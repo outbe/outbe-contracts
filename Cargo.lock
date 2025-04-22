@@ -736,6 +736,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "integration-tests"
+version = "0.1.0"
+dependencies = [
+ "consumption-unit",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw20",
+ "q-nft",
+]
+
+[[package]]
 name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
