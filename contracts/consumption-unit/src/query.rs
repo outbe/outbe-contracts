@@ -4,7 +4,6 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, Env, StdResult};
 
-
 pub type ConsumptionUnitInfoResponse = q_nft::msg::NftInfoResponse<ConsumptionUnitData>;
 
 #[cw_serde]

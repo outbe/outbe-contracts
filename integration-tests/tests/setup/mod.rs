@@ -34,7 +34,7 @@ pub fn setup_test_env() -> (App, AppConfig) {
             )
             .unwrap();
     });
-    
+
     (
         app,
         AppConfig {

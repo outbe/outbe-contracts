@@ -50,7 +50,6 @@ pub struct MintConsumptionUnitData {
     pub hashes: Vec<String>,
 }
 
-
 #[cw_serde]
 pub enum ConsumptionUnitExtensionUpdate {
     /// Updates the pool id for the given NFT, can be performed by user only.
