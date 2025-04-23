@@ -1,6 +1,5 @@
-use crate::types::ConsumptionUnitData;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint128};
 use cw20::Denom;
 use q_nft::msg::Cw721InstantiateMsg;
 
@@ -23,7 +22,7 @@ pub enum ExecuteMsg {
         /// The owner of the newly minter NFT
         owner: String,
         /// Any custom extension used by this contract
-        extension: ConsumptionUnitData,
+        extension: MintConsumptionUnitData,
     },
 
     /// Burn an NFT the sender has access to
@@ -34,6 +33,21 @@ pub enum ExecuteMsg {
         token_id: String,
         extension: ConsumptionUnitExtensionUpdate,
     },
+}
+
+#[cw_serde]
+pub struct MintConsumptionUnitData {
+    /// The value of Consumption Unit in Settlement Tokens
+    pub consumption_value: Uint128,
+    /// Sum of Nominal Qty from Consumption Records
+    pub nominal_quantity: Uint128,
+    /// Nominal currency from Consumption Records
+    pub nominal_currency: String,
+    /// Where the CU is allocated by the User.
+    /// A user can change commitment Pool at any time prior to CU NFT selection in raffle
+    pub commitment_tier: u16,
+    /// Hashes identifying consumption records batch
+    pub hashes: Vec<String>,
 }
 
 #[cw_serde]

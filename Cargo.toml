@@ -1,5 +1,5 @@
 [workspace]
-members = ["contracts/*", "packages/*"]
+members = ["contracts/*", "packages/*", "integration-tests"]
 
 # Resolver has to be set explicitely in workspaces, see https://github.com/rust-lang/cargo/issues/9956
 resolver = "2"
@@ -8,9 +8,9 @@ resolver = "2"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.78"
-license       = "TODO"
-repository    = "https://github.com/qlabs-xyz/q-contracts"
-homepage      = "TODO"
+license = "TODO"
+repository = "https://github.com/qlabs-xyz/q-contracts"
+homepage = "TODO"
 documentation = "TODO"
 
 [workspace.dependencies]
@@ -31,5 +31,7 @@ cw2 = { version = "2.0.0" }
 cw20 = { version = "2.0.0" }
 cw20-base = { version = "2.0.0" }
 
+# Self dependencies
 q-nft = { version = "*", path = "./packages/q-nft" }
+consumption-unit = { version = "*", path = "./contracts/consumption-unit" }
 

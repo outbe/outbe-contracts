@@ -1,9 +1,11 @@
 use crate::error::ContractError;
-use crate::msg::{ConsumptionUnitExtensionUpdate, ExecuteMsg, InstantiateMsg, MigrateMsg};
+use crate::msg::{
+    ConsumptionUnitExtensionUpdate, ExecuteMsg, InstantiateMsg, MigrateMsg, MintConsumptionUnitData,
+};
 use crate::types::{CUConfig, ConsumptionUnitData, ConsumptionUnitNft, ConsumptionUnitState};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
+use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Response};
 use cw_ownable::OwnershipError;
 use q_nft::error::Cw721ContractError;
 use q_nft::execute::assert_minter;
@@ -133,11 +135,11 @@ fn execute_update_nft_info(
 #[allow(clippy::too_many_arguments)]
 fn execute_mint(
     deps: DepsMut,
-    _env: &Env,
+    env: &Env,
     info: &MessageInfo,
     token_id: String,
     owner: String,
-    extension: ConsumptionUnitData,
+    extension: MintConsumptionUnitData,
 ) -> Result<Response, ContractError> {
     assert_minter(deps.storage, &info.sender)?;
     // validate owner
@@ -146,10 +148,21 @@ fn execute_mint(
     let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
 
     // create the token
+    let data = ConsumptionUnitData {
+        consumption_value: extension.consumption_value,
+        nominal_quantity: extension.nominal_quantity,
+        nominal_currency: extension.nominal_currency,
+        commitment_tier: extension.commitment_tier,
+        state: ConsumptionUnitState::Reflected,
+        floor_price: Decimal::one(), // TODO query from Oracle
+        hashes: extension.hashes,
+        created_at: env.block.time,
+        updated_at: env.block.time,
+    };
 
     let token = ConsumptionUnitNft {
         owner: owner_addr,
-        extension,
+        extension: data,
     };
 
     config
