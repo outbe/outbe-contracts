@@ -5,7 +5,7 @@ use crate::msg::{
 use crate::types::{CUConfig, ConsumptionUnitData, ConsumptionUnitNft, ConsumptionUnitState};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Response};
+use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128};
 use cw_ownable::OwnershipError;
 use q_nft::error::Cw721ContractError;
 use q_nft::execute::assert_minter;
@@ -144,6 +144,13 @@ fn execute_mint(
     assert_minter(deps.storage, &info.sender)?;
     // validate owner
     let owner_addr = deps.api.addr_validate(&owner)?;
+
+    if extension.hashes.is_empty()
+        || extension.nominal_quantity == Uint128::zero()
+        || extension.consumption_value == Uint128::zero()
+    {
+        return Err(ContractError::WrongInput {});
+    }
 
     let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
 
