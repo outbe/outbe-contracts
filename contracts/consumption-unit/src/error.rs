@@ -10,4 +10,6 @@ pub enum ContractError {
     Cw721ContractError(#[from] Cw721ContractError),
     #[error("WrongInput")]
     WrongInput {},
+    #[error("HashAlreadyExists")]
+    HashAlreadyExists {},
 }

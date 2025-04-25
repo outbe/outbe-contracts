@@ -2,6 +2,7 @@ use crate::error::ContractError;
 use crate::msg::{
     ConsumptionUnitExtensionUpdate, ExecuteMsg, InstantiateMsg, MigrateMsg, MintConsumptionUnitData,
 };
+use crate::state::HASHES;
 use crate::types::{CUConfig, ConsumptionUnitData, ConsumptionUnitNft, ConsumptionUnitState};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -162,7 +163,7 @@ fn execute_mint(
         commitment_tier: extension.commitment_tier,
         state: ConsumptionUnitState::Reflected,
         floor_price: Decimal::one(), // TODO query from Oracle
-        hashes: extension.hashes,
+        hashes: extension.hashes.clone(),
         created_at: env.block.time,
         updated_at: env.block.time,
     };
@@ -178,6 +179,13 @@ fn execute_mint(
             Some(_) => Err(Cw721ContractError::Claimed {}),
             None => Ok(token),
         })?;
+
+    for hash in extension.hashes {
+        HASHES.update(deps.storage, &hash, |old| match old {
+            Some(_) => Err(ContractError::HashAlreadyExists {}),
+            None => Ok(token_id.clone()),
+        })?;
+    }
 
     config.increment_tokens(deps.storage)?;
 
