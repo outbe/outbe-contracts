@@ -14,6 +14,7 @@ fn test_consumption_unit() {
     println!("📦 Deploy Consumption Unit");
     let cu = deploy_consumption_unit(&mut app, config.owner_addr.clone());
 
+    println!("🧪 Perform tests");
     app.execute_contract(
         config.owner_addr.clone(),
         cu.address.clone(),
