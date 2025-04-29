@@ -1,6 +1,8 @@
 use crate::setup::{setup_test_env, DeployedContract, NATIVE_DENOM};
 use consumption_unit::msg::ExecuteMsg::Mint;
-use consumption_unit::msg::{ConsumptionUnitCollectionExtension, ConsumptionUnitEntity, MintExtension};
+use consumption_unit::msg::{
+    ConsumptionUnitCollectionExtension, ConsumptionUnitEntity, MintExtension,
+};
 use consumption_unit::query::{ConsumptionUnitInfoResponse, QueryMsg};
 use cosmwasm_std::{Addr, Uint128};
 use cw_multi_test::{App, ContractWrapper, Executor};
@@ -30,8 +32,9 @@ fn test_consumption_unit() {
                     nominal_currency: "usd".to_string(),
                     commitment_tier: 1,
                     hashes: vec!["hash1".to_string()],
-                } ,
-                digest: "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d".to_string()
+                },
+                digest: "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+                    .to_string(),
             },
         },
         &[],
