@@ -207,13 +207,14 @@ fn execute_mint(
         ))
 }
 
+// TODO add tests for this  method
 fn verify_digest(entity: ConsumptionUnitEntity, digest: String) -> Result<(), ContractError> {
     let expected_hash = match hex::decode(digest) {
         Ok(hash) => hash,
         Err(_) => return Err(ContractError::WrongDigest {}),
     };
     let serialized = to_json_binary(&entity)?;
-    
+
     let actual_hash = Sha256::digest(serialized.clone());
 
     if expected_hash[..] == actual_hash[..] {
