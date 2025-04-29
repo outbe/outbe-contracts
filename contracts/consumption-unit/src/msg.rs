@@ -38,6 +38,7 @@ pub enum ExecuteMsg {
 #[cw_serde]
 pub struct MintExtension {
     pub entity: ConsumptionUnitEntity,
+    /// Sha256 hash of the given `entity` in hex format
     pub digest: String,
 }
 
@@ -54,7 +55,8 @@ pub struct ConsumptionUnitEntity {
     /// Where the CU is allocated by the User.
     /// A user can change commitment Pool at any time prior to CU NFT selection in raffle
     pub commitment_tier: u16,
-    /// Hashes identifying consumption records batch
+    /// Hashes identifying consumption records batch. Each hash should be a valid unique
+    /// sha256 hash in hex format
     pub hashes: Vec<String>,
 }
 
