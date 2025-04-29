@@ -221,8 +221,10 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "cw20",
+ "hex",
  "q-nft",
  "serde",
+ "sha2",
  "thiserror 1.0.69",
 ]
 

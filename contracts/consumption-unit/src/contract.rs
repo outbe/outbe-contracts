@@ -1,16 +1,18 @@
 use crate::error::ContractError;
 use crate::msg::{
-    ConsumptionUnitExtensionUpdate, ExecuteMsg, InstantiateMsg, MigrateMsg, MintConsumptionUnitData,
+    ConsumptionUnitEntity, ConsumptionUnitExtensionUpdate, ExecuteMsg, InstantiateMsg, MigrateMsg,
+    MintExtension,
 };
 use crate::state::HASHES;
 use crate::types::{CUConfig, ConsumptionUnitData, ConsumptionUnitNft, ConsumptionUnitState};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128};
+use cosmwasm_std::{to_json_binary, Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128};
 use cw_ownable::OwnershipError;
 use q_nft::error::Cw721ContractError;
 use q_nft::execute::assert_minter;
 use q_nft::state::{CollectionInfo, Cw721Config};
+use sha2::{Digest, Sha256};
 
 const CONTRACT_NAME: &str = "gemlabs.io:consumption-unit";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -140,30 +142,37 @@ fn execute_mint(
     info: &MessageInfo,
     token_id: String,
     owner: String,
-    extension: MintConsumptionUnitData,
+    extension: MintExtension,
 ) -> Result<Response, ContractError> {
     assert_minter(deps.storage, &info.sender)?;
     // validate owner
     let owner_addr = deps.api.addr_validate(&owner)?;
 
-    if extension.hashes.is_empty()
-        || extension.nominal_quantity == Uint128::zero()
-        || extension.consumption_value == Uint128::zero()
+    let entity = extension.entity;
+    if entity.token_id != token_id || entity.owner != owner {
+        return Err(ContractError::WrongInput {});
+    }
+
+    if entity.hashes.is_empty()
+        || entity.nominal_quantity == Uint128::zero()
+        || entity.consumption_value == Uint128::zero()
     {
         return Err(ContractError::WrongInput {});
     }
+
+    verify_digest(entity.clone(), extension.digest)?;
 
     let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
 
     // create the token
     let data = ConsumptionUnitData {
-        consumption_value: extension.consumption_value,
-        nominal_quantity: extension.nominal_quantity,
-        nominal_currency: extension.nominal_currency,
-        commitment_tier: extension.commitment_tier,
+        consumption_value: entity.consumption_value,
+        nominal_quantity: entity.nominal_quantity,
+        nominal_currency: entity.nominal_currency,
+        commitment_tier: entity.commitment_tier,
         state: ConsumptionUnitState::Reflected,
         floor_price: Decimal::one(), // TODO query from Oracle
-        hashes: extension.hashes.clone(),
+        hashes: entity.hashes.clone(),
         created_at: env.block.time,
         updated_at: env.block.time,
     };
@@ -180,7 +189,7 @@ fn execute_mint(
             None => Ok(token),
         })?;
 
-    for hash in extension.hashes {
+    for hash in entity.hashes {
         HASHES.update(deps.storage, &hash, |old| match old {
             Some(_) => Err(ContractError::HashAlreadyExists {}),
             None => Ok(token_id.clone()),
@@ -196,6 +205,21 @@ fn execute_mint(
                 .add_attribute("token_id", token_id)
                 .add_attribute("owner", owner),
         ))
+}
+
+fn verify_digest(entity: ConsumptionUnitEntity, digest: String) -> Result<(), ContractError> {
+    let expected_hash = match hex::decode(digest) {
+        Ok(hash) => hash,
+        Err(_) => return Err(ContractError::WrongDigest {}),
+    };
+    let serialized = to_json_binary(&entity)?;
+    
+    let actual_hash = Sha256::digest(serialized.clone());
+
+    if expected_hash[..] == actual_hash[..] {
+        return Ok(());
+    }
+    Err(ContractError::WrongDigest {})
 }
 
 fn execute_burn(
