@@ -1,0 +1,22 @@
+@startuml
+
+actor User as user
+control Agent as agent
+participant "CU Oracle" as oracle
+participant "Consumption Unit" as cu
+
+== Approve flow ==
+autonumber 1
+
+agent -> oracle: Propose Consumption Units
+user -> oracle: Approve Proposal
+oracle -> cu: Mint Consumption Unit
+cu -> user: Receive Consumption Unit NFT
+
+== Reject flow ==
+autonumber 1
+agent -> oracle: Propose Consumption Units
+user -> oracle: Reject Proposal
+oracle -> oracle: Remove Proposal
+
+@enduml
