@@ -12,6 +12,8 @@ pub enum ContractError {
     WrongInput {},
     #[error("WrongDigest")]
     WrongDigest {},
+    #[error("WrongTier")]
+    WrongTier {},
     #[error("HashAlreadyExists")]
     HashAlreadyExists {},
 }

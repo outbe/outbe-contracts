@@ -99,9 +99,7 @@ fn execute_update_nft_info(
     let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
 
     match update {
-        ConsumptionUnitExtensionUpdate::UpdatePool {
-            new_commitment_tier_id,
-        } => {
+        ConsumptionUnitExtensionUpdate::UpdatePool { new_tier_id } => {
             let mut current_nft_info = config.nft_info.load(deps.storage, &token_id)?;
             if current_nft_info.owner != info.sender {
                 return Err(ContractError::Cw721ContractError(
@@ -113,9 +111,9 @@ fn execute_update_nft_info(
                 return Err(ContractError::WrongInput {});
             }
 
-            current_nft_info.extension = current_nft_info
-                .extension
-                .update_tier(new_commitment_tier_id, env);
+            verify_tier(new_tier_id)?;
+
+            current_nft_info.extension = current_nft_info.extension.update_tier(new_tier_id, env);
 
             config
                 .nft_info
@@ -126,10 +124,7 @@ fn execute_update_nft_info(
                 .add_event(
                     Event::new("consumption-unit::update_nft_info")
                         .add_attribute("token_id", token_id)
-                        .add_attribute(
-                            "new_commitment_pool_id",
-                            new_commitment_tier_id.to_string(),
-                        ),
+                        .add_attribute("new_commitment_pool_id", new_tier_id.to_string()),
                 ))
         }
     }
@@ -152,6 +147,8 @@ fn execute_mint(
     if entity.token_id != token_id || entity.owner != owner {
         return Err(ContractError::WrongInput {});
     }
+
+    verify_tier(entity.commitment_tier)?;
 
     if entity.hashes.is_empty()
         || entity.nominal_quantity == Uint128::zero()
@@ -221,6 +218,16 @@ fn verify_digest(entity: ConsumptionUnitEntity, digest: String) -> Result<(), Co
         return Ok(());
     }
     Err(ContractError::WrongDigest {})
+}
+
+/// Verifies that the given tier id is correct.
+/// NB: should be in sync with commitment tiers smart contract.
+/// NB: we do not store ref to that contract to save gas
+fn verify_tier(new_tier_id: u16) -> Result<(), ContractError> {
+    if new_tier_id >= 1 && new_tier_id <= 16 {
+        return Ok(());
+    }
+    Err(ContractError::WrongTier {})
 }
 
 fn execute_burn(

@@ -261,10 +261,10 @@
               "update_pool": {
                 "type": "object",
                 "required": [
-                  "new_commitment_tier_id"
+                  "new_tier_id"
                 ],
                 "properties": {
-                  "new_commitment_tier_id": {
+                  "new_tier_id": {
                     "type": "integer",
                     "format": "uint16",
                     "minimum": 0.0
