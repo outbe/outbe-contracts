@@ -127,7 +127,7 @@
                 "description": "Any custom extension used by this contract",
                 "allOf": [
                   {
-                    "$ref": "#/definitions/MintConsumptionUnitData"
+                    "$ref": "#/definitions/MintExtension"
                   }
                 ]
               },
@@ -195,6 +195,60 @@
       }
     ],
     "definitions": {
+      "ConsumptionUnitEntity": {
+        "type": "object",
+        "required": [
+          "commitment_tier",
+          "consumption_value",
+          "hashes",
+          "nominal_currency",
+          "nominal_quantity",
+          "owner",
+          "token_id"
+        ],
+        "properties": {
+          "commitment_tier": {
+            "description": "Where the CU is allocated by the User. A user can change commitment Pool at any time prior to CU NFT selection in raffle",
+            "type": "integer",
+            "format": "uint16",
+            "minimum": 0.0
+          },
+          "consumption_value": {
+            "description": "The value of Consumption Unit in Settlement Tokens",
+            "allOf": [
+              {
+                "$ref": "#/definitions/Uint128"
+              }
+            ]
+          },
+          "hashes": {
+            "description": "Hashes identifying consumption records batch. Each hash should be a valid unique sha256 hash in hex format",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nominal_currency": {
+            "description": "Nominal currency from Consumption Records",
+            "type": "string"
+          },
+          "nominal_quantity": {
+            "description": "Sum of Nominal Qty from Consumption Records",
+            "allOf": [
+              {
+                "$ref": "#/definitions/Uint128"
+              }
+            ]
+          },
+          "owner": {
+            "type": "string"
+          },
+          "token_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "ConsumptionUnitExtensionUpdate": {
         "oneOf": [
           {
@@ -223,48 +277,19 @@
           }
         ]
       },
-      "MintConsumptionUnitData": {
+      "MintExtension": {
         "type": "object",
         "required": [
-          "commitment_tier",
-          "consumption_value",
-          "hashes",
-          "nominal_currency",
-          "nominal_quantity"
+          "digest",
+          "entity"
         ],
         "properties": {
-          "commitment_tier": {
-            "description": "Where the CU is allocated by the User. A user can change commitment Pool at any time prior to CU NFT selection in raffle",
-            "type": "integer",
-            "format": "uint16",
-            "minimum": 0.0
-          },
-          "consumption_value": {
-            "description": "The value of Consumption Unit in Settlement Tokens",
-            "allOf": [
-              {
-                "$ref": "#/definitions/Uint128"
-              }
-            ]
-          },
-          "hashes": {
-            "description": "Hashes identifying consumption records batch",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "nominal_currency": {
-            "description": "Nominal currency from Consumption Records",
+          "digest": {
+            "description": "Sha256 hash of the given `entity` in hex format",
             "type": "string"
           },
-          "nominal_quantity": {
-            "description": "Sum of Nominal Qty from Consumption Records",
-            "allOf": [
-              {
-                "$ref": "#/definitions/Uint128"
-              }
-            ]
+          "entity": {
+            "$ref": "#/definitions/ConsumptionUnitEntity"
           }
         },
         "additionalProperties": false

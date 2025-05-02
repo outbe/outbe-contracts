@@ -1,6 +1,8 @@
 use crate::setup::{setup_test_env, DeployedContract, NATIVE_DENOM};
 use consumption_unit::msg::ExecuteMsg::Mint;
-use consumption_unit::msg::{ConsumptionUnitCollectionExtension, MintConsumptionUnitData};
+use consumption_unit::msg::{
+    ConsumptionUnitCollectionExtension, ConsumptionUnitEntity, MintExtension,
+};
 use consumption_unit::query::{ConsumptionUnitInfoResponse, QueryMsg};
 use cosmwasm_std::{Addr, Uint128};
 use cw_multi_test::{App, ContractWrapper, Executor};
@@ -14,18 +16,25 @@ fn test_consumption_unit() {
     println!("📦 Deploy Consumption Unit");
     let cu = deploy_consumption_unit(&mut app, config.owner_addr.clone());
 
+    println!("🧪 Perform tests");
     app.execute_contract(
         config.owner_addr.clone(),
         cu.address.clone(),
         &Mint {
             token_id: "1".to_string(),
             owner: config.user_addr.to_string(),
-            extension: MintConsumptionUnitData {
-                consumption_value: Uint128::from(100u32),
-                nominal_quantity: Uint128::from(100u32),
-                nominal_currency: "usd".to_string(),
-                commitment_tier: 1,
-                hashes: vec!["hash1".to_string()],
+            extension: MintExtension {
+                entity: ConsumptionUnitEntity {
+                    token_id: "1".to_string(),
+                    owner: config.user_addr.to_string(),
+                    consumption_value: Uint128::from(100u32),
+                    nominal_quantity: Uint128::from(100u32),
+                    nominal_currency: "usd".to_string(),
+                    commitment_tier: 1,
+                    hashes: vec!["hash1".to_string()],
+                },
+                digest: "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+                    .to_string(),
             },
         },
         &[],

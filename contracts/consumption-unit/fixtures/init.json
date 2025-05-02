@@ -1,16 +1,14 @@
 {
   "name": "consumption unit",
-  "symbol": "CUT",
+  "symbol": "cu",
   "collection_info_extension": {
     "settlement_token": {
-      "cw20": $cw20_address
+      "cw20": $usdc_address
     },
     "native_token": {
-      "native": "qnc"
+      "native": "gem"
     },
-    "price_oracle": $oracle
-  },
-  "minter": null,
-  "creator": null,
-  "withdraw_address": null
+    "price_oracle": $price_oracle
+  }
+
 }

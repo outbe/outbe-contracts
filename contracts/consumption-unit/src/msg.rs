@@ -22,7 +22,7 @@ pub enum ExecuteMsg {
         /// The owner of the newly minter NFT
         owner: String,
         /// Any custom extension used by this contract
-        extension: MintConsumptionUnitData,
+        extension: MintExtension,
     },
 
     /// Burn an NFT the sender has access to
@@ -36,7 +36,16 @@ pub enum ExecuteMsg {
 }
 
 #[cw_serde]
-pub struct MintConsumptionUnitData {
+pub struct MintExtension {
+    pub entity: ConsumptionUnitEntity,
+    /// Sha256 hash of the given `entity` in hex format
+    pub digest: String,
+}
+
+#[cw_serde]
+pub struct ConsumptionUnitEntity {
+    pub token_id: String,
+    pub owner: String,
     /// The value of Consumption Unit in Settlement Tokens
     pub consumption_value: Uint128,
     /// Sum of Nominal Qty from Consumption Records
@@ -46,7 +55,8 @@ pub struct MintConsumptionUnitData {
     /// Where the CU is allocated by the User.
     /// A user can change commitment Pool at any time prior to CU NFT selection in raffle
     pub commitment_tier: u16,
-    /// Hashes identifying consumption records batch
+    /// Hashes identifying consumption records batch. Each hash should be a valid unique
+    /// sha256 hash in hex format
     pub hashes: Vec<String>,
 }
 
