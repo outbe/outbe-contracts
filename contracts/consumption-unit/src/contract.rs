@@ -224,7 +224,7 @@ fn verify_digest(entity: ConsumptionUnitEntity, digest: String) -> Result<(), Co
 /// NB: should be in sync with commitment tiers smart contract.
 /// NB: we do not store ref to that contract to save gas
 fn verify_tier(new_tier_id: u16) -> Result<(), ContractError> {
-    if new_tier_id >= 1 && new_tier_id <= 16 {
+    if (1..=16).contains(&new_tier_id) {
         return Ok(());
     }
     Err(ContractError::WrongTier {})
