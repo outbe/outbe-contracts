@@ -23,7 +23,7 @@ fn test_consumption_unit() {
         &Mint {
             token_id: "1".to_string(),
             owner: config.user_addr.to_string(),
-            extension: MintExtension {
+            extension: Box::new(MintExtension {
                 entity: ConsumptionUnitEntity {
                     token_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
@@ -33,9 +33,11 @@ fn test_consumption_unit() {
                     commitment_tier: 1,
                     hashes: vec!["hash1".to_string()],
                 },
-                digest: "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+                signature: "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
                     .to_string(),
-            },
+                public_key: "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+                    .to_string(),
+            }),
         },
         &[],
     )

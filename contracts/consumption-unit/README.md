@@ -19,11 +19,32 @@ For minting a consumption unit the following data is required:
 - "token_id" the consumption unit identifier, should be unique.
 - "owner" a user address that this consumption belongs to.
 - "entity" the consumption unit entity i.e. payload info.
-- "digest" a cryptographical digest of the entity in sha256 hash hex.
+- "signature" is a cryptographical signature of the entity hash.
+- "public_key" is a public key to verify the signature.
 
-To create a valid digest you need to serialize the given entity as a binary json in
-[json binary](https://github.com/CosmWasm/serde-json-wasm)
-and then sign the given bytes using `sha256` hash function and encode in hex format.
+### Signing Consumption Unit Data
+
+Signing raw data is important to make sure that the given Consumption Unit is authentic. For assuring that
+the [ECDSA secp256k1](https://cosmwasm.cosmos.network/core/standard-library/cryptography/k256) elliptic curve cryptography is used.
+It's a Koblitz curve widely used in the blockchain space (e.g., Bitcoin and Ethereum).
+
+To create a valid signature, you need to perform the following steps:
+
+- serialize the given entity as a binary json in [json binary](https://github.com/CosmWasm/serde-json-wasm)
+- produce a hash of the given bytes using `sha256` hash function
+- sign the given hash using secp256k1 cryptography
+- provide the given signature and public key in hex format within the message
+
+Note:  
+The signature and public key are in "Cosmos" format:  
+signature: Serialized "compact" signature (64 bytes).  
+public key: Serialized according to SEC 2 (33 or 65 bytes).  
+
+_This implementation accepts both high-S and low-S signatures.
+Some applications, including Ethereum transactions, consider high-S signatures invalid to avoid malleability.
+If that's the case for your protocol, the signature needs to be tested for low-S in addition to this verification._
+
+[//]: # (TODO: add examples of creating signatures)
 
 ## Consumption Unit deployment info
 

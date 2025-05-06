@@ -7,7 +7,9 @@ use crate::state::HASHES;
 use crate::types::{CUConfig, ConsumptionUnitData, ConsumptionUnitNft, ConsumptionUnitState};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128};
+use cosmwasm_std::{
+    to_json_binary, Api, Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128,
+};
 use cw_ownable::OwnershipError;
 use q_nft::error::Cw721ContractError;
 use q_nft::execute::assert_minter;
@@ -80,7 +82,7 @@ pub fn execute(
             token_id,
             owner,
             extension,
-        } => execute_mint(deps, &env, &info, token_id, owner, extension),
+        } => execute_mint(deps, &env, &info, token_id, owner, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
         ExecuteMsg::UpdateNftInfo {
             token_id,
@@ -157,7 +159,12 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
-    verify_digest(entity.clone(), extension.digest)?;
+    verify_signature(
+        deps.api,
+        entity.clone(),
+        extension.signature,
+        extension.public_key,
+    )?;
 
     let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
 
@@ -205,19 +212,30 @@ fn execute_mint(
 }
 
 // TODO add tests for this  method
-fn verify_digest(entity: ConsumptionUnitEntity, digest: String) -> Result<(), ContractError> {
-    let expected_hash = match hex::decode(digest) {
-        Ok(hash) => hash,
-        Err(_) => return Err(ContractError::WrongDigest {}),
+fn verify_signature(
+    api: &dyn Api,
+    entity: ConsumptionUnitEntity,
+    signature: String,
+    public_key: String,
+) -> Result<(), ContractError> {
+    let signature_bytes = match hex::decode(signature) {
+        Ok(data) => data,
+        Err(_) => return Err(ContractError::WrongInput {}),
     };
-    let serialized = to_json_binary(&entity)?;
+    let public_key_bytes = match hex::decode(public_key) {
+        Ok(data) => data,
+        Err(_) => return Err(ContractError::WrongInput {}),
+    };
 
-    let actual_hash = Sha256::digest(serialized.clone());
+    let serialized_entity = to_json_binary(&entity)?;
+    let data_hash = Sha256::digest(serialized_entity.clone());
 
-    if expected_hash[..] == actual_hash[..] {
-        return Ok(());
+    let signature_ok = api.secp256k1_verify(&data_hash, &signature_bytes, &public_key_bytes)?;
+    if signature_ok {
+        Ok(())
+    } else {
+        Err(ContractError::WrongDigest {})
     }
-    Err(ContractError::WrongDigest {})
 }
 
 /// Verifies that the given tier id is correct.
@@ -264,9 +282,12 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
 
 #[cfg(test)]
 mod tests {
-    use crate::contract::verify_digest;
+    use crate::contract::verify_signature;
+    use crate::error::ContractError::VerificationError;
     use crate::msg::ExecuteMsg;
     use cosmwasm_schema::schemars::_serde_json::from_str;
+    use cosmwasm_std::testing::mock_dependencies;
+    use cosmwasm_std::VerificationError::InvalidSignatureFormat;
 
     #[test]
     fn test_verify_digest() {
@@ -286,7 +307,8 @@ mod tests {
                   "hash1"
                 ]
               },
-              "digest": "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+              "signature": "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d",
+              "public_key": "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
             }
           }
         }"#;
@@ -295,13 +317,22 @@ mod tests {
 
         println!("msg {:?}", m);
 
+        let deps = mock_dependencies();
         match m {
             ExecuteMsg::Mint {
                 token_id: _,
                 owner: _,
                 extension,
             } => {
-                verify_digest(extension.entity, extension.digest).unwrap();
+                let result = verify_signature(
+                    &deps.api,
+                    extension.entity,
+                    extension.signature,
+                    extension.public_key,
+                );
+
+                // TODO assert no error; implement signature creation
+                assert_eq!(result, Err(VerificationError(InvalidSignatureFormat)))
             }
             _ => panic!("wrong type"),
         }

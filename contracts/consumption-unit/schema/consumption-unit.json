@@ -280,16 +280,21 @@
       "MintExtension": {
         "type": "object",
         "required": [
-          "digest",
-          "entity"
+          "entity",
+          "public_key",
+          "signature"
         ],
         "properties": {
-          "digest": {
-            "description": "Sha256 hash of the given `entity` in hex format",
-            "type": "string"
-          },
           "entity": {
             "$ref": "#/definitions/ConsumptionUnitEntity"
+          },
+          "public_key": {
+            "description": "Serialized according to SEC 2 (33 or 65 bytes) public key in hex",
+            "type": "string"
+          },
+          "signature": {
+            "description": "Serialized \"compact\" signature (64 bytes) of the `entity` in hex",
+            "type": "string"
           }
         },
         "additionalProperties": false
