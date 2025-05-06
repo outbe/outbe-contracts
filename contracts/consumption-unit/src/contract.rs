@@ -261,3 +261,49 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
         MigrateMsg::Migrate {} => Ok(Response::new()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::contract::verify_digest;
+    use crate::msg::ExecuteMsg;
+    use cosmwasm_schema::schemars::_serde_json::from_str;
+
+    #[test]
+    fn test_verify_digest() {
+        let raw_json = r#"{
+          "mint": {
+            "token_id": "1",
+            "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
+            "extension": {
+              "entity": {
+                "token_id": "1",
+                "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
+                "consumption_value": "100",
+                "nominal_quantity": "100",
+                "nominal_currency": "usd",
+                "commitment_tier": 1,
+                "hashes": [
+                  "hash1"
+                ]
+              },
+              "digest": "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+            }
+          }
+        }"#;
+
+        let m: ExecuteMsg = from_str(raw_json).unwrap();
+
+        println!("msg {:?}", m);
+
+        match m {
+            ExecuteMsg::Mint {
+                token_id: _,
+                owner: _,
+                extension,
+            } => {
+                verify_digest(extension.entity, extension.digest).unwrap();
+            }
+            _ => panic!("wrong type"),
+        }
+    }
+}
