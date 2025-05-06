@@ -283,58 +283,68 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
 #[cfg(test)]
 mod tests {
     use crate::contract::verify_signature;
-    use crate::error::ContractError::VerificationError;
-    use crate::msg::ExecuteMsg;
+    use crate::msg::ConsumptionUnitEntity;
     use cosmwasm_schema::schemars::_serde_json::from_str;
     use cosmwasm_std::testing::mock_dependencies;
-    use cosmwasm_std::VerificationError::InvalidSignatureFormat;
+    use cosmwasm_std::to_json_binary;
+    use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
+    use sha2::{Digest, Sha256};
+    use std::str::FromStr;
 
     #[test]
-    fn test_verify_digest() {
+    fn test_signature_creation() {
+        let deps = mock_dependencies();
+        let secp = Secp256k1::new();
+
+        // prepare test keys
+        let private_key =
+            SecretKey::from_str("4236627b5a03b3f2e601141a883ccdb23aeef15c910a0789e4343aad394cbf6d")
+                .unwrap();
+        let public_key = PublicKey::from_secret_key(&secp, &private_key);
+
+        // prepare raw json data
         let raw_json = r#"{
-          "mint": {
             "token_id": "1",
             "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-            "extension": {
-              "entity": {
-                "token_id": "1",
-                "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-                "consumption_value": "100",
-                "nominal_quantity": "100",
-                "nominal_currency": "usd",
-                "commitment_tier": 1,
-                "hashes": [
-                  "hash1"
-                ]
-              },
-              "signature": "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d",
-              "public_key": "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
-            }
-          }
+            "consumption_value": "100",
+            "nominal_quantity": "100",
+            "nominal_currency": "usd",
+            "commitment_tier": 1,
+            "hashes": [
+              "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+            ]
         }"#;
+        let entity: ConsumptionUnitEntity = from_str(raw_json).unwrap();
 
-        let m: ExecuteMsg = from_str(raw_json).unwrap();
+        // sign the data
+        let message_binary = to_json_binary(&entity).unwrap();
+        let message_hash = Sha256::digest(message_binary);
 
-        println!("msg {:?}", m);
+        println!("message_hash {:?}", hex::encode(message_hash));
 
-        let deps = mock_dependencies();
-        match m {
-            ExecuteMsg::Mint {
-                token_id: _,
-                owner: _,
-                extension,
-            } => {
-                let result = verify_signature(
-                    &deps.api,
-                    extension.entity,
-                    extension.signature,
-                    extension.public_key,
-                );
+        // Sign the hashed message
+        let msg = Message::from_digest_slice(&message_hash).unwrap();
+        // Sign message (produces low-S normalized signature)
+        let sig = secp.sign_ecdsa(&msg, &private_key);
 
-                // TODO assert no error; implement signature creation
-                assert_eq!(result, Err(VerificationError(InvalidSignatureFormat)))
-            }
-            _ => panic!("wrong type"),
-        }
+        // verify the signature using standard lib
+        secp.verify_ecdsa(&msg, &sig, &public_key)
+            .map(|_| println!("Signature is valid."))
+            .unwrap();
+
+        // Verify signature on the smart contract side
+        // Serialize signature in compact 64-byte form
+        let signature_hex = hex::encode(sig.serialize_compact());
+        println!("Compact Signature (64 bytes): {}", signature_hex);
+
+        // Serialize public key compressed (33 bytes)
+        let public_key_hex = hex::encode(public_key.serialize());
+
+        println!("Public key (compressed, 33 bytes): {}", public_key_hex);
+
+        assert_eq!(
+            verify_signature(&deps.api, entity, signature_hex, public_key_hex),
+            Ok(())
+        );
     }
 }

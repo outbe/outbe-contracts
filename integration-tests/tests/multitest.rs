@@ -31,11 +31,11 @@ fn test_consumption_unit() {
                     nominal_quantity: Uint128::from(100u32),
                     nominal_currency: "usd".to_string(),
                     commitment_tier: 1,
-                    hashes: vec!["hash1".to_string()],
+                    hashes: vec!["872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d".to_string()],
                 },
-                signature: "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+                signature: "dbc7c4d857beea592131a673f5970add886f26a1d1b9cd4fbc68aed82a5b8a342d07d7acb26a12acaacc5cad785534a814c38f67ddacdaf0693943b1aa78fa85"
                     .to_string(),
-                public_key: "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+                public_key: "02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d"
                     .to_string(),
             }),
         },

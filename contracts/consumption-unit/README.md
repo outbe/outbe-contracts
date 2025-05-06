@@ -44,7 +44,7 @@ _This implementation accepts both high-S and low-S signatures.
 Some applications, including Ethereum transactions, consider high-S signatures invalid to avoid malleability.
 If that's the case for your protocol, the signature needs to be tested for low-S in addition to this verification._
 
-[//]: # (TODO: add examples of creating signatures)
+Please see an example of the signature creation [in Rust](./src/contract.rs:295).
 
 ## Consumption Unit deployment info
 
