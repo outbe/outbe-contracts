@@ -47,7 +47,9 @@ mod tests {
     use crate::contract::{execute, instantiate};
     use crate::msg::InstantiateMsg;
     use crate::query::{query, AllTiersResponse, QueryMsg};
+    use cosmwasm_std::Decimal;
     use cw_multi_test::{App, ContractWrapper, Executor};
+    use std::str::FromStr;
 
     #[test]
     fn test_query_tiers() {
@@ -72,6 +74,14 @@ mod tests {
             .unwrap();
         assert_eq!(response.tiers.len(), 16);
         assert_eq!(response.tiers.first().unwrap().tier_id, 1);
+        assert_eq!(
+            response.tiers.first().unwrap().weight,
+            Decimal::from_str("0.125").unwrap()
+        );
         assert_eq!(response.tiers.last().unwrap().tier_id, 16);
+        assert_eq!(
+            response.tiers.last().unwrap().weight,
+            Decimal::from_str("1").unwrap()
+        );
     }
 }
