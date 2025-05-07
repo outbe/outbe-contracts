@@ -46,6 +46,8 @@ If that's the case for your protocol, the signature needs to be tested for low-S
 
 Please see an example of the signature creation [in Rust](./src/contract.rs:295).
 
+Please see an example of the signature creation [in TypeScript](./sign-cu-ts-demo/README.md).
+
 ## Consumption Unit deployment info
 
 Devnet deployment address: `gem15m5fe2pfxq6796rf2z7gma8a0n2s0f0dxasmrzark3q26tltgsyschkllh`

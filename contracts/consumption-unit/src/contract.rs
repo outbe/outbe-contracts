@@ -318,6 +318,7 @@ mod tests {
 
         // sign the data
         let message_binary = to_json_binary(&entity).unwrap();
+        println!("message_binary {:?}", hex::encode(message_binary.clone()));
         let message_hash = Sha256::digest(message_binary);
 
         println!("message_hash {:?}", hex::encode(message_hash));
