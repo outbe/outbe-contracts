@@ -211,7 +211,6 @@ fn execute_mint(
         ))
 }
 
-// TODO add tests for this  method
 fn verify_signature(
     api: &dyn Api,
     entity: ConsumptionUnitEntity,
