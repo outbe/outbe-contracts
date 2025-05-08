@@ -7,7 +7,9 @@ use crate::state::HASHES;
 use crate::types::{CUConfig, ConsumptionUnitData, ConsumptionUnitNft, ConsumptionUnitState};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128};
+use cosmwasm_std::{
+    to_json_binary, Api, Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128,
+};
 use cw_ownable::OwnershipError;
 use q_nft::error::Cw721ContractError;
 use q_nft::execute::assert_minter;
@@ -80,7 +82,7 @@ pub fn execute(
             token_id,
             owner,
             extension,
-        } => execute_mint(deps, &env, &info, token_id, owner, extension),
+        } => execute_mint(deps, &env, &info, token_id, owner, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
         ExecuteMsg::UpdateNftInfo {
             token_id,
@@ -99,9 +101,7 @@ fn execute_update_nft_info(
     let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
 
     match update {
-        ConsumptionUnitExtensionUpdate::UpdatePool {
-            new_commitment_tier_id,
-        } => {
+        ConsumptionUnitExtensionUpdate::UpdatePool { new_tier_id } => {
             let mut current_nft_info = config.nft_info.load(deps.storage, &token_id)?;
             if current_nft_info.owner != info.sender {
                 return Err(ContractError::Cw721ContractError(
@@ -113,9 +113,9 @@ fn execute_update_nft_info(
                 return Err(ContractError::WrongInput {});
             }
 
-            current_nft_info.extension = current_nft_info
-                .extension
-                .update_tier(new_commitment_tier_id, env);
+            verify_tier(new_tier_id)?;
+
+            current_nft_info.extension = current_nft_info.extension.update_tier(new_tier_id, env);
 
             config
                 .nft_info
@@ -126,10 +126,7 @@ fn execute_update_nft_info(
                 .add_event(
                     Event::new("consumption-unit::update_nft_info")
                         .add_attribute("token_id", token_id)
-                        .add_attribute(
-                            "new_commitment_pool_id",
-                            new_commitment_tier_id.to_string(),
-                        ),
+                        .add_attribute("new_commitment_pool_id", new_tier_id.to_string()),
                 ))
         }
     }
@@ -153,6 +150,8 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
+    verify_tier(entity.commitment_tier)?;
+
     if entity.hashes.is_empty()
         || entity.nominal_quantity == Uint128::zero()
         || entity.consumption_value == Uint128::zero()
@@ -160,7 +159,12 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
-    verify_digest(entity.clone(), extension.digest)?;
+    verify_signature(
+        deps.api,
+        entity.clone(),
+        extension.signature,
+        extension.public_key,
+    )?;
 
     let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
 
@@ -207,20 +211,40 @@ fn execute_mint(
         ))
 }
 
-// TODO add tests for this  method
-fn verify_digest(entity: ConsumptionUnitEntity, digest: String) -> Result<(), ContractError> {
-    let expected_hash = match hex::decode(digest) {
-        Ok(hash) => hash,
-        Err(_) => return Err(ContractError::WrongDigest {}),
+fn verify_signature(
+    api: &dyn Api,
+    entity: ConsumptionUnitEntity,
+    signature: String,
+    public_key: String,
+) -> Result<(), ContractError> {
+    let signature_bytes = match hex::decode(signature) {
+        Ok(data) => data,
+        Err(_) => return Err(ContractError::WrongInput {}),
     };
-    let serialized = to_json_binary(&entity)?;
+    let public_key_bytes = match hex::decode(public_key) {
+        Ok(data) => data,
+        Err(_) => return Err(ContractError::WrongInput {}),
+    };
 
-    let actual_hash = Sha256::digest(serialized.clone());
+    let serialized_entity = to_json_binary(&entity)?;
+    let data_hash = Sha256::digest(serialized_entity.clone());
 
-    if expected_hash[..] == actual_hash[..] {
+    let signature_ok = api.secp256k1_verify(&data_hash, &signature_bytes, &public_key_bytes)?;
+    if signature_ok {
+        Ok(())
+    } else {
+        Err(ContractError::WrongDigest {})
+    }
+}
+
+/// Verifies that the given tier id is correct.
+/// NB: should be in sync with commitment tiers smart contract.
+/// NB: we do not store ref to that contract to save gas
+fn verify_tier(new_tier_id: u16) -> Result<(), ContractError> {
+    if (1..=16).contains(&new_tier_id) {
         return Ok(());
     }
-    Err(ContractError::WrongDigest {})
+    Err(ContractError::WrongTier {})
 }
 
 fn execute_burn(
@@ -252,5 +276,75 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
 
     match msg {
         MigrateMsg::Migrate {} => Ok(Response::new()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::contract::verify_signature;
+    use crate::msg::ConsumptionUnitEntity;
+    use cosmwasm_schema::schemars::_serde_json::from_str;
+    use cosmwasm_std::testing::mock_dependencies;
+    use cosmwasm_std::to_json_binary;
+    use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
+    use sha2::{Digest, Sha256};
+    use std::str::FromStr;
+
+    #[test]
+    fn test_signature_creation() {
+        let deps = mock_dependencies();
+        let secp = Secp256k1::new();
+
+        // prepare test keys
+        let private_key =
+            SecretKey::from_str("4236627b5a03b3f2e601141a883ccdb23aeef15c910a0789e4343aad394cbf6d")
+                .unwrap();
+        let public_key = PublicKey::from_secret_key(&secp, &private_key);
+
+        // prepare raw json data
+        let raw_json = r#"{
+            "token_id": "1",
+            "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
+            "consumption_value": "100",
+            "nominal_quantity": "100",
+            "nominal_currency": "usd",
+            "commitment_tier": 1,
+            "hashes": [
+              "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+            ]
+        }"#;
+        let entity: ConsumptionUnitEntity = from_str(raw_json).unwrap();
+
+        // sign the data
+        let message_binary = to_json_binary(&entity).unwrap();
+        println!("message_binary {:?}", hex::encode(message_binary.clone()));
+        let message_hash = Sha256::digest(message_binary);
+
+        println!("message_hash {:?}", hex::encode(message_hash));
+
+        // Sign the hashed message
+        let msg = Message::from_digest_slice(&message_hash).unwrap();
+        // Sign message (produces low-S normalized signature)
+        let sig = secp.sign_ecdsa(&msg, &private_key);
+
+        // verify the signature using standard lib
+        secp.verify_ecdsa(&msg, &sig, &public_key)
+            .map(|_| println!("Signature is valid."))
+            .unwrap();
+
+        // Verify signature on the smart contract side
+        // Serialize signature in compact 64-byte form
+        let signature_hex = hex::encode(sig.serialize_compact());
+        println!("Compact Signature (64 bytes): {}", signature_hex);
+
+        // Serialize public key compressed (33 bytes)
+        let public_key_hex = hex::encode(public_key.serialize());
+
+        println!("Public key (compressed, 33 bytes): {}", public_key_hex);
+
+        assert_eq!(
+            verify_signature(&deps.api, entity, signature_hex, public_key_hex),
+            Ok(())
+        );
     }
 }

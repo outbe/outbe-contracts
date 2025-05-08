@@ -22,7 +22,7 @@ pub enum ExecuteMsg {
         /// The owner of the newly minter NFT
         owner: String,
         /// Any custom extension used by this contract
-        extension: MintExtension,
+        extension: Box<MintExtension>,
     },
 
     /// Burn an NFT the sender has access to
@@ -38,8 +38,10 @@ pub enum ExecuteMsg {
 #[cw_serde]
 pub struct MintExtension {
     pub entity: ConsumptionUnitEntity,
-    /// Sha256 hash of the given `entity` in hex format
-    pub digest: String,
+    /// Serialized "compact" signature (64 bytes) of the `entity` in hex
+    pub signature: String,
+    /// Serialized according to SEC 2 (33 or 65 bytes) public key in hex
+    pub public_key: String,
 }
 
 #[cw_serde]
@@ -64,7 +66,7 @@ pub struct ConsumptionUnitEntity {
 pub enum ConsumptionUnitExtensionUpdate {
     /// Updates the pool id for the given NFT, can be performed by user only.
     /// When updating the pool a new price will be fetched.
-    UpdatePool { new_commitment_tier_id: u16 },
+    UpdatePool { new_tier_id: u16 },
 }
 
 #[cw_serde]

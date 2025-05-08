@@ -261,10 +261,10 @@
               "update_pool": {
                 "type": "object",
                 "required": [
-                  "new_commitment_tier_id"
+                  "new_tier_id"
                 ],
                 "properties": {
-                  "new_commitment_tier_id": {
+                  "new_tier_id": {
                     "type": "integer",
                     "format": "uint16",
                     "minimum": 0.0
@@ -280,16 +280,21 @@
       "MintExtension": {
         "type": "object",
         "required": [
-          "digest",
-          "entity"
+          "entity",
+          "public_key",
+          "signature"
         ],
         "properties": {
-          "digest": {
-            "description": "Sha256 hash of the given `entity` in hex format",
-            "type": "string"
-          },
           "entity": {
             "$ref": "#/definitions/ConsumptionUnitEntity"
+          },
+          "public_key": {
+            "description": "Serialized according to SEC 2 (33 or 65 bytes) public key in hex",
+            "type": "string"
+          },
+          "signature": {
+            "description": "Serialized \"compact\" signature (64 bytes) of the `entity` in hex",
+            "type": "string"
           }
         },
         "additionalProperties": false

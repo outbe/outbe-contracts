@@ -50,7 +50,7 @@ info required to make a raffle.
 #### Commitment Tier Entity Data
 
 ```rust
-/// ConsumptionUnit public data
+/// Commitment tier public data
 pub struct CommitmentTierData {
     /// Identifier
     pub tier_id: u16,
