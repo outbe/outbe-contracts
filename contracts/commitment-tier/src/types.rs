@@ -7,7 +7,7 @@ pub struct CommitmentTier {
     /// Identifier
     pub tier_id: u16,
     /// TPT+%
-    pub tpt_percent_increase: Uint128,
+    pub performance_rate: Uint128,
     /// Winning Probability weight
     pub weight: Decimal,
 }
