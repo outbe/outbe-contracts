@@ -1,5 +1,5 @@
 use cosmwasm_std::{StdError, VerificationError};
-use q_nft::error::Cw721ContractError;
+use outbe_nft::error::Cw721ContractError;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]

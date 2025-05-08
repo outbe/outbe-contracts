@@ -1,7 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint128};
 use cw20::Denom;
-use q_nft::msg::Cw721InstantiateMsg;
+use outbe_nft::msg::Cw721InstantiateMsg;
 
 #[cw_serde]
 pub struct ConsumptionUnitCollectionExtension {

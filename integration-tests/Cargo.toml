@@ -10,5 +10,5 @@ cw-multi-test = { workspace = true }
 
 cw20 = { workspace = true }
 
-q-nft = { workspace = true }
+outbe-nft = { workspace = true }
 consumption-unit = { workspace = true }

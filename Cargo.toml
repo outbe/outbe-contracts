@@ -9,7 +9,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.78"
 license = "TODO"
-repository = "https://github.com/qlabs-xyz/q-contracts"
+repository = "https://github.com/outbe/outbe-contracts"
 homepage = "TODO"
 documentation = "TODO"
 
@@ -35,6 +35,6 @@ cw20 = { version = "2.0.0" }
 cw20-base = { version = "2.0.0" }
 
 # Self dependencies
-q-nft = { version = "*", path = "./packages/q-nft" }
+outbe-nft = { version = "*", path = "packages/outbe-nft" }
 consumption-unit = { version = "*", path = "./contracts/consumption-unit" }
 

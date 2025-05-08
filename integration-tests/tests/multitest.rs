@@ -43,7 +43,7 @@ fn test_consumption_unit() {
     )
     .unwrap();
 
-    let response: q_nft::msg::TokensResponse = app
+    let response: outbe_nft::msg::TokensResponse = app
         .wrap()
         .query_wasm_smart(
             cu.address.clone(),

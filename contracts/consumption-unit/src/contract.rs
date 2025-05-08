@@ -11,9 +11,9 @@ use cosmwasm_std::{
     to_json_binary, Api, Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128,
 };
 use cw_ownable::OwnershipError;
-use q_nft::error::Cw721ContractError;
-use q_nft::execute::assert_minter;
-use q_nft::state::{CollectionInfo, Cw721Config};
+use outbe_nft::error::Cw721ContractError;
+use outbe_nft::execute::assert_minter;
+use outbe_nft::state::{CollectionInfo, Cw721Config};
 use sha2::{Digest, Sha256};
 
 const CONTRACT_NAME: &str = "gemlabs.io:consumption-unit";
@@ -52,14 +52,14 @@ pub fn instantiate(
         Some(minter) => minter,
         None => info.sender.as_str(),
     };
-    q_nft::execute::initialize_minter(deps.storage, deps.api, Some(minter))?;
+    outbe_nft::execute::initialize_minter(deps.storage, deps.api, Some(minter))?;
 
     // use info.sender if None is passed
     let creator: &str = match msg.creator.as_deref() {
         Some(creator) => creator,
         None => info.sender.as_str(),
     };
-    q_nft::execute::initialize_creator(deps.storage, deps.api, Some(creator))?;
+    outbe_nft::execute::initialize_creator(deps.storage, deps.api, Some(creator))?;
 
     Ok(Response::default()
         .add_attribute("action", "consumption-unit::instantiate")

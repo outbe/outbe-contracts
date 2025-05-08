@@ -4,19 +4,19 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, Env, StdResult};
 
-pub type ConsumptionUnitInfoResponse = q_nft::msg::NftInfoResponse<ConsumptionUnitData>;
+pub type ConsumptionUnitInfoResponse = outbe_nft::msg::NftInfoResponse<ConsumptionUnitData>;
 
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(q_nft::msg::ContractInfoResponse<CUConfig>)]
+    #[returns(outbe_nft::msg::ContractInfoResponse<CUConfig>)]
     ContractInfo {},
 
     // TODO add Cw721 config as well
-    #[returns(q_nft::msg::OwnerOfResponse)]
+    #[returns(outbe_nft::msg::OwnerOfResponse)]
     OwnerOf { token_id: String },
 
-    #[returns(q_nft::msg::NumTokensResponse)]
+    #[returns(outbe_nft::msg::NumTokensResponse)]
     NumTokens {},
 
     #[returns(cw_ownable::Ownership<String>)]
@@ -30,7 +30,7 @@ pub enum QueryMsg {
 
     /// Returns all tokens owned by the given address.
     /// Same as `AllTokens` but with owner filter.
-    #[returns(q_nft::msg::TokensResponse)]
+    #[returns(outbe_nft::msg::TokensResponse)]
     Tokens {
         owner: String,
         start_after: Option<String>,
@@ -38,7 +38,7 @@ pub enum QueryMsg {
     },
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.
-    #[returns(q_nft::msg::TokensResponse)]
+    #[returns(outbe_nft::msg::TokensResponse)]
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,
@@ -48,27 +48,31 @@ pub enum QueryMsg {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::ContractInfo {} => to_json_binary(
-            &q_nft::query::query_contract_info::<CUConfig>(deps.storage)?,
-        ),
-        QueryMsg::OwnerOf { token_id } => {
-            to_json_binary(&q_nft::query::query_owner_of(deps.storage, &env, token_id)?)
+        QueryMsg::ContractInfo {} => to_json_binary(&outbe_nft::query::query_contract_info::<
+            CUConfig,
+        >(deps.storage)?),
+        QueryMsg::OwnerOf { token_id } => to_json_binary(&outbe_nft::query::query_owner_of(
+            deps.storage,
+            &env,
+            token_id,
+        )?),
+        QueryMsg::NumTokens {} => {
+            to_json_binary(&outbe_nft::query::query_num_tokens(deps.storage)?)
         }
-        QueryMsg::NumTokens {} => to_json_binary(&q_nft::query::query_num_tokens(deps.storage)?),
         QueryMsg::GetMinterOwnership {} => {
-            to_json_binary(&q_nft::query::query_minter_ownership(deps.storage)?)
+            to_json_binary(&outbe_nft::query::query_minter_ownership(deps.storage)?)
         }
         QueryMsg::GetCreatorOwnership {} => {
-            to_json_binary(&q_nft::query::query_creator_ownership(deps.storage)?)
+            to_json_binary(&outbe_nft::query::query_creator_ownership(deps.storage)?)
         }
-        QueryMsg::NftInfo { token_id } => to_json_binary(&q_nft::query::query_nft_info::<
+        QueryMsg::NftInfo { token_id } => to_json_binary(&outbe_nft::query::query_nft_info::<
             ConsumptionUnitData,
         >(deps.storage, token_id)?),
         QueryMsg::Tokens {
             owner,
             start_after,
             limit,
-        } => to_json_binary(&q_nft::query::query_tokens(
+        } => to_json_binary(&outbe_nft::query::query_tokens(
             deps,
             &env,
             owner,
@@ -76,7 +80,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             limit,
         )?),
         QueryMsg::AllTokens { start_after, limit } => to_json_binary(
-            &q_nft::query::query_all_tokens(deps, &env, start_after, limit)?,
+            &outbe_nft::query::query_all_tokens(deps, &env, start_after, limit)?,
         ),
     }
 }
@@ -117,7 +121,7 @@ mod tests {
             .instantiate_contract(code_id, owner.clone(), &init_msg, &[], "cu1", None)
             .unwrap();
 
-        let response: q_nft::msg::NumTokensResponse = app
+        let response: outbe_nft::msg::NumTokensResponse = app
             .wrap()
             .query_wasm_smart(contract_addr.clone(), &QueryMsg::NumTokens {})
             .unwrap();
