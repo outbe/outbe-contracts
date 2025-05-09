@@ -53,6 +53,8 @@ To deploy the smart contracts to a network, you need to build them and optimize.
 Optimize is a process of shrinking the binary to fit into `store-core` transaction
 which is done by the standard CosmWasm [optimizer](https://github.com/CosmWasm/optimizer).
 
+_Just in case of any questions, please refer to the [official docs](https://cosmwasm.cosmos.network/wasmd/getting-started/cli#upload-code)._
+
 To make an optimized build, run the following command:
 
 ```shell
