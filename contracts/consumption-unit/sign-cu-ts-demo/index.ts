@@ -8,7 +8,6 @@ let raw_json = {
     "consumption_value": "100",
     "nominal_quantity": "100",
     "nominal_currency": "usd",
-    "commitment_tier": 1,
     "hashes": [
         "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
     ]
@@ -39,7 +38,7 @@ console.log('Compact signature (64 bytes):', signatureHex);
 const verified = secp256k1.ecdsaVerify(signature, msgHash, pubKeyCompressed);
 console.log('Signature valid?', verified);
 
-if (signatureHex != "dbc7c4d857beea592131a673f5970add886f26a1d1b9cd4fbc68aed82a5b8a342d07d7acb26a12acaacc5cad785534a814c38f67ddacdaf0693943b1aa78fa85") {
+if (signatureHex != "987327f5e1879d8a4739cad9ce0ef3743e5470a6fd2e6d96e67e87701dbcc81b30c6b978d2c40dd022cb9514416ff911ecbe26e9d9d7e726ce82bebf1d41a258") {
     console.error("wrong signature")
 }
 
@@ -50,6 +49,7 @@ let mintTx = {
         owner: "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
         extension: {
             entity: raw_json,
+            commitment_tier: 1,
             signature: signatureHex,
             public_key: publicKeyHex,
         },

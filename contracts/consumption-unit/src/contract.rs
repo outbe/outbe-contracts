@@ -150,7 +150,7 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
-    verify_tier(entity.commitment_tier)?;
+    verify_tier(extension.commitment_tier)?;
 
     if entity.hashes.is_empty()
         || entity.nominal_quantity == Uint128::zero()
@@ -173,7 +173,7 @@ fn execute_mint(
         consumption_value: entity.consumption_value,
         nominal_quantity: entity.nominal_quantity,
         nominal_currency: entity.nominal_currency,
-        commitment_tier: entity.commitment_tier,
+        commitment_tier: extension.commitment_tier,
         state: ConsumptionUnitState::Reflected,
         floor_price: Decimal::one(), // TODO query from Oracle
         hashes: entity.hashes.clone(),
@@ -308,7 +308,6 @@ mod tests {
             "consumption_value": "100",
             "nominal_quantity": "100",
             "nominal_currency": "usd",
-            "commitment_tier": 1,
             "hashes": [
               "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
             ]

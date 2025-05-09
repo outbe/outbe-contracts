@@ -38,6 +38,9 @@ pub enum ExecuteMsg {
 #[cw_serde]
 pub struct MintExtension {
     pub entity: ConsumptionUnitEntity,
+    /// Where the CU is allocated by the User.
+    /// A user can change commitment Pool at any time prior to CU NFT selection in raffle
+    pub commitment_tier: u16,
     /// Serialized "compact" signature (64 bytes) of the `entity` in hex
     pub signature: String,
     /// Serialized according to SEC 2 (33 or 65 bytes) public key in hex
@@ -54,9 +57,6 @@ pub struct ConsumptionUnitEntity {
     pub nominal_quantity: Uint128,
     /// Nominal currency from Consumption Records
     pub nominal_currency: String,
-    /// Where the CU is allocated by the User.
-    /// A user can change commitment Pool at any time prior to CU NFT selection in raffle
-    pub commitment_tier: u16,
     /// Hashes identifying consumption records batch. Each hash should be a valid unique
     /// sha256 hash in hex format
     pub hashes: Vec<String>,

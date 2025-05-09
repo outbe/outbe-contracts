@@ -59,7 +59,7 @@ CONTRACT_ADDRESS=gem15m5fe2pfxq6796rf2z7gma8a0n2s0f0dxasmrzark3q26tltgsyschkllh
 gemchaind query wasm contract-state smart $CONTRACT_ADDRESS '{"contract_info": {}}' --node $RPC
 gemchaind query wasm contract-state smart $CONTRACT_ADDRESS '{"all_tokens": {}}' --node $RPC
 
-DATA=$(echo '{"mint":{"token_id":"1","owner":"cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx","extension":{"entity":{"token_id":"1","owner":"cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx","consumption_value":"100","nominal_quantity":"100","nominal_currency":"usd","commitment_tier":1,"hashes":["hash1"]},"digest":"872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"}}}' | jq )
+DATA=$(echo '<mint payload>' | jq )
 
 gemchaind tx wasm execute $CONTRACT_ADDRESS "$DATA" \
   --node $RPC --from ci --chain-id $CHAIN_ID \
