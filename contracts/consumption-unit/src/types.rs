@@ -1,8 +1,8 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Decimal, Env, Timestamp, Uint128};
 use cw20::Denom;
-use q_nft::state::NftInfo;
-use q_nft::traits::Cw721CollectionConfig;
+use outbe_nft::state::NftInfo;
+use outbe_nft::traits::Cw721CollectionConfig;
 
 /// ConsumptionUnit contract config
 #[cw_serde]
@@ -31,7 +31,8 @@ pub struct ConsumptionUnitData {
     /// Calculated according to initial Native Coin Price, PGT, and allocated Commitment Pool.
     /// FloorPrice is to be re-calculated each time out of the update of the Commitment Pool
     pub floor_price: Decimal,
-    /// Hashes identifying consumption records batch
+    /// Hashes identifying consumption records batch. Each hash should be a valid unique
+    /// sha256 hash in hex format
     pub hashes: Vec<String>,
     pub created_at: Timestamp,
     pub updated_at: Timestamp,
@@ -50,8 +51,8 @@ pub enum ConsumptionUnitState {
 
 pub type ConsumptionUnitNft = NftInfo<ConsumptionUnitData>;
 
-impl q_nft::traits::Cw721State for ConsumptionUnitData {}
-impl q_nft::traits::Cw721CustomMsg for ConsumptionUnitData {}
+impl outbe_nft::traits::Cw721State for ConsumptionUnitData {}
+impl outbe_nft::traits::Cw721CustomMsg for ConsumptionUnitData {}
 
 impl ConsumptionUnitData {
     pub fn update_tier(mut self, new_tier_id: u16, env: &Env) -> Self {

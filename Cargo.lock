@@ -245,7 +245,7 @@ dependencies = [
  "cw2",
  "cw20",
  "hex",
- "q-nft",
+ "outbe-nft",
  "secp256k1",
  "serde",
  "sha2",
@@ -769,7 +769,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "cw20",
- "q-nft",
+ "outbe-nft",
 ]
 
 [[package]]
@@ -855,6 +855,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 
 [[package]]
+name = "outbe-nft"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "schemars",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "outbe-utils"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-std",
+]
+
+[[package]]
 name = "p256"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -920,29 +943,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.100",
-]
-
-[[package]]
-name = "q-nft"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-multi-test",
- "cw-ownable",
- "cw-storage-plus",
- "cw-utils",
- "cw2",
- "schemars",
- "serde",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "q-utils"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-std",
 ]
 
 [[package]]

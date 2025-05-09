@@ -11,9 +11,9 @@ use cosmwasm_std::{
     to_json_binary, Api, Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128,
 };
 use cw_ownable::OwnershipError;
-use q_nft::error::Cw721ContractError;
-use q_nft::execute::assert_minter;
-use q_nft::state::{CollectionInfo, Cw721Config};
+use outbe_nft::error::Cw721ContractError;
+use outbe_nft::execute::assert_minter;
+use outbe_nft::state::{CollectionInfo, Cw721Config};
 use sha2::{Digest, Sha256};
 
 const CONTRACT_NAME: &str = "gemlabs.io:consumption-unit";
@@ -52,14 +52,14 @@ pub fn instantiate(
         Some(minter) => minter,
         None => info.sender.as_str(),
     };
-    q_nft::execute::initialize_minter(deps.storage, deps.api, Some(minter))?;
+    outbe_nft::execute::initialize_minter(deps.storage, deps.api, Some(minter))?;
 
     // use info.sender if None is passed
     let creator: &str = match msg.creator.as_deref() {
         Some(creator) => creator,
         None => info.sender.as_str(),
     };
-    q_nft::execute::initialize_creator(deps.storage, deps.api, Some(creator))?;
+    outbe_nft::execute::initialize_creator(deps.storage, deps.api, Some(creator))?;
 
     Ok(Response::default()
         .add_attribute("action", "consumption-unit::instantiate")
@@ -150,7 +150,7 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
-    verify_tier(entity.commitment_tier)?;
+    verify_tier(extension.commitment_tier)?;
 
     if entity.hashes.is_empty()
         || entity.nominal_quantity == Uint128::zero()
@@ -173,7 +173,7 @@ fn execute_mint(
         consumption_value: entity.consumption_value,
         nominal_quantity: entity.nominal_quantity,
         nominal_currency: entity.nominal_currency,
-        commitment_tier: entity.commitment_tier,
+        commitment_tier: extension.commitment_tier,
         state: ConsumptionUnitState::Reflected,
         floor_price: Decimal::one(), // TODO query from Oracle
         hashes: entity.hashes.clone(),
@@ -308,7 +308,6 @@ mod tests {
             "consumption_value": "100",
             "nominal_quantity": "100",
             "nominal_currency": "usd",
-            "commitment_tier": 1,
             "hashes": [
               "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
             ]

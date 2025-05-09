@@ -198,7 +198,6 @@
       "ConsumptionUnitEntity": {
         "type": "object",
         "required": [
-          "commitment_tier",
           "consumption_value",
           "hashes",
           "nominal_currency",
@@ -207,12 +206,6 @@
           "token_id"
         ],
         "properties": {
-          "commitment_tier": {
-            "description": "Where the CU is allocated by the User. A user can change commitment Pool at any time prior to CU NFT selection in raffle",
-            "type": "integer",
-            "format": "uint16",
-            "minimum": 0.0
-          },
           "consumption_value": {
             "description": "The value of Consumption Unit in Settlement Tokens",
             "allOf": [
@@ -280,11 +273,18 @@
       "MintExtension": {
         "type": "object",
         "required": [
+          "commitment_tier",
           "entity",
           "public_key",
           "signature"
         ],
         "properties": {
+          "commitment_tier": {
+            "description": "Where the CU is allocated by the User. A user can change commitment Pool at any time prior to CU NFT selection in raffle",
+            "type": "integer",
+            "format": "uint16",
+            "minimum": 0.0
+          },
           "entity": {
             "$ref": "#/definitions/ConsumptionUnitEntity"
           },
@@ -866,7 +866,7 @@
               ]
             },
             "hashes": {
-              "description": "Hashes identifying consumption records batch",
+              "description": "Hashes identifying consumption records batch. Each hash should be a valid unique sha256 hash in hex format",
               "type": "array",
               "items": {
                 "type": "string"

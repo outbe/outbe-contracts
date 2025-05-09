@@ -1,5 +1,5 @@
 [package]
-name          = "q-nft"
+name          = "outbe-nft"
 description   = "Definition and types for the CosmWasm-721 NFT interface."
 version       = { workspace = true }
 edition       = { workspace = true }

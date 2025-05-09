@@ -29,24 +29,24 @@
         "description": "Commitment tier public data",
         "type": "object",
         "required": [
+          "performance_rate",
           "tier_id",
-          "tpt_percent_increase",
           "weight"
         ],
         "properties": {
-          "tier_id": {
-            "description": "Identifier",
-            "type": "integer",
-            "format": "uint16",
-            "minimum": 0.0
-          },
-          "tpt_percent_increase": {
+          "performance_rate": {
             "description": "TPT+%",
             "allOf": [
               {
                 "$ref": "#/definitions/Uint128"
               }
             ]
+          },
+          "tier_id": {
+            "description": "Identifier",
+            "type": "integer",
+            "format": "uint16",
+            "minimum": 0.0
           },
           "weight": {
             "description": "Winning Probability weight",
@@ -227,24 +227,24 @@
           "description": "Commitment tier public data",
           "type": "object",
           "required": [
+            "performance_rate",
             "tier_id",
-            "tpt_percent_increase",
             "weight"
           ],
           "properties": {
-            "tier_id": {
-              "description": "Identifier",
-              "type": "integer",
-              "format": "uint16",
-              "minimum": 0.0
-            },
-            "tpt_percent_increase": {
+            "performance_rate": {
               "description": "TPT+%",
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
                 }
               ]
+            },
+            "tier_id": {
+              "description": "Identifier",
+              "type": "integer",
+              "format": "uint16",
+              "minimum": 0.0
             },
             "weight": {
               "description": "Winning Probability weight",
