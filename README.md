@@ -74,7 +74,7 @@ you have a wallet with funds to be used for deployment.
 To create a wallet:
 
 ```shell
-outbed keys add deployer
+outbe-noded keys add deployer
 ```
 
 You will see a new wallet address created with the name "deployer". **Make sure to back up the seed.**
@@ -84,14 +84,14 @@ You will see a new wallet address created with the name "deployer". **Make sure 
 Now you can deploy the contracts on-chain. To do so run the following script: 
 
 ```shell
-TX_HASH=$(outbed tx wasm store $filename \
+TX_HASH=$(outbe-noded tx wasm store $filename \
   -y --from deployer --broadcast-mode sync \
   --node $RPC --chain-id $CHAIN_ID --gas-prices 0.25$FEE_DENOM --gas auto --gas-adjustment 1.3 --output json \
   | jq -r '.txhash')
 
 sleep 7
 
-CODE_ID=$(outbed query tx --type=hash $TX_HASH --node $RPC --output json | \
+CODE_ID=$(outbe-noded query tx --type=hash $TX_HASH --node $RPC --output json | \
   jq -r '.events[] | select(.type == "store_code") | .attributes[] | select(.key == "code_id") | .value')
 
 echo $CODE_ID
@@ -103,7 +103,7 @@ Now you can use this code to create a first instance of a smart contract:
 ```shell
 INIT_PAYLOAD="<provide here InstantiateMsg JSON>"
 
-TX_HASH=$(outbed tx wasm instantiate \
+TX_HASH=$(outbe-noded tx wasm instantiate \
   $CODE_ID "$INIT_PAYLOAD" \
   --label "<Your Smart Contract Label>" \
   --from deployer -y \
@@ -115,7 +115,7 @@ sleep 7
 
 # Query a created contract
 # NB: we also need to filter by code_id because it may create several contracts under the hood
-CONTRACT_ADDRESS=$(outbed query tx --type=hash $TX_HASH --node $RPC --output json \
+CONTRACT_ADDRESS=$(outbe-noded query tx --type=hash $TX_HASH --node $RPC --output json \
   | jq -r ".events[] | select(.type == \"instantiate\" and .attributes[].key == \"code_id\" and .attributes[].value == \"$CODE_ID\")  | .attributes[] | select(.key == \"_contract_address\") | .value")
 ```
 
@@ -131,7 +131,7 @@ In this section, we will show you how to interact with the protocol.
 To query a smart contract, you can use the following command:
 
 ```shell
-outbed $NODE query wasm contract-state smart [CONTRACT_ADDRESS] [QUERY]
+outbe-noded $NODE query wasm contract-state smart [CONTRACT_ADDRESS] [QUERY]
 ```
 
 Query is a JSON object that you create based on the query message. Let's say you have this query message:
@@ -149,7 +149,7 @@ pub enum QueryMsg {
 You can create a query message like this:
 
 ```shell
-outbed $NODE query wasm contract-state smart [CONTRACT_ADDRESS] '{"tokens": {"owner": $address, "start_after": null, "limit": 10}}'
+outbe-noded $NODE query wasm contract-state smart [CONTRACT_ADDRESS] '{"tokens": {"owner": $address, "start_after": null, "limit": 10}}'
 ```
 
 ### Execute a smart contract
@@ -157,8 +157,8 @@ outbed $NODE query wasm contract-state smart [CONTRACT_ADDRESS] '{"tokens": {"ow
 To execute a smart contract you can use the following command:
 
 ```shell
-outbed tx wasm execute [CONTRACT_ADDRESS] [EXECUTE_MESSAGE] --from [YOUR_ADDRESS] $TXFLAG
-outbed tx wasm execute [CONTRACT_ADDRESS] '{"minter": {"grant": {"address": $address}}}' --from $wallet $TXFLAG
+outbe-noded tx wasm execute [CONTRACT_ADDRESS] [EXECUTE_MESSAGE] --from [YOUR_ADDRESS] $TXFLAG
+outbe-noded tx wasm execute [CONTRACT_ADDRESS] '{"minter": {"grant": {"address": $address}}}' --from $wallet $TXFLAG
 ```
 
 Execute message is a JSON object that you create based on the execute message. Let's say you have this execute message:
@@ -174,7 +174,7 @@ pub enum ExecuteMsg {
 You can create an execute message like this:
 
 ```shell
-outbed tx wasm execute [CONTRACT_ADDRESS] '{"mint": {"recipient": $address}}' --from $wallet $TXFLAG
+outbe-noded tx wasm execute [CONTRACT_ADDRESS] '{"mint": {"recipient": $address}}' --from $wallet $TXFLAG
 ```
 
 ## Integration Tests
