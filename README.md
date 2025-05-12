@@ -61,7 +61,7 @@ To make an optimized build, run the following command:
 docker run --rm \
   -v "$(pwd)":/code \
   -v ./docker_output:/target \
-  registry.digitalocean.com/gemlabs/wasm-builder:0.0.3 optimize.sh .
+  ghcr.io/outbe/outbe-wasm-builder optimize.sh .
 ```
 
 It will produce `*.wasm` artifacts in the `./docker_output` directory.
