@@ -84,9 +84,13 @@ You will see a new wallet address created with the name "deployer". **Make sure 
 Now you can deploy the contracts on-chain. To do so run the following script: 
 
 ```shell
+CHAIN_ID=localchain_90001-1
+FEE_DENOM=outbe
+RPC=http://localhost:26657
+
 TX_HASH=$(outbe-noded tx wasm store $filename \
   -y --from deployer --broadcast-mode sync \
-  --node $RPC --chain-id $CHAIN_ID --gas-prices 0.25$FEE_DENOM --gas auto --gas-adjustment 1.3 --output json \
+  --node $RPC --chain-id $CHAIN_ID --gas auto --gas-adjustment 1.3 --output json \
   | jq -r '.txhash')
 
 sleep 7
@@ -101,6 +105,9 @@ At the end you will have `$CODE_ID`: unique identifier of the smart contract cod
 Now you can use this code to create a first instance of a smart contract:
 
 ```shell
+CHAIN_ID=localchain_90001-1
+FEE_DENOM=outbe
+RPC=http://localhost:26657
 INIT_PAYLOAD="<provide here InstantiateMsg JSON>"
 
 TX_HASH=$(outbe-noded tx wasm instantiate \
@@ -108,7 +115,7 @@ TX_HASH=$(outbe-noded tx wasm instantiate \
   --label "<Your Smart Contract Label>" \
   --from deployer -y \
   --admin "<Your Deployer Wallet Address>" \
-  --node $RPC --chain-id $CHAIN_ID --gas-prices 0.25$FEE_DENOM --gas auto --gas-adjustment 1.3 --output json \
+  --node $RPC --chain-id $CHAIN_ID --gas auto --gas-adjustment 1.3 --output json \
   | jq -r '.txhash')
 
 sleep 7
