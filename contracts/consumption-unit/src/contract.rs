@@ -101,7 +101,7 @@ fn execute_update_nft_info(
     let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
 
     match update {
-        ConsumptionUnitExtensionUpdate::UpdatePool { new_vector_id } => {
+        ConsumptionUnitExtensionUpdate::UpdateVector { new_vector_id } => {
             let mut current_nft_info = config.nft_info.load(deps.storage, &token_id)?;
             if current_nft_info.owner != info.sender {
                 return Err(ContractError::Cw721ContractError(

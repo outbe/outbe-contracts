@@ -24,12 +24,12 @@ pub struct ConsumptionUnitData {
     /// Nominal currency from Consumption Records
     pub nominal_currency: String,
     /// Where the CU is allocated by the User.
-    /// A user can change commitment Pool at any time prior to CU NFT selection in raffle
+    /// A user can change vector at any time prior to CU NFT selection in raffle
     pub vector: u16,
     /// State of the record
     pub state: ConsumptionUnitState,
-    /// Calculated according to initial Native Coin Price, PGT, and allocated Commitment Pool.
-    /// FloorPrice is to be re-calculated each time out of the update of the Commitment Pool
+    /// Calculated according to initial Native Coin Price, PGT, and allocated vector.
+    /// FloorPrice is to be re-calculated each time out of the update of the vector
     pub floor_price: Decimal,
     /// Hashes identifying consumption records batch. Each hash should be a valid unique
     /// sha256 hash in hex format

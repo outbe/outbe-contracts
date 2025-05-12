@@ -248,10 +248,10 @@
             "description": "Updates the vector id for the given NFT, can be performed by user only. When updating the vector, a new price will be fetched.",
             "type": "object",
             "required": [
-              "update_pool"
+              "update_vector"
             ],
             "properties": {
-              "update_pool": {
+              "update_vector": {
                 "type": "object",
                 "required": [
                   "new_vector_id"
@@ -291,7 +291,7 @@
             "type": "string"
           },
           "vector": {
-            "description": "Where the CU is allocated by the User. A user can change commitment Pool at any time prior to CU NFT selection in raffle",
+            "description": "Where the CU is allocated by the User. A user can change Vector at any time prior to CU NFT selection in raffle",
             "type": "integer",
             "format": "uint16",
             "minimum": 0.0
@@ -852,7 +852,7 @@
               "$ref": "#/definitions/Timestamp"
             },
             "floor_price": {
-              "description": "Calculated according to initial Native Coin Price, PGT, and allocated Commitment Pool. FloorPrice is to be re-calculated each time out of the update of the Commitment Pool",
+              "description": "Calculated according to initial Native Coin Price, PGT, and allocated vector. FloorPrice is to be re-calculated each time out of the update of the vector",
               "allOf": [
                 {
                   "$ref": "#/definitions/Decimal"
@@ -890,7 +890,7 @@
               "$ref": "#/definitions/Timestamp"
             },
             "vector": {
-              "description": "Where the CU is allocated by the User. A user can change commitment Pool at any time prior to CU NFT selection in raffle",
+              "description": "Where the CU is allocated by the User. A user can change vector at any time prior to CU NFT selection in raffle",
               "type": "integer",
               "format": "uint16",
               "minimum": 0.0
