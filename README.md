@@ -79,6 +79,12 @@ outbe-noded keys add deployer
 
 You will see a new wallet address created with the name "deployer". **Make sure to back up the seed.**
 
+add some tokens to wallet on testnet
+
+```
+./outbe-noded tx bank send outbe140fehngcrxvhdt84x729p3f0qmkmea8nqxn3gl $deployer_address 10000000000outbe --chain-id localchain_90001-1 --from acc0
+```
+
 ### Onchain Deployment
 
 Now you can deploy the contracts on-chain. To do so run the following script: 
