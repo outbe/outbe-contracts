@@ -245,7 +245,7 @@
       "ConsumptionUnitExtensionUpdate": {
         "oneOf": [
           {
-            "description": "Updates the pool id for the given NFT, can be performed by user only. When updating the pool a new price will be fetched.",
+            "description": "Updates the vector id for the given NFT, can be performed by user only. When updating the vector, a new price will be fetched.",
             "type": "object",
             "required": [
               "update_pool"
@@ -254,10 +254,10 @@
               "update_pool": {
                 "type": "object",
                 "required": [
-                  "new_tier_id"
+                  "new_vector_id"
                 ],
                 "properties": {
-                  "new_tier_id": {
+                  "new_vector_id": {
                     "type": "integer",
                     "format": "uint16",
                     "minimum": 0.0
@@ -273,18 +273,12 @@
       "MintExtension": {
         "type": "object",
         "required": [
-          "commitment_tier",
           "entity",
           "public_key",
-          "signature"
+          "signature",
+          "vector"
         ],
         "properties": {
-          "commitment_tier": {
-            "description": "Where the CU is allocated by the User. A user can change commitment Pool at any time prior to CU NFT selection in raffle",
-            "type": "integer",
-            "format": "uint16",
-            "minimum": 0.0
-          },
           "entity": {
             "$ref": "#/definitions/ConsumptionUnitEntity"
           },
@@ -295,6 +289,12 @@
           "signature": {
             "description": "Serialized \"compact\" signature (64 bytes) of the `entity` in hex",
             "type": "string"
+          },
+          "vector": {
+            "description": "Where the CU is allocated by the User. A user can change commitment Pool at any time prior to CU NFT selection in raffle",
+            "type": "integer",
+            "format": "uint16",
+            "minimum": 0.0
           }
         },
         "additionalProperties": false
@@ -829,7 +829,6 @@
           "description": "ConsumptionUnit public data",
           "type": "object",
           "required": [
-            "commitment_tier",
             "consumption_value",
             "created_at",
             "floor_price",
@@ -837,15 +836,10 @@
             "nominal_currency",
             "nominal_quantity",
             "state",
-            "updated_at"
+            "updated_at",
+            "vector"
           ],
           "properties": {
-            "commitment_tier": {
-              "description": "Where the CU is allocated by the User. A user can change commitment Pool at any time prior to CU NFT selection in raffle",
-              "type": "integer",
-              "format": "uint16",
-              "minimum": 0.0
-            },
             "consumption_value": {
               "description": "The value of Consumption Unit in Settlement Tokens",
               "allOf": [
@@ -894,6 +888,12 @@
             },
             "updated_at": {
               "$ref": "#/definitions/Timestamp"
+            },
+            "vector": {
+              "description": "Where the CU is allocated by the User. A user can change commitment Pool at any time prior to CU NFT selection in raffle",
+              "type": "integer",
+              "format": "uint16",
+              "minimum": 0.0
             }
           },
           "additionalProperties": false

@@ -1,6 +1,6 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{default_tiers, Config, CONFIG, CREATOR};
+use crate::state::{default_vector_tiers, Config, CONFIG, CREATOR};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
@@ -24,13 +24,13 @@ pub fn instantiate(
     };
     CREATOR.initialize_owner(deps.storage, deps.api, Some(creator))?;
 
-    let tiers = msg.tiers.unwrap_or_else(default_tiers);
+    let vectors = msg.vectors.unwrap_or_else(default_vector_tiers);
 
-    CONFIG.save(deps.storage, &Config { tiers })?;
+    CONFIG.save(deps.storage, &Config { vectors })?;
 
     Ok(Response::default()
-        .add_attribute("action", "commitment-tier::instantiate")
-        .add_event(Event::new("commitment-tier::instantiate").add_attribute("creator", creator)))
+        .add_attribute("action", "vector::instantiate")
+        .add_event(Event::new("vector::instantiate").add_attribute("creator", creator)))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

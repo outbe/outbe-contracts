@@ -1,5 +1,5 @@
 use crate::state::{CONFIG, CREATOR};
-use crate::types::CommitmentTier;
+use crate::types::Vector;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -9,32 +9,32 @@ use cw_ownable::Ownership;
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    /// Returns all tiers
-    #[returns(AllTiersResponse)]
-    Tiers {},
+    /// Returns all vectors
+    #[returns(AllVectorsResponse)]
+    Vectors {},
 
     #[returns(cw_ownable::Ownership<String>)]
     GetCreatorOwnership {},
 }
 
 #[cw_serde]
-pub struct AllTiersResponse {
-    pub tiers: Vec<CommitmentTier>,
+pub struct AllVectorsResponse {
+    pub vectors: Vec<Vector>,
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Tiers {} => to_json_binary(&query_tiers(deps.storage)?),
+        QueryMsg::Vectors {} => to_json_binary(&query_vectors(deps.storage)?),
         QueryMsg::GetCreatorOwnership {} => to_json_binary(&query_creator_ownership(deps.storage)?),
     }
 }
 
 // Query
-pub fn query_tiers(storage: &dyn Storage) -> StdResult<AllTiersResponse> {
+pub fn query_vectors(storage: &dyn Storage) -> StdResult<AllVectorsResponse> {
     let config = CONFIG.load(storage)?;
-    Ok(AllTiersResponse {
-        tiers: config.tiers,
+    Ok(AllVectorsResponse {
+        vectors: config.vectors,
     })
 }
 
@@ -46,7 +46,7 @@ pub fn query_creator_ownership(storage: &dyn Storage) -> StdResult<Ownership<Add
 mod tests {
     use crate::contract::{execute, instantiate};
     use crate::msg::InstantiateMsg;
-    use crate::query::{query, AllTiersResponse, QueryMsg};
+    use crate::query::{query, AllVectorsResponse, QueryMsg};
     use cosmwasm_std::Decimal;
     use cw_multi_test::{App, ContractWrapper, Executor};
     use std::str::FromStr;
@@ -60,7 +60,7 @@ mod tests {
         let code_id = app.store_code(Box::new(code));
 
         let init_msg = InstantiateMsg {
-            tiers: None,
+            vectors: None,
             creator: None,
         };
 
@@ -68,19 +68,19 @@ mod tests {
             .instantiate_contract(code_id, owner.clone(), &init_msg, &[], "tiers1", None)
             .unwrap();
 
-        let response: AllTiersResponse = app
+        let response: AllVectorsResponse = app
             .wrap()
-            .query_wasm_smart(contract_addr.clone(), &QueryMsg::Tiers {})
+            .query_wasm_smart(contract_addr.clone(), &QueryMsg::Vectors {})
             .unwrap();
-        assert_eq!(response.tiers.len(), 16);
-        assert_eq!(response.tiers.first().unwrap().tier_id, 1);
+        assert_eq!(response.vectors.len(), 16);
+        assert_eq!(response.vectors.first().unwrap().vector_id, 1);
         assert_eq!(
-            response.tiers.first().unwrap().weight,
+            response.vectors.first().unwrap().weight,
             Decimal::from_str("0.125").unwrap()
         );
-        assert_eq!(response.tiers.last().unwrap().tier_id, 16);
+        assert_eq!(response.vectors.last().unwrap().vector_id, 16);
         assert_eq!(
-            response.tiers.last().unwrap().weight,
+            response.vectors.last().unwrap().weight,
             Decimal::from_str("1").unwrap()
         );
     }

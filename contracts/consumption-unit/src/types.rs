@@ -25,7 +25,7 @@ pub struct ConsumptionUnitData {
     pub nominal_currency: String,
     /// Where the CU is allocated by the User.
     /// A user can change commitment Pool at any time prior to CU NFT selection in raffle
-    pub commitment_tier: u16,
+    pub vector: u16,
     /// State of the record
     pub state: ConsumptionUnitState,
     /// Calculated according to initial Native Coin Price, PGT, and allocated Commitment Pool.
@@ -55,8 +55,8 @@ impl outbe_nft::traits::Cw721State for ConsumptionUnitData {}
 impl outbe_nft::traits::Cw721CustomMsg for ConsumptionUnitData {}
 
 impl ConsumptionUnitData {
-    pub fn update_tier(mut self, new_tier_id: u16, env: &Env) -> Self {
-        self.commitment_tier = new_tier_id;
+    pub fn update_vector(mut self, new_vector_id: u16, env: &Env) -> Self {
+        self.vector = new_vector_id;
         self.updated_at = env.block.time;
         self
     }

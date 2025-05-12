@@ -32,7 +32,7 @@ fn test_consumption_unit() {
                     nominal_currency: "usd".to_string(),
                     hashes: vec!["872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d".to_string()],
                 },
-                commitment_tier: 1,
+                vector: 1,
                 signature: "987327f5e1879d8a4739cad9ce0ef3743e5470a6fd2e6d96e67e87701dbcc81b30c6b978d2c40dd022cb9514416ff911ecbe26e9d9d7e726ce82bebf1d41a258"
                     .to_string(),
                 public_key: "02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d"
