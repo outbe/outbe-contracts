@@ -1,4 +1,4 @@
-name: Optimize Wasm And Deploy
+name: Deploy
 
 on:
   pull_request:
@@ -13,6 +13,7 @@ env:
 
 jobs:
   deploy:
+    name: Optimize Wasm And Deploy
     runs-on: ubuntu-latest
 #    outputs:
 #      CONTRACT_REGISTRY_CONTRACT_ADDRESS: ${{ steps.sendoutput.outputs.CONTRACT_REGISTRY_CONTRACT_ADDRESS }}
