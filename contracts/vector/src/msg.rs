@@ -1,9 +1,9 @@
-use crate::types::CommitmentTier;
+use crate::types::Vector;
 use cosmwasm_schema::cw_serde;
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub tiers: Option<Vec<CommitmentTier>>,
+    pub vectors: Option<Vec<Vector>>,
     pub creator: Option<String>,
 }
 

@@ -1,6 +1,6 @@
-use commitment_tier::msg::{ExecuteMsg, InstantiateMsg};
-use commitment_tier::query::QueryMsg;
 use cosmwasm_schema::write_api;
+use vector::msg::{ExecuteMsg, InstantiateMsg};
+use vector::query::QueryMsg;
 
 fn main() {
     write_api! {

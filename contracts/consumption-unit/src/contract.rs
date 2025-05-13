@@ -101,7 +101,7 @@ fn execute_update_nft_info(
     let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
 
     match update {
-        ConsumptionUnitExtensionUpdate::UpdatePool { new_tier_id } => {
+        ConsumptionUnitExtensionUpdate::UpdateVector { new_vector_id } => {
             let mut current_nft_info = config.nft_info.load(deps.storage, &token_id)?;
             if current_nft_info.owner != info.sender {
                 return Err(ContractError::Cw721ContractError(
@@ -113,9 +113,10 @@ fn execute_update_nft_info(
                 return Err(ContractError::WrongInput {});
             }
 
-            verify_tier(new_tier_id)?;
+            verify_vector(new_vector_id)?;
 
-            current_nft_info.extension = current_nft_info.extension.update_tier(new_tier_id, env);
+            current_nft_info.extension =
+                current_nft_info.extension.update_vector(new_vector_id, env);
 
             config
                 .nft_info
@@ -126,7 +127,7 @@ fn execute_update_nft_info(
                 .add_event(
                     Event::new("consumption-unit::update_nft_info")
                         .add_attribute("token_id", token_id)
-                        .add_attribute("new_commitment_pool_id", new_tier_id.to_string()),
+                        .add_attribute("new_commitment_pool_id", new_vector_id.to_string()),
                 ))
         }
     }
@@ -150,7 +151,7 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
-    verify_tier(extension.commitment_tier)?;
+    verify_vector(extension.vector)?;
 
     if entity.hashes.is_empty()
         || entity.nominal_quantity == Uint128::zero()
@@ -173,7 +174,7 @@ fn execute_mint(
         consumption_value: entity.consumption_value,
         nominal_quantity: entity.nominal_quantity,
         nominal_currency: entity.nominal_currency,
-        commitment_tier: extension.commitment_tier,
+        vector: extension.vector,
         state: ConsumptionUnitState::Reflected,
         floor_price: Decimal::one(), // TODO query from Oracle
         hashes: entity.hashes.clone(),
@@ -237,14 +238,14 @@ fn verify_signature(
     }
 }
 
-/// Verifies that the given tier id is correct.
-/// NB: should be in sync with commitment tiers smart contract.
+/// Verifies that the given vector id is correct.
+/// NB: should be in sync with Vector smart contract.
 /// NB: we do not store ref to that contract to save gas
-fn verify_tier(new_tier_id: u16) -> Result<(), ContractError> {
-    if (1..=16).contains(&new_tier_id) {
+fn verify_vector(new_vector_id: u16) -> Result<(), ContractError> {
+    if (1..=16).contains(&new_vector_id) {
         return Ok(());
     }
-    Err(ContractError::WrongTier {})
+    Err(ContractError::WrongVector {})
 }
 
 fn execute_burn(

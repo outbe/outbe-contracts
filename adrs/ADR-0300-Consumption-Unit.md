@@ -77,10 +77,10 @@ pub struct ConsumptionUnitData {
     /// Nominal currency from Consumption Records
     pub nominal_currency: String,
     /// Where the CU is allocated by the User.
-    /// A user can change commitment Pool at any time prior to CU NFT selection in raffle
-    pub commitment_pool_id: u16,
-    /// Calculated according to initial Native Coin Price, PGT and allocated Commitment Pool.
-    /// FloorPrice is to be re-calculated each time out of the update of the Commitment Pool
+    /// A user can change vector at any time prior to CU NFT selection in raffle
+    pub vector: u16,
+    /// Calculated according to initial Native Coin Price, PGT and allocated vector.
+    /// FloorPrice is to be re-calculated each time out of the update of the vector
     pub floor_price: Decimal,
     /// Hashes identifying consumption records batch
     pub hashes: Vec<String>,
@@ -116,9 +116,9 @@ pub enum ExecuteMsg {
 }
 
 pub enum ConsumptionUnitExtensionUpdate {
-    UpdatePool {
+    UpdateVector {
         token_id: String,
-        new_commitment_pool_id: u16,
+        new_vector_id: u16,
     }
 }
 ```

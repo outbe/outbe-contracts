@@ -49,7 +49,7 @@ let mintTx = {
         owner: "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
         extension: {
             entity: raw_json,
-            commitment_tier: 1,
+            vector: 1,
             signature: signatureHex,
             public_key: publicKeyHex,
         },

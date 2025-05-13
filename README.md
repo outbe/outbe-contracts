@@ -10,7 +10,7 @@ Dependency/test contracts:
 Main contracts:
 
 - **consumption-unit**: please see [docs](./contracts/consumption-unit/README.md) for more info.
-- **commitment-tier**: please see [docs](./contracts/commitment-tier/README.md) for more info.
+- **vector**: please see [docs](contracts/vector/README.md) for more info.
 
 ## Requirements
 
@@ -18,7 +18,7 @@ Please check requirements at the official [CosmWasm book](https://book.cosmwasm.
 
 ## How to build
 
-To build the Wasm binary containing smart contracts simply run:
+To build the Wasm binary containing smart contracts, run:
 
 ```shell
 cargo wasm
