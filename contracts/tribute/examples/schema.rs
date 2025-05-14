@@ -1,6 +1,6 @@
-use consumption_unit::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
-use consumption_unit::query::QueryMsg;
 use cosmwasm_schema::write_api;
+use tribute::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
+use tribute::query::QueryMsg;
 
 fn main() {
     write_api! {

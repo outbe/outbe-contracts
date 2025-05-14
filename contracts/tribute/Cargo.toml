@@ -1,5 +1,5 @@
 [package]
-name = "consumption-unit"
+name = "tribute"
 version = { workspace = true }
 edition = { workspace = true }
 

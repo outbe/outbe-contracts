@@ -36,5 +36,5 @@ cw20-base = { version = "2.0.0" }
 
 # Self dependencies
 outbe-nft = { version = "*", path = "packages/outbe-nft" }
-consumption-unit = { version = "*", path = "./contracts/consumption-unit" }
+tribute = { version = "*", path = "contracts/tribute" }
 

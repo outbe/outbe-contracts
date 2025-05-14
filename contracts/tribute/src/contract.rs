@@ -4,19 +4,18 @@ use crate::msg::{
     MintExtension,
 };
 use crate::state::HASHES;
-use crate::types::{CUConfig, ConsumptionUnitData, ConsumptionUnitNft, ConsumptionUnitState};
+use crate::types::{Status, TributeConfig, TributeData, TributeNft};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Api, Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128,
+    to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Uint128,
 };
-use cw_ownable::OwnershipError;
 use outbe_nft::error::Cw721ContractError;
 use outbe_nft::execute::assert_minter;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
 use sha2::{Digest, Sha256};
 
-const CONTRACT_NAME: &str = "gemlabs.io:consumption-unit";
+const CONTRACT_NAME: &str = "gemlabs.io:tribute";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -28,8 +27,9 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let cfg = CUConfig {
+    let cfg = TributeConfig {
         settlement_token: msg.collection_info_extension.settlement_token.clone(),
+        symbolic_rate: msg.collection_info_extension.symbolic_rate,
         native_token: msg.collection_info_extension.native_token.clone(),
         price_oracle: msg.collection_info_extension.price_oracle.clone(),
     };
@@ -40,7 +40,7 @@ pub fn instantiate(
         updated_at: env.block.time,
     };
 
-    let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
+    let config = Cw721Config::<TributeData, TributeConfig>::default();
     config.collection_config.save(deps.storage, &cfg)?;
     config
         .collection_info
@@ -62,9 +62,9 @@ pub fn instantiate(
     outbe_nft::execute::initialize_creator(deps.storage, deps.api, Some(creator))?;
 
     Ok(Response::default()
-        .add_attribute("action", "consumption-unit::instantiate")
+        .add_attribute("action", "tribute::instantiate")
         .add_event(
-            Event::new("consumption-unit::instantiate")
+            Event::new("tribute::instantiate")
                 .add_attribute("minter", minter)
                 .add_attribute("creator", creator),
         ))
@@ -92,45 +92,13 @@ pub fn execute(
 }
 
 fn execute_update_nft_info(
-    deps: DepsMut,
-    env: &Env,
-    info: &MessageInfo,
-    token_id: String,
-    update: ConsumptionUnitExtensionUpdate,
+    _deps: DepsMut,
+    _env: &Env,
+    _info: &MessageInfo,
+    _token_id: String,
+    _update: ConsumptionUnitExtensionUpdate,
 ) -> Result<Response, ContractError> {
-    let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
-
-    match update {
-        ConsumptionUnitExtensionUpdate::UpdateVector { new_vector_id } => {
-            let mut current_nft_info = config.nft_info.load(deps.storage, &token_id)?;
-            if current_nft_info.owner != info.sender {
-                return Err(ContractError::Cw721ContractError(
-                    Cw721ContractError::Ownership(OwnershipError::NotOwner),
-                ));
-            }
-
-            if current_nft_info.extension.state == ConsumptionUnitState::Selected {
-                return Err(ContractError::WrongInput {});
-            }
-
-            verify_vector(new_vector_id)?;
-
-            current_nft_info.extension =
-                current_nft_info.extension.update_vector(new_vector_id, env);
-
-            config
-                .nft_info
-                .save(deps.storage, &token_id, &current_nft_info)?;
-
-            Ok(Response::new()
-                .add_attribute("action", "consumption-unit::update_nft_info")
-                .add_event(
-                    Event::new("consumption-unit::update_nft_info")
-                        .add_attribute("token_id", token_id)
-                        .add_attribute("new_commitment_pool_id", new_vector_id.to_string()),
-                ))
-        }
-    }
+    Ok(Response::new())
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -151,12 +119,7 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
-    verify_vector(extension.vector)?;
-
-    if entity.hashes.is_empty()
-        || entity.nominal_quantity == Uint128::zero()
-        || entity.consumption_value == Uint128::zero()
-    {
+    if entity.hashes.is_empty() || entity.minor_value_settlement == Uint128::zero() {
         return Err(ContractError::WrongInput {});
     }
 
@@ -167,22 +130,30 @@ fn execute_mint(
         extension.public_key,
     )?;
 
-    let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
+    let config = Cw721Config::<TributeData, TributeConfig>::default();
+    let col_config = config.collection_config.load(deps.storage)?;
+    let exchange_rate = Decimal::one(); // TODO query from Oracle
+
+    let (nominal_qty, load) = calc_sybolics(
+        entity.minor_value_settlement,
+        exchange_rate,
+        col_config.symbolic_rate,
+    );
 
     // create the token
-    let data = ConsumptionUnitData {
-        consumption_value: entity.consumption_value,
-        nominal_quantity: entity.nominal_quantity,
-        nominal_currency: entity.nominal_currency,
-        vector: extension.vector,
-        state: ConsumptionUnitState::Reflected,
-        floor_price: Decimal::one(), // TODO query from Oracle
+    let data = TributeData {
+        minor_value_settlement: entity.minor_value_settlement,
+        nominal_price: exchange_rate,
+        nominal_minor_qty: nominal_qty,
+        vector: 1, // TODO: hardcode tmp
+        status: Status::Accepted,
+        symbolic_load: load,
         hashes: entity.hashes.clone(),
         created_at: env.block.time,
         updated_at: env.block.time,
     };
 
-    let token = ConsumptionUnitNft {
+    let token = TributeNft {
         owner: owner_addr,
         extension: data,
     };
@@ -195,7 +166,7 @@ fn execute_mint(
         })?;
 
     for hash in entity.hashes {
-        HASHES.update(deps.storage, &hash, |old| match old {
+        HASHES.update(deps.storage, &hash.to_hex(), |old| match old {
             Some(_) => Err(ContractError::HashAlreadyExists {}),
             None => Ok(token_id.clone()),
         })?;
@@ -204,48 +175,44 @@ fn execute_mint(
     config.increment_tokens(deps.storage)?;
 
     Ok(Response::new()
-        .add_attribute("action", "consumption-unit::mint")
+        .add_attribute("action", "tribute::mint")
         .add_event(
-            Event::new("consumption-unit::mint")
+            Event::new("tribute::mint")
                 .add_attribute("token_id", token_id)
                 .add_attribute("owner", owner),
         ))
 }
 
+fn calc_sybolics(
+    settlement_value: Uint128,
+    exchange_rate: Decimal,
+    symbolic_rate: Decimal,
+) -> (Uint128, Uint128) {
+    let settlement_value_dec = Decimal::from_atomics(settlement_value, 0).unwrap();
+    let nominal_qty = settlement_value_dec * exchange_rate;
+
+    let symbolic_divisor = settlement_value_dec / nominal_qty * (Decimal::one() + symbolic_rate);
+    let load = settlement_value_dec * symbolic_rate / symbolic_divisor;
+
+    (nominal_qty.to_uint_floor(), load.to_uint_floor())
+}
+
 fn verify_signature(
     api: &dyn Api,
     entity: ConsumptionUnitEntity,
-    signature: String,
-    public_key: String,
+    signature: HexBinary,
+    public_key: HexBinary,
 ) -> Result<(), ContractError> {
-    let signature_bytes = match hex::decode(signature) {
-        Ok(data) => data,
-        Err(_) => return Err(ContractError::WrongInput {}),
-    };
-    let public_key_bytes = match hex::decode(public_key) {
-        Ok(data) => data,
-        Err(_) => return Err(ContractError::WrongInput {}),
-    };
-
     let serialized_entity = to_json_binary(&entity)?;
     let data_hash = Sha256::digest(serialized_entity.clone());
 
-    let signature_ok = api.secp256k1_verify(&data_hash, &signature_bytes, &public_key_bytes)?;
+    let signature_ok =
+        api.secp256k1_verify(&data_hash, signature.as_slice(), public_key.as_slice())?;
     if signature_ok {
         Ok(())
     } else {
         Err(ContractError::WrongDigest {})
     }
-}
-
-/// Verifies that the given vector id is correct.
-/// NB: should be in sync with Vector smart contract.
-/// NB: we do not store ref to that contract to save gas
-fn verify_vector(new_vector_id: u16) -> Result<(), ContractError> {
-    if (1..=16).contains(&new_vector_id) {
-        return Ok(());
-    }
-    Err(ContractError::WrongVector {})
 }
 
 fn execute_burn(
@@ -254,7 +221,7 @@ fn execute_burn(
     info: &MessageInfo,
     token_id: String,
 ) -> Result<Response, ContractError> {
-    let config = Cw721Config::<ConsumptionUnitData, CUConfig>::default();
+    let config = Cw721Config::<TributeData, TributeConfig>::default();
     // TODO verify ownership
     // let token = config.nft_info.load(deps.storage, &token_id)?;
     // check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
@@ -263,9 +230,9 @@ fn execute_burn(
     config.decrement_tokens(deps.storage)?;
 
     Ok(Response::new()
-        .add_attribute("action", "consumption-unit::burn")
+        .add_attribute("action", "tribute::burn")
         .add_event(
-            Event::new("consumption-unit::burn")
+            Event::new("tribute::burn")
                 .add_attribute("sender", info.sender.to_string())
                 .add_attribute("token_id", token_id),
         ))
@@ -282,14 +249,25 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
 
 #[cfg(test)]
 mod tests {
-    use crate::contract::verify_signature;
+    use crate::contract::{calc_sybolics, verify_signature};
     use crate::msg::ConsumptionUnitEntity;
     use cosmwasm_schema::schemars::_serde_json::from_str;
     use cosmwasm_std::testing::mock_dependencies;
-    use cosmwasm_std::to_json_binary;
+    use cosmwasm_std::{to_json_binary, Decimal, HexBinary, Uint128};
     use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
     use sha2::{Digest, Sha256};
     use std::str::FromStr;
+
+    #[test]
+    fn test_symbolics_calc() {
+        let (nominal, load) = calc_sybolics(
+            Uint128::new(1500u128),
+            Decimal::from_str("0.2").unwrap(),
+            Decimal::from_str("0.08").unwrap(),
+        );
+        assert_eq!(nominal, Uint128::new(300u128));
+        assert_eq!(load, Uint128::new(22u128));
+    }
 
     #[test]
     fn test_signature_creation() {
@@ -306,9 +284,7 @@ mod tests {
         let raw_json = r#"{
             "token_id": "1",
             "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-            "consumption_value": "100",
-            "nominal_quantity": "100",
-            "nominal_currency": "usd",
+            "minor_value_settlement": "100",
             "hashes": [
               "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
             ]
@@ -334,11 +310,11 @@ mod tests {
 
         // Verify signature on the smart contract side
         // Serialize signature in compact 64-byte form
-        let signature_hex = hex::encode(sig.serialize_compact());
+        let signature_hex = HexBinary::from(sig.serialize_compact());
         println!("Compact Signature (64 bytes): {}", signature_hex);
 
         // Serialize public key compressed (33 bytes)
-        let public_key_hex = hex::encode(public_key.serialize());
+        let public_key_hex = HexBinary::from(public_key.serialize());
 
         println!("Public key (compressed, 33 bytes): {}", public_key_hex);
 

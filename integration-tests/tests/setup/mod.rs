@@ -1,7 +1,7 @@
 use cosmwasm_std::{Addr, Coin, Uint128};
 use cw_multi_test::App;
 
-pub const NATIVE_DENOM: &str = "qnc";
+pub const NATIVE_DENOM: &str = "outbe";
 
 pub const INITIAL_BALANCE: Uint128 = Uint128::new(10_000_000_u128);
 

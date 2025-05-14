@@ -1,15 +1,15 @@
-use crate::types::{CUConfig, ConsumptionUnitData};
+use crate::types::{TributeConfig, TributeData};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, Env, StdResult};
 
-pub type ConsumptionUnitInfoResponse = outbe_nft::msg::NftInfoResponse<ConsumptionUnitData>;
+pub type TributeInfoResponse = outbe_nft::msg::NftInfoResponse<TributeData>;
 
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(outbe_nft::msg::ContractInfoResponse<CUConfig>)]
+    #[returns(outbe_nft::msg::ContractInfoResponse<TributeConfig>)]
     ContractInfo {},
 
     // TODO add Cw721 config as well
@@ -25,7 +25,7 @@ pub enum QueryMsg {
     #[returns(cw_ownable::Ownership<String>)]
     GetCreatorOwnership {},
 
-    #[returns(ConsumptionUnitInfoResponse)]
+    #[returns(TributeInfoResponse)]
     NftInfo { token_id: String },
 
     /// Returns all tokens owned by the given address.
@@ -49,7 +49,7 @@ pub enum QueryMsg {
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::ContractInfo {} => to_json_binary(&outbe_nft::query::query_contract_info::<
-            CUConfig,
+            TributeConfig,
         >(deps.storage)?),
         QueryMsg::OwnerOf { token_id } => to_json_binary(&outbe_nft::query::query_owner_of(
             deps.storage,
@@ -66,7 +66,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             to_json_binary(&outbe_nft::query::query_creator_ownership(deps.storage)?)
         }
         QueryMsg::NftInfo { token_id } => to_json_binary(&outbe_nft::query::query_nft_info::<
-            ConsumptionUnitData,
+            TributeData,
         >(deps.storage, token_id)?),
         QueryMsg::Tokens {
             owner,
@@ -92,10 +92,11 @@ mod tests {
     use crate::contract::{execute, instantiate};
     use crate::msg::{ConsumptionUnitCollectionExtension, InstantiateMsg};
     use crate::query::{query, QueryMsg};
-    use cosmwasm_std::Addr;
+    use cosmwasm_std::{Addr, Decimal};
     use cw20::Denom;
     use cw_multi_test::{App, ContractWrapper, Executor};
     use cw_ownable::Ownership;
+    use std::str::FromStr;
 
     #[test]
     fn test_query_config() {
@@ -106,10 +107,11 @@ mod tests {
         let code_id = app.store_code(Box::new(code));
 
         let init_msg = InstantiateMsg {
-            name: "consumption unit".to_string(),
-            symbol: "cu".to_string(),
+            name: "tribute".to_string(),
+            symbol: "t".to_string(),
             collection_info_extension: ConsumptionUnitCollectionExtension {
                 settlement_token: Denom::Cw20(Addr::unchecked("settlement")),
+                symbolic_rate: Decimal::from_str("0.08").unwrap(),
                 native_token: Denom::Native("native".to_string()),
                 price_oracle: Addr::unchecked("price_oracle"),
             },
@@ -118,7 +120,7 @@ mod tests {
         };
 
         let contract_addr = app
-            .instantiate_contract(code_id, owner.clone(), &init_msg, &[], "cu1", None)
+            .instantiate_contract(code_id, owner.clone(), &init_msg, &[], "t1", None)
             .unwrap();
 
         let response: outbe_nft::msg::NumTokensResponse = app

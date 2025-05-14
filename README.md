@@ -9,7 +9,7 @@ Dependency/test contracts:
 
 Main contracts:
 
-- **consumption-unit**: please see [docs](./contracts/consumption-unit/README.md) for more info.
+- **tribute**: please see [docs](contracts/tribute/README.md) for more info.
 - **vector**: please see [docs](contracts/vector/README.md) for more info.
 
 ## Requirements
