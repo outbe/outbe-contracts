@@ -39,9 +39,6 @@ pub enum ExecuteMsg {
 #[cw_serde]
 pub struct MintExtension {
     pub entity: ConsumptionUnitEntity,
-    /// Where the CU is allocated by the User.
-    /// A user can change Vector at any time prior to CU NFT selection in raffle
-    pub vector: u16,
     /// Serialized "compact" signature (64 bytes) of the `entity` in hex
     pub signature: HexBinary,
     /// Serialized according to SEC 2 (33 or 65 bytes) public key in hex
@@ -60,11 +57,7 @@ pub struct ConsumptionUnitEntity {
 }
 
 #[cw_serde]
-pub enum ConsumptionUnitExtensionUpdate {
-    /// Updates the vector id for the given NFT, can be performed by user only.
-    /// When updating the vector, a new price will be fetched.
-    UpdateVector { new_vector_id: u16 },
-}
+pub enum ConsumptionUnitExtensionUpdate {}
 
 #[cw_serde]
 pub enum MigrateMsg {

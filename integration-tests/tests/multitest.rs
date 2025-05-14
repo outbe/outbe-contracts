@@ -29,7 +29,6 @@ fn test_tribute() {
                     minor_value_settlement: Uint128::from(100u32),
                     hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
                 },
-                vector: 1,
                 signature: HexBinary::from_hex("eea361aa7fff68cf0b07bc7b6d5907ba46a144ed1b5af6900bd0f96dc6e73e5f6e88eacffc84c3b3f84f2a0099503cd716883e251834176afc8b8e01b85d90bc").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
             }),

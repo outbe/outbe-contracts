@@ -216,7 +216,7 @@
             "description": "Hashes identifying consumption records batch. Each hash should be a valid unique sha256 hash in hex format",
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/definitions/HexBinary"
             }
           },
           "minor_value_settlement": {
@@ -237,40 +237,19 @@
         "additionalProperties": false
       },
       "ConsumptionUnitExtensionUpdate": {
-        "oneOf": [
-          {
-            "description": "Updates the vector id for the given NFT, can be performed by user only. When updating the vector, a new price will be fetched.",
-            "type": "object",
-            "required": [
-              "update_vector"
-            ],
-            "properties": {
-              "update_vector": {
-                "type": "object",
-                "required": [
-                  "new_vector_id"
-                ],
-                "properties": {
-                  "new_vector_id": {
-                    "type": "integer",
-                    "format": "uint16",
-                    "minimum": 0.0
-                  }
-                },
-                "additionalProperties": false
-              }
-            },
-            "additionalProperties": false
-          }
-        ]
+        "type": "string",
+        "enum": []
+      },
+      "HexBinary": {
+        "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+        "type": "string"
       },
       "MintExtension": {
         "type": "object",
         "required": [
           "entity",
           "public_key",
-          "signature",
-          "vector"
+          "signature"
         ],
         "properties": {
           "entity": {
@@ -278,17 +257,19 @@
           },
           "public_key": {
             "description": "Serialized according to SEC 2 (33 or 65 bytes) public key in hex",
-            "type": "string"
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
           },
           "signature": {
             "description": "Serialized \"compact\" signature (64 bytes) of the `entity` in hex",
-            "type": "string"
-          },
-          "vector": {
-            "description": "Where the CU is allocated by the User. A user can change Vector at any time prior to CU NFT selection in raffle",
-            "type": "integer",
-            "format": "uint16",
-            "minimum": 0.0
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
           }
         },
         "additionalProperties": false
@@ -831,6 +812,10 @@
           "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
           "type": "string"
         },
+        "HexBinary": {
+          "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+          "type": "string"
+        },
         "Status": {
           "oneOf": [
             {
@@ -905,7 +890,7 @@
               "description": "Hashes identifying consumption records batch. Each hash should be a valid unique sha256 hash in hex format",
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/definitions/HexBinary"
               }
             },
             "minor_value_settlement": {

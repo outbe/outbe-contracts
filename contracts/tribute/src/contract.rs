@@ -10,7 +10,6 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Uint128,
 };
-use cw_ownable::OwnershipError;
 use outbe_nft::error::Cw721ContractError;
 use outbe_nft::execute::assert_minter;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
@@ -93,47 +92,13 @@ pub fn execute(
 }
 
 fn execute_update_nft_info(
-    deps: DepsMut,
-    env: &Env,
-    info: &MessageInfo,
-    token_id: String,
-    update: ConsumptionUnitExtensionUpdate,
+    _deps: DepsMut,
+    _env: &Env,
+    _info: &MessageInfo,
+    _token_id: String,
+    _update: ConsumptionUnitExtensionUpdate,
 ) -> Result<Response, ContractError> {
-    let config = Cw721Config::<TributeData, TributeConfig>::default();
-
-    match update {
-        ConsumptionUnitExtensionUpdate::UpdateVector { new_vector_id } => {
-            let mut current_nft_info = config.nft_info.load(deps.storage, &token_id)?;
-            if current_nft_info.owner != info.sender {
-                return Err(ContractError::Cw721ContractError(
-                    Cw721ContractError::Ownership(OwnershipError::NotOwner),
-                ));
-            }
-
-            if current_nft_info.extension.status == Status::Recognized
-                || current_nft_info.extension.status == Status::Voided
-            {
-                return Err(ContractError::WrongInput {});
-            }
-
-            verify_vector(new_vector_id)?;
-
-            current_nft_info.extension =
-                current_nft_info.extension.update_vector(new_vector_id, env);
-
-            config
-                .nft_info
-                .save(deps.storage, &token_id, &current_nft_info)?;
-
-            Ok(Response::new()
-                .add_attribute("action", "tribute::update_nft_info")
-                .add_event(
-                    Event::new("tribute::update_nft_info")
-                        .add_attribute("token_id", token_id)
-                        .add_attribute("new_commitment_pool_id", new_vector_id.to_string()),
-                ))
-        }
-    }
+    Ok(Response::new())
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -153,8 +118,6 @@ fn execute_mint(
     if entity.token_id != token_id || entity.owner != owner {
         return Err(ContractError::WrongInput {});
     }
-
-    verify_vector(extension.vector)?;
 
     if entity.hashes.is_empty() || entity.minor_value_settlement == Uint128::zero() {
         return Err(ContractError::WrongInput {});
@@ -182,7 +145,7 @@ fn execute_mint(
         minor_value_settlement: entity.minor_value_settlement,
         nominal_price: exchange_rate,
         nominal_minor_qty: nominal_qty,
-        vector: extension.vector,
+        vector: 1, // TODO: hardcode tmp
         status: Status::Accepted,
         symbolic_load: load,
         hashes: entity.hashes.clone(),
@@ -250,16 +213,6 @@ fn verify_signature(
     } else {
         Err(ContractError::WrongDigest {})
     }
-}
-
-/// Verifies that the given vector id is correct.
-/// NB: should be in sync with Vector smart contract.
-/// NB: we do not store ref to that contract to save gas
-fn verify_vector(new_vector_id: u16) -> Result<(), ContractError> {
-    if (1..=16).contains(&new_vector_id) {
-        return Ok(());
-    }
-    Err(ContractError::WrongVector {})
 }
 
 fn execute_burn(

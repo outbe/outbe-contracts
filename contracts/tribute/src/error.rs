@@ -14,8 +14,6 @@ pub enum ContractError {
     WrongDigest {},
     #[error("{0}")]
     VerificationError(#[from] VerificationError),
-    #[error("WrongVector")]
-    WrongVector {},
     #[error("HashAlreadyExists")]
     HashAlreadyExists {},
 }
