@@ -1,11 +1,12 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, Decimal, Uint128};
 use cw20::Denom;
 use outbe_nft::msg::Cw721InstantiateMsg;
 
 #[cw_serde]
 pub struct ConsumptionUnitCollectionExtension {
     pub settlement_token: Denom,
+    pub symbolic_rate: Decimal,
     pub native_token: Denom,
     /// Address of the price Oracle to query floor prices
     pub price_oracle: Addr,
@@ -51,12 +52,8 @@ pub struct MintExtension {
 pub struct ConsumptionUnitEntity {
     pub token_id: String,
     pub owner: String,
-    /// The value of Consumption Unit in Settlement Tokens
-    pub consumption_value: Uint128,
-    /// Sum of Nominal Qty from Consumption Records
-    pub nominal_quantity: Uint128,
-    /// Nominal currency from Consumption Records
-    pub nominal_currency: String,
+    /// Value of the Tribute in Settlement Tokens
+    pub minor_value_settlement: Uint128,
     /// Hashes identifying consumption records batch. Each hash should be a valid unique
     /// sha256 hash in hex format
     pub hashes: Vec<String>,

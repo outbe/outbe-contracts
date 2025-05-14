@@ -1,7 +1,7 @@
 import * as secp256k1 from 'secp256k1';
 import {createHash} from "node:crypto";
 
-// prepare raw json data (consumption unit)
+// prepare raw json data (tribute)
 let raw_json = {
     "token_id": "1",
     "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",

@@ -220,25 +220,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
 
 [[package]]
-name = "consumption-unit"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-multi-test",
- "cw-ownable",
- "cw-storage-plus",
- "cw2",
- "cw20",
- "hex",
- "outbe-nft",
- "secp256k1",
- "serde",
- "sha2",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "cosmwasm-core"
 version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -751,11 +732,11 @@ dependencies = [
 name = "integration-tests"
 version = "0.1.0"
 dependencies = [
- "consumption-unit",
  "cosmwasm-std",
  "cw-multi-test",
  "cw20",
  "outbe-nft",
+ "tribute",
 ]
 
 [[package]]
@@ -1250,6 +1231,25 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.100",
+]
+
+[[package]]
+name = "tribute"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "cw20",
+ "hex",
+ "outbe-nft",
+ "secp256k1",
+ "serde",
+ "sha2",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
