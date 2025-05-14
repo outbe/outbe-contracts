@@ -1,4 +1,4 @@
-# [ARD.0300] Consumption Unit
+# [ARD.0300] Tribute
 
 ## Status
 
@@ -17,8 +17,8 @@ This ADR defines the functionality required to implement Consumption Unit smart 
 ### Glossary
 
 *   **Consumption Record** – is a user's transaction representation that 1-to-1 corresponds to a user tx.
-*   **Consumption Unit** – is NFT; an aggregate record that represents user's consumption by a given time range.
-*   **Consumption Unit Oracle** – is a smart contract responsible for creating Consumption Units.
+*   **Tribute** – is NFT; an aggregate record that represents user's consumption by a given time range.
+*   **Consumption Unit Oracle** – is a smart contract responsible for creating Tribute.
 *   **Open Banking Data Agent** (agent in short) – is a trusted counterparty responsible for.
 
 ## Scope
@@ -65,11 +65,11 @@ pub  struct Config {
 }
 ```
 
-#### Consumption Unit Entity Data
+#### Tribute Entity Data
 
 ```rust
 /// ConsumptionUnit public data
-pub struct ConsumptionUnitData {
+pub struct TributeData {
     /// The value of Consumption Unit in Settlement Tokens
     pub consumption_value: Uint128,
     /// Sum of Nominal Qty from Consumption Records
@@ -88,7 +88,7 @@ pub struct ConsumptionUnitData {
 }
 ```
 
-#### Consumption Unit Write API
+#### Tribute Write API
 
 NB: Keep maximum compatibility with cw721. 
 
@@ -123,7 +123,7 @@ pub enum ConsumptionUnitExtensionUpdate {
 }
 ```
 
-#### Consumption Unit Read API
+#### Tribute Read API
 
 NB: Keep maximum compatibility with cw721.
 

@@ -30,7 +30,7 @@ fn test_tribute() {
                     hashes: vec!["872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d".to_string()],
                 },
                 vector: 1,
-                signature: "987327f5e1879d8a4739cad9ce0ef3743e5470a6fd2e6d96e67e87701dbcc81b30c6b978d2c40dd022cb9514416ff911ecbe26e9d9d7e726ce82bebf1d41a258"
+                signature: "eea361aa7fff68cf0b07bc7b6d5907ba46a144ed1b5af6900bd0f96dc6e73e5f6e88eacffc84c3b3f84f2a0099503cd716883e251834176afc8b8e01b85d90bc"
                     .to_string(),
                 public_key: "02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d"
                     .to_string(),

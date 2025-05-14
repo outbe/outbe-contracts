@@ -339,9 +339,7 @@ mod tests {
         let raw_json = r#"{
             "token_id": "1",
             "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-            "consumption_value": "100",
-            "nominal_quantity": "100",
-            "nominal_currency": "usd",
+            "minor_value_settlement": "100",
             "hashes": [
               "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
             ]
