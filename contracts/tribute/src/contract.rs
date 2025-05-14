@@ -8,7 +8,7 @@ use crate::types::{Status, TributeConfig, TributeData, TributeNft};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Api, Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128,
+    to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Uint128,
 };
 use cw_ownable::OwnershipError;
 use outbe_nft::error::Cw721ContractError;
@@ -203,7 +203,7 @@ fn execute_mint(
         })?;
 
     for hash in entity.hashes {
-        HASHES.update(deps.storage, &hash, |old| match old {
+        HASHES.update(deps.storage, &hash.to_hex(), |old| match old {
             Some(_) => Err(ContractError::HashAlreadyExists {}),
             None => Ok(token_id.clone()),
         })?;
@@ -237,22 +237,14 @@ fn calc_sybolics(
 fn verify_signature(
     api: &dyn Api,
     entity: ConsumptionUnitEntity,
-    signature: String,
-    public_key: String,
+    signature: HexBinary,
+    public_key: HexBinary,
 ) -> Result<(), ContractError> {
-    let signature_bytes = match hex::decode(signature) {
-        Ok(data) => data,
-        Err(_) => return Err(ContractError::WrongInput {}),
-    };
-    let public_key_bytes = match hex::decode(public_key) {
-        Ok(data) => data,
-        Err(_) => return Err(ContractError::WrongInput {}),
-    };
-
     let serialized_entity = to_json_binary(&entity)?;
     let data_hash = Sha256::digest(serialized_entity.clone());
 
-    let signature_ok = api.secp256k1_verify(&data_hash, &signature_bytes, &public_key_bytes)?;
+    let signature_ok =
+        api.secp256k1_verify(&data_hash, signature.as_slice(), public_key.as_slice())?;
     if signature_ok {
         Ok(())
     } else {
@@ -308,7 +300,7 @@ mod tests {
     use crate::msg::ConsumptionUnitEntity;
     use cosmwasm_schema::schemars::_serde_json::from_str;
     use cosmwasm_std::testing::mock_dependencies;
-    use cosmwasm_std::{to_json_binary, Decimal, Uint128};
+    use cosmwasm_std::{to_json_binary, Decimal, HexBinary, Uint128};
     use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
     use sha2::{Digest, Sha256};
     use std::str::FromStr;
@@ -365,11 +357,11 @@ mod tests {
 
         // Verify signature on the smart contract side
         // Serialize signature in compact 64-byte form
-        let signature_hex = hex::encode(sig.serialize_compact());
+        let signature_hex = HexBinary::from(sig.serialize_compact());
         println!("Compact Signature (64 bytes): {}", signature_hex);
 
         // Serialize public key compressed (33 bytes)
-        let public_key_hex = hex::encode(public_key.serialize());
+        let public_key_hex = HexBinary::from(public_key.serialize());
 
         println!("Public key (compressed, 33 bytes): {}", public_key_hex);
 

@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Decimal, Env, Timestamp, Uint128};
+use cosmwasm_std::{Addr, Decimal, Env, HexBinary, Timestamp, Uint128};
 use cw20::Denom;
 use outbe_nft::state::NftInfo;
 use outbe_nft::traits::Cw721CollectionConfig;
@@ -33,7 +33,7 @@ pub struct TributeData {
     pub status: Status,
     /// Hashes identifying consumption records batch. Each hash should be a valid unique
     /// sha256 hash in hex format
-    pub hashes: Vec<String>,
+    pub hashes: Vec<HexBinary>,
     /// Time when the Tribute NFT was created on the network
     pub created_at: Timestamp,
     /// Last updated time
