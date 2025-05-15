@@ -30,12 +30,12 @@
         "properties": {
           "set_random": {
             "type": "object",
-            "required": [
-              "random_value"
-            ],
             "properties": {
               "random_value": {
-                "type": "integer",
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "format": "uint64",
                 "minimum": 0.0
               }
