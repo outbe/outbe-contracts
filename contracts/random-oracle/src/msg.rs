@@ -6,6 +6,8 @@ pub struct InstantiateMsg {
 }
 #[cw_serde]
 pub enum ExecuteMsg {
+    /// Sets a predictable value as "random".
+    /// Or removes if None
     SetRandom { random_value: Option<u64> },
 }
 

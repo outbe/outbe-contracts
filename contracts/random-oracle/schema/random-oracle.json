@@ -23,6 +23,7 @@
     "title": "ExecuteMsg",
     "oneOf": [
       {
+        "description": "Sets a predictable value as \"random\". Or removes if None",
         "type": "object",
         "required": [
           "set_random"
