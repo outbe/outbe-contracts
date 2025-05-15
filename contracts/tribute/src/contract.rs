@@ -15,7 +15,7 @@ use outbe_nft::execute::assert_minter;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
 use sha2::{Digest, Sha256};
 
-const CONTRACT_NAME: &str = "gemlabs.io:tribute";
+const CONTRACT_NAME: &str = "outbe.net:tribute";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

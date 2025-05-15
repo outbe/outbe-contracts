@@ -5,7 +5,7 @@ use crate::state::{default_vector_tiers, Config, CONFIG, CREATOR};
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
 
-const CONTRACT_NAME: &str = "gemlabs.io:tribute";
+const CONTRACT_NAME: &str = "outbe.net:vector";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

@@ -1,0 +1,116 @@
+{
+  "contract_name": "random-oracle",
+  "contract_version": "0.1.0",
+  "idl_version": "1.0.0",
+  "instantiate": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InstantiateMsg",
+    "type": "object",
+    "properties": {
+      "random_value": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "uint64",
+        "minimum": 0.0
+      }
+    },
+    "additionalProperties": false
+  },
+  "execute": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ExecuteMsg",
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "set_random"
+        ],
+        "properties": {
+          "set_random": {
+            "type": "object",
+            "required": [
+              "random_value"
+            ],
+            "properties": {
+              "random_value": {
+                "type": "integer",
+                "format": "uint64",
+                "minimum": 0.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
+  },
+  "query": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "QueryMsg",
+    "oneOf": [
+      {
+        "description": "Returns a pseudo random value either previously supplied by `SetRandom` or depending on the current block number.",
+        "type": "object",
+        "required": [
+          "random_value"
+        ],
+        "properties": {
+          "random_value": {
+            "type": "object",
+            "required": [
+              "count_values",
+              "from_range",
+              "to_range"
+            ],
+            "properties": {
+              "count_values": {
+                "description": "Number of random values to return",
+                "type": "integer",
+                "format": "uint64",
+                "minimum": 0.0
+              },
+              "from_range": {
+                "type": "integer",
+                "format": "uint64",
+                "minimum": 0.0
+              },
+              "to_range": {
+                "type": "integer",
+                "format": "uint64",
+                "minimum": 0.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
+  },
+  "migrate": null,
+  "sudo": null,
+  "responses": {
+    "random_value": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RandomResponse",
+      "type": "object",
+      "required": [
+        "random_values"
+      ],
+      "properties": {
+        "random_values": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

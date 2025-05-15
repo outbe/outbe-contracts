@@ -1,0 +1,14 @@
+{
+  "name": "tribute",
+  "symbol": "tbt",
+  "collection_info_extension": {
+    "settlement_token": {
+      "cw20": $usdc_address
+    },
+    "native_token": {
+      "native": "outbe"
+    },
+    "price_oracle": $price_oracle
+  }
+
+}
