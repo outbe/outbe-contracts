@@ -6,7 +6,7 @@ pub struct InstantiateMsg {
 }
 #[cw_serde]
 pub enum ExecuteMsg {
-    SetRandom { random_value: u64 },
+    SetRandom { random_value: Option<u64> },
 }
 
 #[cw_serde]

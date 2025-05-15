@@ -35,7 +35,11 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::SetRandom { random_value } => {
-            RND.save(deps.storage, &random_value)?;
+            if random_value.is_some() {
+                RND.save(deps.storage, &random_value.unwrap())?;
+            } else {
+                RND.remove(deps.storage);
+            }
             Ok(Response::new()
                 .add_attribute("action", "random-oracle::set_random")
                 .add_event(Event::new("random-oracle::set_random")))
