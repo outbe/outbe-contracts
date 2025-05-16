@@ -1,7 +1,6 @@
 use crate::error::ContractError;
 use crate::msg::{
-    ConsumptionUnitEntity, ConsumptionUnitExtensionUpdate, ExecuteMsg, InstantiateMsg, MigrateMsg,
-    MintExtension,
+    ExecuteMsg, InstantiateMsg, MigrateMsg, MintExtension, TributeEntity, TributeExtensionUpdate,
 };
 use crate::state::HASHES;
 use crate::types::{Status, TributeConfig, TributeData, TributeNft};
@@ -96,7 +95,7 @@ fn execute_update_nft_info(
     _env: &Env,
     _info: &MessageInfo,
     _token_id: String,
-    _update: ConsumptionUnitExtensionUpdate,
+    _update: TributeExtensionUpdate,
 ) -> Result<Response, ContractError> {
     Ok(Response::new())
 }
@@ -145,11 +144,10 @@ fn execute_mint(
         minor_value_settlement: entity.minor_value_settlement,
         nominal_price: exchange_rate,
         nominal_minor_qty: nominal_qty,
-        vector: 1, // TODO: hardcode tmp
-        status: Status::Accepted,
+        status: Status::Accepted, // todo query from Oracle
         symbolic_load: load,
         hashes: entity.hashes.clone(),
-        created_at: env.block.time,
+        created_at: extension.created_at.unwrap_or(env.block.time),
         updated_at: env.block.time,
     };
 
@@ -199,7 +197,7 @@ fn calc_sybolics(
 
 fn verify_signature(
     api: &dyn Api,
-    entity: ConsumptionUnitEntity,
+    entity: TributeEntity,
     signature: HexBinary,
     public_key: HexBinary,
 ) -> Result<(), ContractError> {
@@ -250,7 +248,7 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
 #[cfg(test)]
 mod tests {
     use crate::contract::{calc_sybolics, verify_signature};
-    use crate::msg::ConsumptionUnitEntity;
+    use crate::msg::TributeEntity;
     use cosmwasm_schema::schemars::_serde_json::from_str;
     use cosmwasm_std::testing::mock_dependencies;
     use cosmwasm_std::{to_json_binary, Decimal, HexBinary, Uint128};
@@ -289,7 +287,7 @@ mod tests {
               "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
             ]
         }"#;
-        let entity: ConsumptionUnitEntity = from_str(raw_json).unwrap();
+        let entity: TributeEntity = from_str(raw_json).unwrap();
 
         // sign the data
         let message_binary = to_json_binary(&entity).unwrap();
