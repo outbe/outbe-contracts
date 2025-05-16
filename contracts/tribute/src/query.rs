@@ -1,8 +1,10 @@
-use crate::types::{TributeConfig, TributeData};
+use crate::types::{Status, TributeConfig, TributeData};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Binary, Deps, Env, StdResult};
+use cosmwasm_std::{to_json_binary, Binary, Deps, Empty, Env, Order, StdResult, Timestamp};
+use outbe_nft::msg::TokensResponse;
+use outbe_nft::state::Cw721Config;
 
 pub type TributeInfoResponse = outbe_nft::msg::NftInfoResponse<TributeData>;
 
@@ -43,6 +45,13 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
+
+    /// Returns all tokens created in the given date with an optional filter by status.
+    #[returns(outbe_nft::msg::TokensResponse)]
+    DailyTributes {
+        date: Timestamp,
+        status: Option<Status>,
+    },
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -82,7 +91,56 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::AllTokens { start_after, limit } => to_json_binary(
             &outbe_nft::query::query_all_tokens(deps, &env, start_after, limit)?,
         ),
+        QueryMsg::DailyTributes { date, status } => {
+            to_json_binary(&query_daily_tributes(deps, &env, date, status)?)
+        }
     }
+}
+fn query_daily_tributes(
+    deps: Deps,
+    _env: &Env,
+    date: Timestamp,
+    status: Option<Status>,
+) -> StdResult<TokensResponse> {
+    let (start_date, end_date) = date_bounds(date);
+
+    let tokens: StdResult<Vec<String>> = Cw721Config::<TributeData, Option<Empty>>::default()
+        .nft_info
+        .range(deps.storage, None, None, Order::Ascending)
+        .filter_map(|item| match item {
+            Ok((id, tribute))
+                if (tribute.extension.created_at >= start_date
+                    && tribute.extension.created_at < end_date)
+                    && (status.clone().unwrap_or(tribute.clone().extension.status)
+                        == tribute.extension.status) =>
+            {
+                Some(Ok(id))
+            }
+            _ => None,
+        })
+        .collect();
+
+    Ok(TokensResponse { tokens: tokens? })
+}
+
+/// Normalize any timestamp to midnight UTC of that day.
+#[allow(dead_code)]
+fn normalize_to_date(timestamp: Timestamp) -> Timestamp {
+    // 86400 seconds in a day
+    let seconds = timestamp.seconds();
+    let days = seconds / 86400;
+    Timestamp::from_seconds(days * 86400)
+}
+
+/// Normalize any timestamp to midnight UTC of that day.
+fn date_bounds(timestamp: Timestamp) -> (Timestamp, Timestamp) {
+    // 86400 seconds in a day
+    let seconds = timestamp.seconds();
+    let days = seconds / 86400;
+    (
+        Timestamp::from_seconds(days * 86400),
+        Timestamp::from_seconds((days + 1) * 86400),
+    )
 }
 
 // Query
