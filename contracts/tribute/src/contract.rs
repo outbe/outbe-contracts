@@ -131,20 +131,26 @@ fn execute_mint(
 
     let config = Cw721Config::<TributeData, TributeConfig>::default();
     let col_config = config.collection_config.load(deps.storage)?;
-    let exchange_rate = Decimal::one(); // TODO query from Oracle
+    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
+        &col_config.price_oracle,
+        &price_oracle::query::QueryMsg::GetPrice {},
+    )?;
 
     let (nominal_qty, load) = calc_sybolics(
         entity.minor_value_settlement,
-        exchange_rate,
+        exchange_rate.price,
         col_config.symbolic_rate,
     );
 
     // create the token
     let data = TributeData {
         minor_value_settlement: entity.minor_value_settlement,
-        nominal_price: exchange_rate,
+        nominal_price: exchange_rate.price,
         nominal_minor_qty: nominal_qty,
-        status: Status::Accepted, // todo query from Oracle
+        status: match exchange_rate.day_type {
+            price_oracle::types::DayType::GREEN => Status::Accepted,
+            price_oracle::types::DayType::RED => Status::Muted,
+        },
         symbolic_load: load,
         hashes: entity.hashes.clone(),
         created_at: extension.created_at.unwrap_or(env.block.time),

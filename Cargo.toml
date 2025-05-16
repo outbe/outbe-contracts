@@ -38,3 +38,4 @@ cw20-base = { version = "2.0.0" }
 outbe-nft = { version = "*", path = "packages/outbe-nft" }
 outbe-utils = { version = "*", path = "packages/outbe-utils" }
 tribute = { version = "*", path = "contracts/tribute" }
+price-oracle = { version = "*", path = "contracts/price-oracle" }

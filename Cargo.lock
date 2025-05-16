@@ -1292,6 +1292,7 @@ dependencies = [
  "cw20",
  "hex",
  "outbe-nft",
+ "price-oracle",
  "secp256k1",
  "serde",
  "sha2",

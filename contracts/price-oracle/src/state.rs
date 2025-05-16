@@ -1,3 +1,4 @@
+use crate::types::DayType;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Timestamp};
 use cw20::Denom;
@@ -6,12 +7,6 @@ use cw_storage_plus::Item;
 use std::fmt;
 
 pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
-
-#[cw_serde]
-pub enum DayType {
-    GREEN,
-    RED,
-}
 
 #[cw_serde]
 pub struct TokenPairState {
