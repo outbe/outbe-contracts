@@ -3,12 +3,12 @@
   "symbol": "tbt",
   "collection_info_extension": {
     "settlement_token": {
-      "cw20": "gem1aaf9r6s7nxhysuegqrxv0wpm27ypyv4886medd3mrkrw6t4yfcnsvkn2zr"
+      "cw20": $usdc_address
     },
     "native_token": {
       "native": "gem"
     },
     "symbolic_rate": "0.08",
-    "price_oracle": "gem1kwhfggqzzjy3vnyvldymrrrmjcvxe8ajzlerhx3putherrht2xqs5zf4k2"
+    "price_oracle": $price_oracle
   }
 }
