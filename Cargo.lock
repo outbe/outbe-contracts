@@ -872,6 +872,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "price-oracle"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "cw20",
+ "outbe-utils",
+ "prost",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "primeorder"
 version = "0.13.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1243,6 +1260,23 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.100",
+]
+
+[[package]]
+name = "token-allocator"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "cw20",
+ "outbe-utils",
+ "prost",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
