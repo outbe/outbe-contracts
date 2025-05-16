@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Decimal, HexBinary, Uint128};
+use cosmwasm_std::{Addr, Decimal, HexBinary, Timestamp, Uint128};
 use cw20::Denom;
 use outbe_nft::msg::Cw721InstantiateMsg;
 
@@ -32,21 +32,23 @@ pub enum ExecuteMsg {
     /// Extension msg
     UpdateNftInfo {
         token_id: String,
-        extension: ConsumptionUnitExtensionUpdate,
+        extension: TributeExtensionUpdate,
     },
 }
 
 #[cw_serde]
 pub struct MintExtension {
-    pub entity: ConsumptionUnitEntity,
+    pub entity: TributeEntity,
     /// Serialized "compact" signature (64 bytes) of the `entity` in hex
     pub signature: HexBinary,
     /// Serialized according to SEC 2 (33 or 65 bytes) public key in hex
     pub public_key: HexBinary,
+    /// Time of the Tribute NFT for demo
+    pub created_at: Option<Timestamp>,
 }
 
 #[cw_serde]
-pub struct ConsumptionUnitEntity {
+pub struct TributeEntity {
     pub token_id: String,
     pub owner: String,
     /// Value of the Tribute in Settlement Tokens
@@ -57,7 +59,7 @@ pub struct ConsumptionUnitEntity {
 }
 
 #[cw_serde]
-pub enum ConsumptionUnitExtensionUpdate {}
+pub enum TributeExtensionUpdate {}
 
 #[cw_serde]
 pub enum MigrateMsg {
