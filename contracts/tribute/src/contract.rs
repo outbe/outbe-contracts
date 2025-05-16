@@ -144,7 +144,7 @@ fn execute_mint(
         minor_value_settlement: entity.minor_value_settlement,
         nominal_price: exchange_rate,
         nominal_minor_qty: nominal_qty,
-        status: Status::Accepted,
+        status: Status::Accepted, // todo query from Oracle
         symbolic_load: load,
         hashes: entity.hashes.clone(),
         created_at: extension.created_at.unwrap_or(env.block.time),
