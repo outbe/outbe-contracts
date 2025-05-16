@@ -1,0 +1,26 @@
+[package]
+name = "price-oracle"
+version = { workspace = true }
+edition = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+library = []
+
+[dependencies]
+cosmwasm-std = { workspace = true }
+cosmwasm-schema = { workspace = true }
+cw-storage-plus = { workspace = true }
+cw2 = { workspace = true }
+cw20 = { workspace = true }
+cw-utils = { workspace = true }
+thiserror = { workspace = true }
+cw-ownable = { workspace = true }
+outbe-utils = { workspace = true }
+
+
+[dev-dependencies]
+cw-multi-test = { workspace = true }
+prost = "0.13.1"
