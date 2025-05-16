@@ -951,6 +951,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "random-oracle"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "rayon"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
