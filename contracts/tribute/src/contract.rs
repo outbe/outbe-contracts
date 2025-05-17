@@ -10,7 +10,6 @@ use cosmwasm_std::{
     to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Uint128,
 };
 use outbe_nft::error::Cw721ContractError;
-use outbe_nft::execute::assert_minter;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
 use sha2::{Digest, Sha256};
 
@@ -104,12 +103,13 @@ fn execute_update_nft_info(
 fn execute_mint(
     deps: DepsMut,
     env: &Env,
-    info: &MessageInfo,
+    _info: &MessageInfo,
     token_id: String,
     owner: String,
     extension: MintExtension,
 ) -> Result<Response, ContractError> {
-    assert_minter(deps.storage, &info.sender)?;
+    // TODO temporary disable for demo purpose
+    // assert_minter(deps.storage, &info.sender)?;
     // validate owner
     let owner_addr = deps.api.addr_validate(&owner)?;
 
