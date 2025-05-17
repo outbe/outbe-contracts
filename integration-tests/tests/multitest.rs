@@ -84,7 +84,7 @@ fn deploy_tribute(app: &mut App, owner: Addr) -> DeployedContract {
             settlement_token: cw20::Denom::Cw20(app.api().addr_make("usdc")),
             symbolic_rate: Decimal::from_str("0.08").unwrap(),
             native_token: cw20::Denom::Native(NATIVE_DENOM.to_string()),
-            price_oracle: app.api().addr_make("ORACLE"), // todo replace after implementation
+            price_oracle: app.api().addr_make("ORACLE"), // todo replace with implementation
         },
         minter: None,
         creator: None,

@@ -10,7 +10,6 @@ use cosmwasm_std::{
     to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Uint128,
 };
 use outbe_nft::error::Cw721ContractError;
-use outbe_nft::execute::assert_minter;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
 use sha2::{Digest, Sha256};
 
@@ -104,12 +103,13 @@ fn execute_update_nft_info(
 fn execute_mint(
     deps: DepsMut,
     env: &Env,
-    info: &MessageInfo,
+    _info: &MessageInfo,
     token_id: String,
     owner: String,
     extension: MintExtension,
 ) -> Result<Response, ContractError> {
-    assert_minter(deps.storage, &info.sender)?;
+    // TODO temporary disable for demo purpose
+    // assert_minter(deps.storage, &info.sender)?;
     // validate owner
     let owner_addr = deps.api.addr_validate(&owner)?;
 
@@ -131,20 +131,26 @@ fn execute_mint(
 
     let config = Cw721Config::<TributeData, TributeConfig>::default();
     let col_config = config.collection_config.load(deps.storage)?;
-    let exchange_rate = Decimal::one(); // TODO query from Oracle
+    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
+        &col_config.price_oracle,
+        &price_oracle::query::QueryMsg::GetPrice {},
+    )?;
 
     let (nominal_qty, load) = calc_sybolics(
         entity.minor_value_settlement,
-        exchange_rate,
+        exchange_rate.price,
         col_config.symbolic_rate,
     );
 
     // create the token
     let data = TributeData {
         minor_value_settlement: entity.minor_value_settlement,
-        nominal_price: exchange_rate,
+        nominal_price: exchange_rate.price,
         nominal_minor_qty: nominal_qty,
-        status: Status::Accepted, // todo query from Oracle
+        status: match exchange_rate.day_type {
+            price_oracle::types::DayType::GREEN => Status::Accepted,
+            price_oracle::types::DayType::RED => Status::Muted,
+        },
         symbolic_load: load,
         hashes: entity.hashes.clone(),
         created_at: extension.created_at.unwrap_or(env.block.time),
