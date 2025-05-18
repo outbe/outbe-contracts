@@ -27,7 +27,9 @@ pub fn instantiate(
     };
     let config = Cw721Config::<NodData, NodConfig>::default();
     config.collection_config.save(deps.storage, &cfg)?;
-    config.collection_info.save(deps.storage, &collection_info)?;
+    config
+        .collection_info
+        .save(deps.storage, &collection_info)?;
 
     let minter = msg
         .minter
@@ -68,12 +70,13 @@ pub fn execute(
 fn execute_submit(
     deps: DepsMut,
     env: &Env,
-    info: &MessageInfo,
+    _info: &MessageInfo,
     token_id: String,
     owner: String,
     extension: SubmitExtension,
 ) -> Result<Response, ContractError> {
-    outbe_nft::execute::assert_minter(deps.storage, &info.sender)?;
+    // TODO uncomment after demo
+    // outbe_nft::execute::assert_minter(deps.storage, &info.sender)?;
 
     let owner_addr = deps.api.addr_validate(&owner)?;
     let entity = extension.entity;
@@ -93,7 +96,10 @@ fn execute_submit(
         created_at: extension.created_at.unwrap_or(env.block.time),
     };
 
-    let token = NodNft { owner: owner_addr, extension: data };
+    let token = NodNft {
+        owner: owner_addr,
+        extension: data,
+    };
 
     let config = Cw721Config::<NodData, NodConfig>::default();
     config
@@ -127,11 +133,7 @@ fn execute_burn(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(
-    deps: DepsMut,
-    _env: Env,
-    _msg: MigrateMsg,
-) -> Result<Response, ContractError> {
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     Ok(Response::new())
 }
