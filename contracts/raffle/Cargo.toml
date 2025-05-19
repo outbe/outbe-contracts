@@ -7,6 +7,7 @@ edition = { workspace = true }
 crate-type = ["cdylib", "rlib"]
 
 [features]
+# use library feature to disable all instantiate/execute/query exports
 library = []
 
 [dependencies]
@@ -19,8 +20,9 @@ cw20 = { workspace = true }
 thiserror = { workspace = true }
 cw-ownable = { workspace = true }
 
-tribute = { workspace = true }
-nod = { workspace = true }
+tribute = { workspace = true}
+nod = { workspace = true}
+vector = { workspace = true}
 
 
 [dev-dependencies]

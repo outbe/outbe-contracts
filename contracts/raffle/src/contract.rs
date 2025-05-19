@@ -108,10 +108,13 @@ fn execute_raffle(
 
     DAILY_RAFFLE.save(deps.storage, date, &raffle_run_today)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "raffle::raffle")
-        .add_event(Event::new("raffle::raffle").add_attribute("run", raffle_run_today.to_string()))
-        .add_submessages(messages))
+    Ok(
+        Response::new()
+            .add_attribute("action", "raffle::raffle")
+            .add_event(
+                Event::new("raffle::raffle").add_attribute("run", raffle_run_today.to_string()),
+            ), // .add_submessages(messages)
+    )
 }
 
 /// Normalize any timestamp to midnight UTC of that day.
