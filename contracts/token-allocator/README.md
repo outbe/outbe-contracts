@@ -37,6 +37,24 @@ You can query the contract to retrieve information such as:
 
 *   **Current Token Allocation Amount:**  `GetData {}` - Returns the amount of tokens allocated based on the current block height and emission rate.
 *   **Creator Ownership:** `GetCreatorOwnership {}` - Returns the address of the contract owner.
+*   **Total Token Allocation for Block Range:** `GetRangeData { from_block, to_block }` - Returns the sum of token allocation amounts for blocks in the specified range (inclusive).
+
+#### Example JSON Query
+```json
+{
+  "get_range_data": {
+    "from_block": "1000",
+    "to_block": "2000"
+  }
+}
+```
+
+#### Example JSON Response
+```json
+{
+  "amount": "<total tokens emitted from block 1000 through 2000>"
+}
+```
 
 
 ## Development & Testing
