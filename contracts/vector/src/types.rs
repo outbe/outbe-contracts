@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Decimal, Uint128};
+use cosmwasm_std::Uint128;
 
 #[cw_serde]
 pub struct Vector {
@@ -9,6 +9,4 @@ pub struct Vector {
     pub name: String,
     /// TPT+%
     pub performance_rate: Uint128,
-    /// Winning Probability weight
-    pub weight: Decimal,
 }

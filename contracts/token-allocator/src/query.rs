@@ -14,7 +14,10 @@ pub enum QueryMsg {
     #[returns(cw_ownable::Ownership<String>)]
     GetCreatorOwnership {},
     #[returns(TokenAllocatorData)]
-    GetRangeData { from_block: Uint64, to_block: Uint64 },
+    GetRangeData {
+        from_block: Uint64,
+        to_block: Uint64,
+    },
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -22,7 +25,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetData {} => to_json_binary(&query_amount(_env)?),
         QueryMsg::GetCreatorOwnership {} => to_json_binary(&query_creator_ownership(deps.storage)?),
-        QueryMsg::GetRangeData { from_block, to_block } => to_json_binary(&query_range_amount(from_block, to_block)?),
+        QueryMsg::GetRangeData {
+            from_block,
+            to_block,
+        } => to_json_binary(&query_range_amount(from_block, to_block)?),
     }
 }
 
@@ -105,8 +111,8 @@ mod tests {
     use crate::contract::{execute, instantiate};
     use crate::msg::InstantiateMsg;
     use crate::query::{query, QueryMsg, TokenAllocatorData};
-    use cw_multi_test::{App, ContractWrapper, Executor};
     use cosmwasm_std::Uint64;
+    use cw_multi_test::{App, ContractWrapper, Executor};
 
     #[test]
     fn test_query() {
@@ -152,7 +158,7 @@ mod tests {
             .unwrap();
         assert_eq!(response.amount.u64(), 3260u64);
     }
-    
+
     #[test]
     fn test_query_range_data() {
         let mut app = App::default();

@@ -39,3 +39,4 @@ outbe-nft = { version = "*", path = "packages/outbe-nft" }
 outbe-utils = { version = "*", path = "packages/outbe-utils" }
 tribute = { version = "*", path = "contracts/tribute" }
 price-oracle = { version = "*", path = "contracts/price-oracle" }
+nod = { version = "*", path = "contracts/nod" }

@@ -955,6 +955,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "raffle"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "cw20",
+ "nod",
+ "serde",
+ "thiserror 1.0.69",
+ "tribute",
+]
+
+[[package]]
 name = "rand"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

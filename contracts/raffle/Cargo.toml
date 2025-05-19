@@ -1,0 +1,27 @@
+[package]
+name = "raffle"
+version = { workspace = true }
+edition = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+library = []
+
+[dependencies]
+cosmwasm-std = { workspace = true }
+cosmwasm-schema = { workspace = true }
+cw-storage-plus = { workspace = true }
+serde = { workspace = true }
+cw2 = { workspace = true }
+cw20 = { workspace = true }
+thiserror = { workspace = true }
+cw-ownable = { workspace = true }
+
+tribute = { workspace = true }
+nod = { workspace = true }
+
+
+[dev-dependencies]
+cw-multi-test = { workspace = true }
