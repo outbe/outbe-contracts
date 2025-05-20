@@ -735,7 +735,10 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "cw20",
+ "nod",
  "outbe-nft",
+ "price-oracle",
+ "raffle",
  "tribute",
 ]
 

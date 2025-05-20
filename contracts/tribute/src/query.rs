@@ -115,6 +115,13 @@ fn query_daily_tributes(
 ) -> StdResult<DailyTributesResponse> {
     let (start_date, end_date) = date_bounds(date);
 
+    println!(
+        "dates {} {} {}",
+        date.seconds(),
+        start_date.seconds(),
+        end_date.seconds()
+    );
+
     let tokens: StdResult<Vec<FullTributeData>> =
         Cw721Config::<TributeData, Option<Empty>>::default()
             .nft_info

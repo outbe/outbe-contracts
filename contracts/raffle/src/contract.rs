@@ -1,6 +1,6 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{CONFIG, CREATOR, DAILY_RAFFLE};
+use crate::state::{Config, CONFIG, CREATOR, DAILY_RAFFLE};
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -28,6 +28,15 @@ pub fn instantiate(
     };
 
     CREATOR.initialize_owner(deps.storage, deps.api, Some(creator))?;
+
+    CONFIG.save(
+        deps.storage,
+        &Config {
+            vector: msg.vector,
+            tribute: msg.tribute,
+            nod: msg.nod,
+        },
+    )?;
 
     Ok(Response::default()
         .add_attribute("action", "raffle::instantiate")
@@ -62,6 +71,7 @@ fn execute_raffle(
     let config = CONFIG.load(deps.storage)?;
     let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
 
+    println!("Raffle dates = {} {} ", date_time, date);
     // query tribute
     let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
         &tribute_address,
@@ -71,6 +81,7 @@ fn execute_raffle(
         },
     )?;
 
+    println!("Raffle tributes = {}", tributes.tributes.len());
     // todo implement logic with vectors and raffle itself
 
     // mint nod
@@ -108,13 +119,10 @@ fn execute_raffle(
 
     DAILY_RAFFLE.save(deps.storage, date, &raffle_run_today)?;
 
-    Ok(
-        Response::new()
-            .add_attribute("action", "raffle::raffle")
-            .add_event(
-                Event::new("raffle::raffle").add_attribute("run", raffle_run_today.to_string()),
-            ), // .add_submessages(messages)
-    )
+    Ok(Response::new()
+        .add_attribute("action", "raffle::raffle")
+        .add_event(Event::new("raffle::raffle").add_attribute("run", raffle_run_today.to_string()))
+        .add_submessages(messages))
 }
 
 /// Normalize any timestamp to midnight UTC of that day.

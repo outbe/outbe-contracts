@@ -41,3 +41,4 @@ tribute = { version = "*", path = "contracts/tribute", features = ["library"] }
 price-oracle = { version = "*", path = "contracts/price-oracle", features = ["library"] }
 nod = { version = "*", path = "contracts/nod", features = ["library"] }
 vector = { version = "*", path = "contracts/vector", features = ["library"] }
+raffle = { version = "*", path = "contracts/raffle", features = ["library"] }
