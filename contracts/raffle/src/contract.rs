@@ -1,8 +1,6 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{Config, CONFIG, CREATOR, DAILY_RAFFLE, TRIBUTES_DISTRIBUTION};
-use std::collections::HashSet;
-
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
@@ -10,6 +8,7 @@ use cosmwasm_std::{
     WasmMsg,
 };
 use cw20::Denom;
+use std::collections::HashSet;
 
 const CONTRACT_NAME: &str = "outbe.net:raffle";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -159,6 +158,11 @@ fn execute_raffle(
 
     // mint nod
     let mut messages: Vec<SubMsg> = vec![];
+    let tributes_count = tributes_in_current_raffle.len();
+    println!(
+        "Tributes in current run {}: {}",
+        raffle_run_today, tributes_count
+    );
     for tribute_id in tributes_in_current_raffle {
         let tribute: tribute::query::TributeInfoResponse = deps.querier.query_wasm_smart(
             &tribute_address,
@@ -200,7 +204,11 @@ fn execute_raffle(
 
     Ok(Response::new()
         .add_attribute("action", "raffle::raffle")
-        .add_event(Event::new("raffle::raffle").add_attribute("run", raffle_run_today.to_string()))
+        .add_event(
+            Event::new("raffle::raffle")
+                .add_attribute("run", raffle_run_today.to_string())
+                .add_attribute("tributes_count", format!("{}", tributes_count)),
+        )
         .add_submessages(messages))
 }
 
