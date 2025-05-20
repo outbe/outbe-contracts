@@ -6,7 +6,8 @@ use std::collections::HashSet;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, DepsMut, Env, Event, MessageInfo, Response, SubMsg, Timestamp, Uint128, WasmMsg,
+    to_json_binary, Addr, DepsMut, Env, Event, MessageInfo, Response, SubMsg, Timestamp, Uint128,
+    WasmMsg,
 };
 use cw20::Denom;
 
@@ -174,7 +175,9 @@ fn execute_raffle(
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
                         nod_id,
-                        settlement_token: Denom::Native("gem".to_string()), // todo define fields
+                        settlement_token: Denom::Cw20(Addr::unchecked(
+                            "gem1aaf9r6s7nxhysuegqrxv0wpm27ypyv4886medd3mrkrw6t4yfcnsvkn2zr",
+                        )), // todo query from tribute?
                         symbolic_rate: Default::default(),
                         vector_rate: Default::default(),
                         nominal_minor_rate: tribute.extension.nominal_minor_qty,
