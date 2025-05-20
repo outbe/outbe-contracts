@@ -739,6 +739,7 @@ dependencies = [
  "outbe-nft",
  "price-oracle",
  "raffle",
+ "token-allocator",
  "tribute",
 ]
 

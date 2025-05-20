@@ -88,41 +88,19 @@ fn test_raffle() {
     println!("📦 Deploy Node");
     let nod = deploy_nod(&mut app, config.owner_addr.clone());
 
+    println!("📦 Deploy Token Allocator");
+    let token_allocator = deploy_token_allocator(&mut app, config.owner_addr.clone());
+
     println!("📦 Deploy Raffle");
     let raffle = deploy_raffle(
         &mut app,
         config.owner_addr.clone(),
         tribute.address.clone(),
         nod.address.clone(),
+        token_allocator.address.clone(),
     );
 
     println!("🧪 Perform tests");
-
-    println!("🔬 Raffle on no tributes");
-    app.execute_contract(
-        config.owner_addr.clone(),
-        raffle.address.clone(),
-        &raffle::msg::ExecuteMsg::Raffle { raffle_date: None },
-        &[],
-    )
-    .unwrap();
-
-    let response: outbe_nft::msg::TokensResponse = app
-        .wrap()
-        .query_wasm_smart(
-            nod.address.clone(),
-            &QueryMsg::AllTokens {
-                start_after: None,
-                limit: None,
-            },
-        )
-        .unwrap();
-
-    assert_eq!(
-        response.tokens.len(),
-        0,
-        "No nods because there were no tributes"
-    );
 
     println!("☑️ Add tribute");
     app.execute_contract(
@@ -203,20 +181,31 @@ fn test_raffle() {
         "One node should be created after raffle"
     );
 
-    // let response: TributeInfoResponse = app
-    //     .wrap()
-    //     .query_wasm_smart(
-    //         tribute.address.clone(),
-    //         &QueryMsg::NftInfo {
-    //             token_id: "1".to_string(),
-    //         },
-    //     )
-    //     .unwrap();
-    //
-    // assert_eq!(
-    //     response.extension.minor_value_settlement,
-    //     Uint128::from(100u32)
-    // );
+    println!("🔬 Raffle on no tributes");
+    app.execute_contract(
+        config.owner_addr.clone(),
+        raffle.address.clone(),
+        &raffle::msg::ExecuteMsg::Raffle { raffle_date: None },
+        &[],
+    )
+    .unwrap();
+
+    let response: outbe_nft::msg::TokensResponse = app
+        .wrap()
+        .query_wasm_smart(
+            nod.address.clone(),
+            &QueryMsg::AllTokens {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
+
+    assert_eq!(
+        response.tokens.len(),
+        1,
+        "No new nods because there were no tributes"
+    );
 }
 
 fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedContract {
@@ -279,7 +268,13 @@ fn deploy_nod(app: &mut App, owner: Addr) -> DeployedContract {
     DeployedContract { address, code_id }
 }
 
-fn deploy_raffle(app: &mut App, owner: Addr, tribute: Addr, nod: Addr) -> DeployedContract {
+fn deploy_raffle(
+    app: &mut App,
+    owner: Addr,
+    tribute: Addr,
+    nod: Addr,
+    token_allocator: Addr,
+) -> DeployedContract {
     use raffle::contract::{execute, instantiate};
     use raffle::msg::InstantiateMsg;
     use raffle::query::query;
@@ -292,7 +287,7 @@ fn deploy_raffle(app: &mut App, owner: Addr, tribute: Addr, nod: Addr) -> Deploy
         vector: None,
         tribute: Some(tribute),
         nod: Some(nod),
-        token_allocator: None, // TODO!!
+        token_allocator: Some(token_allocator),
     };
     let address = app
         .instantiate_contract(
@@ -331,6 +326,28 @@ fn deploy_price_oracle(app: &mut App, owner: Addr) -> DeployedContract {
             &instantiate_msg,
             &[],
             "price-oracle".to_string(),
+            None,
+        )
+        .unwrap();
+    DeployedContract { address, code_id }
+}
+
+fn deploy_token_allocator(app: &mut App, owner: Addr) -> DeployedContract {
+    use token_allocator::contract::{execute, instantiate};
+    use token_allocator::msg::InstantiateMsg;
+    use token_allocator::query::query;
+
+    let code = ContractWrapper::new(execute, instantiate, query);
+    let code_id = app.store_code(Box::new(code));
+
+    let instantiate_msg = InstantiateMsg { creator: None };
+    let address = app
+        .instantiate_contract(
+            code_id,
+            owner,
+            &instantiate_msg,
+            &[],
+            "token-allocator".to_string(),
             None,
         )
         .unwrap();

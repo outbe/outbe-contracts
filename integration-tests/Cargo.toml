@@ -15,3 +15,4 @@ tribute = { workspace = true }
 nod = { workspace = true }
 raffle = { workspace = true }
 price-oracle = { workspace = true }
+token-allocator = { workspace = true}

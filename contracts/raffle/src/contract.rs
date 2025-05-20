@@ -104,7 +104,8 @@ fn execute_raffle(
 
         let mut distributed_tributes: HashSet<String> = HashSet::new();
         let mut pools: Vec<Vec<String>> = Vec::with_capacity(24);
-        for pool_id in [0usize; 23] {
+        let mut pool_id: usize = 0;
+        while pool_id < 24 {
             let mut pool_tributes: Vec<String> = vec![];
             let mut allocated_in_pool = Uint128::zero();
             for tribute in tributes.tributes.clone() {
@@ -127,6 +128,7 @@ fn execute_raffle(
                 pool_tributes.len()
             );
             pools.push(pool_tributes);
+            pool_id += 1;
         }
 
         for (i, pool) in pools.iter().enumerate() {
@@ -135,6 +137,7 @@ fn execute_raffle(
                 // NB: i starts from 1 because first vector starts from 1
                 let key = format!("{}_{}_{}", date, i + 1, j);
                 TRIBUTES_DISTRIBUTION.save(deps.storage, &key, tribute_id)?;
+                println!("added tribute {} in pool {}", tribute_id, key,);
             }
         }
         pools.first().unwrap_or(&vec![]).clone()

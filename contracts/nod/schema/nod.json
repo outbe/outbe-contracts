@@ -701,7 +701,8 @@
       "title": "NftInfoResponse_for_NodData",
       "type": "object",
       "required": [
-        "extension"
+        "extension",
+        "owner"
       ],
       "properties": {
         "extension": {
@@ -711,6 +712,9 @@
               "$ref": "#/definitions/NodData"
             }
           ]
+        },
+        "owner": {
+          "$ref": "#/definitions/Addr"
         }
       },
       "additionalProperties": false,
