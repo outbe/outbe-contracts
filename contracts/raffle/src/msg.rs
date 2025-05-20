@@ -7,6 +7,7 @@ pub struct InstantiateMsg {
     pub vector: Option<Addr>,
     pub tribute: Option<Addr>,
     pub nod: Option<Addr>,
+    pub token_allocator: Option<Addr>,
 }
 
 #[cw_serde]

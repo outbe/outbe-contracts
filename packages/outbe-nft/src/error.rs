@@ -27,7 +27,8 @@ pub enum Cw721ContractError {
     #[error(transparent)]
     Version(#[from] cw2::VersionError),
 
-    #[error("token_id already claimed")]
+    // TODO fix error message on a target contract, not here
+    #[error("Submission failed: tribute already exists on the network")]
     Claimed {},
 
     #[error("Caller is not collection creator")]

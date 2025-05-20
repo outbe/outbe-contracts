@@ -23,6 +23,7 @@ cw-ownable = { workspace = true }
 tribute = { workspace = true}
 nod = { workspace = true}
 vector = { workspace = true}
+token-allocator = { workspace = true}
 
 
 [dev-dependencies]

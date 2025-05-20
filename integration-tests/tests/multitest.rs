@@ -292,6 +292,7 @@ fn deploy_raffle(app: &mut App, owner: Addr, tribute: Addr, nod: Addr) -> Deploy
         vector: None,
         tribute: Some(tribute),
         nod: Some(nod),
+        token_allocator: None, // TODO!!
     };
     let address = app
         .instantiate_contract(

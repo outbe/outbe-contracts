@@ -1,11 +1,12 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{Config, CONFIG, CREATOR, DAILY_RAFFLE};
+use crate::state::{Config, CONFIG, CREATOR, DAILY_RAFFLE, TRIBUTES_DISTRIBUTION};
+use std::collections::HashSet;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, DepsMut, Env, Event, MessageInfo, Response, SubMsg, Timestamp, WasmMsg,
+    to_json_binary, DepsMut, Env, Event, MessageInfo, Response, SubMsg, Timestamp, Uint128, WasmMsg,
 };
 use cw20::Denom;
 
@@ -35,6 +36,7 @@ pub fn instantiate(
             vector: msg.vector,
             tribute: msg.tribute,
             nod: msg.nod,
+            token_allocator: msg.token_allocator,
         },
     )?;
 
@@ -70,44 +72,118 @@ fn execute_raffle(
 
     let config = CONFIG.load(deps.storage)?;
     let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
+    let token_allocator_address = config
+        .token_allocator
+        .ok_or(ContractError::NotInitialized {})?;
 
     println!("Raffle dates = {} {} ", date_time, date);
-    // query tribute
-    let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
-        &tribute_address,
-        &tribute::query::QueryMsg::DailyTributes {
-            date: date_time,
-            status: Some(tribute::types::Status::Accepted),
-        },
-    )?;
-
-    println!("Raffle tributes = {}", tributes.tributes.len());
-    // todo implement logic with vectors and raffle itself
-
-    // mint nod
     let nod_address = config.nod.ok_or(ContractError::NotInitialized {})?;
 
+    let tributes_in_current_raffle: Vec<String> = if raffle_run_today == 1 {
+        // distribute tokens
+        let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+            &tribute_address,
+            &tribute::query::QueryMsg::DailyTributes {
+                date: date_time,
+                status: Some(tribute::types::Status::Accepted),
+            },
+        )?;
+        println!("Raffle tributes = {}", tributes.tributes.len());
+
+        // query total to distribute
+        // todo rely on block numbers to calc how many we need to distribute?
+        let allocation_per_block: token_allocator::types::TokenAllocatorData =
+            deps.querier.query_wasm_smart(
+                &token_allocator_address,
+                &token_allocator::query::QueryMsg::GetData {},
+            )?;
+        //
+        let total_allocation =
+            Uint128::from(allocation_per_block.amount) * Uint128::new(24 * 60 * 12);
+        let allocation_per_pool = total_allocation / Uint128::new(24);
+
+        let mut distributed_tributes: HashSet<String> = HashSet::new();
+        let mut pools: Vec<Vec<String>> = Vec::with_capacity(24);
+        for pool_id in [0usize; 23] {
+            let mut pool_tributes: Vec<String> = vec![];
+            let mut allocated_in_pool = Uint128::zero();
+            for tribute in tributes.tributes.clone() {
+                if allocated_in_pool >= allocation_per_pool {
+                    break;
+                }
+                if !distributed_tributes.contains(&tribute.token_id) {
+                    if allocated_in_pool + tribute.data.minor_value_settlement > allocation_per_pool
+                    {
+                        continue;
+                    }
+                    allocated_in_pool += tribute.data.minor_value_settlement;
+                    pool_tributes.push(tribute.token_id.clone());
+                    distributed_tributes.insert(tribute.token_id.clone());
+                }
+            }
+            println!(
+                "Distributed in pool {:?}: {:?} tributes",
+                pool_id,
+                pool_tributes.len()
+            );
+            pools.push(pool_tributes);
+        }
+
+        for (i, pool) in pools.iter().enumerate() {
+            for (j, tribute_id) in pool.iter().enumerate() {
+                // todo define public key for such struct
+                // NB: i starts from 1 because first vector starts from 1
+                let key = format!("{}_{}_{}", date, i + 1, j);
+                TRIBUTES_DISTRIBUTION.save(deps.storage, &key, tribute_id)?;
+            }
+        }
+        pools.first().unwrap_or(&vec![]).clone()
+    } else {
+        // use already distributed tokens
+        let mut result: Vec<String> = vec![];
+        let mut j: usize = 0;
+        loop {
+            let key = format!("{}_{}_{}", date, raffle_run_today, j);
+            let tribute_id = TRIBUTES_DISTRIBUTION.may_load(deps.storage, &key)?;
+            match tribute_id {
+                None => {
+                    break;
+                }
+                Some(id) => result.push(id),
+            }
+            j += 1;
+        }
+        result
+    };
+
+    // mint nod
     let mut messages: Vec<SubMsg> = vec![];
-    for tribute in tributes.tributes {
-        let nod_id = format!("{}_{}", tribute.token_id, raffle_run_today);
+    for tribute_id in tributes_in_current_raffle {
+        let tribute: tribute::query::TributeInfoResponse = deps.querier.query_wasm_smart(
+            &tribute_address,
+            &tribute::query::QueryMsg::NftInfo {
+                token_id: tribute_id.clone(),
+            },
+        )?;
+        let nod_id = format!("{}_{}", tribute_id, raffle_run_today);
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
                 token_id: nod_id.clone(),
-                owner: tribute.owner.clone(),
+                owner: tribute.owner.to_string(),
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
                         nod_id,
                         settlement_token: Denom::Native("gem".to_string()), // todo define fields
                         symbolic_rate: Default::default(),
                         vector_rate: Default::default(),
-                        nominal_minor_rate: tribute.data.nominal_minor_qty,
+                        nominal_minor_rate: tribute.extension.nominal_minor_qty,
                         issuance_minor_rate: Default::default(),
-                        symbolic_minor_load: tribute.data.symbolic_load,
+                        symbolic_minor_load: tribute.extension.symbolic_load,
                         vector_minor_rate: Default::default(),
                         floor_minor_price: Default::default(),
                         state: nod::types::State::Issued,
-                        address: tribute.owner,
+                        address: tribute.owner.to_string(),
                     },
                     created_at: None,
                 }),

@@ -1,5 +1,6 @@
 use crate::state::CollectionInfo;
 use cosmwasm_schema::cw_serde;
+use cosmwasm_std::Addr;
 
 #[cw_serde]
 pub struct Cw721InstantiateMsg<TCollectionExtensionMsg> {
@@ -41,6 +42,7 @@ pub struct NumTokensResponse {
 pub struct NftInfoResponse<TNftExtension> {
     /// You can add any custom metadata here when you extend cw721-base
     pub extension: TNftExtension,
+    pub owner: Addr,
 }
 
 #[cw_serde]
