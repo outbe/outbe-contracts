@@ -215,17 +215,6 @@
           "signature"
         ],
         "properties": {
-          "created_at": {
-            "description": "Time of the Tribute NFT for demo",
-            "anyOf": [
-              {
-                "$ref": "#/definitions/Timestamp"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "entity": {
             "$ref": "#/definitions/TributeEntity"
           },
@@ -242,6 +231,17 @@
             "allOf": [
               {
                 "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          },
+          "tribute_date": {
+            "description": "Time of the Tribute NFT for demo",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Timestamp"
+              },
+              {
+                "type": "null"
               }
             ]
           }
@@ -801,6 +801,7 @@
             "settlement_token",
             "status",
             "symbolic_load",
+            "tribute_date",
             "updated_at"
           ],
           "properties": {
@@ -866,6 +867,9 @@
                   "$ref": "#/definitions/Uint128"
                 }
               ]
+            },
+            "tribute_date": {
+              "$ref": "#/definitions/Timestamp"
             },
             "updated_at": {
               "description": "Last updated time",
@@ -1183,6 +1187,7 @@
             "settlement_token",
             "status",
             "symbolic_load",
+            "tribute_date",
             "updated_at"
           ],
           "properties": {
@@ -1248,6 +1253,9 @@
                   "$ref": "#/definitions/Uint128"
                 }
               ]
+            },
+            "tribute_date": {
+              "$ref": "#/definitions/Timestamp"
             },
             "updated_at": {
               "description": "Last updated time",

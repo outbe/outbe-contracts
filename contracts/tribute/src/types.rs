@@ -33,6 +33,7 @@ pub struct TributeData {
     /// Hashes identifying consumption records batch. Each hash should be a valid unique
     /// sha256 hash in hex format
     pub hashes: Vec<HexBinary>,
+    pub tribute_date: Timestamp,
     /// Time when the Tribute NFT was created on the network
     pub created_at: Timestamp,
     /// Last updated time

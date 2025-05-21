@@ -153,7 +153,8 @@ fn execute_mint(
         },
         symbolic_load: load,
         hashes: entity.hashes.clone(),
-        created_at: extension.created_at.unwrap_or(env.block.time),
+        tribute_date: extension.tribute_date.unwrap_or(env.block.time),
+        created_at: env.block.time,
         updated_at: env.block.time,
     };
 

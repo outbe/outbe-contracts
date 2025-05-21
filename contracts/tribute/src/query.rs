@@ -129,8 +129,8 @@ fn query_daily_tributes(
             .range(deps.storage, None, None, Order::Ascending)
             .filter_map(|item| match item {
                 Ok((id, tribute))
-                    if (tribute.extension.created_at >= start_date
-                        && tribute.extension.created_at < end_date)
+                    if (tribute.extension.tribute_date >= start_date
+                        && tribute.extension.tribute_date < end_date)
                         && (status.clone().unwrap_or(tribute.clone().extension.status)
                             == tribute.extension.status) =>
                 {

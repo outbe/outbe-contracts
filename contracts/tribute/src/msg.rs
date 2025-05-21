@@ -44,7 +44,7 @@ pub struct MintExtension {
     /// Serialized according to SEC 2 (33 or 65 bytes) public key in hex
     pub public_key: HexBinary,
     /// Time of the Tribute NFT for demo
-    pub created_at: Option<Timestamp>,
+    pub tribute_date: Option<Timestamp>,
 }
 
 #[cw_serde]
