@@ -208,7 +208,7 @@ fn execute_raffle(
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
                         nod_id,
-                        settlement_token: tribute_info.settlement_token.clone(),
+                        settlement_token: tribute.extension.settlement_token.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
                         nominal_minor_rate: tribute.extension.nominal_minor_qty,
                         symbolic_minor_load: tribute.extension.symbolic_load,
