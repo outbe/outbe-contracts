@@ -9,6 +9,7 @@ pub struct Config {
     pub tribute: Option<Addr>,
     pub nod: Option<Addr>,
     pub token_allocator: Option<Addr>,
+    pub price_oracle: Option<Addr>,
 }
 
 pub const CONFIG: Item<Config> = Item::new("config");

@@ -24,6 +24,7 @@ tribute = { workspace = true}
 nod = { workspace = true}
 vector = { workspace = true}
 token-allocator = { workspace = true}
+price-oracle = { workspace = true}
 
 
 [dev-dependencies]

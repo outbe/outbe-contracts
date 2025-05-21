@@ -22,13 +22,13 @@ pub struct NodData {
     /// Nominal minor rate at transaction time
     pub nominal_minor_rate: Uint128,
     /// Issuance minor rate at issuance time
-    pub issuance_minor_rate: Uint128,
+    pub issuance_minor_rate: Decimal,
     /// Symbolic minor load
     pub symbolic_minor_load: Uint128,
     /// Vector minor rate from account
     pub vector_minor_rate: Uint128,
     /// Floor minor price threshold
-    pub floor_minor_price: Uint128,
+    pub floor_minor_price: Decimal,
     /// Current state of the Nod
     pub state: State,
     /// Address entitled to claim the Nod

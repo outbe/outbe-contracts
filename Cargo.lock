@@ -967,6 +967,7 @@ dependencies = [
  "cw2",
  "cw20",
  "nod",
+ "price-oracle",
  "serde",
  "thiserror 1.0.69",
  "token-allocator",

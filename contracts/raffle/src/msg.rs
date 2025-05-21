@@ -8,6 +8,7 @@ pub struct InstantiateMsg {
     pub tribute: Option<Addr>,
     pub nod: Option<Addr>,
     pub token_allocator: Option<Addr>,
+    pub price_oracle: Option<Addr>,
 }
 
 #[cw_serde]

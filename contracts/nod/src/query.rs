@@ -143,10 +143,10 @@ mod tests {
             settlement_token: Denom::Native("uset".to_string()),
             symbolic_rate: Decimal::from_str("1.23").unwrap(),
             nominal_minor_rate: Uint128::new(10),
-            issuance_minor_rate: Uint128::new(20),
+            issuance_minor_rate: Decimal::from_str("20").unwrap(),
             symbolic_minor_load: Uint128::new(30),
             vector_minor_rate: Uint128::new(40),
-            floor_minor_price: Uint128::new(50),
+            floor_minor_price: Decimal::from_str("50").unwrap(),
             state: State::Issued,
             address: recipient.to_string(),
         };

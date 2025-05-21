@@ -40,10 +40,10 @@ pub struct NodEntity {
     pub settlement_token: Denom,
     pub symbolic_rate: Decimal,
     pub nominal_minor_rate: Uint128,
-    pub issuance_minor_rate: Uint128,
+    pub issuance_minor_rate: Decimal,
     pub symbolic_minor_load: Uint128,
     pub vector_minor_rate: Uint128,
-    pub floor_minor_price: Uint128,
+    pub floor_minor_price: Decimal,
     pub state: State,
     pub address: String,
 }

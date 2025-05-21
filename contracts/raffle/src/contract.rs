@@ -4,7 +4,8 @@ use crate::state::{Config, CONFIG, CREATOR, DAILY_RAFFLE, TRIBUTES_DISTRIBUTION}
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, DepsMut, Env, Event, MessageInfo, Response, SubMsg, Timestamp, Uint128, WasmMsg,
+    to_json_binary, Decimal, DepsMut, Env, Event, MessageInfo, Response, SubMsg, Timestamp,
+    Uint128, WasmMsg,
 };
 use std::collections::HashSet;
 
@@ -35,6 +36,7 @@ pub fn instantiate(
             tribute: msg.tribute,
             nod: msg.nod,
             token_allocator: msg.token_allocator,
+            price_oracle: msg.price_oracle,
         },
     )?;
 
@@ -74,6 +76,9 @@ fn execute_raffle(
         .token_allocator
         .ok_or(ContractError::NotInitialized {})?;
     let vector_address = config.vector.ok_or(ContractError::NotInitialized {})?;
+    let price_oracle_address = config
+        .price_oracle
+        .ok_or(ContractError::NotInitialized {})?;
 
     println!("Raffle dates = {} {} ", date_time, date);
     let nod_address = config.nod.ok_or(ContractError::NotInitialized {})?;
@@ -180,6 +185,11 @@ fn execute_raffle(
         .find(|v| v.vector_id == raffle_run_today)
         .ok_or(ContractError::BadRunConfiguration {})?;
 
+    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
+        &price_oracle_address,
+        &price_oracle::query::QueryMsg::GetPrice {},
+    )?;
+
     for tribute_id in tributes_in_current_raffle {
         let tribute: tribute::query::TributeInfoResponse = deps.querier.query_wasm_smart(
             &tribute_address,
@@ -188,6 +198,8 @@ fn execute_raffle(
             },
         )?;
         let nod_id = format!("{}_{}", tribute_id, raffle_run_today);
+        let floor_price = exchange_rate.price
+            * (Decimal::one() + Decimal::from_atomics(vector.performance_rate, 3).unwrap());
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
@@ -200,9 +212,9 @@ fn execute_raffle(
                         symbolic_rate: tribute_info.symbolic_rate,
                         nominal_minor_rate: tribute.extension.nominal_minor_qty,
                         symbolic_minor_load: tribute.extension.symbolic_load,
-                        issuance_minor_rate: Default::default(),
                         vector_minor_rate: vector.performance_rate,
-                        floor_minor_price: Default::default(),
+                        issuance_minor_rate: exchange_rate.price,
+                        floor_minor_price: floor_price,
                         state: nod::types::State::Issued,
                         address: tribute.owner.to_string(),
                     },

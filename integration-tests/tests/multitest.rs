@@ -102,6 +102,7 @@ fn test_raffle() {
         nod.address.clone(),
         token_allocator.address.clone(),
         vector.address.clone(),
+        price_oracle.address.clone(),
     );
 
     println!("🧪 Perform tests");
@@ -290,6 +291,7 @@ fn deploy_raffle(
     nod: Addr,
     token_allocator: Addr,
     vector: Addr,
+    price_oracle: Addr,
 ) -> DeployedContract {
     use raffle::contract::{execute, instantiate};
     use raffle::msg::InstantiateMsg;
@@ -304,6 +306,7 @@ fn deploy_raffle(
         tribute: Some(tribute),
         nod: Some(nod),
         token_allocator: Some(token_allocator),
+        price_oracle: Some(price_oracle),
     };
     let address = app
         .instantiate_contract(
