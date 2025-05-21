@@ -741,6 +741,7 @@ dependencies = [
  "raffle",
  "token-allocator",
  "tribute",
+ "vector",
 ]
 
 [[package]]

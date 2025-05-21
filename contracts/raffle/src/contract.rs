@@ -73,6 +73,7 @@ fn execute_raffle(
     let token_allocator_address = config
         .token_allocator
         .ok_or(ContractError::NotInitialized {})?;
+    let vector_address = config.vector.ok_or(ContractError::NotInitialized {})?;
 
     println!("Raffle dates = {} {} ", date_time, date);
     let nod_address = config.nod.ok_or(ContractError::NotInitialized {})?;
@@ -170,6 +171,15 @@ fn execute_raffle(
         .query_wasm_smart(&tribute_address, &tribute::query::QueryMsg::ContractInfo {})?;
     let tribute_info = tribute_info.collection_config;
 
+    let vector_info: vector::query::AllVectorsResponse = deps
+        .querier
+        .query_wasm_smart(&vector_address, &vector::query::QueryMsg::Vectors {})?;
+    let vector = vector_info
+        .vectors
+        .iter()
+        .find(|v| v.vector_id == raffle_run_today)
+        .ok_or(ContractError::BadRunConfiguration {})?;
+
     for tribute_id in tributes_in_current_raffle {
         let tribute: tribute::query::TributeInfoResponse = deps.querier.query_wasm_smart(
             &tribute_address,
@@ -191,7 +201,7 @@ fn execute_raffle(
                         nominal_minor_rate: tribute.extension.nominal_minor_qty,
                         symbolic_minor_load: tribute.extension.symbolic_load,
                         issuance_minor_rate: Default::default(),
-                        vector_minor_rate: Default::default(),
+                        vector_minor_rate: vector.performance_rate,
                         floor_minor_price: Default::default(),
                         state: nod::types::State::Issued,
                         address: tribute.owner.to_string(),

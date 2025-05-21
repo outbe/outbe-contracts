@@ -7,4 +7,6 @@ pub enum ContractError {
     Std(#[from] StdError),
     #[error("Not initialized")]
     NotInitialized {},
+    #[error("Bad Run Configuration")]
+    BadRunConfiguration {},
 }

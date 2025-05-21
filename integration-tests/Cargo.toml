@@ -16,3 +16,4 @@ nod = { workspace = true }
 raffle = { workspace = true }
 price-oracle = { workspace = true }
 token-allocator = { workspace = true}
+vector = { workspace = true}

@@ -135,7 +135,7 @@ pub fn default_vector_tiers() -> Vec<Vector> {
         },
         Vector {
             vector_id: 24,
-            name: "Growth Vector 10%".to_string(),
+            name: "Growth Vector 100%".to_string(),
             performance_rate: Uint128::new(100u128),
         },
     ]

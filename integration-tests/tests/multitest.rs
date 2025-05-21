@@ -91,6 +91,9 @@ fn test_raffle() {
     println!("📦 Deploy Token Allocator");
     let token_allocator = deploy_token_allocator(&mut app, config.owner_addr.clone());
 
+    println!("📦 Deploy Vector");
+    let vector = deploy_vector(&mut app, config.owner_addr.clone());
+
     println!("📦 Deploy Raffle");
     let raffle = deploy_raffle(
         &mut app,
@@ -98,6 +101,7 @@ fn test_raffle() {
         tribute.address.clone(),
         nod.address.clone(),
         token_allocator.address.clone(),
+        vector.address.clone(),
     );
 
     println!("🧪 Perform tests");
@@ -285,6 +289,7 @@ fn deploy_raffle(
     tribute: Addr,
     nod: Addr,
     token_allocator: Addr,
+    vector: Addr,
 ) -> DeployedContract {
     use raffle::contract::{execute, instantiate};
     use raffle::msg::InstantiateMsg;
@@ -294,8 +299,8 @@ fn deploy_raffle(
     let code_id = app.store_code(Box::new(code));
 
     let instantiate_msg = InstantiateMsg {
-        creator: None,
-        vector: None,
+        creator: Some(owner.to_string()),
+        vector: Some(vector),
         tribute: Some(tribute),
         nod: Some(nod),
         token_allocator: Some(token_allocator),
@@ -359,6 +364,31 @@ fn deploy_token_allocator(app: &mut App, owner: Addr) -> DeployedContract {
             &instantiate_msg,
             &[],
             "token-allocator".to_string(),
+            None,
+        )
+        .unwrap();
+    DeployedContract { address, code_id }
+}
+
+fn deploy_vector(app: &mut App, owner: Addr) -> DeployedContract {
+    use vector::contract::{execute, instantiate};
+    use vector::msg::InstantiateMsg;
+    use vector::query::query;
+
+    let code = ContractWrapper::new(execute, instantiate, query);
+    let code_id = app.store_code(Box::new(code));
+
+    let instantiate_msg = InstantiateMsg {
+        vectors: None,
+        creator: None,
+    };
+    let address = app
+        .instantiate_contract(
+            code_id,
+            owner,
+            &instantiate_msg,
+            &[],
+            "vector".to_string(),
             None,
         )
         .unwrap();
