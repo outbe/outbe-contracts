@@ -9,7 +9,6 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Uint128,
 };
-use outbe_nft::error::Cw721ContractError;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
 use sha2::{Digest, Sha256};
 
@@ -165,7 +164,7 @@ fn execute_mint(
     config
         .nft_info
         .update(deps.storage, &token_id, |old| match old {
-            Some(_) => Err(Cw721ContractError::Claimed {}),
+            Some(_) => Err(ContractError::AlreadyExists {}),
             None => Ok(token),
         })?;
 
