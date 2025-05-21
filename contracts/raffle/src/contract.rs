@@ -236,6 +236,7 @@ fn execute_raffle(
         let nod_id = format!("{}_{}", tribute_id, raffle_run_today);
         let floor_price = exchange_rate.price
             * (Decimal::one() + Decimal::from_atomics(vector.vector_rate, 3).unwrap());
+        println!("Nod id creation = {}", nod_id);
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {

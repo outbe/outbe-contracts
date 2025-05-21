@@ -130,6 +130,28 @@ fn test_raffle() {
     )
         .unwrap();
 
+    app.execute_contract(
+        config.owner_addr.clone(),
+        tribute.address.clone(),
+        &Mint {
+            token_id: "2".to_string(),
+            owner: config.user_addr.to_string(),
+            extension: Box::new(MintExtension {
+                entity: TributeEntity {
+                    token_id: "2".to_string(),
+                    owner: config.user_addr.to_string(),
+                    minor_value_settlement: Uint128::from(9u32),
+                    hashes: vec![HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap()],
+                },
+                signature: HexBinary::from_hex("6ac18ac91280ef125e78d205319f9b84d131793bec05dfcfb22ce8663ce0b143566773bfdedb334b0a938f7ca9d1dab7cdf0f3791c3f7e7dcd69c00d8a3e6245").unwrap(),
+                public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
+                tribute_date: None
+            }),
+        },
+        &[],
+    )
+        .unwrap();
+
     let response: outbe_nft::msg::TokensResponse = app
         .wrap()
         .query_wasm_smart(
@@ -141,7 +163,7 @@ fn test_raffle() {
         )
         .unwrap();
 
-    assert_eq!(response.tokens.len(), 1, "One tribute expected");
+    assert_eq!(response.tokens.len(), 2);
 
     let response: tribute::query::DailyTributesResponse = app
         .wrap()
@@ -154,13 +176,9 @@ fn test_raffle() {
         )
         .unwrap();
 
-    assert_eq!(
-        response.tributes.len(),
-        1,
-        "One tribute expected in next raffle"
-    );
+    assert_eq!(response.tributes.len(), 2);
 
-    println!("🔬 Raffle");
+    println!("🔬 Raffle 1");
     app.execute_contract(
         config.owner_addr.clone(),
         raffle.address.clone(),
@@ -186,7 +204,29 @@ fn test_raffle() {
         "One node should be created after raffle"
     );
 
-    println!("🔬 Raffle on no tributes");
+    println!("🔬 Raffle 2");
+    app.execute_contract(
+        config.owner_addr.clone(),
+        raffle.address.clone(),
+        &raffle::msg::ExecuteMsg::Raffle { raffle_date: None },
+        &[],
+    )
+    .unwrap();
+
+    let response: outbe_nft::msg::TokensResponse = app
+        .wrap()
+        .query_wasm_smart(
+            nod.address.clone(),
+            &QueryMsg::AllTokens {
+                start_after: None,
+                limit: None,
+            },
+        )
+        .unwrap();
+
+    assert_eq!(response.tokens.len(), 2);
+
+    println!("🔬 Raffle 3");
     app.execute_contract(
         config.owner_addr.clone(),
         raffle.address.clone(),
@@ -208,7 +248,7 @@ fn test_raffle() {
 
     assert_eq!(
         response.tokens.len(),
-        1,
+        2,
         "No new nods because there were no tributes"
     );
 
@@ -221,7 +261,7 @@ fn test_raffle() {
         )
         .unwrap();
 
-    assert_eq!(response.data.len(), 1,);
+    assert_eq!(response.data.len(), 2,);
 }
 
 fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedContract {

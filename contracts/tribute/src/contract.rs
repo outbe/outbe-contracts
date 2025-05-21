@@ -307,11 +307,11 @@ mod tests {
 
         // prepare raw json data
         let raw_json = r#"{
-            "token_id": "1",
+            "token_id": "2",
             "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-            "minor_value_settlement": "5",
+            "minor_value_settlement": "9",
             "hashes": [
-              "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+              "02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d"
             ]
         }"#;
         let entity: TributeEntity = from_str(raw_json).unwrap();
