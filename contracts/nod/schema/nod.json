@@ -174,10 +174,10 @@
             "type": "string"
           },
           "floor_minor_price": {
-            "$ref": "#/definitions/Uint128"
+            "$ref": "#/definitions/Decimal"
           },
           "issuance_minor_rate": {
-            "$ref": "#/definitions/Uint128"
+            "$ref": "#/definitions/Decimal"
           },
           "nod_id": {
             "type": "string"
@@ -788,7 +788,7 @@
               "description": "Floor minor price threshold",
               "allOf": [
                 {
-                  "$ref": "#/definitions/Uint128"
+                  "$ref": "#/definitions/Decimal"
                 }
               ]
             },
@@ -796,7 +796,7 @@
               "description": "Issuance minor rate at issuance time",
               "allOf": [
                 {
-                  "$ref": "#/definitions/Uint128"
+                  "$ref": "#/definitions/Decimal"
                 }
               ]
             },
