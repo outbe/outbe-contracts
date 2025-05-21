@@ -167,8 +167,7 @@
           "state",
           "symbolic_minor_load",
           "symbolic_rate",
-          "vector_minor_rate",
-          "vector_rate"
+          "vector_minor_rate"
         ],
         "properties": {
           "address": {
@@ -200,9 +199,6 @@
           },
           "vector_minor_rate": {
             "$ref": "#/definitions/Uint128"
-          },
-          "vector_rate": {
-            "$ref": "#/definitions/Decimal"
           }
         },
         "additionalProperties": false
@@ -773,8 +769,7 @@
             "state",
             "symbolic_minor_load",
             "symbolic_rate",
-            "vector_minor_rate",
-            "vector_rate"
+            "vector_minor_rate"
           ],
           "properties": {
             "address": {
@@ -854,14 +849,6 @@
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
-                }
-              ]
-            },
-            "vector_rate": {
-              "description": "Vector rate",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Decimal"
                 }
               ]
             }
