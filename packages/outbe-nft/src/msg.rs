@@ -43,6 +43,7 @@ pub struct NftInfoResponse<TNftExtension> {
     /// You can add any custom metadata here when you extend cw721-base
     pub extension: TNftExtension,
     pub owner: Addr,
+    pub token_id: String,
 }
 
 #[cw_serde]

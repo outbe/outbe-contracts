@@ -40,6 +40,7 @@ where
     Ok(NftInfoResponse {
         extension: info.extension,
         owner: info.owner,
+        token_id,
     })
 }
 

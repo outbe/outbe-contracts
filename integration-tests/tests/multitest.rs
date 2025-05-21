@@ -206,6 +206,17 @@ fn test_raffle() {
         1,
         "No new nods because there were no tributes"
     );
+
+    println!("🔬 Check distribution");
+    let response: raffle::query::TributesDistributionResponse = app
+        .wrap()
+        .query_wasm_smart(
+            raffle.address.clone(),
+            &raffle::query::QueryMsg::TributesDistribution {},
+        )
+        .unwrap();
+
+    assert_eq!(response.data.len(), 1,);
 }
 
 fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedContract {

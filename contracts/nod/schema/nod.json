@@ -702,7 +702,8 @@
       "type": "object",
       "required": [
         "extension",
-        "owner"
+        "owner",
+        "token_id"
       ],
       "properties": {
         "extension": {
@@ -715,6 +716,9 @@
         },
         "owner": {
           "$ref": "#/definitions/Addr"
+        },
+        "token_id": {
+          "type": "string"
         }
       },
       "additionalProperties": false,

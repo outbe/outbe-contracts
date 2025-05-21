@@ -4,10 +4,8 @@ use crate::state::{Config, CONFIG, CREATOR, DAILY_RAFFLE, TRIBUTES_DISTRIBUTION}
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Addr, DepsMut, Env, Event, MessageInfo, Response, SubMsg, Timestamp, Uint128,
-    WasmMsg,
+    to_json_binary, DepsMut, Env, Event, MessageInfo, Response, SubMsg, Timestamp, Uint128, WasmMsg,
 };
-use cw20::Denom;
 use std::collections::HashSet;
 
 const CONTRACT_NAME: &str = "outbe.net:raffle";
@@ -137,7 +135,7 @@ fn execute_raffle(
                 // NB: i starts from 1 because first vector starts from 1
                 let key = format!("{}_{}_{}", date, i + 1, j);
                 TRIBUTES_DISTRIBUTION.save(deps.storage, &key, tribute_id)?;
-                println!("added tribute {} in pool {}", tribute_id, key,);
+                println!("added tribute {} in pool {}", tribute_id, key);
             }
         }
         pools.first().unwrap_or(&vec![]).clone()
@@ -166,6 +164,12 @@ fn execute_raffle(
         "Tributes in current run {}: {}",
         raffle_run_today, tributes_count
     );
+
+    let tribute_info: tribute::query::TributeContractInfoResponse = deps
+        .querier
+        .query_wasm_smart(&tribute_address, &tribute::query::QueryMsg::ContractInfo {})?;
+    let tribute_info = tribute_info.collection_config;
+
     for tribute_id in tributes_in_current_raffle {
         let tribute: tribute::query::TributeInfoResponse = deps.querier.query_wasm_smart(
             &tribute_address,
@@ -182,14 +186,11 @@ fn execute_raffle(
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
                         nod_id,
-                        settlement_token: Denom::Cw20(Addr::unchecked(
-                            "gem1aaf9r6s7nxhysuegqrxv0wpm27ypyv4886medd3mrkrw6t4yfcnsvkn2zr",
-                        )), // todo query from tribute?
-                        symbolic_rate: Default::default(),
-                        vector_rate: Default::default(),
+                        settlement_token: tribute_info.settlement_token.clone(),
+                        symbolic_rate: tribute_info.symbolic_rate,
                         nominal_minor_rate: tribute.extension.nominal_minor_qty,
-                        issuance_minor_rate: Default::default(),
                         symbolic_minor_load: tribute.extension.symbolic_load,
+                        issuance_minor_rate: Default::default(),
                         vector_minor_rate: Default::default(),
                         floor_minor_price: Default::default(),
                         state: nod::types::State::Issued,

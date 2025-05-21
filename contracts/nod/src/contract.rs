@@ -85,7 +85,6 @@ fn execute_submit(
         nod_id: entity.nod_id.clone(),
         settlement_token: entity.settlement_token.clone(),
         symbolic_rate: entity.symbolic_rate,
-        vector_rate: entity.vector_rate,
         nominal_minor_rate: entity.nominal_minor_rate,
         issuance_minor_rate: entity.issuance_minor_rate,
         symbolic_minor_load: entity.symbolic_minor_load,

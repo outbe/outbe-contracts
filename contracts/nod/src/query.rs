@@ -142,7 +142,6 @@ mod tests {
             nod_id: "nod123".to_string(),
             settlement_token: Denom::Native("uset".to_string()),
             symbolic_rate: Decimal::from_str("1.23").unwrap(),
-            vector_rate: Decimal::from_str("4.56").unwrap(),
             nominal_minor_rate: Uint128::new(10),
             issuance_minor_rate: Uint128::new(20),
             symbolic_minor_load: Uint128::new(30),
@@ -195,7 +194,6 @@ mod tests {
         assert_eq!(resp.extension.nod_id, entity.nod_id);
         assert_eq!(resp.extension.settlement_token, entity.settlement_token);
         assert_eq!(resp.extension.symbolic_rate, entity.symbolic_rate);
-        assert_eq!(resp.extension.vector_rate, entity.vector_rate);
         assert_eq!(resp.extension.nominal_minor_rate, entity.nominal_minor_rate);
         assert_eq!(
             resp.extension.issuance_minor_rate,

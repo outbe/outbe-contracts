@@ -67,14 +67,21 @@ fn query_daily_raffle(deps: Deps, _env: Env) -> StdResult<DailyRaffleResponse> {
 }
 
 fn query_tributes_distribution(deps: Deps, _env: Env) -> StdResult<TributesDistributionResponse> {
+    println!("query_tributes_distribution");
     let result: StdResult<Vec<TributesDistributionData>> = TRIBUTES_DISTRIBUTION
         .range(deps.storage, None, None, Order::Ascending)
         .filter_map(|item| match item {
-            Ok((k, v)) => Some(Ok(TributesDistributionData {
-                key: k,
-                tribute_id: v,
-            })),
-            _ => None,
+            Ok((k, v)) => {
+                println!("found tribute {} {}", k, v);
+                Some(Ok(TributesDistributionData {
+                    key: k,
+                    tribute_id: v,
+                }))
+            }
+            e => {
+                println!("debug error {:?}", e);
+                None
+            }
         })
         .collect();
 

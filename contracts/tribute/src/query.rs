@@ -6,11 +6,12 @@ use cosmwasm_std::{to_json_binary, Binary, Deps, Empty, Env, Order, StdResult, T
 use outbe_nft::state::Cw721Config;
 
 pub type TributeInfoResponse = outbe_nft::msg::NftInfoResponse<TributeData>;
+pub type TributeContractInfoResponse = outbe_nft::msg::ContractInfoResponse<TributeConfig>;
 
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(outbe_nft::msg::ContractInfoResponse<TributeConfig>)]
+    #[returns(TributeContractInfoResponse)]
     ContractInfo {},
 
     // TODO add Cw721 config as well

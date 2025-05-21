@@ -39,7 +39,6 @@ pub struct NodEntity {
     pub nod_id: String,
     pub settlement_token: Denom,
     pub symbolic_rate: Decimal,
-    pub vector_rate: Decimal,
     pub nominal_minor_rate: Uint128,
     pub issuance_minor_rate: Uint128,
     pub symbolic_minor_load: Uint128,

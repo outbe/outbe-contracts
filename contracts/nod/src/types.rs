@@ -19,8 +19,6 @@ pub struct NodData {
     pub settlement_token: Denom,
     /// Symbolic rate
     pub symbolic_rate: Decimal,
-    /// Vector rate
-    pub vector_rate: Decimal,
     /// Nominal minor rate at transaction time
     pub nominal_minor_rate: Uint128,
     /// Issuance minor rate at issuance time
