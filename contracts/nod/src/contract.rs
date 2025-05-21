@@ -3,7 +3,7 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, SubmitExtension};
 use crate::types::{NodConfig, NodData, NodNft};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
 use outbe_nft::error::Cw721ContractError;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
 
@@ -63,6 +63,7 @@ pub fn execute(
             extension,
         } => execute_submit(deps, &env, &info, token_id, owner, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
+        ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
     }
 }
 
@@ -129,6 +130,24 @@ fn execute_burn(
         .add_attribute("action", "nod::burn")
         .add_attribute("sender", info.sender.to_string())
         .add_attribute("token_id", token_id))
+}
+
+fn execute_burn_all(
+    deps: DepsMut,
+    _env: &Env,
+    info: &MessageInfo,
+) -> Result<Response, ContractError> {
+    let config = Cw721Config::<NodData, NodConfig>::default();
+    // TODO verify ownership
+    // let token = config.nft_info.load(deps.storage, &token_id)?;
+    // check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
+
+    config.nft_info.clear(deps.storage);
+    config.token_count.save(deps.storage, &0u64)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "nod::burn_all")
+        .add_event(Event::new("nod::burn_all").add_attribute("sender", info.sender.to_string())))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

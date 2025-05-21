@@ -23,7 +23,11 @@ pub enum ExecuteMsg {
         extension: Box<SubmitExtension>,
     },
     /// Burn an existing Nod NFT
-    Burn { token_id: String },
+    Burn {
+        token_id: String,
+    },
+    // todo remove after demo
+    BurnAll {},
 }
 
 /// Extension data for submit (mint)

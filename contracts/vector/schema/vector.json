@@ -33,27 +33,27 @@
         "type": "object",
         "required": [
           "name",
-          "performance_rate",
-          "vector_id"
+          "vector_id",
+          "vector_rate"
         ],
         "properties": {
           "name": {
             "description": "Name or label of the vector tier",
             "type": "string"
           },
-          "performance_rate": {
+          "vector_id": {
+            "description": "Vector identifier",
+            "type": "integer",
+            "format": "uint16",
+            "minimum": 0.0
+          },
+          "vector_rate": {
             "description": "TPT+%",
             "allOf": [
               {
                 "$ref": "#/definitions/Uint128"
               }
             ]
-          },
-          "vector_id": {
-            "description": "Vector identifier",
-            "type": "integer",
-            "format": "uint16",
-            "minimum": 0.0
           }
         },
         "additionalProperties": false
@@ -222,27 +222,27 @@
           "type": "object",
           "required": [
             "name",
-            "performance_rate",
-            "vector_id"
+            "vector_id",
+            "vector_rate"
           ],
           "properties": {
             "name": {
               "description": "Name or label of the vector tier",
               "type": "string"
             },
-            "performance_rate": {
+            "vector_id": {
+              "description": "Vector identifier",
+              "type": "integer",
+              "format": "uint16",
+              "minimum": 0.0
+            },
+            "vector_rate": {
               "description": "TPT+%",
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
                 }
               ]
-            },
-            "vector_id": {
-              "description": "Vector identifier",
-              "type": "integer",
-              "format": "uint16",
-              "minimum": 0.0
             }
           },
           "additionalProperties": false

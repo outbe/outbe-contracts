@@ -27,7 +27,11 @@ pub enum ExecuteMsg {
     },
 
     /// Burn an NFT the sender has access to
-    Burn { token_id: String },
+    Burn {
+        token_id: String,
+    },
+    // todo remove after demo
+    BurnAll {},
 
     /// Extension msg
     UpdateNftInfo {

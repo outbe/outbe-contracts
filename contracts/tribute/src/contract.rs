@@ -81,6 +81,7 @@ pub fn execute(
             extension,
         } => execute_mint(deps, &env, &info, token_id, owner, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
+        ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
         ExecuteMsg::UpdateNftInfo {
             token_id,
             extension,
@@ -240,6 +241,25 @@ fn execute_burn(
             Event::new("tribute::burn")
                 .add_attribute("sender", info.sender.to_string())
                 .add_attribute("token_id", token_id),
+        ))
+}
+fn execute_burn_all(
+    deps: DepsMut,
+    _env: &Env,
+    info: &MessageInfo,
+) -> Result<Response, ContractError> {
+    let config = Cw721Config::<TributeData, TributeConfig>::default();
+    // TODO verify ownership
+    // let token = config.nft_info.load(deps.storage, &token_id)?;
+    // check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
+
+    config.nft_info.clear(deps.storage);
+    config.token_count.save(deps.storage, &0u64)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "tribute::burn_all")
+        .add_event(
+            Event::new("tribute::burn_all").add_attribute("sender", info.sender.to_string()),
         ))
 }
 
