@@ -1,4 +1,4 @@
-use crate::state::{DAILY_RAFFLE, TRIBUTES_DISTRIBUTION};
+use crate::state::{RaffleHistory, DAILY_RAFFLE, HISTORY, TRIBUTES_DISTRIBUTION};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -11,6 +11,8 @@ pub enum QueryMsg {
     DailyRaffle {},
     #[returns(TributesDistributionResponse)]
     TributesDistribution {},
+    #[returns(RaffleHistory)]
+    History {},
 }
 
 #[cw_serde]
@@ -48,6 +50,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::TributesDistribution {} => {
             to_json_binary(&query_tributes_distribution(_deps, _env)?)
         }
+        QueryMsg::History {} => to_json_binary(&query_history(_deps, _env)?),
     }
 }
 
@@ -86,4 +89,12 @@ fn query_tributes_distribution(deps: Deps, _env: Env) -> StdResult<TributesDistr
         .collect();
 
     Ok(TributesDistributionResponse { data: result? })
+}
+
+fn query_history(deps: Deps, _env: Env) -> StdResult<RaffleHistory> {
+    let history = HISTORY
+        .may_load(deps.storage)?
+        .unwrap_or(RaffleHistory { data: vec![] });
+
+    Ok(history)
 }
