@@ -104,7 +104,9 @@ fn execute_raffle(
         //
         let total_allocation =
             Uint128::from(allocation_per_block.amount) * Uint128::new(24 * 60 * 12);
+        // todo increase allocation
         let allocation_per_pool = total_allocation / Uint128::new(24);
+        // let allocation_per_pool = total_allocation / Uint128::new(24);
 
         let mut distributed_tributes: HashSet<String> = HashSet::new();
         let mut pools: Vec<Vec<String>> = Vec::with_capacity(24);
