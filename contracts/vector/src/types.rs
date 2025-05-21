@@ -8,5 +8,5 @@ pub struct Vector {
     /// Name or label of the vector tier
     pub name: String,
     /// TPT+%
-    pub performance_rate: Uint128,
+    pub vector_rate: Uint128,
 }

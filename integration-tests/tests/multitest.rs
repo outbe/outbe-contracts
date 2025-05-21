@@ -118,10 +118,10 @@ fn test_raffle() {
                 entity: TributeEntity {
                     token_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
-                    minor_value_settlement: Uint128::from(100u32),
+                    minor_value_settlement: Uint128::from(5u32),
                     hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
                 },
-                signature: HexBinary::from_hex("eea361aa7fff68cf0b07bc7b6d5907ba46a144ed1b5af6900bd0f96dc6e73e5f6e88eacffc84c3b3f84f2a0099503cd716883e251834176afc8b8e01b85d90bc").unwrap(),
+                signature: HexBinary::from_hex("a6b34279e80e3a9983dfd9b59d257701976f1b2115cd6a8c41e3e517df82a5e05fd2002a84098625114c842e42c4e2f9e2b37166b14b74fea168d8951673337e").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
                 tribute_date: None
             }),

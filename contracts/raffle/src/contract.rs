@@ -1,6 +1,9 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{Config, CONFIG, CREATOR, DAILY_RAFFLE, TRIBUTES_DISTRIBUTION};
+use crate::state::{
+    Config, RaffleHistory, RaffleRunData, CONFIG, CREATOR, DAILY_RAFFLE, HISTORY,
+    TRIBUTES_DISTRIBUTION,
+};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
@@ -8,6 +11,7 @@ use cosmwasm_std::{
     Uint128, WasmMsg,
 };
 use std::collections::HashSet;
+use std::str::FromStr;
 
 const CONTRACT_NAME: &str = "outbe.net:raffle";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -72,9 +76,9 @@ fn execute_raffle(
 
     let config = CONFIG.load(deps.storage)?;
     let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
-    let token_allocator_address = config
-        .token_allocator
-        .ok_or(ContractError::NotInitialized {})?;
+    // let token_allocator_address = config
+    //     .token_allocator
+    //     .ok_or(ContractError::NotInitialized {})?;
     let vector_address = config.vector.ok_or(ContractError::NotInitialized {})?;
     let price_oracle_address = config
         .price_oracle
@@ -96,29 +100,41 @@ fn execute_raffle(
 
         // query total to distribute
         // todo rely on block numbers to calc how many we need to distribute?
-        let allocation_per_block: token_allocator::types::TokenAllocatorData =
-            deps.querier.query_wasm_smart(
-                &token_allocator_address,
-                &token_allocator::query::QueryMsg::GetData {},
-            )?;
-        //
-        let total_allocation =
-            Uint128::from(allocation_per_block.amount) * Uint128::new(24 * 60 * 12);
-        let allocation_per_pool = total_allocation / Uint128::new(24);
+        // let allocation_per_block: token_allocator::types::TokenAllocatorData =
+        //     deps.querier.query_wasm_smart(
+        //         &token_allocator_address,
+        //         &token_allocator::query::QueryMsg::GetData {},
+        //     )?;
 
+        // todo define for demo
+        // let total_allocation =
+        //     Uint128::from(allocation_per_block.amount) * Uint128::new(24 * 60 * 12);
+        // let allocation_per_pool = total_allocation / Uint128::new(24);
+
+        let total_allocation = Uint128::new(240_000_000);
+        let allocation_per_pool = total_allocation / Uint128::new(24);
+        let pool_capacity = (Decimal::from_str("1.08").unwrap()
+            * Decimal::from_atomics(allocation_per_pool, 0).unwrap())
+        .to_uint_floor();
+
+        // + 8%
+        println!("Total allocation = {}", total_allocation);
+        println!("allocation_per_pool = {}", allocation_per_pool);
+        println!("pool_capacity = {}", pool_capacity);
+
+        let mut raffle_history: Vec<RaffleRunData> = vec![];
         let mut distributed_tributes: HashSet<String> = HashSet::new();
         let mut pools: Vec<Vec<String>> = Vec::with_capacity(24);
-        let mut pool_id: usize = 0;
+        let mut pool_id: u16 = 0;
         while pool_id < 24 {
             let mut pool_tributes: Vec<String> = vec![];
             let mut allocated_in_pool = Uint128::zero();
             for tribute in tributes.tributes.clone() {
-                if allocated_in_pool >= allocation_per_pool {
+                if allocated_in_pool >= pool_capacity {
                     break;
                 }
                 if !distributed_tributes.contains(&tribute.token_id) {
-                    if allocated_in_pool + tribute.data.minor_value_settlement > allocation_per_pool
-                    {
+                    if allocated_in_pool + tribute.data.minor_value_settlement > pool_capacity {
                         continue;
                     }
                     allocated_in_pool += tribute.data.minor_value_settlement;
@@ -131,6 +147,18 @@ fn execute_raffle(
                 pool_id,
                 pool_tributes.len()
             );
+
+            raffle_history.push(RaffleRunData {
+                raffle_date: Timestamp::from_seconds(date),
+                raffle_date_time: date_time,
+                pool_id,
+                tributes_in_pool: pool_tributes.len(),
+                total_allocation,
+                allocation_per_pool,
+                pool_capacity,
+                allocated_in_pool,
+            });
+
             pools.push(pool_tributes);
             pool_id += 1;
         }
@@ -144,6 +172,14 @@ fn execute_raffle(
                 println!("added tribute {} in pool {}", tribute_id, key);
             }
         }
+
+        // save history
+        let mut history = HISTORY
+            .may_load(deps.storage)?
+            .unwrap_or(RaffleHistory { data: vec![] });
+        history.data.extend(raffle_history);
+        HISTORY.save(deps.storage, &history)?;
+
         pools.first().unwrap_or(&vec![]).clone()
     } else {
         // use already distributed tokens
@@ -199,7 +235,7 @@ fn execute_raffle(
         )?;
         let nod_id = format!("{}_{}", tribute_id, raffle_run_today);
         let floor_price = exchange_rate.price
-            * (Decimal::one() + Decimal::from_atomics(vector.performance_rate, 3).unwrap());
+            * (Decimal::one() + Decimal::from_atomics(vector.vector_rate, 3).unwrap());
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
@@ -212,7 +248,7 @@ fn execute_raffle(
                         symbolic_rate: tribute_info.symbolic_rate,
                         nominal_minor_rate: tribute.extension.nominal_minor_qty,
                         symbolic_minor_load: tribute.extension.symbolic_load,
-                        vector_minor_rate: vector.performance_rate,
+                        vector_minor_rate: vector.vector_rate,
                         issuance_minor_rate: exchange_rate.price,
                         floor_minor_price: floor_price,
                         state: nod::types::State::Issued,

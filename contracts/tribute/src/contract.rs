@@ -143,7 +143,7 @@ fn execute_mint(
 
     // create the token
     let data = TributeData {
-        minor_value_settlement: entity.minor_value_settlement,
+        minor_value_settlement: entity.minor_value_settlement * Uint128::new(1_000_000u128),
         settlement_token: col_config.settlement_token.clone(),
         nominal_price: exchange_rate.price,
         nominal_minor_qty: nominal_qty,
@@ -289,7 +289,7 @@ mod tests {
         let raw_json = r#"{
             "token_id": "1",
             "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-            "minor_value_settlement": "100",
+            "minor_value_settlement": "5",
             "hashes": [
               "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
             ]
