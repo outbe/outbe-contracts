@@ -140,10 +140,10 @@ fn test_raffle() {
                 entity: TributeEntity {
                     token_id: "2".to_string(),
                     owner: config.user_addr.to_string(),
-                    minor_value_settlement: Uint128::from(9u32),
+                    minor_value_settlement: Uint128::from(15u32),
                     hashes: vec![HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap()],
                 },
-                signature: HexBinary::from_hex("6ac18ac91280ef125e78d205319f9b84d131793bec05dfcfb22ce8663ce0b143566773bfdedb334b0a938f7ca9d1dab7cdf0f3791c3f7e7dcd69c00d8a3e6245").unwrap(),
+                signature: HexBinary::from_hex("9db9f9cb1ec1291e8c6e70c24cca4f0a34d08ad4e566ba6bf52d54e1dd4362e23ff59e1c206525ec6afc0eb39e7cd180661e9d19a32e2ca7349495f71f933a58").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
                 tribute_date: None
             }),
@@ -198,11 +198,7 @@ fn test_raffle() {
         )
         .unwrap();
 
-    assert_eq!(
-        response.tokens.len(),
-        1,
-        "One node should be created after raffle"
-    );
+    assert_eq!(response.tokens.len(), 1,);
 
     println!("🔬 Raffle 2");
     app.execute_contract(

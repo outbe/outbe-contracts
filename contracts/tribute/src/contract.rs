@@ -129,6 +129,11 @@ fn execute_mint(
         extension.public_key,
     )?;
 
+    let mut settlement_value = entity.minor_value_settlement;
+    if entity.minor_value_settlement < Uint128::new(1_000_000u128) {
+        settlement_value = entity.minor_value_settlement * Uint128::new(1_000_000u128);
+    }
+
     let config = Cw721Config::<TributeData, TributeConfig>::default();
     let col_config = config.collection_config.load(deps.storage)?;
     let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
@@ -137,14 +142,14 @@ fn execute_mint(
     )?;
 
     let (nominal_qty, load) = calc_sybolics(
-        entity.minor_value_settlement,
+        settlement_value,
         exchange_rate.price,
         col_config.symbolic_rate,
     );
 
     // create the token
     let data = TributeData {
-        minor_value_settlement: entity.minor_value_settlement * Uint128::new(1_000_000u128),
+        minor_value_settlement: settlement_value,
         settlement_token: col_config.settlement_token.clone(),
         nominal_price: exchange_rate.price,
         nominal_minor_qty: nominal_qty,
@@ -309,7 +314,7 @@ mod tests {
         let raw_json = r#"{
             "token_id": "2",
             "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-            "minor_value_settlement": "9",
+            "minor_value_settlement": "15",
             "hashes": [
               "02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d"
             ]

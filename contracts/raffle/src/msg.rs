@@ -14,4 +14,6 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     Raffle { raffle_date: Option<Timestamp> },
+    // todo remove after demo
+    BurnAll {},
 }

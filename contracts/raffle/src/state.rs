@@ -20,12 +20,15 @@ pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 pub struct RaffleRunData {
     pub raffle_date: Timestamp,
     pub raffle_date_time: Timestamp,
-    pub pool_id: u16,
-    pub tributes_in_pool: usize,
+    pub pool_index: u16,
+
     pub total_allocation: Uint128,
-    pub allocation_per_pool: Uint128,
+    pub pool_allocation: Uint128,
+    pub total_deficit: Uint128,
+    pub pool_deficit: Uint128,
     pub pool_capacity: Uint128,
-    pub allocated_in_pool: Uint128,
+    pub assigned_tributes: usize,
+    pub assigned_tributes_sum: Uint128,
 }
 
 #[cw_serde]

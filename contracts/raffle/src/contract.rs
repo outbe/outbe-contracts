@@ -58,6 +58,7 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Raffle { raffle_date } => execute_raffle(deps, env, info, raffle_date),
+        ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
     }
 }
 
@@ -112,21 +113,40 @@ fn execute_raffle(
         // let allocation_per_pool = total_allocation / Uint128::new(24);
 
         let total_allocation = Uint128::new(240_000_000);
-        let allocation_per_pool = total_allocation / Uint128::new(24);
-        let pool_capacity = (Decimal::from_str("1.08").unwrap()
-            * Decimal::from_atomics(allocation_per_pool, 0).unwrap())
+        let pool_allocation = total_allocation / Uint128::new(24);
+
+        let total_interest = tributes
+            .tributes
+            .iter()
+            .fold(Uint128::zero(), |acc, t| acc + t.data.symbolic_load);
+
+        let mut total_deficit = (Decimal::from_str("0.08").unwrap()
+            * Decimal::from_atomics(total_allocation, 0).unwrap())
         .to_uint_floor();
 
+        if total_interest > total_allocation && total_interest - total_allocation > total_deficit {
+            total_deficit = total_interest - total_allocation;
+        }
+
+        // TODO distribute deficit
+        let pool_deficit = total_deficit / Uint128::new(24);
+
+        // Pool Capacity = Pool Allocation + Pool Deficit.
+        let pool_capacity = pool_allocation + pool_deficit;
+
         // + 8%
-        println!("Total allocation = {}", total_allocation);
-        println!("allocation_per_pool = {}", allocation_per_pool);
+        println!("total_allocation = {}", total_allocation);
+        println!("total_interest = {}", total_interest);
+        println!("allocation_per_pool = {}", pool_allocation);
+        println!("total_deficit = {}", total_deficit);
+        println!("pool_deficit = {}", pool_deficit);
         println!("pool_capacity = {}", pool_capacity);
 
         let mut raffle_history: Vec<RaffleRunData> = vec![];
         let mut distributed_tributes: HashSet<String> = HashSet::new();
         let mut pools: Vec<Vec<String>> = Vec::with_capacity(24);
-        let mut pool_id: u16 = 0;
-        while pool_id < 24 {
+        let mut pool_index: u16 = 0;
+        while pool_index < 24 {
             let mut pool_tributes: Vec<String> = vec![];
             let mut allocated_in_pool = Uint128::zero();
             for tribute in tributes.tributes.clone() {
@@ -134,33 +154,35 @@ fn execute_raffle(
                     break;
                 }
                 if !distributed_tributes.contains(&tribute.token_id) {
-                    if allocated_in_pool + tribute.data.minor_value_settlement > pool_capacity {
+                    if allocated_in_pool + tribute.data.symbolic_load > pool_capacity {
                         continue;
                     }
-                    allocated_in_pool += tribute.data.minor_value_settlement;
+                    allocated_in_pool += tribute.data.symbolic_load;
                     pool_tributes.push(tribute.token_id.clone());
                     distributed_tributes.insert(tribute.token_id.clone());
                 }
             }
             println!(
                 "Distributed in pool {:?}: {:?} tributes",
-                pool_id,
+                pool_index,
                 pool_tributes.len()
             );
 
             raffle_history.push(RaffleRunData {
                 raffle_date: Timestamp::from_seconds(date),
                 raffle_date_time: date_time,
-                pool_id,
-                tributes_in_pool: pool_tributes.len(),
+                pool_index,
                 total_allocation,
-                allocation_per_pool,
+                pool_allocation,
+                total_deficit,
+                pool_deficit,
                 pool_capacity,
-                allocated_in_pool,
+                assigned_tributes: pool_tributes.len(),
+                assigned_tributes_sum: allocated_in_pool,
             });
 
             pools.push(pool_tributes);
-            pool_id += 1;
+            pool_index += 1;
         }
 
         for (i, pool) in pools.iter().enumerate() {
@@ -173,12 +195,13 @@ fn execute_raffle(
             }
         }
 
-        // save history
-        let mut history = HISTORY
-            .may_load(deps.storage)?
-            .unwrap_or(RaffleHistory { data: vec![] });
-        history.data.extend(raffle_history);
-        HISTORY.save(deps.storage, &history)?;
+        // save history of the last distribution
+        HISTORY.save(
+            deps.storage,
+            &RaffleHistory {
+                data: raffle_history,
+            },
+        )?;
 
         pools.first().unwrap_or(&vec![]).clone()
     } else {
@@ -281,4 +304,22 @@ fn normalize_to_date(timestamp: Timestamp) -> Timestamp {
     let seconds = timestamp.seconds();
     let days = seconds / 86400;
     Timestamp::from_seconds(days * 86400)
+}
+
+fn execute_burn_all(
+    deps: DepsMut,
+    _env: &Env,
+    info: &MessageInfo,
+) -> Result<Response, ContractError> {
+    // TODO verify ownership
+    // let token = config.nft_info.load(deps.storage, &token_id)?;
+    // check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
+
+    HISTORY.remove(deps.storage);
+    DAILY_RAFFLE.clear(deps.storage);
+    TRIBUTES_DISTRIBUTION.clear(deps.storage);
+
+    Ok(Response::new()
+        .add_attribute("action", "raffle::burn_all")
+        .add_event(Event::new("raffle::burn_all").add_attribute("sender", info.sender.to_string())))
 }
