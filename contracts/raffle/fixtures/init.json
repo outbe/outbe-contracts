@@ -1,0 +1,8 @@
+{
+  "creator": null,
+  "vector": $vector_address,
+  "tribute": $tribute_address,
+  "token_allocator": $token_allocator,
+  "nod": $nod_address,
+  "price_oracle": $price_oracle_address
+}

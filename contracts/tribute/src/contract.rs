@@ -9,8 +9,6 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Uint128,
 };
-use outbe_nft::error::Cw721ContractError;
-use outbe_nft::execute::assert_minter;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
 use sha2::{Digest, Sha256};
 
@@ -83,6 +81,7 @@ pub fn execute(
             extension,
         } => execute_mint(deps, &env, &info, token_id, owner, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
+        ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
         ExecuteMsg::UpdateNftInfo {
             token_id,
             extension,
@@ -104,12 +103,13 @@ fn execute_update_nft_info(
 fn execute_mint(
     deps: DepsMut,
     env: &Env,
-    info: &MessageInfo,
+    _info: &MessageInfo,
     token_id: String,
     owner: String,
     extension: MintExtension,
 ) -> Result<Response, ContractError> {
-    assert_minter(deps.storage, &info.sender)?;
+    // TODO temporary disable for demo purpose
+    // assert_minter(deps.storage, &info.sender)?;
     // validate owner
     let owner_addr = deps.api.addr_validate(&owner)?;
 
@@ -129,25 +129,38 @@ fn execute_mint(
         extension.public_key,
     )?;
 
+    let mut settlement_value = entity.minor_value_settlement;
+    if entity.minor_value_settlement < Uint128::new(1_000_000u128) {
+        settlement_value = entity.minor_value_settlement * Uint128::new(1_000_000u128);
+    }
+
     let config = Cw721Config::<TributeData, TributeConfig>::default();
     let col_config = config.collection_config.load(deps.storage)?;
-    let exchange_rate = Decimal::one(); // TODO query from Oracle
+    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
+        &col_config.price_oracle,
+        &price_oracle::query::QueryMsg::GetPrice {},
+    )?;
 
     let (nominal_qty, load) = calc_sybolics(
-        entity.minor_value_settlement,
-        exchange_rate,
+        settlement_value,
+        exchange_rate.price,
         col_config.symbolic_rate,
     );
 
     // create the token
     let data = TributeData {
-        minor_value_settlement: entity.minor_value_settlement,
-        nominal_price: exchange_rate,
+        minor_value_settlement: settlement_value,
+        settlement_token: col_config.settlement_token.clone(),
+        nominal_price: exchange_rate.price,
         nominal_minor_qty: nominal_qty,
-        status: Status::Accepted, // todo query from Oracle
+        status: match exchange_rate.day_type {
+            price_oracle::types::DayType::GREEN => Status::Accepted,
+            price_oracle::types::DayType::RED => Status::Muted,
+        },
         symbolic_load: load,
         hashes: entity.hashes.clone(),
-        created_at: extension.created_at.unwrap_or(env.block.time),
+        tribute_date: extension.tribute_date.unwrap_or(env.block.time),
+        created_at: env.block.time,
         updated_at: env.block.time,
     };
 
@@ -159,7 +172,7 @@ fn execute_mint(
     config
         .nft_info
         .update(deps.storage, &token_id, |old| match old {
-            Some(_) => Err(Cw721ContractError::Claimed {}),
+            Some(_) => Err(ContractError::AlreadyExists {}),
             None => Ok(token),
         })?;
 
@@ -235,6 +248,25 @@ fn execute_burn(
                 .add_attribute("token_id", token_id),
         ))
 }
+fn execute_burn_all(
+    deps: DepsMut,
+    _env: &Env,
+    info: &MessageInfo,
+) -> Result<Response, ContractError> {
+    let config = Cw721Config::<TributeData, TributeConfig>::default();
+    // TODO verify ownership
+    // let token = config.nft_info.load(deps.storage, &token_id)?;
+    // check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
+
+    config.nft_info.clear(deps.storage);
+    config.token_count.save(deps.storage, &0u64)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "tribute::burn_all")
+        .add_event(
+            Event::new("tribute::burn_all").add_attribute("sender", info.sender.to_string()),
+        ))
+}
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
@@ -280,11 +312,11 @@ mod tests {
 
         // prepare raw json data
         let raw_json = r#"{
-            "token_id": "1",
+            "token_id": "2",
             "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-            "minor_value_settlement": "100",
+            "minor_value_settlement": "15",
             "hashes": [
-              "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
+              "02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d"
             ]
         }"#;
         let entity: TributeEntity = from_str(raw_json).unwrap();

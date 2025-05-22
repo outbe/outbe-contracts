@@ -20,6 +20,8 @@ impl Cw721CollectionConfig for TributeConfig {}
 pub struct TributeData {
     /// Value of the Tribute in Settlement Tokens
     pub minor_value_settlement: Uint128,
+    /// Tribute settlement token
+    pub settlement_token: Denom,
     /// Value of the Tribute in Native Coins
     pub nominal_minor_qty: Uint128,
     /// Price in Native coins with a rate on the moment of the transaction
@@ -31,6 +33,7 @@ pub struct TributeData {
     /// Hashes identifying consumption records batch. Each hash should be a valid unique
     /// sha256 hash in hex format
     pub hashes: Vec<HexBinary>,
+    pub tribute_date: Timestamp,
     /// Time when the Tribute NFT was created on the network
     pub created_at: Timestamp,
     /// Last updated time
