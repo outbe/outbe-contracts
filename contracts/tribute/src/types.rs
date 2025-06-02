@@ -7,7 +7,6 @@ use outbe_nft::traits::Cw721CollectionConfig;
 /// ConsumptionUnit contract config
 #[cw_serde]
 pub struct TributeConfig {
-    pub settlement_token: Denom,
     pub symbolic_rate: Decimal,
     pub native_token: Denom,
     pub price_oracle: Addr,

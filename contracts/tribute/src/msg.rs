@@ -27,10 +27,8 @@ pub enum ExecuteMsg {
     },
 
     /// Burn an NFT the sender has access to
-    Burn {
-        token_id: String,
-    },
-    // todo remove after demo
+    Burn { token_id: String },
+    /// Removes all tributes previously submitted
     BurnAll {},
 
     /// Extension msg
@@ -42,21 +40,23 @@ pub enum ExecuteMsg {
 
 #[cw_serde]
 pub struct MintExtension {
-    pub entity: TributeEntity,
+    pub data: TributeMintData,
     /// Serialized "compact" signature (64 bytes) of the `entity` in hex
     pub signature: HexBinary,
     /// Serialized according to SEC 2 (33 or 65 bytes) public key in hex
     pub public_key: HexBinary,
-    /// Time of the Tribute NFT for demo
-    pub tribute_date: Option<Timestamp>,
 }
 
 #[cw_serde]
-pub struct TributeEntity {
+pub struct TributeMintData {
     pub token_id: String,
     pub owner: String,
     /// Value of the Tribute in Settlement Tokens
     pub minor_value_settlement: Uint128,
+    /// Tribute settlement token
+    pub settlement_token: Denom,
+    /// Date of the Tribute creation
+    pub tribute_date: Option<Timestamp>,
     /// Hashes identifying consumption records batch. Each hash should be a valid unique
     /// sha256 hash in hex format
     pub hashes: Vec<HexBinary>,

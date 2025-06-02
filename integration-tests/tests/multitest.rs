@@ -4,7 +4,7 @@ use cw20::Denom;
 use cw_multi_test::{App, ContractWrapper, Executor};
 use std::str::FromStr;
 use tribute::msg::ExecuteMsg::Mint;
-use tribute::msg::{ConsumptionUnitCollectionExtension, MintExtension, TributeEntity};
+use tribute::msg::{ConsumptionUnitCollectionExtension, MintExtension, TributeMintData};
 use tribute::query::{QueryMsg, TributeInfoResponse};
 
 mod setup;
@@ -26,15 +26,16 @@ fn test_tribute() {
             token_id: "1".to_string(),
             owner: config.user_addr.to_string(),
             extension: Box::new(MintExtension {
-                entity: TributeEntity {
+                data: TributeMintData {
                     token_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
+                    settlement_token: Denom::Cw20(Addr::unchecked("usdc")),
                     minor_value_settlement: Uint128::from(100u32),
                     hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
+                    tribute_date: None
                 },
                 signature: HexBinary::from_hex("eea361aa7fff68cf0b07bc7b6d5907ba46a144ed1b5af6900bd0f96dc6e73e5f6e88eacffc84c3b3f84f2a0099503cd716883e251834176afc8b8e01b85d90bc").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
-                tribute_date: None
             }),
         },
         &[],
@@ -115,15 +116,16 @@ fn test_raffle() {
             token_id: "1".to_string(),
             owner: config.user_addr.to_string(),
             extension: Box::new(MintExtension {
-                entity: TributeEntity {
+                data: TributeMintData {
                     token_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
+                    settlement_token: Denom::Cw20(Addr::unchecked("usdc")),
                     minor_value_settlement: Uint128::from(5u32),
+                    tribute_date: None,
                     hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
                 },
-                signature: HexBinary::from_hex("a6b34279e80e3a9983dfd9b59d257701976f1b2115cd6a8c41e3e517df82a5e05fd2002a84098625114c842e42c4e2f9e2b37166b14b74fea168d8951673337e").unwrap(),
+                signature: HexBinary::from_hex("cfe6a139243dcabe1fcdfcb097ef506af433bb56401c84c30966497b96b39075587ff85599fc431a43f3c1ef2520ca9d18abb12e8878be75c9097cb27d66ca88").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
-                tribute_date: None
             }),
         },
         &[],
@@ -137,15 +139,16 @@ fn test_raffle() {
             token_id: "2".to_string(),
             owner: config.user_addr.to_string(),
             extension: Box::new(MintExtension {
-                entity: TributeEntity {
+                data: TributeMintData {
                     token_id: "2".to_string(),
+                    settlement_token: Denom::Cw20(Addr::unchecked("usdc")),
                     owner: config.user_addr.to_string(),
                     minor_value_settlement: Uint128::from(15u32),
+                    tribute_date: None,
                     hashes: vec![HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap()],
                 },
-                signature: HexBinary::from_hex("9db9f9cb1ec1291e8c6e70c24cca4f0a34d08ad4e566ba6bf52d54e1dd4362e23ff59e1c206525ec6afc0eb39e7cd180661e9d19a32e2ca7349495f71f933a58").unwrap(),
+                signature: HexBinary::from_hex("7a01be86767cfd3961af54ef701e2f24d0d5647741d2e9bd0b208c9f586e19f9036f3eb7bb67a3e6b7d08bb7cb3e26727adb8f89d13e94bfecec2160f7065d8b").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
-                tribute_date: None
             }),
         },
         &[],

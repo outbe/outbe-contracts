@@ -1,6 +1,6 @@
 use crate::error::ContractError;
 use crate::msg::{
-    ExecuteMsg, InstantiateMsg, MigrateMsg, MintExtension, TributeEntity, TributeExtensionUpdate,
+    ExecuteMsg, InstantiateMsg, MigrateMsg, MintExtension, TributeExtensionUpdate, TributeMintData,
 };
 use crate::state::HASHES;
 use crate::types::{Status, TributeConfig, TributeData, TributeNft};
@@ -25,7 +25,6 @@ pub fn instantiate(
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     let cfg = TributeConfig {
-        settlement_token: msg.collection_info_extension.settlement_token.clone(),
         symbolic_rate: msg.collection_info_extension.symbolic_rate,
         native_token: msg.collection_info_extension.native_token.clone(),
         price_oracle: msg.collection_info_extension.price_oracle.clone(),
@@ -113,7 +112,7 @@ fn execute_mint(
     // validate owner
     let owner_addr = deps.api.addr_validate(&owner)?;
 
-    let entity = extension.entity;
+    let entity = extension.data;
     if entity.token_id != token_id || entity.owner != owner {
         return Err(ContractError::WrongInput {});
     }
@@ -150,7 +149,7 @@ fn execute_mint(
     // create the token
     let data = TributeData {
         minor_value_settlement: settlement_value,
-        settlement_token: col_config.settlement_token.clone(),
+        settlement_token: entity.settlement_token,
         nominal_price: exchange_rate.price,
         nominal_minor_qty: nominal_qty,
         status: match exchange_rate.day_type {
@@ -159,7 +158,7 @@ fn execute_mint(
         },
         symbolic_load: load,
         hashes: entity.hashes.clone(),
-        tribute_date: extension.tribute_date.unwrap_or(env.block.time),
+        tribute_date: entity.tribute_date.unwrap_or(env.block.time),
         created_at: env.block.time,
         updated_at: env.block.time,
     };
@@ -210,7 +209,7 @@ fn calc_sybolics(
 
 fn verify_signature(
     api: &dyn Api,
-    entity: TributeEntity,
+    entity: TributeMintData,
     signature: HexBinary,
     public_key: HexBinary,
 ) -> Result<(), ContractError> {
@@ -280,7 +279,7 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
 #[cfg(test)]
 mod tests {
     use crate::contract::{calc_sybolics, verify_signature};
-    use crate::msg::TributeEntity;
+    use crate::msg::TributeMintData;
     use cosmwasm_schema::schemars::_serde_json::from_str;
     use cosmwasm_std::testing::mock_dependencies;
     use cosmwasm_std::{to_json_binary, Decimal, HexBinary, Uint128};
@@ -315,11 +314,13 @@ mod tests {
             "token_id": "2",
             "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
             "minor_value_settlement": "15",
+            "settlement_token": { "cw20": "usdc" },
+            "tribute_date": null,
             "hashes": [
               "02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d"
             ]
         }"#;
-        let entity: TributeEntity = from_str(raw_json).unwrap();
+        let entity: TributeMintData = from_str(raw_json).unwrap();
 
         // sign the data
         let message_binary = to_json_binary(&entity).unwrap();
