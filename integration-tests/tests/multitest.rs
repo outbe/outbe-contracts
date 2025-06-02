@@ -201,7 +201,7 @@ fn test_raffle() {
         )
         .unwrap();
 
-    assert_eq!(response.tokens.len(), 1,);
+    assert_eq!(response.tokens.len(), 2);
 
     println!("🔬 Raffle 2");
     app.execute_contract(
