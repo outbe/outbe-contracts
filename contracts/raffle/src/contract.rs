@@ -77,9 +77,9 @@ fn execute_raffle(
 
     let config = CONFIG.load(deps.storage)?;
     let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
-    // let token_allocator_address = config
-    //     .token_allocator
-    //     .ok_or(ContractError::NotInitialized {})?;
+    let token_allocator_address = config
+        .token_allocator
+        .ok_or(ContractError::NotInitialized {})?;
     let vector_address = config.vector.ok_or(ContractError::NotInitialized {})?;
     let price_oracle_address = config
         .price_oracle
@@ -100,19 +100,14 @@ fn execute_raffle(
         println!("Raffle tributes = {}", tributes.tributes.len());
 
         // query total to distribute
-        // todo rely on block numbers to calc how many we need to distribute?
-        // let allocation_per_block: token_allocator::types::TokenAllocatorData =
-        //     deps.querier.query_wasm_smart(
-        //         &token_allocator_address,
-        //         &token_allocator::query::QueryMsg::GetData {},
-        //     )?;
+        let allocation_per_block: token_allocator::types::TokenAllocatorData =
+            deps.querier.query_wasm_smart(
+                &token_allocator_address,
+                &token_allocator::query::QueryMsg::GetData {},
+            )?;
 
-        // todo define for demo
-        // let total_allocation =
-        //     Uint128::from(allocation_per_block.amount) * Uint128::new(24 * 60 * 12);
-        // let allocation_per_pool = total_allocation / Uint128::new(24);
-
-        let total_allocation = Uint128::new(240_000_000);
+        let total_allocation =
+            Uint128::from(allocation_per_block.amount) * Uint128::new(24 * 60 * 12);
         let pool_allocation = total_allocation / Uint128::new(24);
 
         let total_interest = tributes
@@ -187,7 +182,7 @@ fn execute_raffle(
 
         for (i, pool) in pools.iter().enumerate() {
             for (j, tribute_id) in pool.iter().enumerate() {
-                // todo define public key for such struct
+                // todo define map key for such struct
                 // NB: i starts from 1 because first vector starts from 1
                 let key = format!("{}_{}_{}", date, i + 1, j);
                 TRIBUTES_DISTRIBUTION.save(deps.storage, &key, tribute_id)?;
