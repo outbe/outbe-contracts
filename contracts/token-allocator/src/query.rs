@@ -175,12 +175,12 @@ mod tests {
             .unwrap();
 
         // Single-block range should match GetData result for block 1
-        let single: TokenAllocatorData = app
+        let _single: TokenAllocatorData = app
             .wrap()
             .query_wasm_smart(contract_addr.clone(), &QueryMsg::GetData {})
             .unwrap();
 
-        let range_single: TokenAllocatorData = app
+        let _range_single: TokenAllocatorData = app
             .wrap()
             .query_wasm_smart(
                 contract_addr.clone(),

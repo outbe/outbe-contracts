@@ -30,11 +30,11 @@ fn test_tribute() {
                     token_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
                     settlement_token: Denom::Cw20(Addr::unchecked("usdc")),
-                    minor_value_settlement: Uint128::from(100u32),
+                    minor_value_settlement: Uint128::from(100000000u32),
                     hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
                     tribute_date: None
                 },
-                signature: HexBinary::from_hex("1104aa44a6086ba9e835224ebeb6a77bf534b5d97dccee2c8c87f39f7958be1e25225c8271ba3ff199ee37a1b012bdbf4dd4ffc2c586c168802fa1035483c8b5").unwrap(),
+                signature: HexBinary::from_hex("4065015a8e712f74165822ae7556ce38f44c3b1e2d60a508a643b9198d1641ef6f387cceb8798a1b44a5fef42061c3c0ffe881d2413f18650477aa50f2fa49eb").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
             }),
         },
