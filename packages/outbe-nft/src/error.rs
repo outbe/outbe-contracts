@@ -36,6 +36,9 @@ pub enum Cw721ContractError {
     #[error("Caller is not minter")]
     NotMinter {},
 
+    #[error("Caller is not burner")]
+    NotBurner {},
+
     #[error("Caller is neither minter nor collection creator")]
     NotMinterOrCreator {},
 

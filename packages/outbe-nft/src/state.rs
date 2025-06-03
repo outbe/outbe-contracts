@@ -12,6 +12,8 @@ pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 /// - minter is stored in the contract storage using cw_ownable::OwnershipStore (same as for OWNERSHIP but with different key)
 pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 
+pub const BURNER: OwnershipStore = OwnershipStore::new("collection_burner");
+
 #[cw_serde]
 pub struct CollectionInfo {
     pub name: String,
@@ -95,6 +97,11 @@ pub fn token_owner_idx<TNftExtension>(_pk: &[u8], d: &NftInfo<TNftExtension>) ->
 pub struct NftInfo<TNftExtension> {
     /// The owner of the newly minted NFT
     pub owner: Addr,
+
+    /// Universal resource identifier for this NFT
+    /// Should point to a JSON file that conforms to the ERC721
+    /// Metadata JSON Schema
+    pub token_uri: Option<String>,
 
     /// You can add any custom metadata here when you extend cw721-base
     pub extension: TNftExtension,

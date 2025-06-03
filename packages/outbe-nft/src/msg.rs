@@ -1,5 +1,6 @@
 use crate::state::CollectionInfo;
 use cosmwasm_schema::cw_serde;
+use cosmwasm_std::Addr;
 
 #[cw_serde]
 pub struct Cw721InstantiateMsg<TCollectionExtensionMsg> {
@@ -14,9 +15,17 @@ pub struct Cw721InstantiateMsg<TCollectionExtensionMsg> {
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: Option<String>,
-
+    /// The burner is the only one who can burn NFTs.
+    pub burner: Option<String>,
     /// Sets the creator of collection. The creator is the only one eligible to update `CollectionInfo`.
     pub creator: Option<String>,
+}
+
+#[cw_serde]
+pub struct CollectionInfoMsg<TCollectionExtensionMsg> {
+    pub name: Option<String>,
+    pub symbol: Option<String>,
+    pub extension: TCollectionExtensionMsg,
 }
 
 /// This is a wrapper around CollectionInfo that includes the extension, contract info, and number of tokens (supply).
@@ -41,6 +50,8 @@ pub struct NumTokensResponse {
 pub struct NftInfoResponse<TNftExtension> {
     /// You can add any custom metadata here when you extend cw721-base
     pub extension: TNftExtension,
+    pub owner: Addr,
+    pub token_id: String,
 }
 
 #[cw_serde]

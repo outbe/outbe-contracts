@@ -39,6 +39,8 @@ where
         .load(storage, &token_id)?;
     Ok(NftInfoResponse {
         extension: info.extension,
+        owner: info.owner,
+        token_id,
     })
 }
 

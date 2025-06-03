@@ -16,4 +16,6 @@ pub enum ContractError {
     VerificationError(#[from] VerificationError),
     #[error("HashAlreadyExists")]
     HashAlreadyExists {},
+    #[error("Submission failed: tribute already exists on the network")]
+    AlreadyExists {},
 }

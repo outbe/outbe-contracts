@@ -735,8 +735,13 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "cw20",
+ "nod",
  "outbe-nft",
+ "price-oracle",
+ "raffle",
+ "token-allocator",
  "tribute",
+ "vector",
 ]
 
 [[package]]
@@ -786,6 +791,22 @@ name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
+
+[[package]]
+name = "nod"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "cw20",
+ "outbe-nft",
+ "serde",
+ "thiserror 1.0.69",
+]
 
 [[package]]
 name = "num-bigint"
@@ -872,6 +893,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "price-oracle"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "cw20",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "primeorder"
 version = "0.13.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -919,6 +953,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "raffle"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "cw20",
+ "nod",
+ "price-oracle",
+ "serde",
+ "thiserror 1.0.69",
+ "token-allocator",
+ "tribute",
+ "vector",
 ]
 
 [[package]]
@@ -1246,6 +1300,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "token-allocator"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "cw20",
+ "outbe-utils",
+ "prost",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "tribute"
 version = "0.1.0"
 dependencies = [
@@ -1258,6 +1329,7 @@ dependencies = [
  "cw20",
  "hex",
  "outbe-nft",
+ "price-oracle",
  "secp256k1",
  "serde",
  "sha2",

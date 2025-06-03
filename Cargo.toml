@@ -36,5 +36,10 @@ cw20-base = { version = "2.0.0" }
 
 # Self dependencies
 outbe-nft = { version = "*", path = "packages/outbe-nft" }
-tribute = { version = "*", path = "contracts/tribute" }
-
+outbe-utils = { version = "*", path = "packages/outbe-utils" }
+tribute = { version = "*", path = "contracts/tribute", features = ["library"] }
+price-oracle = { version = "*", path = "contracts/price-oracle", features = ["library"] }
+nod = { version = "*", path = "contracts/nod", features = ["library"] }
+vector = { version = "*", path = "contracts/vector", features = ["library"] }
+raffle = { version = "*", path = "contracts/raffle", features = ["library"] }
+token-allocator = { version = "*", path = "contracts/token-allocator", features = ["library"] }

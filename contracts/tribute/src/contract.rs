@@ -1,6 +1,7 @@
 use crate::error::ContractError;
 use crate::msg::{
-    ExecuteMsg, InstantiateMsg, MigrateMsg, MintExtension, TributeEntity, TributeExtensionUpdate,
+    ExecuteMsg, InstantiateMsg, MigrateMsg, MintExtension, TributeCollectionExtension,
+    TributeMintData,
 };
 use crate::state::HASHES;
 use crate::types::{Status, TributeConfig, TributeData, TributeNft};
@@ -9,8 +10,7 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Uint128,
 };
-use outbe_nft::error::Cw721ContractError;
-use outbe_nft::execute::assert_minter;
+use outbe_nft::msg::CollectionInfoMsg;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
 use sha2::{Digest, Sha256};
 
@@ -27,7 +27,6 @@ pub fn instantiate(
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     let cfg = TributeConfig {
-        settlement_token: msg.collection_info_extension.settlement_token.clone(),
         symbolic_rate: msg.collection_info_extension.symbolic_rate,
         native_token: msg.collection_info_extension.native_token.clone(),
         price_oracle: msg.collection_info_extension.price_oracle.clone(),
@@ -52,6 +51,13 @@ pub fn instantiate(
         None => info.sender.as_str(),
     };
     outbe_nft::execute::initialize_minter(deps.storage, deps.api, Some(minter))?;
+
+    // use info.sender if None is passed
+    let burner: &str = match msg.burner.as_deref() {
+        Some(burner) => burner,
+        None => info.sender.as_str(),
+    };
+    outbe_nft::execute::initialize_burner(deps.storage, deps.api, Some(burner))?;
 
     // use info.sender if None is passed
     let creator: &str = match msg.creator.as_deref() {
@@ -80,40 +86,73 @@ pub fn execute(
         ExecuteMsg::Mint {
             token_id,
             owner,
+            token_uri,
             extension,
-        } => execute_mint(deps, &env, &info, token_id, owner, *extension),
+        } => execute_mint(deps, &env, &info, token_id, owner, token_uri, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
-        ExecuteMsg::UpdateNftInfo {
-            token_id,
-            extension,
-        } => execute_update_nft_info(deps, &env, &info, token_id, extension),
+        ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
+
+        ExecuteMsg::UpdateMinterOwnership(action) => Ok(
+            outbe_nft::execute::update_minter_ownership(deps, &env, &info, action)?,
+        ),
+        ExecuteMsg::UpdateCreatorOwnership(action) => Ok(
+            outbe_nft::execute::update_creator_ownership(deps, &env, &info, action)?,
+        ),
+        ExecuteMsg::UpdateBurnerOwnership(action) => Ok(
+            outbe_nft::execute::update_burner_ownership(deps, &env, &info, action)?,
+        ),
+        ExecuteMsg::UpdateCollectionInfo { collection_info } => {
+            update_collection_info(deps, collection_info)
+        }
     }
 }
 
-fn execute_update_nft_info(
-    _deps: DepsMut,
-    _env: &Env,
-    _info: &MessageInfo,
-    _token_id: String,
-    _update: TributeExtensionUpdate,
+pub fn update_collection_info(
+    deps: DepsMut,
+    msg: CollectionInfoMsg<Option<TributeCollectionExtension>>,
 ) -> Result<Response, ContractError> {
-    Ok(Response::new())
+    let config = Cw721Config::<TributeData, TributeConfig>::default();
+
+    let mut collection_info = config.collection_info.load(deps.storage)?;
+    if msg.name.is_some() {
+        collection_info.name = msg.name.unwrap();
+    }
+    if msg.symbol.is_some() {
+        collection_info.symbol = msg.symbol.unwrap();
+    }
+
+    if msg.extension.is_some() {
+        let data = msg.extension.unwrap();
+        config.collection_config.save(
+            deps.storage,
+            &TributeConfig {
+                symbolic_rate: data.symbolic_rate,
+                native_token: data.native_token,
+                price_oracle: data.price_oracle,
+            },
+        )?;
+    }
+
+    let response = Response::new().add_attribute("action", "update_collection_info");
+    Ok(response)
 }
 
 #[allow(clippy::too_many_arguments)]
 fn execute_mint(
     deps: DepsMut,
     env: &Env,
-    info: &MessageInfo,
+    _info: &MessageInfo,
     token_id: String,
     owner: String,
+    token_uri: Option<String>,
     extension: MintExtension,
 ) -> Result<Response, ContractError> {
-    assert_minter(deps.storage, &info.sender)?;
+    // TODO temporary disable for demo purpose
+    // assert_minter(deps.storage, &info.sender)?;
     // validate owner
     let owner_addr = deps.api.addr_validate(&owner)?;
 
-    let entity = extension.entity;
+    let entity = extension.data;
     if entity.token_id != token_id || entity.owner != owner {
         return Err(ContractError::WrongInput {});
     }
@@ -131,35 +170,44 @@ fn execute_mint(
 
     let config = Cw721Config::<TributeData, TributeConfig>::default();
     let col_config = config.collection_config.load(deps.storage)?;
-    let exchange_rate = Decimal::one(); // TODO query from Oracle
+    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
+        &col_config.price_oracle,
+        &price_oracle::query::QueryMsg::GetPrice {},
+    )?;
 
     let (nominal_qty, load) = calc_sybolics(
         entity.minor_value_settlement,
-        exchange_rate,
+        exchange_rate.price,
         col_config.symbolic_rate,
     );
 
     // create the token
     let data = TributeData {
         minor_value_settlement: entity.minor_value_settlement,
-        nominal_price: exchange_rate,
+        settlement_token: entity.settlement_token,
+        nominal_price: exchange_rate.price,
         nominal_minor_qty: nominal_qty,
-        status: Status::Accepted, // todo query from Oracle
+        status: match exchange_rate.day_type {
+            price_oracle::types::DayType::GREEN => Status::Accepted,
+            price_oracle::types::DayType::RED => Status::Muted,
+        },
         symbolic_load: load,
         hashes: entity.hashes.clone(),
-        created_at: extension.created_at.unwrap_or(env.block.time),
+        tribute_date: entity.tribute_date.unwrap_or(env.block.time),
+        created_at: env.block.time,
         updated_at: env.block.time,
     };
 
     let token = TributeNft {
         owner: owner_addr,
+        token_uri,
         extension: data,
     };
 
     config
         .nft_info
         .update(deps.storage, &token_id, |old| match old {
-            Some(_) => Err(Cw721ContractError::Claimed {}),
+            Some(_) => Err(ContractError::AlreadyExists {}),
             None => Ok(token),
         })?;
 
@@ -197,7 +245,7 @@ fn calc_sybolics(
 
 fn verify_signature(
     api: &dyn Api,
-    entity: TributeEntity,
+    entity: TributeMintData,
     signature: HexBinary,
     public_key: HexBinary,
 ) -> Result<(), ContractError> {
@@ -235,6 +283,25 @@ fn execute_burn(
                 .add_attribute("token_id", token_id),
         ))
 }
+fn execute_burn_all(
+    deps: DepsMut,
+    _env: &Env,
+    info: &MessageInfo,
+) -> Result<Response, ContractError> {
+    let config = Cw721Config::<TributeData, TributeConfig>::default();
+    // TODO verify ownership
+    // let token = config.nft_info.load(deps.storage, &token_id)?;
+    // check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
+
+    config.nft_info.clear(deps.storage);
+    config.token_count.save(deps.storage, &0u64)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "tribute::burn_all")
+        .add_event(
+            Event::new("tribute::burn_all").add_attribute("sender", info.sender.to_string()),
+        ))
+}
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
@@ -248,7 +315,7 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
 #[cfg(test)]
 mod tests {
     use crate::contract::{calc_sybolics, verify_signature};
-    use crate::msg::TributeEntity;
+    use crate::msg::TributeMintData;
     use cosmwasm_schema::schemars::_serde_json::from_str;
     use cosmwasm_std::testing::mock_dependencies;
     use cosmwasm_std::{to_json_binary, Decimal, HexBinary, Uint128};
@@ -282,12 +349,14 @@ mod tests {
         let raw_json = r#"{
             "token_id": "1",
             "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-            "minor_value_settlement": "100",
+            "minor_value_settlement": "100000000",
+            "settlement_token": { "cw20": "usdc" },
+            "tribute_date": null,
             "hashes": [
               "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
             ]
         }"#;
-        let entity: TributeEntity = from_str(raw_json).unwrap();
+        let entity: TributeMintData = from_str(raw_json).unwrap();
 
         // sign the data
         let message_binary = to_json_binary(&entity).unwrap();
