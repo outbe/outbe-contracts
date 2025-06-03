@@ -4,7 +4,7 @@ use cw20::Denom;
 use cw_multi_test::{App, ContractWrapper, Executor};
 use std::str::FromStr;
 use tribute::msg::ExecuteMsg::Mint;
-use tribute::msg::{ConsumptionUnitCollectionExtension, MintExtension, TributeMintData};
+use tribute::msg::{MintExtension, TributeCollectionExtension, TributeMintData};
 use tribute::query::{QueryMsg, TributeInfoResponse};
 
 mod setup;
@@ -24,6 +24,7 @@ fn test_tribute() {
         tribute.address.clone(),
         &Mint {
             token_id: "1".to_string(),
+            token_uri: None,
             owner: config.user_addr.to_string(),
             extension: Box::new(MintExtension {
                 data: TributeMintData {
@@ -114,6 +115,7 @@ fn test_raffle() {
         tribute.address.clone(),
         &Mint {
             token_id: "1".to_string(),
+            token_uri: None,
             owner: config.user_addr.to_string(),
             extension: Box::new(MintExtension {
                 data: TributeMintData {
@@ -137,6 +139,7 @@ fn test_raffle() {
         tribute.address.clone(),
         &Mint {
             token_id: "2".to_string(),
+            token_uri: None,
             owner: config.user_addr.to_string(),
             extension: Box::new(MintExtension {
                 data: TributeMintData {
@@ -274,14 +277,14 @@ fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedCon
     let instantiate_msg = InstantiateMsg {
         name: "consumption unit".to_string(),
         symbol: "cu".to_string(),
-        collection_info_extension: ConsumptionUnitCollectionExtension {
-            settlement_token: cw20::Denom::Cw20(app.api().addr_make("usdc")),
+        collection_info_extension: TributeCollectionExtension {
             symbolic_rate: Decimal::from_str("0.08").unwrap(),
             native_token: cw20::Denom::Native(NATIVE_DENOM.to_string()),
             price_oracle,
         },
         minter: None,
         creator: None,
+        burner: None,
     };
     let address = app
         .instantiate_contract(
@@ -309,6 +312,7 @@ fn deploy_nod(app: &mut App, owner: Addr) -> DeployedContract {
         collection_info_extension: nod::msg::NodCollectionExtension {},
         minter: None,
         creator: None,
+        burner: None,
     };
     let address = app
         .instantiate_contract(

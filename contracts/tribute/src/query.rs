@@ -163,7 +163,7 @@ fn date_bounds(timestamp: Timestamp) -> (Timestamp, Timestamp) {
 #[cfg(test)]
 mod tests {
     use crate::contract::{execute, instantiate};
-    use crate::msg::{ConsumptionUnitCollectionExtension, InstantiateMsg};
+    use crate::msg::{InstantiateMsg, TributeCollectionExtension};
     use crate::query::{query, QueryMsg};
     use cosmwasm_std::{Addr, Decimal};
     use cw20::Denom;
@@ -182,13 +182,13 @@ mod tests {
         let init_msg = InstantiateMsg {
             name: "tribute".to_string(),
             symbol: "t".to_string(),
-            collection_info_extension: ConsumptionUnitCollectionExtension {
-                settlement_token: Denom::Cw20(Addr::unchecked("settlement")),
+            collection_info_extension: TributeCollectionExtension {
                 symbolic_rate: Decimal::from_str("0.08").unwrap(),
                 native_token: Denom::Native("native".to_string()),
                 price_oracle: Addr::unchecked("price_oracle"),
             },
             minter: None,
+            burner: None,
             creator: None,
         };
 

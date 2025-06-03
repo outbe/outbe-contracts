@@ -98,6 +98,7 @@ fn execute_submit(
 
     let token = NodNft {
         owner: owner_addr,
+        token_uri: None, // todo populate
         extension: data,
     };
 

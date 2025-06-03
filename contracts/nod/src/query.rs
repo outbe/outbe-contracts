@@ -111,6 +111,7 @@ mod tests {
             collection_info_extension: NodCollectionExtension {},
             minter: None,
             creator: None,
+            burner: None,
         };
         let contract_addr = app
             .instantiate_contract(code_id, owner.clone(), &init_msg, &[], "nod1", None)

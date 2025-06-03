@@ -12,6 +12,13 @@
       "symbol"
     ],
     "properties": {
+      "burner": {
+        "description": "The burner is the only one who can burn NFTs.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
       "collection_info_extension": {
         "description": "Optional extension of the collection metadata",
         "allOf": [

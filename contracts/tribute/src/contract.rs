@@ -1,6 +1,7 @@
 use crate::error::ContractError;
 use crate::msg::{
-    ExecuteMsg, InstantiateMsg, MigrateMsg, MintExtension, TributeExtensionUpdate, TributeMintData,
+    ExecuteMsg, InstantiateMsg, MigrateMsg, MintExtension, TributeCollectionExtension,
+    TributeMintData,
 };
 use crate::state::HASHES;
 use crate::types::{Status, TributeConfig, TributeData, TributeNft};
@@ -9,6 +10,7 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Uint128,
 };
+use outbe_nft::msg::CollectionInfoMsg;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
 use sha2::{Digest, Sha256};
 
@@ -51,6 +53,13 @@ pub fn instantiate(
     outbe_nft::execute::initialize_minter(deps.storage, deps.api, Some(minter))?;
 
     // use info.sender if None is passed
+    let burner: &str = match msg.burner.as_deref() {
+        Some(burner) => burner,
+        None => info.sender.as_str(),
+    };
+    outbe_nft::execute::initialize_burner(deps.storage, deps.api, Some(burner))?;
+
+    // use info.sender if None is passed
     let creator: &str = match msg.creator.as_deref() {
         Some(creator) => creator,
         None => info.sender.as_str(),
@@ -77,25 +86,55 @@ pub fn execute(
         ExecuteMsg::Mint {
             token_id,
             owner,
+            token_uri,
             extension,
-        } => execute_mint(deps, &env, &info, token_id, owner, *extension),
+        } => execute_mint(deps, &env, &info, token_id, owner, token_uri, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
         ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
-        ExecuteMsg::UpdateNftInfo {
-            token_id,
-            extension,
-        } => execute_update_nft_info(deps, &env, &info, token_id, extension),
+
+        ExecuteMsg::UpdateMinterOwnership(action) => Ok(
+            outbe_nft::execute::update_minter_ownership(deps, &env, &info, action)?,
+        ),
+        ExecuteMsg::UpdateCreatorOwnership(action) => Ok(
+            outbe_nft::execute::update_creator_ownership(deps, &env, &info, action)?,
+        ),
+        ExecuteMsg::UpdateBurnerOwnership(action) => Ok(
+            outbe_nft::execute::update_burner_ownership(deps, &env, &info, action)?,
+        ),
+        ExecuteMsg::UpdateCollectionInfo { collection_info } => {
+            update_collection_info(deps, collection_info)
+        }
     }
 }
 
-fn execute_update_nft_info(
-    _deps: DepsMut,
-    _env: &Env,
-    _info: &MessageInfo,
-    _token_id: String,
-    _update: TributeExtensionUpdate,
+pub fn update_collection_info(
+    deps: DepsMut,
+    msg: CollectionInfoMsg<Option<TributeCollectionExtension>>,
 ) -> Result<Response, ContractError> {
-    Ok(Response::new())
+    let config = Cw721Config::<TributeData, TributeConfig>::default();
+
+    let mut collection_info = config.collection_info.load(deps.storage)?;
+    if msg.name.is_some() {
+        collection_info.name = msg.name.unwrap();
+    }
+    if msg.symbol.is_some() {
+        collection_info.symbol = msg.symbol.unwrap();
+    }
+
+    if msg.extension.is_some() {
+        let data = msg.extension.unwrap();
+        config.collection_config.save(
+            deps.storage,
+            &TributeConfig {
+                symbolic_rate: data.symbolic_rate,
+                native_token: data.native_token,
+                price_oracle: data.price_oracle,
+            },
+        )?;
+    }
+
+    let response = Response::new().add_attribute("action", "update_collection_info");
+    Ok(response)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -105,6 +144,7 @@ fn execute_mint(
     _info: &MessageInfo,
     token_id: String,
     owner: String,
+    token_uri: Option<String>,
     extension: MintExtension,
 ) -> Result<Response, ContractError> {
     // TODO temporary disable for demo purpose
@@ -160,6 +200,7 @@ fn execute_mint(
 
     let token = TributeNft {
         owner: owner_addr,
+        token_uri,
         extension: data,
     };
 
