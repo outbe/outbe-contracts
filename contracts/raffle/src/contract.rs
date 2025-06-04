@@ -265,7 +265,7 @@ fn execute_raffle(
                         nod_id,
                         settlement_token: tribute.extension.settlement_token.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
-                        nominal_minor_rate: tribute.extension.nominal_minor_qty,
+                        nominal_minor_rate: tribute.extension.nominal_qty,
                         symbolic_minor_load: tribute.extension.symbolic_load,
                         vector_minor_rate: vector.vector_rate,
                         issuance_minor_rate: exchange_rate.price,

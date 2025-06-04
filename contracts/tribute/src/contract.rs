@@ -183,10 +183,10 @@ fn execute_mint(
 
     // create the token
     let data = TributeData {
-        minor_value_settlement: entity.minor_value_settlement,
+        settlement_value: entity.minor_value_settlement,
         settlement_token: entity.settlement_token,
         nominal_price: exchange_rate.price,
-        nominal_minor_qty: nominal_qty,
+        nominal_qty,
         symbolic_load: load,
         hashes: entity.hashes.clone(),
         tribute_date: entity.tribute_date.unwrap_or(env.block.time),

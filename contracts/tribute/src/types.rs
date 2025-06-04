@@ -18,11 +18,11 @@ impl Cw721CollectionConfig for TributeConfig {}
 #[cw_serde]
 pub struct TributeData {
     /// Value of the Tribute in Settlement Tokens
-    pub minor_value_settlement: Uint128,
+    pub settlement_value: Uint128,
     /// Tribute settlement token
     pub settlement_token: Denom,
     /// Value of the Tribute in Native Coins
-    pub nominal_minor_qty: Uint128,
+    pub nominal_qty: Uint128,
     /// Price in Native coins with a rate on the moment of the transaction
     pub nominal_price: Decimal,
     /// Signals an eligible interest to the network Gratis qty

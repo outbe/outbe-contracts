@@ -69,7 +69,7 @@ fn test_tribute() {
         .unwrap();
 
     assert_eq!(
-        response.extension.minor_value_settlement,
+        response.extension.settlement_value,
         Uint128::from(100_000_000u64)
     );
 }

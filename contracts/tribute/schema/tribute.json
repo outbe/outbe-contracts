@@ -982,11 +982,12 @@
           "type": "object",
           "required": [
             "created_at",
+            "fidelity_index",
             "hashes",
-            "minor_value_settlement",
-            "nominal_minor_qty",
             "nominal_price",
+            "nominal_qty",
             "settlement_token",
+            "settlement_value",
             "symbolic_load",
             "tribute_date",
             "updated_at"
@@ -1000,28 +1001,16 @@
                 }
               ]
             },
+            "fidelity_index": {
+              "type": "integer",
+              "format": "int32"
+            },
             "hashes": {
               "description": "Hashes identifying consumption records batch. Each hash should be a valid unique sha256 hash in hex format",
               "type": "array",
               "items": {
                 "$ref": "#/definitions/HexBinary"
               }
-            },
-            "minor_value_settlement": {
-              "description": "Value of the Tribute in Settlement Tokens",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Uint128"
-                }
-              ]
-            },
-            "nominal_minor_qty": {
-              "description": "Value of the Tribute in Native Coins",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Uint128"
-                }
-              ]
             },
             "nominal_price": {
               "description": "Price in Native coins with a rate on the moment of the transaction",
@@ -1031,11 +1020,27 @@
                 }
               ]
             },
+            "nominal_qty": {
+              "description": "Value of the Tribute in Native Coins",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
             "settlement_token": {
               "description": "Tribute settlement token",
               "allOf": [
                 {
                   "$ref": "#/definitions/Denom"
+                }
+              ]
+            },
+            "settlement_value": {
+              "description": "Value of the Tribute in Settlement Tokens",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
                 }
               ]
             },
@@ -1341,11 +1346,12 @@
           "type": "object",
           "required": [
             "created_at",
+            "fidelity_index",
             "hashes",
-            "minor_value_settlement",
-            "nominal_minor_qty",
             "nominal_price",
+            "nominal_qty",
             "settlement_token",
+            "settlement_value",
             "symbolic_load",
             "tribute_date",
             "updated_at"
@@ -1359,28 +1365,16 @@
                 }
               ]
             },
+            "fidelity_index": {
+              "type": "integer",
+              "format": "int32"
+            },
             "hashes": {
               "description": "Hashes identifying consumption records batch. Each hash should be a valid unique sha256 hash in hex format",
               "type": "array",
               "items": {
                 "$ref": "#/definitions/HexBinary"
               }
-            },
-            "minor_value_settlement": {
-              "description": "Value of the Tribute in Settlement Tokens",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Uint128"
-                }
-              ]
-            },
-            "nominal_minor_qty": {
-              "description": "Value of the Tribute in Native Coins",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Uint128"
-                }
-              ]
             },
             "nominal_price": {
               "description": "Price in Native coins with a rate on the moment of the transaction",
@@ -1390,11 +1384,27 @@
                 }
               ]
             },
+            "nominal_qty": {
+              "description": "Value of the Tribute in Native Coins",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
             "settlement_token": {
               "description": "Tribute settlement token",
               "allOf": [
                 {
                   "$ref": "#/definitions/Denom"
+                }
+              ]
+            },
+            "settlement_value": {
+              "description": "Value of the Tribute in Settlement Tokens",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
                 }
               ]
             },
