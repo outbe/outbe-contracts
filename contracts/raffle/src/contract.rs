@@ -90,11 +90,15 @@ fn execute_raffle(
 
     let tributes_in_current_raffle: Vec<String> = if raffle_run_today == 1 {
         // distribute tokens
-        let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+        let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
             &tribute_address,
             &tribute::query::QueryMsg::DailyTributes { date: date_time },
         )?;
-        println!("Raffle tributes = {}", tributes.tributes.len());
+        let all_tributes = all_tributes.tributes;
+        println!("Raffle tributes = {}", all_tributes.len());
+
+        // TODO do sort by fidelity index
+        //  such as fidelity_index = 0 for all tributes we avoid sorting as redundant operation
 
         // query total to distribute
         let allocation_per_block: token_allocator::types::TokenAllocatorData =
@@ -107,8 +111,7 @@ fn execute_raffle(
             Uint128::from(allocation_per_block.amount) * Uint128::new(24 * 60 * 12);
         let pool_allocation = total_allocation / Uint128::new(24);
 
-        let total_interest = tributes
-            .tributes
+        let total_interest = all_tributes
             .iter()
             .fold(Uint128::zero(), |acc, t| acc + t.data.symbolic_load);
 
@@ -141,7 +144,7 @@ fn execute_raffle(
         while pool_index < 24 {
             let mut pool_tributes: Vec<String> = vec![];
             let mut allocated_in_pool = Uint128::zero();
-            for tribute in tributes.tributes.clone() {
+            for tribute in all_tributes.clone() {
                 if allocated_in_pool >= pool_capacity {
                     break;
                 }

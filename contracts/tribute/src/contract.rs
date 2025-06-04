@@ -190,6 +190,7 @@ fn execute_mint(
         symbolic_load: load,
         hashes: entity.hashes.clone(),
         tribute_date: entity.tribute_date.unwrap_or(env.block.time),
+        fidelity_index: 0, // TODO implement fidelity index
         created_at: env.block.time,
         updated_at: env.block.time,
     };

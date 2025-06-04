@@ -31,6 +31,7 @@ pub struct TributeData {
     /// sha256 hash in hex format
     pub hashes: Vec<HexBinary>,
     pub tribute_date: Timestamp,
+    pub fidelity_index: i32,
     /// Time when the Tribute NFT was created on the network
     pub created_at: Timestamp,
     /// Last updated time
