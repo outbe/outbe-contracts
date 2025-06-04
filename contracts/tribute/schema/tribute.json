@@ -720,16 +720,6 @@
             "properties": {
               "date": {
                 "$ref": "#/definitions/Timestamp"
-              },
-              "status": {
-                "anyOf": [
-                  {
-                    "$ref": "#/definitions/Status"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
               }
             },
             "additionalProperties": false
@@ -739,24 +729,6 @@
       }
     ],
     "definitions": {
-      "Status": {
-        "oneOf": [
-          {
-            "description": "Accepted on the Network (Vector and floorPrice can be changed)",
-            "type": "string",
-            "enum": [
-              "accepted"
-            ]
-          },
-          {
-            "description": "Submitted on a Red Day; not eligible for Raffle",
-            "type": "string",
-            "enum": [
-              "muted"
-            ]
-          }
-        ]
-      },
       "Timestamp": {
         "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
         "allOf": [
@@ -997,24 +969,6 @@
           "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
           "type": "string"
         },
-        "Status": {
-          "oneOf": [
-            {
-              "description": "Accepted on the Network (Vector and floorPrice can be changed)",
-              "type": "string",
-              "enum": [
-                "accepted"
-              ]
-            },
-            {
-              "description": "Submitted on a Red Day; not eligible for Raffle",
-              "type": "string",
-              "enum": [
-                "muted"
-              ]
-            }
-          ]
-        },
         "Timestamp": {
           "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
           "allOf": [
@@ -1033,7 +987,6 @@
             "nominal_minor_qty",
             "nominal_price",
             "settlement_token",
-            "status",
             "symbolic_load",
             "tribute_date",
             "updated_at"
@@ -1083,14 +1036,6 @@
               "allOf": [
                 {
                   "$ref": "#/definitions/Denom"
-                }
-              ]
-            },
-            "status": {
-              "description": "State of the record",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Status"
                 }
               ]
             },
@@ -1383,24 +1328,6 @@
           "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
           "type": "string"
         },
-        "Status": {
-          "oneOf": [
-            {
-              "description": "Accepted on the Network (Vector and floorPrice can be changed)",
-              "type": "string",
-              "enum": [
-                "accepted"
-              ]
-            },
-            {
-              "description": "Submitted on a Red Day; not eligible for Raffle",
-              "type": "string",
-              "enum": [
-                "muted"
-              ]
-            }
-          ]
-        },
         "Timestamp": {
           "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
           "allOf": [
@@ -1419,7 +1346,6 @@
             "nominal_minor_qty",
             "nominal_price",
             "settlement_token",
-            "status",
             "symbolic_load",
             "tribute_date",
             "updated_at"
@@ -1469,14 +1395,6 @@
               "allOf": [
                 {
                   "$ref": "#/definitions/Denom"
-                }
-              ]
-            },
-            "status": {
-              "description": "State of the record",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Status"
                 }
               ]
             },

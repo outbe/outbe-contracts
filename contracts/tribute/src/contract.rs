@@ -4,7 +4,7 @@ use crate::msg::{
     TributeMintData,
 };
 use crate::state::HASHES;
-use crate::types::{Status, TributeConfig, TributeData, TributeNft};
+use crate::types::{TributeConfig, TributeData, TributeNft};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
@@ -187,10 +187,6 @@ fn execute_mint(
         settlement_token: entity.settlement_token,
         nominal_price: exchange_rate.price,
         nominal_minor_qty: nominal_qty,
-        status: match exchange_rate.day_type {
-            price_oracle::types::DayType::GREEN => Status::Accepted,
-            price_oracle::types::DayType::RED => Status::Muted,
-        },
         symbolic_load: load,
         hashes: entity.hashes.clone(),
         tribute_date: entity.tribute_date.unwrap_or(env.block.time),

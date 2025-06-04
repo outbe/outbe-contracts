@@ -92,10 +92,7 @@ fn execute_raffle(
         // distribute tokens
         let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
             &tribute_address,
-            &tribute::query::QueryMsg::DailyTributes {
-                date: date_time,
-                status: Some(tribute::types::Status::Accepted),
-            },
+            &tribute::query::QueryMsg::DailyTributes { date: date_time },
         )?;
         println!("Raffle tributes = {}", tributes.tributes.len());
 

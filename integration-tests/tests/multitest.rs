@@ -177,7 +177,6 @@ fn test_raffle() {
             tribute.address.clone(),
             &QueryMsg::DailyTributes {
                 date: app.block_info().time,
-                status: Some(tribute::types::Status::Accepted {}),
             },
         )
         .unwrap();
