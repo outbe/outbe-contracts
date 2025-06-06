@@ -349,6 +349,7 @@ fn deploy_raffle(
         nod: Some(nod),
         token_allocator: Some(token_allocator),
         price_oracle: Some(price_oracle),
+        deficit: Decimal::from_str("0.08").unwrap(),
     };
     let address = app
         .instantiate_contract(
