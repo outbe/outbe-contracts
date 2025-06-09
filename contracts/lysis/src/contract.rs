@@ -15,7 +15,7 @@ use price_oracle::types::DayType;
 use std::collections::HashSet;
 use tribute::query::FullTributeData;
 
-const CONTRACT_NAME: &str = "outbe.net:raffle";
+const CONTRACT_NAME: &str = "outbe.net:lysis";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -48,8 +48,8 @@ pub fn instantiate(
     )?;
 
     Ok(Response::default()
-        .add_attribute("action", "raffle::instantiate")
-        .add_event(Event::new("raffle::instantiate").add_attribute("creator", creator)))
+        .add_attribute("action", "lysis::instantiate")
+        .add_event(Event::new("lysis::instantiate").add_attribute("creator", creator)))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -71,6 +71,8 @@ fn execute_raffle(
     _info: MessageInfo,
     raffle_date: Option<Timestamp>,
 ) -> Result<Response, ContractError> {
+    // todo verify ownership to run raffle
+
     let execution_date_time = raffle_date.unwrap_or(env.block.time);
     println!("Raffle execution date = {}", execution_date_time);
     let execution_date = time_utils::normalize_to_date(execution_date_time).seconds();
@@ -168,7 +170,7 @@ fn execute_raffle_or_touch(
         }
         RunType::Touch => {
             let tributes_for_touch: Vec<FullTributeData> = vec![];
-            // TODO add tributes query that were not selected for raffle
+            // TODO add tributes query that were not selected for lysis
             execute_touch(
                 tributes_for_touch,
                 run_info.pool_allocation,
@@ -250,9 +252,9 @@ fn do_raffle_in_tier(
     }
 
     Ok(Response::new()
-        .add_attribute("action", "raffle::raffle")
+        .add_attribute("action", "lysis::lysis")
         .add_event(
-            Event::new("raffle::raffle")
+            Event::new("lysis::lysis")
                 .add_attribute("run", raffle_run_today.to_string())
                 .add_attribute("tributes_count", format!("{}", tributes_count)),
         )
@@ -417,8 +419,8 @@ fn execute_touch(
 ) -> Result<Response, ContractError> {
     if tributes.is_empty() {
         return Ok(Response::new()
-            .add_attribute("action", "raffle::raffle")
-            .add_event(Event::new("raffle::raffle").add_attribute("touch", "no-data")));
+            .add_attribute("action", "lysis::lysis")
+            .add_event(Event::new("lysis::lysis").add_attribute("touch", "no-data")));
     }
 
     // todo implement random. Now first tribute will win.
@@ -455,8 +457,8 @@ fn execute_touch(
     messages.push(SubMsg::new(nod_mint));
 
     Ok(Response::new()
-        .add_attribute("action", "raffle::raffle")
-        .add_event(Event::new("raffle::raffle").add_attribute("touch", run_today.to_string()))
+        .add_attribute("action", "lysis::lysis")
+        .add_event(Event::new("lysis::lysis").add_attribute("touch", run_today.to_string()))
         .add_submessages(messages))
 }
 
@@ -474,8 +476,8 @@ fn execute_burn_all(
     DAILY_RAFFLE_RUN.clear(deps.storage);
 
     Ok(Response::new()
-        .add_attribute("action", "raffle::burn_all")
-        .add_event(Event::new("raffle::burn_all").add_attribute("sender", info.sender.to_string())))
+        .add_attribute("action", "lysis::burn_all")
+        .add_event(Event::new("lysis::burn_all").add_attribute("sender", info.sender.to_string())))
 }
 
 fn calc_allocation(

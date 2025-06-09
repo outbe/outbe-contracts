@@ -735,10 +735,10 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "cw20",
+ "lysis",
  "nod",
  "outbe-nft",
  "price-oracle",
- "raffle",
  "token-allocator",
  "tribute",
  "vector",
@@ -785,6 +785,27 @@ name = "libc"
 version = "0.2.171"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c19937216e9d3aa9956d9bb8dfc0b0c8beb6058fc4f7a4dc4d850edf86a237d6"
+
+[[package]]
+name = "lysis"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "cw20",
+ "nod",
+ "outbe-utils",
+ "price-oracle",
+ "serde",
+ "thiserror 1.0.69",
+ "token-allocator",
+ "tribute",
+ "vector",
+]
 
 [[package]]
 name = "memchr"
@@ -953,27 +974,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
 dependencies = [
  "proc-macro2",
-]
-
-[[package]]
-name = "raffle"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-multi-test",
- "cw-ownable",
- "cw-storage-plus",
- "cw2",
- "cw20",
- "nod",
- "outbe-utils",
- "price-oracle",
- "serde",
- "thiserror 1.0.69",
- "token-allocator",
- "tribute",
- "vector",
 ]
 
 [[package]]

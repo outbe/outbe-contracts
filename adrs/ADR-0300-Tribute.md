@@ -77,7 +77,7 @@ pub struct TributeData {
     /// Nominal currency from Consumption Records
     pub nominal_currency: String,
     /// Where the CU is allocated by the User.
-    /// A user can change vector at any time prior to CU NFT selection in raffle
+    /// A user can change vector at any time prior to CU NFT selection in lysis
     pub vector: u16,
     /// Calculated according to initial Native Coin Price, PGT and allocated vector.
     /// FloorPrice is to be re-calculated each time out of the update of the vector
