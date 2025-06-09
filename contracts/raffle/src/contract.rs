@@ -1,8 +1,8 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{
-    Config, RaffleHistory, RaffleRunData, CONFIG, CREATOR, DAILY_RAFFLE, DAILY_TOUCH, HISTORY,
-    TRIBUTES_DISTRIBUTION,
+    Config, DailyRaffleRunInfo, RaffleRunInfo, RunType, CONFIG, CREATOR, DAILY_RAFFLE_RUN,
+    DAILY_RAFFLE_RUN_INFO, TRIBUTES_DISTRIBUTION,
 };
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -73,6 +73,7 @@ fn execute_raffle(
 ) -> Result<Response, ContractError> {
     let execution_date_time = raffle_date.unwrap_or(env.block.time);
     println!("Raffle execution date = {}", execution_date_time);
+    let execution_date = time_utils::normalize_to_date(execution_date_time).seconds();
 
     let config = CONFIG.load(deps.storage)?;
     let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
@@ -90,95 +91,61 @@ fn execute_raffle(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let (total_allocation, allocation_per_tier) =
-        calc_allocation(deps.as_ref(), token_allocator_address)?;
-    println!(
-        "total_allocation = {}, allocation_per_pool = {}, ",
-        total_allocation, allocation_per_tier
-    );
+    let raffle_run_today = DAILY_RAFFLE_RUN.may_load(deps.storage, execution_date)?;
+    let raffle_run_today = raffle_run_today.unwrap_or_default();
+    let raffle_run_today = raffle_run_today + 1;
 
-    match exchange_rate.day_type {
-        DayType::GREEN => execute_raffle_tier(
+    if raffle_run_today == 1 {
+        schedule_executions(
             deps.branch(),
-            total_allocation,
-            allocation_per_tier,
+            tribute_address.clone(),
+            token_allocator_address,
             execution_date_time,
-            tribute_address,
-            nod_address,
-            vector_address,
-            exchange_rate.price,
+            execution_date,
             config.deficit,
-        ),
-        DayType::RED => {
-            // We have only touch if day is red
-            let all_tributes: tribute::query::DailyTributesResponse =
-                deps.querier.query_wasm_smart(
-                    &tribute_address,
-                    &tribute::query::QueryMsg::DailyTributes {
-                        date: execution_date_time,
-                    },
-                )?;
-            let all_tributes = all_tributes.tributes;
-            println!("Raffle tributes = {}", all_tributes.len());
-
-            execute_touch(
-                deps.branch(),
-                all_tributes.clone(),
-                allocation_per_tier,
-                execution_date_time,
-                nod_address,
-                exchange_rate.price,
-            )
-        }
+            exchange_rate.day_type,
+        )?;
     }
+
+    DAILY_RAFFLE_RUN.save(deps.storage, execution_date, &raffle_run_today)?;
+    // execute lysis or touch
+
+    execute_raffle_or_touch(
+        deps,
+        execution_date,
+        raffle_run_today,
+        tribute_address,
+        nod_address,
+        vector_address,
+        exchange_rate.price,
+    )
 }
 
 #[allow(clippy::too_many_arguments)]
-fn execute_raffle_tier(
-    mut deps: DepsMut,
-    total_allocation: Uint128,
-    allocation_per_tier: Uint128,
-    execution_date_time: Timestamp,
+fn execute_raffle_or_touch(
+    deps: DepsMut,
+    execution_date: u64,
+    run_today: usize,
     tribute_address: Addr,
     nod_address: Addr,
     vector_address: Addr,
     exchange_rate: Decimal,
-    deficit: Decimal,
 ) -> Result<Response, ContractError> {
-    let date = time_utils::normalize_to_date(execution_date_time).seconds();
+    let info = DAILY_RAFFLE_RUN_INFO.load(deps.storage, execution_date)?;
 
-    let raffle_run_today = DAILY_RAFFLE.may_load(deps.storage, date)?;
-    let raffle_run_today = raffle_run_today.unwrap_or_default();
-    let raffle_run_today = raffle_run_today + 1;
+    if run_today > info.number_of_runs {
+        return Err(ContractError::BadRunConfiguration {});
+    }
 
-    match raffle_run_today {
-        1 => {
-            let tributes_in_first_tier = distribute_tributes_for_tiers(
-                deps.branch(),
-                total_allocation,
-                allocation_per_tier,
-                execution_date_time,
-                date,
-                deficit,
-                tribute_address.clone(),
-            )?;
-            do_raffle_in_tier(
-                deps,
-                tributes_in_first_tier,
-                1,
-                date,
-                tribute_address,
-                vector_address,
-                nod_address,
-                exchange_rate,
-            )
-        }
-        2..=23 => {
+    let run_info = info.data[run_today - 1].clone();
+
+    match run_info.run_type {
+        RunType::Lysis => {
             // use already distributed tokens
             let mut tributes_in_first_tier: Vec<String> = vec![];
             let mut j: usize = 0;
             loop {
-                let key = format!("{}_{}_{}", date, raffle_run_today, j);
+                let key = format!("{}_{}_{}", execution_date, run_today, j);
                 let tribute_id = TRIBUTES_DISTRIBUTION.may_load(deps.storage, &key)?;
                 match tribute_id {
                     None => {
@@ -192,27 +159,24 @@ fn execute_raffle_tier(
             do_raffle_in_tier(
                 deps,
                 tributes_in_first_tier,
-                raffle_run_today,
-                date,
+                run_today,
                 tribute_address,
                 vector_address,
                 nod_address,
                 exchange_rate,
             )
         }
-        24 => {
-            let tributes_for_raffle: Vec<FullTributeData> = vec![];
+        RunType::Touch => {
+            let tributes_for_touch: Vec<FullTributeData> = vec![];
             // TODO add tributes query that were not selected for raffle
             execute_touch(
-                deps.branch(),
-                tributes_for_raffle,
-                allocation_per_tier,
-                execution_date_time,
+                tributes_for_touch,
+                run_info.pool_allocation,
+                run_today,
                 nod_address,
                 exchange_rate,
             )
         }
-        _ => Err(ContractError::BadRunConfiguration {}),
     }
 }
 
@@ -220,8 +184,7 @@ fn execute_raffle_tier(
 fn do_raffle_in_tier(
     deps: DepsMut,
     tributes_in_current_raffle: Vec<String>,
-    raffle_run_today: u16,
-    date: u64,
+    raffle_run_today: usize,
     tribute_address: Addr,
     vector_address: Addr,
     nod_address: Addr,
@@ -246,7 +209,7 @@ fn do_raffle_in_tier(
     let vector = vector_info
         .vectors
         .iter()
-        .find(|v| v.vector_id == raffle_run_today)
+        .find(|v| usize::from(v.vector_id) == raffle_run_today)
         .ok_or(ContractError::BadRunConfiguration {})?;
 
     for tribute_id in tributes_in_current_raffle {
@@ -286,8 +249,6 @@ fn do_raffle_in_tier(
         messages.push(SubMsg::new(nod_mint));
     }
 
-    DAILY_RAFFLE.save(deps.storage, date, &raffle_run_today)?;
-
     Ok(Response::new()
         .add_attribute("action", "raffle::raffle")
         .add_event(
@@ -298,113 +259,139 @@ fn do_raffle_in_tier(
         .add_submessages(messages))
 }
 
-fn distribute_tributes_for_tiers(
+fn schedule_executions(
     deps: DepsMut,
-    total_allocation: Uint128,
-    allocation_per_tier: Uint128,
+    tribute_address: Addr,
+    token_allocator_address: Addr,
     execution_date_time: Timestamp,
     execution_date: u64,
     deficit: Decimal,
-    tribute_address: Addr,
-) -> Result<Vec<String>, ContractError> {
-    // distribute tokens
-    let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
-        &tribute_address,
-        &tribute::query::QueryMsg::DailyTributes {
-            date: execution_date_time,
-        },
-    )?;
-    let all_tributes = all_tributes.tributes;
+    day_type: DayType,
+) -> Result<(), ContractError> {
+    let (total_allocation, allocation_per_tier) =
+        calc_allocation(deps.as_ref(), token_allocator_address)?;
     println!(
-        "Raffle {} tributes distribution for date ",
-        all_tributes.len()
+        "total_allocation = {}, allocation_per_pool = {}, ",
+        total_allocation, allocation_per_tier
     );
 
-    // TODO do sort by fidelity index
-    //  such as fidelity_index = 0 for all tributes we avoid sorting as redundant operation
+    let mut run_data: Vec<RaffleRunInfo> = Vec::with_capacity(24);
 
-    let total_interest = all_tributes
-        .iter()
-        .fold(Uint128::zero(), |acc, t| acc + t.data.symbolic_load);
-
-    let total_deficit = calc_total_deficit(total_allocation, total_interest, deficit);
-
-    // TODO calc deficit per pool
-    let pool_deficit = total_deficit / Uint128::new(24);
-
-    // Pool Capacity = Pool Allocation + Pool Deficit.
-    let pool_capacity = allocation_per_tier + pool_deficit;
-
-    // + 8%
-    println!("total_allocation = {}", total_allocation);
-    println!("total_interest = {}", total_interest);
-    println!("allocation_per_pool = {}", allocation_per_tier);
-    println!("total_deficit = {}", total_deficit);
-    println!("pool_deficit = {}", pool_deficit);
-    println!("pool_capacity = {}", pool_capacity);
-
-    let mut raffle_history: Vec<RaffleRunData> = vec![];
-    let mut distributed_tributes: HashSet<String> = HashSet::new();
-    let mut pools: Vec<Vec<String>> = Vec::with_capacity(23);
-    let mut pool_index: u16 = 0;
-    while pool_index < 23 {
-        let mut pool_tributes: Vec<String> = vec![];
-        let mut allocated_in_pool = Uint128::zero();
-        for tribute in all_tributes.clone() {
-            if allocated_in_pool >= pool_capacity {
-                break;
-            }
-            if !distributed_tributes.contains(&tribute.token_id) {
-                if allocated_in_pool + tribute.data.symbolic_load > pool_capacity {
-                    continue;
-                }
-                allocated_in_pool += tribute.data.symbolic_load;
-                pool_tributes.push(tribute.token_id.clone());
-                distributed_tributes.insert(tribute.token_id.clone());
-            }
-        }
+    if day_type == DayType::GREEN {
+        // distribute tokens
+        let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+            &tribute_address,
+            &tribute::query::QueryMsg::DailyTributes {
+                date: execution_date_time,
+            },
+        )?;
+        let all_tributes = all_tributes.tributes;
         println!(
-            "Distributed in pool {:?}: {:?} tributes",
-            pool_index,
-            pool_tributes.len()
+            "Raffle {} tributes distribution for date ",
+            all_tributes.len()
         );
 
-        raffle_history.push(RaffleRunData {
-            raffle_date: Timestamp::from_seconds(execution_date),
-            raffle_date_time: execution_date_time,
-            pool_index,
-            total_allocation,
-            pool_allocation: allocation_per_tier,
-            total_deficit,
-            pool_deficit,
-            pool_capacity,
-            assigned_tributes: pool_tributes.len(),
-            assigned_tributes_sum: allocated_in_pool,
-        });
+        // TODO do sort by fidelity index
+        //  such as fidelity_index = 0 for all tributes we avoid sorting as redundant operation
 
-        pools.push(pool_tributes);
-        pool_index += 1;
-    }
+        let total_interest = all_tributes
+            .iter()
+            .fold(Uint128::zero(), |acc, t| acc + t.data.symbolic_load);
 
-    for (i, pool) in pools.iter().enumerate() {
-        for (j, tribute_id) in pool.iter().enumerate() {
-            // todo define map key for such struct
-            // NB: i starts from 1 because first vector starts from 1
-            let key = format!("{}_{}_{}", execution_date, i + 1, j);
-            TRIBUTES_DISTRIBUTION.save(deps.storage, &key, tribute_id)?;
-            println!("added tribute {} in pool {}", tribute_id, key);
+        let total_deficit = calc_total_deficit(total_allocation, total_interest, deficit);
+
+        // let total_lysis_limit = total_interest - total_deficit;
+
+        // TODO calc deficit per pool
+        // let lysis_limit = total_lysis_limit / Uint128::new(23);
+        let lysis_deficit = total_deficit / Uint128::new(23);
+        let lysis_capacity = allocation_per_tier + lysis_deficit;
+
+        // + 8%
+        println!("total_allocation = {}", total_allocation);
+        println!("total_interest = {}", total_interest);
+        println!("allocation_per_pool = {}", allocation_per_tier);
+        println!("total_deficit = {}", total_deficit);
+        println!("pool_deficit = {}", lysis_deficit);
+        println!("pool_capacity = {}", lysis_capacity);
+
+        let mut distributed_tributes: HashSet<String> = HashSet::new();
+
+        let mut pools: Vec<Vec<String>> = Vec::with_capacity(23);
+        let mut pool_index: u16 = 23;
+        while pool_index > 0 {
+            let mut pool_tributes: Vec<String> = vec![];
+            let mut allocated_in_pool = Uint128::zero();
+            for tribute in all_tributes.clone() {
+                if allocated_in_pool >= lysis_capacity {
+                    break;
+                }
+                if !distributed_tributes.contains(&tribute.token_id) {
+                    if allocated_in_pool + tribute.data.symbolic_load > lysis_capacity {
+                        continue;
+                    }
+                    allocated_in_pool += tribute.data.symbolic_load;
+                    pool_tributes.push(tribute.token_id.clone());
+                    distributed_tributes.insert(tribute.token_id.clone());
+                }
+            }
+            println!(
+                "Distributed in pool {:?}: {:?} tributes",
+                pool_index,
+                pool_tributes.len()
+            );
+
+            run_data.push(RaffleRunInfo {
+                vector_index: pool_index,
+                run_type: RunType::Lysis,
+                total_allocation,
+                pool_allocation: allocation_per_tier,
+                total_deficit,
+                pool_deficit: lysis_deficit,
+                pool_capacity: lysis_capacity,
+                assigned_tributes: pool_tributes.len(),
+                assigned_tributes_sum: allocated_in_pool,
+            });
+
+            pools.push(pool_tributes);
+            pool_index -= 1;
+        }
+
+        for (i, pool) in pools.iter().enumerate() {
+            for (j, tribute_id) in pool.iter().enumerate() {
+                // todo define map key for such struct
+                // NB: i starts from 1 because first run starts from 1
+                let key = format!("{}_{}_{}", execution_date, i + 1, j);
+                TRIBUTES_DISTRIBUTION.save(deps.storage, &key, tribute_id)?;
+                println!("added tribute {} in pool {}", tribute_id, key);
+            }
         }
     }
 
+    run_data.push(RaffleRunInfo {
+        vector_index: 0,
+        run_type: RunType::Touch,
+        total_allocation,
+        pool_allocation: allocation_per_tier,
+        total_deficit: Uint128::zero(),
+        pool_deficit: Uint128::zero(),
+        pool_capacity: allocation_per_tier,
+        assigned_tributes: 0,
+        assigned_tributes_sum: Uint128::zero(),
+    });
+
+    let runs_num = run_data.len();
     // save history of the last distribution
-    HISTORY.save(
+    DAILY_RAFFLE_RUN_INFO.save(
         deps.storage,
-        &RaffleHistory {
-            data: raffle_history,
+        execution_date,
+        &DailyRaffleRunInfo {
+            data: run_data,
+            number_of_runs: runs_num,
         },
     )?;
 
-    Ok(pools.first().unwrap_or(&vec![]).clone())
+    Ok(())
 }
 
 fn calc_total_deficit(
@@ -422,25 +409,12 @@ fn calc_total_deficit(
 }
 
 fn execute_touch(
-    deps: DepsMut,
     tributes: Vec<FullTributeData>,
     allocation: Uint128,
-    execution_date_time: Timestamp,
+    run_today: usize,
     nod_address: Addr,
     exchange_rate: Decimal,
 ) -> Result<Response, ContractError> {
-    let date = time_utils::normalize_to_date(execution_date_time).seconds();
-
-    let touch_run_today = DAILY_TOUCH
-        .may_load(deps.storage, date)?
-        .unwrap_or_default();
-    if touch_run_today >= 1 {
-        return Err(ContractError::BadRunConfiguration {});
-    }
-    let touch_run_today = touch_run_today + 1;
-
-    DAILY_TOUCH.save(deps.storage, date, &touch_run_today)?;
-
     if tributes.is_empty() {
         return Ok(Response::new()
             .add_attribute("action", "raffle::raffle")
@@ -448,11 +422,13 @@ fn execute_touch(
     }
 
     // todo implement random. Now first tribute will win.
+    // todo implement query gold price
     let winner = tributes.first().unwrap();
 
     let mut messages: Vec<SubMsg> = vec![];
-    let nod_id = format!("{}_{}", winner.token_id, touch_run_today);
+    let nod_id = format!("{}_{}", winner.token_id, run_today);
     println!("Nod id creation = {}", nod_id);
+    // todo create Credis instead of Node
     let nod_mint = WasmMsg::Execute {
         contract_addr: nod_address.to_string(),
         msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
@@ -480,7 +456,7 @@ fn execute_touch(
 
     Ok(Response::new()
         .add_attribute("action", "raffle::raffle")
-        .add_event(Event::new("raffle::raffle").add_attribute("touch", touch_run_today.to_string()))
+        .add_event(Event::new("raffle::raffle").add_attribute("touch", run_today.to_string()))
         .add_submessages(messages))
 }
 
@@ -493,9 +469,9 @@ fn execute_burn_all(
     // let token = config.nft_info.load(deps.storage, &token_id)?;
     // check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
 
-    HISTORY.remove(deps.storage);
-    DAILY_RAFFLE.clear(deps.storage);
     TRIBUTES_DISTRIBUTION.clear(deps.storage);
+    DAILY_RAFFLE_RUN_INFO.clear(deps.storage);
+    DAILY_RAFFLE_RUN.clear(deps.storage);
 
     Ok(Response::new()
         .add_attribute("action", "raffle::burn_all")
