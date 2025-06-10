@@ -377,7 +377,7 @@ fn deploy_price_oracle(app: &mut App, owner: Addr) -> DeployedContract {
         initial_price: price_oracle::types::TokenPairPrice {
             token1: Denom::Native("one".to_string()),
             token2: Denom::Native("two".to_string()),
-            day_type: price_oracle::types::DayType::GREEN,
+            day_type: price_oracle::types::DayType::Green,
             price: Decimal::from_str("1.25").unwrap(),
         },
     };

@@ -12,6 +12,6 @@ pub struct TokenPairPrice {
 
 #[cw_serde]
 pub enum DayType {
-    GREEN,
-    RED,
+    Green,
+    Red,
 }

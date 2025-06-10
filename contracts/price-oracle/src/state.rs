@@ -22,8 +22,8 @@ pub const TOKEN_PAIR_PRICE: Item<TokenPairState> = Item::new("token_pair");
 impl fmt::Display for DayType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            DayType::GREEN => write!(f, "GREEN"),
-            DayType::RED => write!(f, "RED"),
+            DayType::Green => write!(f, "GREEN"),
+            DayType::Red => write!(f, "RED"),
         }
     }
 }

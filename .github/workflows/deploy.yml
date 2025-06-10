@@ -42,9 +42,6 @@ jobs:
           CW20_CODE_ID=$(./scripts/store_code.sh artifacts/cw20_copy.wasm)
           echo "CW20_CODE_ID=$CW20_CODE_ID" >> $GITHUB_ENV
 
-          CW721_CODE_ID=$(./scripts/store_code.sh artifacts/cw721_copy.wasm)
-          echo "CW721_CODE_ID=$CW721_CODE_ID" >> $GITHUB_ENV
-
       - name: Deploy Contract Registry
         run: |
           CONTRACT_REGISTRY_CODE_ID=$(./scripts/store_code.sh artifacts/contract_registry.wasm)
