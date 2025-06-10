@@ -51,21 +51,21 @@ Please see an example of the signature creation [in TypeScript](./sign-cu-ts-dem
 
 ## Consumption Unit deployment info
 
-Devnet deployment address: `gem15m5fe2pfxq6796rf2z7gma8a0n2s0f0dxasmrzark3q26tltgsyschkllh`
+Devnet deployment address: `outbe1s4683e9zlq2pd2en2gnxrqzer0jvq3cj86qgx6r69h4n3j7vcsfsa2wwsh`
 
 Queries: 
 
 ```shell
-CONTRACT_ADDRESS=gem15m5fe2pfxq6796rf2z7gma8a0n2s0f0dxasmrzark3q26tltgsyschkllh
-gemchaind query wasm contract-state smart $CONTRACT_ADDRESS '{"contract_info": {}}' --node $RPC
-gemchaind query wasm contract-state smart $CONTRACT_ADDRESS '{"all_tokens": {}}' --node $RPC
+CONTRACT_ADDRESS=outbe1s4683e9zlq2pd2en2gnxrqzer0jvq3cj86qgx6r69h4n3j7vcsfsa2wwsh
+outbe-noded query wasm contract-state smart $CONTRACT_ADDRESS '{"contract_info": {}}' --node $RPC
+outbe-noded query wasm contract-state smart $CONTRACT_ADDRESS '{"all_tokens": {}}' --node $RPC
 
 DATA=$(echo '<mint payload>' | jq )
 
-gemchaind tx wasm execute $CONTRACT_ADDRESS "$DATA" \
+outbe-noded tx wasm execute $CONTRACT_ADDRESS "$DATA" \
   --node $RPC --from ci --chain-id $CHAIN_ID \
   --gas auto --gas-adjustment 1.5 --gas-prices 0.025$FEE_DENOM -y
 
-gemchaind query wasm contract-state smart $CONTRACT_ADDRESS '{"nft_info": {"token_id" : "1"}}' --node $RPC
+outbe-noded query wasm contract-state smart $CONTRACT_ADDRESS '{"nft_info": {"token_id" : "1"}}' --node $RPC
 
 ```
