@@ -157,7 +157,7 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
-    if entity.hashes.is_empty() || entity.minor_value_settlement == Uint128::zero() {
+    if entity.hashes.is_empty() || entity.settlement_value == Uint128::zero() {
         return Err(ContractError::WrongInput {});
     }
 
@@ -176,14 +176,14 @@ fn execute_mint(
     )?;
 
     let (nominal_qty, load) = calc_sybolics(
-        entity.minor_value_settlement,
+        entity.settlement_value,
         exchange_rate.price,
         col_config.symbolic_rate,
     );
 
     // create the token
     let data = TributeData {
-        settlement_value: entity.minor_value_settlement,
+        settlement_value: entity.settlement_value,
         settlement_token: entity.settlement_token,
         nominal_price: exchange_rate.price,
         nominal_qty,
@@ -346,7 +346,7 @@ mod tests {
         let raw_json = r#"{
             "token_id": "1",
             "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-            "minor_value_settlement": "100000000",
+            "settlement_value": "100000000",
             "settlement_token": { "cw20": "usdc" },
             "tribute_date": null,
             "hashes": [

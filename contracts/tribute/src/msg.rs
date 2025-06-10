@@ -59,7 +59,7 @@ pub struct TributeMintData {
     pub token_id: String,
     pub owner: String,
     /// Value of the Tribute in Settlement Tokens
-    pub minor_value_settlement: Uint128,
+    pub settlement_value: Uint128,
     /// Tribute settlement token
     pub settlement_token: Denom,
     /// Date of the Tribute creation

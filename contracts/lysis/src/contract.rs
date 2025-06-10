@@ -141,7 +141,7 @@ fn execute_raffle_or_touch(
 
     let run_info = info.data[run_today - 1].clone();
 
-    match run_info.run_type {
+    let response = match run_info.run_type {
         RunType::Lysis => {
             // use already distributed tokens
             let mut tributes_in_first_tier: Vec<String> = vec![];
@@ -162,7 +162,7 @@ fn execute_raffle_or_touch(
                 deps,
                 tributes_in_first_tier,
                 run_today,
-                tribute_address,
+                tribute_address.clone(),
                 vector_address,
                 nod_address,
                 exchange_rate,
@@ -179,6 +179,16 @@ fn execute_raffle_or_touch(
                 exchange_rate,
             )
         }
+    };
+
+    if run_today == info.number_of_runs {
+        Ok(response?.add_submessage(SubMsg::new(WasmMsg::Execute {
+            contract_addr: tribute_address.to_string(),
+            msg: to_json_binary(&tribute::msg::ExecuteMsg::BurnAll {})?,
+            funds: vec![],
+        })))
+    } else {
+        response
     }
 }
 

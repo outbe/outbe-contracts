@@ -482,9 +482,9 @@
         "type": "object",
         "required": [
           "hashes",
-          "minor_value_settlement",
           "owner",
           "settlement_token",
+          "settlement_value",
           "token_id"
         ],
         "properties": {
@@ -495,14 +495,6 @@
               "$ref": "#/definitions/HexBinary"
             }
           },
-          "minor_value_settlement": {
-            "description": "Value of the Tribute in Settlement Tokens",
-            "allOf": [
-              {
-                "$ref": "#/definitions/Uint128"
-              }
-            ]
-          },
           "owner": {
             "type": "string"
           },
@@ -511,6 +503,14 @@
             "allOf": [
               {
                 "$ref": "#/definitions/Denom"
+              }
+            ]
+          },
+          "settlement_value": {
+            "description": "Value of the Tribute in Settlement Tokens",
+            "allOf": [
+              {
+                "$ref": "#/definitions/Uint128"
               }
             ]
           },
