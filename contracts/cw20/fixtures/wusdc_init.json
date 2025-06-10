@@ -1,0 +1,14 @@
+{
+  "name": "wUSDC",
+  "symbol": "WUSDC",
+  "decimals": 6,
+  "initial_balances": [
+  ],
+  "mint": { "minter" : $minter },
+  "marketing": {
+    "project": "Outbe",
+    "description": "Outbe",
+    "marketing": null,
+    "logo": { "url": "https://gem-public.fra1.digitaloceanspaces.com/usdc_icon.svg" }
+  }
+}

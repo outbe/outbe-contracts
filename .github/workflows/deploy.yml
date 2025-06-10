@@ -2,21 +2,19 @@ name: Deploy
 
 on:
   pull_request:
-#  TODO uncomment when activate deployment
-#  workflow_dispatch:
+  workflow_dispatch:
 
 env:
   # Chain configuration
-  CHAIN_ID: todo
-  FEE_DENOM: outbe
-  RPC: todo
+  CHAIN_ID: outbe-devnet-1
+  FEE_DENOM: unit
+  RPC: tcp://rpc.dev.outbe.net:26657
 
 jobs:
   deploy:
     name: Optimize Wasm And Deploy
     runs-on: ubuntu-latest
-#    outputs:
-#      CONTRACT_REGISTRY_CONTRACT_ADDRESS: ${{ steps.sendoutput.outputs.CONTRACT_REGISTRY_CONTRACT_ADDRESS }}
+
     container:
       image: ghcr.io/outbe/outbe-wasm-builder:latest
     steps:
@@ -39,11 +37,83 @@ jobs:
         run: |
           optimize.sh .
 
+      - name: Deploy CWs
+        run: |
+          CW20_CODE_ID=$(./scripts/store_code.sh artifacts/cw20_copy.wasm)
+          echo "CW20_CODE_ID=$CW20_CODE_ID" >> $GITHUB_ENV
+
+          CW721_CODE_ID=$(./scripts/store_code.sh artifacts/cw721_copy.wasm)
+          echo "CW721_CODE_ID=$CW721_CODE_ID" >> $GITHUB_ENV
+
+      - name: Deploy Contract Registry
+        run: |
+          CONTRACT_REGISTRY_CODE_ID=$(./scripts/store_code.sh artifacts/contract_registry.wasm)
+          echo "CONTRACT_REGISTRY_CODE_ID=$CONTRACT_REGISTRY_CODE_ID" >> $GITHUB_ENV
+          CONTRACT_REGISTRY_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Contract Registry" $CONTRACT_REGISTRY_CODE_ID "{}")
+          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy wUSDC
+        run: |
+          INIT_PAYLOAD=$(jq -n --arg minter $OWNER_ADDRESS --from-file ./contracts/cw20/fixtures/wusdc_init.json)
+          WUSDC_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "wUSDC" $CW20_CODE_ID "$INIT_PAYLOAD")
+          echo "WUSDC_CONTRACT_ADDRESS=$WUSDC_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Price Oracle
+        run: |
+          PRICE_ORACLE_CODE_ID=$(./scripts/store_code.sh artifacts/price_oracle.wasm)
+          INIT_PAYLOAD=$(jq -n --arg usdc_address $WUSDC_CONTRACT_ADDRESS --from-file ./contracts/price-oracle/fixtures/init.json)
+          PRICE_ORACLE_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Price Oracle" $PRICE_ORACLE_CODE_ID "$INIT_PAYLOAD")
+          echo "PRICE_ORACLE_CONTRACT_ADDRESS=$PRICE_ORACLE_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Token Allocator
+        run: |
+          TOKEN_ALLOCATOR_CODE_ID=$(./scripts/store_code.sh artifacts/token_allocator.wasm)
+          INIT_PAYLOAD=$(jq -n --from-file ./contracts/token-allocator/fixtures/init.json)
+          TOKEN_ALLOCATOR_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Token Allocator" $TOKEN_ALLOCATOR_CODE_ID "$INIT_PAYLOAD")
+          echo "TOKEN_ALLOCATOR_CONTRACT_ADDRESS=$TOKEN_ALLOCATOR_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Vector
+        run: |
+          VECTOR_CODE_ID=$(./scripts/store_code.sh artifacts/vector.wasm)
+          INIT_PAYLOAD=$(jq -n --from-file ./contracts/vector/fixtures/init.json)
+          VECTOR_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Vector" $VECTOR_CODE_ID "$INIT_PAYLOAD")
+          echo "VECTOR_CONTRACT_ADDRESS=$VECTOR_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Tribute
+        run: |
+          TRIBUTE_CODE_ID=$(./scripts/store_code.sh artifacts/tribute.wasm)
+          INIT_PAYLOAD=$(jq -n --arg price_oracle $PRICE_ORACLE_CONTRACT_ADDRESS --from-file ./contracts/tribute/fixtures/init.json)
+          TRIBUTE_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Tribute" $TRIBUTE_CODE_ID "$INIT_PAYLOAD")
+          echo "TRIBUTE_CONTRACT_ADDRESS=$TRIBUTE_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Nod
+        run: |
+          NOD_CODE_ID=$(./scripts/store_code.sh artifacts/nod.wasm)
+          INIT_PAYLOAD=$(jq -n --from-file ./contracts/nod/fixtures/init.json)
+          NOD_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Nod" $NOD_CODE_ID "$INIT_PAYLOAD")
+          echo "NOD_CONTRACT_ADDRESS=$NOD_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Lysis
+        run: |
+          LYSIS_CODE_ID=$(./scripts/store_code.sh artifacts/lysis.wasm)
+          INIT_PAYLOAD=$(jq -n --arg price_oracle_address $PRICE_ORACLE_CONTRACT_ADDRESS --arg vector_address $VECTOR_CONTRACT_ADDRESS --arg tribute_address $TRIBUTE_CONTRACT_ADDRESS --arg nod_address $NOD_CONTRACT_ADDRESS --from-file ./contracts/lysis/fixtures/init.json)
+          LYSIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Lysis" $LYSIS_CODE_ID "$INIT_PAYLOAD")
+          echo "LYSIS_CONTRACT_ADDRESS=$LYSIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
       - name: Print output
         run: |
           echo "Deploy output:"
           env | sort | grep -E 'CODE_ID|ADDRESS' > output.txt
           cat output.txt
+
+      - name: Update Contract Registry
+        run: |
+          COMMIT_ID=${{ github.sha }}
+          IS_LATEST=${{ github.ref_protected }}
+          echo "Updating Contract Registry with commit=$COMMIT_ID and latest=$IS_LATEST"
+          CONTRACTS=$(./scripts/parse_contracts.sh output.txt)
+          UPDATE_PAYLOAD=$(jq -n --arg commit_id $COMMIT_ID --argjson contracts "$CONTRACTS" --argjson is_latest $IS_LATEST --from-file ./contracts/contract-registry/fixtures/publish.json)
+          ./scripts/execute_tx.sh $CONTRACT_REGISTRY_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Send output
         id: sendoutput

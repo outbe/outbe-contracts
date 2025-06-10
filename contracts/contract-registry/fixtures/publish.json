@@ -1,0 +1,9 @@
+{
+  "publish": {
+    "deployment": {
+      "commit_id": $commit_id,
+      "contracts": $contracts,
+      "is_latest": $is_latest
+    }
+  }
+}

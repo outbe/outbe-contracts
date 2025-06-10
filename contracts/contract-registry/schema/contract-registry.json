@@ -1,0 +1,396 @@
+{
+  "contract_name": "contract-registry",
+  "contract_version": "0.1.0",
+  "idl_version": "1.0.0",
+  "instantiate": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InstantiateMsg",
+    "type": "object",
+    "additionalProperties": false
+  },
+  "execute": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ExecuteMsg",
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "publish"
+        ],
+        "properties": {
+          "publish": {
+            "type": "object",
+            "required": [
+              "deployment"
+            ],
+            "properties": {
+              "deployment": {
+                "$ref": "#/definitions/Deployment"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "ownable"
+        ],
+        "properties": {
+          "ownable": {
+            "$ref": "#/definitions/ExecuteMsg"
+          }
+        },
+        "additionalProperties": false
+      }
+    ],
+    "definitions": {
+      "Addr": {
+        "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+        "type": "string"
+      },
+      "ContractInfo": {
+        "type": "object",
+        "required": [
+          "address",
+          "name"
+        ],
+        "properties": {
+          "address": {
+            "description": "Contract address",
+            "allOf": [
+              {
+                "$ref": "#/definitions/Addr"
+              }
+            ]
+          },
+          "name": {
+            "description": "Contract name, should be the same as it's env variable on CI",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Deployment": {
+        "type": "object",
+        "required": [
+          "commit_id",
+          "contracts",
+          "is_latest"
+        ],
+        "properties": {
+          "commit_id": {
+            "type": "string"
+          },
+          "contracts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/ContractInfo"
+            }
+          },
+          "is_latest": {
+            "description": "identifies whenever to mark this deployment as \"latest\"",
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExecuteMsg": {
+        "oneOf": [
+          {
+            "description": "Transfers ownership, revokes the old owner and grants the new one",
+            "type": "object",
+            "required": [
+              "transfer_ownership"
+            ],
+            "properties": {
+              "transfer_ownership": {
+                "type": "object",
+                "required": [
+                  "new_owner"
+                ],
+                "properties": {
+                  "new_owner": {
+                    "$ref": "#/definitions/Addr"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "description": "Pauses the contract",
+            "type": "object",
+            "required": [
+              "update_pause"
+            ],
+            "properties": {
+              "update_pause": {
+                "type": "object",
+                "required": [
+                  "pause"
+                ],
+                "properties": {
+                  "pause": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "query": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "QueryMsg",
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "all_deployments"
+        ],
+        "properties": {
+          "all_deployments": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint32",
+                "minimum": 0.0
+              },
+              "start_after": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Returns the deployment by commit_id. If commit_id is not provided, returns the latest deployment",
+        "type": "object",
+        "required": [
+          "get_deployment"
+        ],
+        "properties": {
+          "get_deployment": {
+            "type": "object",
+            "properties": {
+              "commit_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "ownable"
+        ],
+        "properties": {
+          "ownable": {
+            "$ref": "#/definitions/QueryMsg"
+          }
+        },
+        "additionalProperties": false
+      }
+    ],
+    "definitions": {
+      "QueryMsg": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "is_paused"
+            ],
+            "properties": {
+              "is_paused": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "owner"
+            ],
+            "properties": {
+              "owner": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "migrate": null,
+  "sudo": null,
+  "responses": {
+    "all_deployments": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AllDeploymentsResponse",
+      "type": "object",
+      "required": [
+        "deployments"
+      ],
+      "properties": {
+        "deployments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Deployment"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Addr": {
+          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+          "type": "string"
+        },
+        "ContractInfo": {
+          "type": "object",
+          "required": [
+            "address",
+            "name"
+          ],
+          "properties": {
+            "address": {
+              "description": "Contract address",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Addr"
+                }
+              ]
+            },
+            "name": {
+              "description": "Contract name, should be the same as it's env variable on CI",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Deployment": {
+          "type": "object",
+          "required": [
+            "commit_id",
+            "contracts",
+            "is_latest"
+          ],
+          "properties": {
+            "commit_id": {
+              "type": "string"
+            },
+            "contracts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContractInfo"
+              }
+            },
+            "is_latest": {
+              "description": "identifies whenever to mark this deployment as \"latest\"",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "get_deployment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "GetDeploymentResponse",
+      "type": "object",
+      "required": [
+        "deployment"
+      ],
+      "properties": {
+        "deployment": {
+          "$ref": "#/definitions/Deployment"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Addr": {
+          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+          "type": "string"
+        },
+        "ContractInfo": {
+          "type": "object",
+          "required": [
+            "address",
+            "name"
+          ],
+          "properties": {
+            "address": {
+              "description": "Contract address",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Addr"
+                }
+              ]
+            },
+            "name": {
+              "description": "Contract name, should be the same as it's env variable on CI",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Deployment": {
+          "type": "object",
+          "required": [
+            "commit_id",
+            "contracts",
+            "is_latest"
+          ],
+          "properties": {
+            "commit_id": {
+              "type": "string"
+            },
+            "contracts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContractInfo"
+              }
+            },
+            "is_latest": {
+              "description": "identifies whenever to mark this deployment as \"latest\"",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "ownable": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Binary",
+      "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+      "type": "string"
+    }
+  }
+}
