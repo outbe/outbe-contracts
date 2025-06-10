@@ -1,0 +1,23 @@
+name: Wasm build
+
+on:
+  pull_request:
+
+jobs:
+  wasm:
+    name: Optimized Wasm Build
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/outbe/outbe-wasm-builder:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          cache-all-crates: true
+
+      - name: Make Optimized build
+        run: |
+          optimize.sh .
