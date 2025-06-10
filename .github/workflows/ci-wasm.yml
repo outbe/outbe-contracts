@@ -1,11 +1,11 @@
-name: Wasm build
+name: Project Build
 
 on:
   pull_request:
 
 jobs:
   wasm:
-    name: Optimized Wasm Build
+    name: Optimized Wasm
     runs-on: ubuntu-latest
 
     container:
