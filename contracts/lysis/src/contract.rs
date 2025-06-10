@@ -289,7 +289,7 @@ fn schedule_executions(
 
     let mut run_data: Vec<RaffleRunInfo> = Vec::with_capacity(24);
 
-    if day_type == DayType::GREEN {
+    if day_type == DayType::Green {
         // distribute tokens
         let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
             &tribute_address,

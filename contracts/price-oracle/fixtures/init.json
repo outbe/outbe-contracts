@@ -1,0 +1,13 @@
+{
+  "creator": null,
+  "initial_price": {
+    "token1": {
+      "native": "unit"
+    },
+    "token2": {
+      "cw20": $usdc_address
+    },
+    "day_type": "green",
+    "price": "1.25"
+  }
+}
