@@ -77,7 +77,7 @@ mod tests {
     #[test]
     fn test_all() {
         let mut app = App::default();
-        let owner_addr = Addr::unchecked("owner");
+        let owner_addr = app.api().addr_make("owner");
 
         // Deploy contract
         let contract_code = ContractWrapper::new(execute, instantiate, query);
