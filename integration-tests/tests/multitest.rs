@@ -31,11 +31,11 @@ fn test_tribute() {
                     token_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
                     settlement_token: Denom::Cw20(Addr::unchecked("usdc")),
-                    minor_value_settlement: Uint128::from(100000000u32),
+                    settlement_value: Uint128::from(100000000u32),
                     hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
                     tribute_date: None
                 },
-                signature: HexBinary::from_hex("4065015a8e712f74165822ae7556ce38f44c3b1e2d60a508a643b9198d1641ef6f387cceb8798a1b44a5fef42061c3c0ffe881d2413f18650477aa50f2fa49eb").unwrap(),
+                signature: HexBinary::from_hex("3e0ecd67d3f2bd932abb5f7df70f6c5cc5923ba90e5b2992b0f9540970f4ffe7481d41858cef4f124036de071756d91c2369c40e5d6c1ce00812bfd08d102f42").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
             }),
         },
@@ -69,7 +69,7 @@ fn test_tribute() {
         .unwrap();
 
     assert_eq!(
-        response.extension.minor_value_settlement,
+        response.extension.settlement_value,
         Uint128::from(100_000_000u64)
     );
 }
@@ -122,11 +122,11 @@ fn test_raffle() {
                     token_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
                     settlement_token: Denom::Cw20(Addr::unchecked("usdc")),
-                    minor_value_settlement: Uint128::from(5u32),
+                    settlement_value: Uint128::from(5u32),
                     tribute_date: None,
                     hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
                 },
-                signature: HexBinary::from_hex("cfe6a139243dcabe1fcdfcb097ef506af433bb56401c84c30966497b96b39075587ff85599fc431a43f3c1ef2520ca9d18abb12e8878be75c9097cb27d66ca88").unwrap(),
+                signature: HexBinary::from_hex("504339506d74751f7660b5f57709d68929a5d394d33a9769dd65077aaf7070e67231067426f3647b5b67f35a8df05237ff7f4f37523bd5ca3289412d80b8af2c").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
             }),
         },
@@ -146,11 +146,11 @@ fn test_raffle() {
                     token_id: "2".to_string(),
                     settlement_token: Denom::Cw20(Addr::unchecked("usdc")),
                     owner: config.user_addr.to_string(),
-                    minor_value_settlement: Uint128::from(15u32),
+                    settlement_value: Uint128::from(15u32),
                     tribute_date: None,
                     hashes: vec![HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap()],
                 },
-                signature: HexBinary::from_hex("7a01be86767cfd3961af54ef701e2f24d0d5647741d2e9bd0b208c9f586e19f9036f3eb7bb67a3e6b7d08bb7cb3e26727adb8f89d13e94bfecec2160f7065d8b").unwrap(),
+                signature: HexBinary::from_hex("b5188dd0dd759db3b3592708fb57665267d1268557a463b30d00f070239f69db290df316baaf6ff46c0afd9ab9f425b1f0ac05ab6fb333c78b2770748eed7b85").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
             }),
         },
@@ -177,7 +177,6 @@ fn test_raffle() {
             tribute.address.clone(),
             &QueryMsg::DailyTributes {
                 date: app.block_info().time,
-                status: Some(tribute::types::Status::Accepted {}),
             },
         )
         .unwrap();
@@ -188,7 +187,7 @@ fn test_raffle() {
     app.execute_contract(
         config.owner_addr.clone(),
         raffle.address.clone(),
-        &raffle::msg::ExecuteMsg::Raffle { raffle_date: None },
+        &lysis::msg::ExecuteMsg::Raffle { raffle_date: None },
         &[],
     )
     .unwrap();
@@ -210,7 +209,7 @@ fn test_raffle() {
     app.execute_contract(
         config.owner_addr.clone(),
         raffle.address.clone(),
-        &raffle::msg::ExecuteMsg::Raffle { raffle_date: None },
+        &lysis::msg::ExecuteMsg::Raffle { raffle_date: None },
         &[],
     )
     .unwrap();
@@ -232,7 +231,7 @@ fn test_raffle() {
     app.execute_contract(
         config.owner_addr.clone(),
         raffle.address.clone(),
-        &raffle::msg::ExecuteMsg::Raffle { raffle_date: None },
+        &lysis::msg::ExecuteMsg::Raffle { raffle_date: None },
         &[],
     )
     .unwrap();
@@ -255,11 +254,11 @@ fn test_raffle() {
     );
 
     println!("🔬 Check distribution");
-    let response: raffle::query::TributesDistributionResponse = app
+    let response: lysis::query::TributesDistributionResponse = app
         .wrap()
         .query_wasm_smart(
             raffle.address.clone(),
-            &raffle::query::QueryMsg::TributesDistribution {},
+            &lysis::query::QueryMsg::TributesDistribution {},
         )
         .unwrap();
 
@@ -336,9 +335,9 @@ fn deploy_raffle(
     vector: Addr,
     price_oracle: Addr,
 ) -> DeployedContract {
-    use raffle::contract::{execute, instantiate};
-    use raffle::msg::InstantiateMsg;
-    use raffle::query::query;
+    use lysis::contract::{execute, instantiate};
+    use lysis::msg::InstantiateMsg;
+    use lysis::query::query;
 
     let code = ContractWrapper::new(execute, instantiate, query);
     let code_id = app.store_code(Box::new(code));
@@ -350,6 +349,7 @@ fn deploy_raffle(
         nod: Some(nod),
         token_allocator: Some(token_allocator),
         price_oracle: Some(price_oracle),
+        deficit: Decimal::from_str("0.08").unwrap(),
     };
     let address = app
         .instantiate_contract(
@@ -357,7 +357,7 @@ fn deploy_raffle(
             owner,
             &instantiate_msg,
             &[],
-            "raffle".to_string(),
+            "lysis".to_string(),
             None,
         )
         .unwrap();

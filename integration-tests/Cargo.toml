@@ -13,7 +13,7 @@ cw20 = { workspace = true }
 outbe-nft = { workspace = true }
 tribute = { workspace = true }
 nod = { workspace = true }
-raffle = { workspace = true }
+lysis = { workspace = true }
 price-oracle = { workspace = true }
 token-allocator = { workspace = true}
 vector = { workspace = true}
