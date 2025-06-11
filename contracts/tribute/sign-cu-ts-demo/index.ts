@@ -1,7 +1,7 @@
 import * as secp256k1 from 'secp256k1';
 import {createHash} from "node:crypto";
 
-const owner = "gem1zus30tvmrh2qfazxqcvcvl3n22hsll5z43ujcu";
+const owner = "outbe1zus30tvmrh2qfazxqcvcvl3n22hsll5z43ujcu";
 const token_id = "3";
 // prepare raw json data (tribute)
 let raw_json = {

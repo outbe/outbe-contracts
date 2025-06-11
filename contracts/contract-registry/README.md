@@ -48,5 +48,5 @@ use these messages.
 ## Query examples
 
 ```shell
-gemchaind $NODE query wasm contract-state smart $CONTRACT_REGISTRY_CONTRACT_ADDRESS '{"all_deployments": {}}'
+outbe-noded $NODE query wasm contract-state smart $CONTRACT_REGISTRY_CONTRACT_ADDRESS '{"all_deployments": {}}'
 ```
