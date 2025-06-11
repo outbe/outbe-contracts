@@ -75,7 +75,7 @@ async function main() {
     })
     .option("prefix", {
       type: "string",
-      default: "gem",
+      default: "outbe",
       describe: "Bech32 prefix for addresses",
     })
     .option("memo", {

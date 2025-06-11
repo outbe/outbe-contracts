@@ -1,11 +1,11 @@
 {
   "submit": {
     "token_id": "nod-001",
-    "owner": "gem1fwnmv9dp87xtsr5e4lkqev0k9mjx7nkml0pnvq",
+    "owner": "outbe1fwnmv9dp87xtsr5e4lkqev0k9mjx7nkml0pnvq",
     "extension": {
       "entity": {
         "nod_id": "nod-001",
-        "settlement_token": { "native": "gem" },
+        "settlement_token": { "native": "unit" },
         "symbolic_rate": "1.234",
         "vector_rate": "0.567",
         "nominal_minor_rate": "1000",
@@ -14,7 +14,7 @@
         "vector_minor_rate": "4000",
         "floor_minor_price": "5000",
         "state": "Issued",
-        "address": "gem1fwnmv9dp87xtsr5e4lkqev0k9mjx7nkml0pnvq"
+        "address": "outbe1fwnmv9dp87xtsr5e4lkqev0k9mjx7nkml0pnvq"
       },
       "created_at": null
     }
