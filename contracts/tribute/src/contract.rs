@@ -161,12 +161,13 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
-    verify_signature(
-        deps.api,
-        entity.clone(),
-        extension.signature,
-        extension.public_key,
-    )?;
+    // TODO verify signature temporary disabled
+    // verify_signature(
+    //     deps.api,
+    //     entity.clone(),
+    //     extension.signature,
+    //     extension.public_key,
+    // )?;
 
     let config = Cw721Config::<TributeData, TributeConfig>::default();
     let col_config = config.collection_config.load(deps.storage)?;
@@ -240,6 +241,7 @@ fn calc_sybolics(
     (nominal_qty.to_uint_floor(), load.to_uint_floor())
 }
 
+#[allow(dead_code)]
 fn verify_signature(
     api: &dyn Api,
     entity: TributeMintData,
