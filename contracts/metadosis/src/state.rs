@@ -24,7 +24,7 @@ pub enum RunType {
 }
 
 #[cw_serde]
-pub struct RaffleRunInfo {
+pub struct RunInfo {
     pub vector_index: u16,
     pub run_type: RunType,
 
@@ -38,12 +38,12 @@ pub struct RaffleRunInfo {
 }
 
 #[cw_serde]
-pub struct DailyRaffleRunInfo {
-    pub data: Vec<RaffleRunInfo>,
+pub struct DailyRunInfo {
+    pub data: Vec<RunInfo>,
     pub number_of_runs: usize,
 }
 
-pub const DAILY_RAFFLE_RUN: Map<u64, usize> = Map::new("daily_raffle_run");
-pub const DAILY_RAFFLE_RUN_INFO: Map<u64, DailyRaffleRunInfo> = Map::new("daily_raffle_run_info");
+pub const DAILY_RUNS: Map<u64, usize> = Map::new("daily_runs");
+pub const DAILY_RUNS_INFO: Map<u64, DailyRunInfo> = Map::new("daily_runs_info");
 
 pub const TRIBUTES_DISTRIBUTION: Map<&str, String> = Map::new("tributes_distribution");

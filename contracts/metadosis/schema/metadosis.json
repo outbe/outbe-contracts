@@ -94,13 +94,13 @@
       {
         "type": "object",
         "required": [
-          "raffle"
+          "execute"
         ],
         "properties": {
-          "raffle": {
+          "execute": {
             "type": "object",
             "properties": {
-              "raffle_date": {
+              "run_date": {
                 "anyOf": [
                   {
                     "$ref": "#/definitions/Timestamp"

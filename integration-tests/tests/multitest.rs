@@ -75,7 +75,7 @@ fn test_tribute() {
 }
 
 #[test]
-fn test_raffle() {
+fn test_metadosis() {
     let (mut app, config) = setup_test_env();
 
     println!("📦 Deploy Price Oracle");
@@ -96,8 +96,8 @@ fn test_raffle() {
     println!("📦 Deploy Vector");
     let vector = deploy_vector(&mut app, config.owner_addr.clone());
 
-    println!("📦 Deploy Raffle");
-    let raffle = deploy_raffle(
+    println!("📦 Deploy Metadosis");
+    let metadosis = deploy_metadosis(
         &mut app,
         config.owner_addr.clone(),
         tribute.address.clone(),
@@ -183,11 +183,11 @@ fn test_raffle() {
 
     assert_eq!(response.tributes.len(), 2);
 
-    println!("🔬 Raffle 1");
+    println!("🔬 Lysis 1");
     app.execute_contract(
         config.owner_addr.clone(),
-        raffle.address.clone(),
-        &metadosis::msg::ExecuteMsg::Raffle { raffle_date: None },
+        metadosis.address.clone(),
+        &metadosis::msg::ExecuteMsg::Execute { run_date: None },
         &[],
     )
     .unwrap();
@@ -205,11 +205,11 @@ fn test_raffle() {
 
     assert_eq!(response.tokens.len(), 2);
 
-    println!("🔬 Raffle 2");
+    println!("🔬 Lysis 2");
     app.execute_contract(
         config.owner_addr.clone(),
-        raffle.address.clone(),
-        &metadosis::msg::ExecuteMsg::Raffle { raffle_date: None },
+        metadosis.address.clone(),
+        &metadosis::msg::ExecuteMsg::Execute { run_date: None },
         &[],
     )
     .unwrap();
@@ -227,11 +227,11 @@ fn test_raffle() {
 
     assert_eq!(response.tokens.len(), 2);
 
-    println!("🔬 Raffle 3");
+    println!("🔬 Lysis 3");
     app.execute_contract(
         config.owner_addr.clone(),
-        raffle.address.clone(),
-        &metadosis::msg::ExecuteMsg::Raffle { raffle_date: None },
+        metadosis.address.clone(),
+        &metadosis::msg::ExecuteMsg::Execute { run_date: None },
         &[],
     )
     .unwrap();
@@ -257,7 +257,7 @@ fn test_raffle() {
     let response: metadosis::query::TributesDistributionResponse = app
         .wrap()
         .query_wasm_smart(
-            raffle.address.clone(),
+            metadosis.address.clone(),
             &metadosis::query::QueryMsg::TributesDistribution {},
         )
         .unwrap();
@@ -326,7 +326,7 @@ fn deploy_nod(app: &mut App, owner: Addr) -> DeployedContract {
     DeployedContract { address, code_id }
 }
 
-fn deploy_raffle(
+fn deploy_metadosis(
     app: &mut App,
     owner: Addr,
     tribute: Addr,
