@@ -752,7 +752,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "cw20",
- "lysis",
+ "metadosis",
  "nod",
  "outbe-nft",
  "price-oracle",
@@ -810,7 +810,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
-name = "lysis"
+name = "memchr"
+version = "2.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
+
+[[package]]
+name = "metadosis"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
@@ -829,12 +835,6 @@ dependencies = [
  "tribute",
  "vector",
 ]
-
-[[package]]
-name = "memchr"
-version = "2.7.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
 name = "nod"

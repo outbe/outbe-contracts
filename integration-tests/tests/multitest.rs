@@ -187,7 +187,7 @@ fn test_raffle() {
     app.execute_contract(
         config.owner_addr.clone(),
         raffle.address.clone(),
-        &lysis::msg::ExecuteMsg::Raffle { raffle_date: None },
+        &metadosis::msg::ExecuteMsg::Raffle { raffle_date: None },
         &[],
     )
     .unwrap();
@@ -209,7 +209,7 @@ fn test_raffle() {
     app.execute_contract(
         config.owner_addr.clone(),
         raffle.address.clone(),
-        &lysis::msg::ExecuteMsg::Raffle { raffle_date: None },
+        &metadosis::msg::ExecuteMsg::Raffle { raffle_date: None },
         &[],
     )
     .unwrap();
@@ -231,7 +231,7 @@ fn test_raffle() {
     app.execute_contract(
         config.owner_addr.clone(),
         raffle.address.clone(),
-        &lysis::msg::ExecuteMsg::Raffle { raffle_date: None },
+        &metadosis::msg::ExecuteMsg::Raffle { raffle_date: None },
         &[],
     )
     .unwrap();
@@ -254,11 +254,11 @@ fn test_raffle() {
     );
 
     println!("🔬 Check distribution");
-    let response: lysis::query::TributesDistributionResponse = app
+    let response: metadosis::query::TributesDistributionResponse = app
         .wrap()
         .query_wasm_smart(
             raffle.address.clone(),
-            &lysis::query::QueryMsg::TributesDistribution {},
+            &metadosis::query::QueryMsg::TributesDistribution {},
         )
         .unwrap();
 
@@ -335,9 +335,9 @@ fn deploy_raffle(
     vector: Addr,
     price_oracle: Addr,
 ) -> DeployedContract {
-    use lysis::contract::{execute, instantiate};
-    use lysis::msg::InstantiateMsg;
-    use lysis::query::query;
+    use metadosis::contract::{execute, instantiate};
+    use metadosis::msg::InstantiateMsg;
+    use metadosis::query::query;
 
     let code = ContractWrapper::new(execute, instantiate, query);
     let code_id = app.store_code(Box::new(code));
@@ -357,7 +357,7 @@ fn deploy_raffle(
             owner,
             &instantiate_msg,
             &[],
-            "lysis".to_string(),
+            "metadosis".to_string(),
             None,
         )
         .unwrap();

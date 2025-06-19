@@ -28,7 +28,7 @@ pub struct DailyRaffleResponse {
 #[cw_serde]
 pub struct TributesDistributionData {
     /// the key is in format `{DATE_TIMESTAMP}_{RAFFLE_RUN_ID}_{TRIBUTE_INDEX}` for emulate buckets
-    /// where `DATE_TIMESTAMP` is the lysis date
+    /// where `DATE_TIMESTAMP` is the metadosis date
     /// `RAFFLE_RUN_ID` is in range [1..24]
     /// `TRIBUTE_INDEX` starts from 0, unique withing the bucket
     pub key: String,
