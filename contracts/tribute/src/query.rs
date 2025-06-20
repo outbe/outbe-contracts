@@ -125,8 +125,8 @@ fn query_daily_tributes(
             .range(deps.storage, None, None, Order::Ascending)
             .filter_map(|item| match item {
                 Ok((id, tribute))
-                    if tribute.extension.tribute_date >= start_date
-                        && tribute.extension.tribute_date < end_date =>
+                    if tribute.extension.worldwide_day >= start_date
+                        && tribute.extension.worldwide_day < end_date =>
                 {
                     Some(Ok(FullTributeData {
                         token_id: id,

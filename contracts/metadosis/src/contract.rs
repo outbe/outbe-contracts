@@ -240,7 +240,7 @@ fn do_lysis_tier(
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
                         nod_id,
-                        settlement_token: tribute.extension.settlement_token.clone(),
+                        settlement_token: tribute.extension.settlement_currency.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
                         nominal_minor_rate: tribute.extension.nominal_qty,
                         symbolic_minor_load: tribute.extension.symbolic_load,
@@ -446,8 +446,8 @@ fn execute_touch(
             extension: Box::new(nod::msg::SubmitExtension {
                 entity: nod::msg::NodEntity {
                     nod_id,
-                    settlement_token: winner.data.settlement_token.clone(),
-                    symbolic_rate: winner.data.nominal_price,
+                    settlement_token: winner.data.settlement_currency.clone(),
+                    symbolic_rate: winner.data.tribute_rate,
                     nominal_minor_rate: winner.data.nominal_qty,
                     symbolic_minor_load: allocation,
                     vector_minor_rate: Uint128::zero(),
