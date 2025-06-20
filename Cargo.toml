@@ -41,5 +41,5 @@ tribute = { version = "*", path = "contracts/tribute", features = ["library"] }
 price-oracle = { version = "*", path = "contracts/price-oracle", features = ["library"] }
 nod = { version = "*", path = "contracts/nod", features = ["library"] }
 vector = { version = "*", path = "contracts/vector", features = ["library"] }
-lysis = { version = "*", path = "contracts/lysis", features = ["library"] }
+metadosis = { version = "*", path = "contracts/metadosis", features = ["library"] }
 token-allocator = { version = "*", path = "contracts/token-allocator", features = ["library"] }

@@ -1,5 +1,5 @@
 {
-  "contract_name": "lysis",
+  "contract_name": "metadosis",
   "contract_version": "0.1.0",
   "idl_version": "1.0.0",
   "instantiate": {
@@ -94,13 +94,13 @@
       {
         "type": "object",
         "required": [
-          "raffle"
+          "execute"
         ],
         "properties": {
-          "raffle": {
+          "execute": {
             "type": "object",
             "properties": {
-              "raffle_date": {
+              "run_date": {
                 "anyOf": [
                   {
                     "$ref": "#/definitions/Timestamp"
@@ -192,7 +192,7 @@
           ],
           "properties": {
             "key": {
-              "description": "the key is in format `{DATE_TIMESTAMP}_{RAFFLE_RUN_ID}_{TRIBUTE_INDEX}` for emulate buckets where `DATE_TIMESTAMP` is the lysis date `RAFFLE_RUN_ID` is in range [1..24] `TRIBUTE_INDEX` starts from 0, unique withing the bucket",
+              "description": "the key is in format `{DATE_TIMESTAMP}_{RAFFLE_RUN_ID}_{TRIBUTE_INDEX}` for emulate buckets where `DATE_TIMESTAMP` is the metadosis date `RAFFLE_RUN_ID` is in range [1..24] `TRIBUTE_INDEX` starts from 0, unique withing the bucket",
               "type": "string"
             },
             "tribute_id": {

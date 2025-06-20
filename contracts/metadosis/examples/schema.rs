@@ -1,6 +1,6 @@
 use cosmwasm_schema::write_api;
-use lysis::msg::{ExecuteMsg, InstantiateMsg};
-use lysis::query::QueryMsg;
+use metadosis::msg::{ExecuteMsg, InstantiateMsg};
+use metadosis::query::QueryMsg;
 
 fn main() {
     write_api! {

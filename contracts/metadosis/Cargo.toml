@@ -1,5 +1,5 @@
 [package]
-name = "lysis"
+name = "metadosis"
 version = { workspace = true }
 edition = { workspace = true }
 
