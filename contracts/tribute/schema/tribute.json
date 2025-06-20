@@ -481,32 +481,17 @@
       "TributeMintData": {
         "type": "object",
         "required": [
-          "hashes",
           "owner",
-          "settlement_token",
-          "settlement_value",
-          "token_id"
+          "settlement_amount",
+          "settlement_currency",
+          "tribute_id",
+          "worldwide_day"
         ],
         "properties": {
-          "hashes": {
-            "description": "Hashes identifying consumption records batch. Each hash should be a valid unique sha256 hash in hex format",
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/HexBinary"
-            }
-          },
           "owner": {
             "type": "string"
           },
-          "settlement_token": {
-            "description": "Tribute settlement token",
-            "allOf": [
-              {
-                "$ref": "#/definitions/Denom"
-              }
-            ]
-          },
-          "settlement_value": {
+          "settlement_amount": {
             "description": "Value of the Tribute in Settlement Tokens",
             "allOf": [
               {
@@ -514,17 +499,22 @@
               }
             ]
           },
-          "token_id": {
+          "settlement_currency": {
+            "description": "Tribute settlement token",
+            "allOf": [
+              {
+                "$ref": "#/definitions/Denom"
+              }
+            ]
+          },
+          "tribute_id": {
             "type": "string"
           },
-          "tribute_date": {
+          "worldwide_day": {
             "description": "Date of the Tribute creation",
-            "anyOf": [
+            "allOf": [
               {
                 "$ref": "#/definitions/Timestamp"
-              },
-              {
-                "type": "null"
               }
             ]
           }
@@ -965,10 +955,6 @@
           },
           "additionalProperties": false
         },
-        "HexBinary": {
-          "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
-          "type": "string"
-        },
         "Timestamp": {
           "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
           "allOf": [
@@ -983,14 +969,12 @@
           "required": [
             "created_at",
             "fidelity_index",
-            "hashes",
-            "nominal_price",
             "nominal_qty",
-            "settlement_token",
-            "settlement_value",
+            "settlement_amount",
+            "settlement_currency",
             "symbolic_load",
-            "tribute_date",
-            "updated_at"
+            "tribute_rate",
+            "worldwide_day"
           ],
           "properties": {
             "created_at": {
@@ -1005,21 +989,6 @@
               "type": "integer",
               "format": "int32"
             },
-            "hashes": {
-              "description": "Hashes identifying consumption records batch. Each hash should be a valid unique sha256 hash in hex format",
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/HexBinary"
-              }
-            },
-            "nominal_price": {
-              "description": "Price in Native coins with a rate on the moment of the transaction",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Decimal"
-                }
-              ]
-            },
             "nominal_qty": {
               "description": "Value of the Tribute in Native Coins",
               "allOf": [
@@ -1028,15 +997,7 @@
                 }
               ]
             },
-            "settlement_token": {
-              "description": "Tribute settlement token",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Denom"
-                }
-              ]
-            },
-            "settlement_value": {
+            "settlement_amount": {
               "description": "Value of the Tribute in Settlement Tokens",
               "allOf": [
                 {
@@ -1044,19 +1005,32 @@
                 }
               ]
             },
+            "settlement_currency": {
+              "description": "Tribute settlement token",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Denom"
+                }
+              ]
+            },
             "symbolic_load": {
-              "description": "Signals an eligible interest to the network Gratis qty",
+              "description": "Signals an eligible interest to the network",
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
                 }
               ]
             },
-            "tribute_date": {
-              "$ref": "#/definitions/Timestamp"
+            "tribute_rate": {
+              "description": "Price in Native coins with a rate on the moment of the transaction",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Decimal"
+                }
+              ]
             },
-            "updated_at": {
-              "description": "Last updated time",
+            "worldwide_day": {
+              "description": "Date of Consumption",
               "allOf": [
                 {
                   "$ref": "#/definitions/Timestamp"
@@ -1329,10 +1303,6 @@
             }
           ]
         },
-        "HexBinary": {
-          "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
-          "type": "string"
-        },
         "Timestamp": {
           "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
           "allOf": [
@@ -1347,14 +1317,12 @@
           "required": [
             "created_at",
             "fidelity_index",
-            "hashes",
-            "nominal_price",
             "nominal_qty",
-            "settlement_token",
-            "settlement_value",
+            "settlement_amount",
+            "settlement_currency",
             "symbolic_load",
-            "tribute_date",
-            "updated_at"
+            "tribute_rate",
+            "worldwide_day"
           ],
           "properties": {
             "created_at": {
@@ -1369,21 +1337,6 @@
               "type": "integer",
               "format": "int32"
             },
-            "hashes": {
-              "description": "Hashes identifying consumption records batch. Each hash should be a valid unique sha256 hash in hex format",
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/HexBinary"
-              }
-            },
-            "nominal_price": {
-              "description": "Price in Native coins with a rate on the moment of the transaction",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Decimal"
-                }
-              ]
-            },
             "nominal_qty": {
               "description": "Value of the Tribute in Native Coins",
               "allOf": [
@@ -1392,15 +1345,7 @@
                 }
               ]
             },
-            "settlement_token": {
-              "description": "Tribute settlement token",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Denom"
-                }
-              ]
-            },
-            "settlement_value": {
+            "settlement_amount": {
               "description": "Value of the Tribute in Settlement Tokens",
               "allOf": [
                 {
@@ -1408,19 +1353,32 @@
                 }
               ]
             },
+            "settlement_currency": {
+              "description": "Tribute settlement token",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Denom"
+                }
+              ]
+            },
             "symbolic_load": {
-              "description": "Signals an eligible interest to the network Gratis qty",
+              "description": "Signals an eligible interest to the network",
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
                 }
               ]
             },
-            "tribute_date": {
-              "$ref": "#/definitions/Timestamp"
+            "tribute_rate": {
+              "description": "Price in Native coins with a rate on the moment of the transaction",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Decimal"
+                }
+              ]
             },
-            "updated_at": {
-              "description": "Last updated time",
+            "worldwide_day": {
+              "description": "Date of Consumption",
               "allOf": [
                 {
                   "$ref": "#/definitions/Timestamp"

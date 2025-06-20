@@ -28,12 +28,12 @@ fn test_tribute() {
             owner: config.user_addr.to_string(),
             extension: Box::new(MintExtension {
                 data: TributeMintData {
-                    token_id: "1".to_string(),
+                    tribute_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
-                    settlement_token: Denom::Cw20(Addr::unchecked("usdc")),
-                    settlement_value: Uint128::from(100000000u32),
-                    hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
-                    tribute_date: None
+                    settlement_currency: Denom::Cw20(Addr::unchecked("usdc")),
+                    settlement_amount: Uint128::from(100000000u32),
+                    // hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
+                    worldwide_day: app.block_info().time,
                 },
                 signature: HexBinary::from_hex("3e0ecd67d3f2bd932abb5f7df70f6c5cc5923ba90e5b2992b0f9540970f4ffe7481d41858cef4f124036de071756d91c2369c40e5d6c1ce00812bfd08d102f42").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
@@ -69,7 +69,7 @@ fn test_tribute() {
         .unwrap();
 
     assert_eq!(
-        response.extension.settlement_value,
+        response.extension.settlement_amount,
         Uint128::from(100_000_000u64)
     );
 }
@@ -119,12 +119,12 @@ fn test_metadosis() {
             owner: config.user_addr.to_string(),
             extension: Box::new(MintExtension {
                 data: TributeMintData {
-                    token_id: "1".to_string(),
+                    tribute_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
-                    settlement_token: Denom::Cw20(Addr::unchecked("usdc")),
-                    settlement_value: Uint128::from(5u32),
-                    tribute_date: None,
-                    hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
+                    settlement_currency: Denom::Cw20(Addr::unchecked("usdc")),
+                    settlement_amount: Uint128::from(5u32),
+                    worldwide_day: app.block_info().time,
+                    // hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
                 },
                 signature: HexBinary::from_hex("504339506d74751f7660b5f57709d68929a5d394d33a9769dd65077aaf7070e67231067426f3647b5b67f35a8df05237ff7f4f37523bd5ca3289412d80b8af2c").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
@@ -143,12 +143,12 @@ fn test_metadosis() {
             owner: config.user_addr.to_string(),
             extension: Box::new(MintExtension {
                 data: TributeMintData {
-                    token_id: "2".to_string(),
-                    settlement_token: Denom::Cw20(Addr::unchecked("usdc")),
+                    tribute_id: "2".to_string(),
+                    settlement_currency: Denom::Cw20(Addr::unchecked("usdc")),
                     owner: config.user_addr.to_string(),
-                    settlement_value: Uint128::from(15u32),
-                    tribute_date: None,
-                    hashes: vec![HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap()],
+                    settlement_amount: Uint128::from(15u32),
+                    worldwide_day: app.block_info().time,
+                    // hashes: vec![HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap()],
                 },
                 signature: HexBinary::from_hex("b5188dd0dd759db3b3592708fb57665267d1268557a463b30d00f070239f69db290df316baaf6ff46c0afd9ab9f425b1f0ac05ab6fb333c78b2770748eed7b85").unwrap(),
                 public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),

@@ -48,6 +48,8 @@ pub enum ExecuteMsg {
 #[cw_serde]
 pub struct MintExtension {
     pub data: TributeMintData,
+
+    // TODO currently not checked but remains there for compatibility
     /// Serialized "compact" signature (64 bytes) of the `entity` in hex
     pub signature: HexBinary,
     /// Serialized according to SEC 2 (33 or 65 bytes) public key in hex
@@ -56,17 +58,17 @@ pub struct MintExtension {
 
 #[cw_serde]
 pub struct TributeMintData {
-    pub token_id: String,
+    pub tribute_id: String,
     pub owner: String,
     /// Value of the Tribute in Settlement Tokens
-    pub settlement_value: Uint128,
+    pub settlement_amount: Uint128,
     /// Tribute settlement token
-    pub settlement_token: Denom,
+    pub settlement_currency: Denom,
     /// Date of the Tribute creation
-    pub tribute_date: Option<Timestamp>,
-    /// Hashes identifying consumption records batch. Each hash should be a valid unique
-    /// sha256 hash in hex format
-    pub hashes: Vec<HexBinary>,
+    pub worldwide_day: Timestamp,
+    // /// Hashes identifying consumption records batch. Each hash should be a valid unique
+    // /// sha256 hash in hex format
+    // pub hashes: Vec<HexBinary>,
 }
 
 #[cw_serde]
