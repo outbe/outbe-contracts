@@ -1,5 +1,7 @@
 # Outbe Smart Contracts
 
+[![codecov](https://codecov.io/gh/outbe/outbe-contracts/graph/badge.svg?token=8OI56ZGYQQ)](https://codecov.io/gh/outbe/outbe-contracts)
+
 This repository contains the source code for the Outbe Protocol smart contracts.
 We have two types of contracts; dependency/test and main contracts.
 
