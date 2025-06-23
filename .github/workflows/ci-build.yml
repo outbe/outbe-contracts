@@ -24,6 +24,10 @@ jobs:
           target: wasm32-unknown-unknown
           override: true
 
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
+
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:
