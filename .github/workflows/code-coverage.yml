@@ -1,4 +1,4 @@
-name: Code Coverage
+name: PR
 
 on:
   pull_request:
@@ -25,14 +25,13 @@ jobs:
           toolchain: 1.83.0
           target: wasm32-unknown-unknown
           override: true
-          components: rustfmt, clippy
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
 
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: true
-
-      - name: Install cargo-tarpaulin
-        run: cargo install cargo-tarpaulin
 
       - name: Generate code coverage
         run: |
@@ -48,6 +47,7 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Coverage check
         uses: 5monkeys/cobertura-action@master
