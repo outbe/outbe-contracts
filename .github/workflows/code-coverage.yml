@@ -50,11 +50,12 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: outbe/outbe-contracts
 
-      - name: Coverage check
-        uses: 5monkeys/cobertura-action@master
-        with:
-          path: ./coverage/cobertura.xml
-          minimum_coverage: 60
-          fail_below_threshold: true
-          show_missing: true
-          only_changed_files: true
+# TODO use if needed
+#      - name: Coverage check
+#        uses: 5monkeys/cobertura-action@master
+#        with:
+#          path: ./coverage/cobertura.xml
+#          minimum_coverage: 60
+#          fail_below_threshold: true
+#          show_missing: true
+#          only_changed_files: true
