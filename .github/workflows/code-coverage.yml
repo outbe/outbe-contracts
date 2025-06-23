@@ -46,8 +46,9 @@ jobs:
           file: ./coverage/cobertura.xml
           flags: unittests
           name: codecov-umbrella
-          fail_ci_if_error: false
+          fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: outbe/outbe-contracts
 
       - name: Coverage check
         uses: 5monkeys/cobertura-action@master
