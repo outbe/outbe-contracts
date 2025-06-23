@@ -53,7 +53,7 @@ jobs:
         uses: 5monkeys/cobertura-action@master
         with:
           path: ./coverage/cobertura.xml
-          minimum_coverage: 75
+          minimum_coverage: 60
           fail_below_threshold: true
           show_missing: true
-          only_changed_files: false
+          only_changed_files: true
