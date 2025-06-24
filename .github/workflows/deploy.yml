@@ -2,12 +2,19 @@ name: Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      is_latest:
+        description: 'True specify deployment as latest'
+        required: false
+        type: boolean
 
 env:
   # Chain configuration
   CHAIN_ID: outbe-devnet-1
   FEE_DENOM: unit
   RPC: tcp://rpc.dev.outbe.net:26657
+
+  CONTRACT_REGISTRY_CONTRACT_ADDRESS: ""
 
 jobs:
   deploy:
@@ -40,13 +47,6 @@ jobs:
         run: |
           CW20_CODE_ID=$(./scripts/store_code.sh artifacts/cw20_copy.wasm)
           echo "CW20_CODE_ID=$CW20_CODE_ID" >> $GITHUB_ENV
-
-      - name: Deploy Contract Registry
-        run: |
-          CONTRACT_REGISTRY_CODE_ID=$(./scripts/store_code.sh artifacts/contract_registry.wasm)
-          echo "CONTRACT_REGISTRY_CODE_ID=$CONTRACT_REGISTRY_CODE_ID" >> $GITHUB_ENV
-          CONTRACT_REGISTRY_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Contract Registry" $CONTRACT_REGISTRY_CODE_ID "{}")
-          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy wUSDC
         run: |
@@ -105,7 +105,7 @@ jobs:
       - name: Update Contract Registry
         run: |
           COMMIT_ID=${{ github.sha }}
-          IS_LATEST=${{ github.ref_protected }}
+          IS_LATEST=${{ inputs.is_latest }} 
           echo "Updating Contract Registry with commit=$COMMIT_ID and latest=$IS_LATEST"
           CONTRACTS=$(./scripts/parse_contracts.sh output.txt)
           UPDATE_PAYLOAD=$(jq -n --arg commit_id $COMMIT_ID --argjson contracts "$CONTRACTS" --argjson is_latest $IS_LATEST --from-file ./contracts/contract-registry/fixtures/publish.json)

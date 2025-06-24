@@ -1,0 +1,55 @@
+name: Deploy Registry
+
+on:
+  workflow_dispatch:
+
+env:
+  # Chain configuration
+  CHAIN_ID: outbe-devnet-1
+  FEE_DENOM: unit
+  RPC: tcp://rpc.dev.outbe.net:26657
+
+jobs:
+  deploy:
+    name: Optimize Wasm And Deploy
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/outbe/outbe-wasm-builder:0.1.0
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          cache-all-crates: true
+
+      - name: Configure wallet
+        env:
+          WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY }}
+        run: |
+          outbe-noded keys import-hex ci $WALLET_PRIVATE_KEY --keyring-backend test
+          OWNER_ADDRESS=$(outbe-noded keys show ci --keyring-backend test --output json | jq -r '.address')
+          echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
+
+      - name: Make Optimized build
+        run: |
+          optimize.sh .
+
+      - name: Deploy Contract Registry
+        run: |
+          CONTRACT_REGISTRY_CODE_ID=$(./scripts/store_code.sh artifacts/contract_registry.wasm)
+          echo "CONTRACT_REGISTRY_CODE_ID=$CONTRACT_REGISTRY_CODE_ID" >> $GITHUB_ENV
+          CONTRACT_REGISTRY_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Contract Registry" $CONTRACT_REGISTRY_CODE_ID "{}")
+          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Print output
+        run: |
+          echo "Deploy output:"
+          env | sort | grep -E 'CODE_ID|ADDRESS' > output.txt
+          cat output.txt
+
+      - name: Send output
+        id: sendoutput
+        run: |
+          cat output.txt >> "$GITHUB_OUTPUT"
