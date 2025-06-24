@@ -1,4 +1,4 @@
-name: PR Lint
+name: PR
 
 on:
   pull_request_target:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   lint-title:
-    name: Lint PR Title
+    name: Lint Title
     permissions:
       pull-requests: read
       statuses: write
