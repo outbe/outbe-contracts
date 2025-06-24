@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
+  pull-requests: write # Required to post comments on PRs
 
 jobs:
   coverage:
@@ -53,12 +53,11 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: outbe/outbe-contracts
 
-# TODO use if needed
-#      - name: Coverage check
-#        uses: 5monkeys/cobertura-action@master
-#        with:
-#          path: ./coverage/cobertura.xml
-#          minimum_coverage: 60
-#          fail_below_threshold: true
-#          show_missing: true
-#          only_changed_files: true
+      - name: Coverage check
+        uses: 5monkeys/cobertura-action@master
+        with:
+          path: ./coverage/cobertura.xml
+          minimum_coverage: 60
+          fail_below_threshold: true
+          show_missing: true
+          only_changed_files: true
