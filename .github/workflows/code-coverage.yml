@@ -1,4 +1,4 @@
-name: PR
+name: Code Quality
 
 on:
   push:
@@ -8,57 +8,47 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
+  pull-requests: write # Required to post comments on PRs
 
 jobs:
   coverage:
-    name: Code Coverage Check
+    name: "Code Coverage"
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: "Checkout repository"
         uses: actions/checkout@v4
+
+      - name: "Install Rust toolchain"
+        uses: dtolnay/rust-toolchain@stable
         with:
-          fetch-depth: 0
+          toolchain: "1.83" # As specified in your Cargo.toml
+          components: llvm-tools-preview
 
-      - name: Install 1.83 toolchain
-        uses: actions-rs/toolchain@v1
+      - name: "Install cargo-llvm-cov"
+        uses: taiki-e/install-action@v2
         with:
-          profile: minimal
-          toolchain: 1.83.0
-          target: wasm32-unknown-unknown
-          override: true
+          tool: cargo-llvm-cov
 
-      - name: Install cargo-tarpaulin
-        run: cargo install cargo-tarpaulin
+      - name: "Run tests and generate coverage report"
+        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          cache-all-crates: true
-
-      - name: Generate code coverage
-        run: |
-          cargo tarpaulin --verbose --all-features --workspace --timeout 120 \
-            --exclude-files 'contracts/*/examples/*' \
-            --exclude-files 'integration-tests/*' \
-            --out xml --output-dir ./coverage/
-
-      - name: Upload coverage to Codecov
+      - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v4
         with:
-          file: ./coverage/cobertura.xml
-          flags: unittests
-          name: codecov-umbrella
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          file: lcov.info
           fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: codecov-umbrella
           slug: outbe/outbe-contracts
 
-# TODO use if needed
-#      - name: Coverage check
-#        uses: 5monkeys/cobertura-action@master
-#        with:
-#          path: ./coverage/cobertura.xml
-#          minimum_coverage: 60
-#          fail_below_threshold: true
-#          show_missing: true
-#          only_changed_files: true
+      - name: "PR comment"
+        uses: boris-amenitiz/lcov-pull-request-report@v1.0.0
+        with:
+          lcov-file: ./lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # All files minimum coverage in percentage. For example, 0, 50, 100
+          # Default: 0
+          all-files-minimum-coverage: 60
+          # Changed files minimum coverage in percentage. For example, 0, 50, 100
+          # Default: 0
+          changed-files-minimum-coverage: 75
