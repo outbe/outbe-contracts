@@ -11,7 +11,7 @@ env:
 
 jobs:
   deploy:
-    name: Optimize Wasm And Deploy
+    name: Optimize & Deploy
     runs-on: ubuntu-latest
 
     container:

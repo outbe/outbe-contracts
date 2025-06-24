@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       is_latest:
-        description: 'True specify deployment as latest'
+        description: 'Mark as latest'
         required: false
         type: boolean
 
@@ -18,7 +18,7 @@ env:
 
 jobs:
   deploy:
-    name: Optimize Wasm And Deploy
+    name: Optimize & Deploy
     runs-on: ubuntu-latest
 
     container:
