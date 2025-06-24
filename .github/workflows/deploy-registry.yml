@@ -7,7 +7,7 @@ env:
   # Chain configuration
   CHAIN_ID: outbe-devnet-1
   FEE_DENOM: unit
-  RPC: tcp://rpc.dev.outbe.net:26657
+  RPC: https://rpc.dev.outbe.net
 
 jobs:
   deploy:
