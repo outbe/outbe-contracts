@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       is_latest:
-        description: 'True specify deployment as latest'
+        description: 'Mark as latest'
         required: false
         type: boolean
 
@@ -12,13 +12,13 @@ env:
   # Chain configuration
   CHAIN_ID: outbe-devnet-1
   FEE_DENOM: unit
-  RPC: tcp://rpc.dev.outbe.net:26657
+  RPC: https://rpc.dev.outbe.net
 
-  CONTRACT_REGISTRY_CONTRACT_ADDRESS: ""
+  CONTRACT_REGISTRY_CONTRACT_ADDRESS: "outbe1pu6e36nugjxv3w2tcvxgld39y5kx3zz6l74dwxyyytx9cz5xwg5s4sknnl"
 
 jobs:
   deploy:
-    name: Optimize Wasm And Deploy
+    name: Optimize & Deploy
     runs-on: ubuntu-latest
 
     container:
