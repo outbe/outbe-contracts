@@ -1,8 +1,9 @@
-use crate::state::TRIBUTES_DISTRIBUTION;
+use crate::contract::calc_allocation;
+use crate::state::{CONFIG, TRIBUTES_DISTRIBUTION};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Binary, Deps, Env, Order, StdResult, Timestamp};
+use cosmwasm_std::{to_json_binary, Binary, Deps, Env, Order, StdResult, Timestamp, Uint128};
 
 #[cw_serde]
 #[derive(QueryResponses)]
@@ -11,6 +12,8 @@ pub enum QueryMsg {
     // DailyRaffle {},
     #[returns(TributesDistributionResponse)]
     TributesDistribution {},
+    #[returns(AllocationResponse)]
+    Allocation {},
 }
 
 #[cw_serde]
@@ -23,6 +26,12 @@ pub struct DailyRaffleData {
 #[cw_serde]
 pub struct DailyRaffleResponse {
     pub data: Vec<DailyRaffleData>,
+}
+
+#[cw_serde]
+pub struct AllocationResponse {
+    pub total_allocation: Uint128,
+    pub pool_allocation: Uint128,
 }
 
 #[cw_serde]
@@ -42,12 +51,13 @@ pub struct TributesDistributionResponse {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         // QueryMsg::DailyRaffle {} => to_json_binary(&query_daily_raffle(_deps, _env)?),
         QueryMsg::TributesDistribution {} => {
-            to_json_binary(&query_tributes_distribution(_deps, _env)?)
+            to_json_binary(&query_tributes_distribution(deps, env)?)
         }
+        QueryMsg::Allocation {} => to_json_binary(&query_allocation(deps, env)?),
     }
 }
 
@@ -86,6 +96,19 @@ fn query_tributes_distribution(deps: Deps, _env: Env) -> StdResult<TributesDistr
         .collect();
 
     Ok(TributesDistributionResponse { data: result? })
+}
+
+fn query_allocation(deps: Deps, _env: Env) -> StdResult<AllocationResponse> {
+    println!("query_allocation");
+    let config = CONFIG.load(deps.storage)?;
+    let token_allocator = config.token_allocator.unwrap();
+
+    let (total, pool) = calc_allocation(deps, token_allocator)?;
+
+    Ok(AllocationResponse {
+        total_allocation: total,
+        pool_allocation: pool,
+    })
 }
 
 // fn query_history(deps: Deps, _env: Env) -> StdResult<RaffleHistory> {

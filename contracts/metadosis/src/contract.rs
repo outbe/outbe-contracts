@@ -7,8 +7,8 @@ use crate::state::{
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Addr, Decimal, Deps, DepsMut, Env, Event, MessageInfo, Response, SubMsg,
-    Timestamp, Uint128, WasmMsg,
+    to_json_binary, Addr, Decimal, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
+    SubMsg, Timestamp, Uint128, WasmMsg,
 };
 use outbe_utils::time_utils;
 use price_oracle::types::DayType;
@@ -489,10 +489,10 @@ fn execute_burn_all(
         ))
 }
 
-fn calc_allocation(
+pub(crate) fn calc_allocation(
     deps: Deps,
     token_allocator_address: Addr,
-) -> Result<(Uint128, Uint128), ContractError> {
+) -> StdResult<(Uint128, Uint128)> {
     let allocation_per_block: token_allocator::types::TokenAllocatorData =
         deps.querier.query_wasm_smart(
             &token_allocator_address,
