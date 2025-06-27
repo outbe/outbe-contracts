@@ -1,5 +1,5 @@
 use crate::contract::calc_allocation;
-use crate::state::{CONFIG, TRIBUTES_DISTRIBUTION};
+use crate::state::{DailyRunInfo, CONFIG, DAILY_RUNS, DAILY_RUNS_INFO, TRIBUTES_DISTRIBUTION};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -8,8 +8,8 @@ use cosmwasm_std::{to_json_binary, Binary, Deps, Env, Order, StdResult, Timestam
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    // #[returns(DailyRaffleResponse)]
-    // DailyRaffle {},
+    #[returns(DailyRunsResponse)]
+    DailyRuns {},
     #[returns(TributesDistributionResponse)]
     TributesDistribution {},
     #[returns(AllocationResponse)]
@@ -17,15 +17,16 @@ pub enum QueryMsg {
 }
 
 #[cw_serde]
-pub struct DailyRaffleData {
+pub struct DailyRunsData {
     /// timestamp of the date when raffles were made
     pub timestamp: Timestamp,
     /// counter of the raffles in that day
-    pub runs: u16,
+    pub runs_happened: usize,
+    pub info: DailyRunInfo,
 }
 #[cw_serde]
-pub struct DailyRaffleResponse {
-    pub data: Vec<DailyRaffleData>,
+pub struct DailyRunsResponse {
+    pub data: Vec<DailyRunsData>,
 }
 
 #[cw_serde]
@@ -53,7 +54,7 @@ pub struct TributesDistributionResponse {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        // QueryMsg::DailyRaffle {} => to_json_binary(&query_daily_raffle(_deps, _env)?),
+        QueryMsg::DailyRuns {} => to_json_binary(&query_daily_runs(deps, env)?),
         QueryMsg::TributesDistribution {} => {
             to_json_binary(&query_tributes_distribution(deps, env)?)
         }
@@ -61,21 +62,26 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-// fn query_daily_raffle(deps: Deps, _env: Env) -> StdResult<DailyRaffleResponse> {
-//     let result: StdResult<Vec<DailyRaffleData>> = DAILY_RAFFLE
-//         .range(deps.storage, None, None, Order::Ascending)
-//         .filter_map(|item| match item {
-//             Ok((k, v)) => Some(Ok(DailyRaffleData {
-//                 timestamp: Timestamp::from_seconds(k),
-//                 runs: v,
-//             })),
-//             _ => None,
-//         })
-//         .collect();
-//
-//     Ok(DailyRaffleResponse { data: result? })
-// }
-//
+fn query_daily_runs(deps: Deps, _env: Env) -> StdResult<DailyRunsResponse> {
+    let result: StdResult<Vec<DailyRunsData>> = DAILY_RUNS_INFO
+        .range(deps.storage, None, None, Order::Ascending)
+        .filter_map(|item| match item {
+            Ok((k, v)) => {
+                let runs_happened = DAILY_RUNS.load(deps.storage, k).unwrap_or(0);
+
+                Some(Ok(DailyRunsData {
+                    timestamp: Timestamp::from_seconds(k),
+                    info: v,
+                    runs_happened,
+                }))
+            }
+            _ => None,
+        })
+        .collect();
+
+    Ok(DailyRunsResponse { data: result? })
+}
+
 fn query_tributes_distribution(deps: Deps, _env: Env) -> StdResult<TributesDistributionResponse> {
     println!("query_tributes_distribution");
     let result: StdResult<Vec<TributesDistributionData>> = TRIBUTES_DISTRIBUTION
