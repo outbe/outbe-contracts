@@ -1,15 +1,7 @@
-import {promises as fs} from "fs";
 import {DirectSecp256k1Wallet} from "@cosmjs/proto-signing";
 import {CosmWasmClient, SigningCosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {parseCoins} from "@cosmjs/amino";
-import {WalletKeyInfo} from "./generate-wallets";
-
-
-const METADOSIS_CONTRACT_ADDRESS = "outbe12j3gvpmcte38khlkez28wysp3dwrw0gwwss7w5qxg7hzxmk9ku9s463evk"
-
-
-// Example of how to use the function:
-const endpoint = "https://rpc.dev.outbe.net";
+import {RPC_ENDPOINT, METADOSIS_CONTRACT_ADDRESS} from "./consts";
 
 async function runner(): Promise<DirectSecp256k1Wallet> {
     let private_key = Buffer.from(
@@ -28,13 +20,13 @@ async function main() {
     let runnerWallet = await runner()
     const [{address}] = await runnerWallet.getAccounts()
 
-    let client = await CosmWasmClient.connect(endpoint);
+    let client = await CosmWasmClient.connect(RPC_ENDPOINT);
     let balance = await client.getBalance(address, "unit")
     console.log("Balance: ", balance)
     let height = await client.getHeight()
     console.log("Current Height: ", height)
 
-    let walletClient = await SigningCosmWasmClient.connectWithSigner(endpoint, runnerWallet)
+    let walletClient = await SigningCosmWasmClient.connectWithSigner(RPC_ENDPOINT, runnerWallet)
 
     let current_timestamp = getCurrentUnixTimestamp();
     let current_date = normalize_to_date(current_timestamp);

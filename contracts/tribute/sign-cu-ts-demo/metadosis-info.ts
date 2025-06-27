@@ -1,15 +1,8 @@
 import {CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
-
-
-const METADOSIS_CONTRACT_ADDRESS = "outbe12j3gvpmcte38khlkez28wysp3dwrw0gwwss7w5qxg7hzxmk9ku9s463evk"
-const NOD_CONTRACT_ADDRESS = "outbe12mg78yvda3hddecgyqvn6znase6ad324pf0xzagjkek0ym9nvy6qd6trg6"
-
-
-// Example of how to use the function:
-const endpoint = "https://rpc.dev.outbe.net";
+import {RPC_ENDPOINT, METADOSIS_CONTRACT_ADDRESS, NOD_CONTRACT_ADDRESS} from "./consts";
 
 async function main() {
-    let client = await CosmWasmClient.connect(endpoint);
+    let client = await CosmWasmClient.connect(RPC_ENDPOINT);
     let height = await client.getHeight()
     console.log("Current Height: ", height)
 

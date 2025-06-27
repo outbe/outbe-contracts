@@ -1,12 +1,8 @@
 import {CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
-
-const TRIBUTE_CONTRACT_ADDRESS = "outbe1rle2gp6qcz6jvzjrhz2vwkvew286e3pd3wn65l5mwltzw6u3psgsjdg3t7"
-
-// Example of how to use the function:
-const endpoint = "https://rpc.dev.outbe.net";
+import {RPC_ENDPOINT, TRIBUTE_CONTRACT_ADDRESS} from "./consts";
 
 async function main() {
-    let client = await CosmWasmClient.connect(endpoint);
+    let client = await CosmWasmClient.connect(RPC_ENDPOINT);
     let height = await client.getHeight()
     console.log("Current Height: ", height)
 

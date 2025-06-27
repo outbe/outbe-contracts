@@ -3,12 +3,10 @@ import {DirectSecp256k1Wallet} from "@cosmjs/proto-signing";
 import {CosmWasmClient, SigningCosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {parseCoins} from "@cosmjs/amino";
 import {WalletKeyInfo} from "./generate-wallets";
+import {RPC_ENDPOINT, METADOSIS_CONTRACT_ADDRESS, TRIBUTE_CONTRACT_ADDRESS} from "./consts";
 
 
 const walletsFile = "wallets.json";
-
-const TRIBUTE_CONTRACT_ADDRESS = "outbe1rle2gp6qcz6jvzjrhz2vwkvew286e3pd3wn65l5mwltzw6u3psgsjdg3t7"
-const METADOSIS_CONTRACT_ADDRESS = "outbe12j3gvpmcte38khlkez28wysp3dwrw0gwwss7w5qxg7hzxmk9ku9s463evk"
 
 export class AllocationResponse {
     public total_allocation: string
@@ -40,9 +38,6 @@ async function runner(): Promise<DirectSecp256k1Wallet> {
     return wallet;
 }
 
-// Example of how to use the function:
-const endpoint = "https://rpc.dev.outbe.net";
-
 async function main() {
     const wallets = await readWalletsFromFile();
     if (wallets.length > 0) {
@@ -51,7 +46,7 @@ async function main() {
     let runnerWallet = await runner()
     const [{address}] = await runnerWallet.getAccounts()
 
-    let client = await CosmWasmClient.connect(endpoint);
+    let client = await CosmWasmClient.connect(RPC_ENDPOINT);
     let balance = await client.getBalance(address, "unit")
     console.log("Balance: ", balance)
     let height = await client.getHeight()
@@ -64,7 +59,7 @@ async function main() {
 
     console.log("Trying to mint tx...")
 
-    let walletClient = await SigningCosmWasmClient.connectWithSigner(endpoint, runnerWallet)
+    let walletClient = await SigningCosmWasmClient.connectWithSigner(RPC_ENDPOINT, runnerWallet)
 
     // let current_timestamp = getCurrentUnixTimestamp();
     // let current_date = normalize_to_date(current_timestamp);
@@ -75,7 +70,7 @@ async function main() {
         allocation: {}
     })
     let total_alloc = Number(allocationResp.total_allocation)
-    let avg_price = Math.floor(total_alloc / wallets.length)
+    let avg_price = Math.floor(total_alloc / wallets.length / 4) // we expect 4 times bigger demand than allocation
     console.log("Total Allocation: ", BigInt(allocationResp.total_allocation))
     console.log("Pool Allocation: ", BigInt(allocationResp.pool_allocation))
     console.log("avg_price: ", avg_price)
@@ -110,7 +105,7 @@ function normalize_to_date(ts: number): number {
 
 function randomTribute(owner: string, day: string, avgPrice: number): any {
     let tribute_id = require('crypto').randomUUID().toString();
-    let settlement_amount = getRandomInt(avgPrice - 1000, avgPrice + 1000).toString();
+    let settlement_amount = getRandomInt(avgPrice - 1000000, avgPrice + 1000000).toString();
 
     return {
         mint: {
