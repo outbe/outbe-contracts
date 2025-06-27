@@ -73,7 +73,7 @@ async function main() {
         allocation: {}
     })
     let total_alloc = Number(allocationResp.total_allocation)
-    let avg_price = Math.floor(total_alloc / wallets.length * 4) // we expect 4 times bigger demand than allocation
+    let avg_price = Math.floor(total_alloc / wallets.length * 7)
     console.log("Total Allocation: ", BigInt(allocationResp.total_allocation))
     console.log("Pool Allocation: ", BigInt(allocationResp.pool_allocation))
     console.log("avg_price: ", avg_price)

@@ -18,11 +18,11 @@ async function main() {
     console.log("Number of Nod tokens: ", tokensResp)
 
 
-    let distribution = await client.queryContractSmart(METADOSIS_CONTRACT_ADDRESS, {
-        tributes_distribution: {}
-    })
-    console.log("distribution: ")
-    console.log(JSON.stringify(distribution, null, 2))
+    // let distribution = await client.queryContractSmart(METADOSIS_CONTRACT_ADDRESS, {
+    //     tributes_distribution: {}
+    // })
+    // console.log("distribution: ")
+    // console.log(JSON.stringify(distribution, null, 2))
 }
 
 

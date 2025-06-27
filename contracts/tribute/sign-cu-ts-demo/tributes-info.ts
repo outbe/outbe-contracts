@@ -11,12 +11,11 @@ async function main() {
     })
     console.log("Number of Tribute tokens: ", tokensResp)
 
-
-    let dailyTributes = await client.queryContractSmart(TRIBUTE_CONTRACT_ADDRESS, {
-        daily_tributes: {date: 1750982400 }
-    })
-    console.log("distribution: ")
-    console.log(JSON.stringify(dailyTributes, null, 2))
+    // let dailyTributes = await client.queryContractSmart(TRIBUTE_CONTRACT_ADDRESS, {
+    //     daily_tributes: {date: 1750982400 }
+    // })
+    // console.log("distribution: ")
+    // console.log(JSON.stringify(dailyTributes, null, 2))
 }
 
 
