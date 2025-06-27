@@ -4,6 +4,9 @@ import {CosmWasmClient, SigningCosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {parseCoins} from "@cosmjs/amino";
 import {WalletKeyInfo} from "./generate-wallets";
 import {RPC_ENDPOINT, METADOSIS_CONTRACT_ADDRESS, TRIBUTE_CONTRACT_ADDRESS} from "./consts";
+import {ExecuteInstruction} from "@cosmjs/cosmwasm-stargate/build/signingcosmwasmclient";
+import {JsonObject} from "@cosmjs/cosmwasm-stargate/build/modules";
+import {Coin} from "@cosmjs/stargate";
 
 
 const walletsFile = "wallets.json";
@@ -70,22 +73,31 @@ async function main() {
         allocation: {}
     })
     let total_alloc = Number(allocationResp.total_allocation)
-    let avg_price = Math.floor(total_alloc / wallets.length / 4) // we expect 4 times bigger demand than allocation
+    let avg_price = Math.floor(total_alloc / wallets.length * 4) // we expect 4 times bigger demand than allocation
     console.log("Total Allocation: ", BigInt(allocationResp.total_allocation))
     console.log("Pool Allocation: ", BigInt(allocationResp.pool_allocation))
     console.log("avg_price: ", avg_price)
 
+    let instructions: ExecuteInstruction[] = [];
     for (let i = 0; i < wallets.length; i++) {
         let tribute = randomTribute(wallets[i].outbe_address, "1751032239445134172", avg_price)
-
-        let tx = await walletClient.execute(address, TRIBUTE_CONTRACT_ADDRESS, tribute, {
-            amount: parseCoins("1unit"),
-            gas: "500000",
-        })
-
-        console.log(i, " : created Tribute ", tribute.mint.token_id, "amount = ",
-            tribute.mint.extension.data.settlement_amount, " , tx ", tx.transactionHash)
+        instructions.push({
+                contractAddress: TRIBUTE_CONTRACT_ADDRESS,
+                msg: tribute,
+            }
+        )
     }
+    let tx = await walletClient.executeMultiple(address, instructions, {
+        amount: parseCoins("1unit"),
+        gas: "50000000",
+    })
+
+    console.log("created Tributes, tx ", tx.transactionHash)
+
+    let r = await client.queryContractSmart(TRIBUTE_CONTRACT_ADDRESS, {
+        num_tokens: {}
+    })
+    console.log("Number of Tribute tokens: ", r)
 }
 
 function getRandomInt(min: number, max: number): number {

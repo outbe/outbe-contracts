@@ -13,7 +13,7 @@ async function main() {
 
 
     let dailyTributes = await client.queryContractSmart(TRIBUTE_CONTRACT_ADDRESS, {
-        daily_tributes: {date: "1750982400"}
+        daily_tributes: {date: 1750982400 }
     })
     console.log("distribution: ")
     console.log(JSON.stringify(dailyTributes, null, 2))
