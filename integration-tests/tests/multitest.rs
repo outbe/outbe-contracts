@@ -176,7 +176,7 @@ fn test_metadosis() {
         .query_wasm_smart(
             tribute.address.clone(),
             &QueryMsg::DailyTributes {
-                date: app.block_info().time,
+                date: app.block_info().time.seconds(),
             },
         )
         .unwrap();

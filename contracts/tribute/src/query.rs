@@ -48,7 +48,7 @@ pub enum QueryMsg {
 
     /// Returns all tokens created in the given date with an optional filter by status.
     #[returns(DailyTributesResponse)]
-    DailyTributes { date: Timestamp },
+    DailyTributes { date: u64 },
 }
 
 #[cw_serde]
@@ -105,16 +105,12 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         }
     }
 }
-fn query_daily_tributes(
-    deps: Deps,
-    _env: &Env,
-    date: Timestamp,
-) -> StdResult<DailyTributesResponse> {
+fn query_daily_tributes(deps: Deps, _env: &Env, date: u64) -> StdResult<DailyTributesResponse> {
     let (start_date, end_date) = date_bounds(date);
 
     println!(
         "dates {} {} {}",
-        date.seconds(),
+        date,
         start_date.seconds(),
         end_date.seconds()
     );
@@ -142,9 +138,8 @@ fn query_daily_tributes(
 }
 
 /// Normalize any timestamp to midnight UTC of that day.
-fn date_bounds(timestamp: Timestamp) -> (Timestamp, Timestamp) {
+fn date_bounds(seconds: u64) -> (Timestamp, Timestamp) {
     // 86400 seconds in a day
-    let seconds = timestamp.seconds();
     let days = seconds / 86400;
     (
         Timestamp::from_seconds(days * 86400),
