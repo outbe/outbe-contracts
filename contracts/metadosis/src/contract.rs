@@ -8,7 +8,7 @@ use crate::state::{
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_json_binary, Addr, Decimal, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
-    SubMsg, Timestamp, Uint128, WasmMsg,
+    SubMsg, Timestamp, Uint128, Uint64, WasmMsg,
 };
 use outbe_utils::time_utils;
 use price_oracle::types::DayType;
@@ -69,11 +69,13 @@ fn execute_run(
     mut deps: DepsMut,
     env: Env,
     _info: MessageInfo,
-    run_date: Option<Timestamp>,
+    run_date: Option<Uint64>,
 ) -> Result<Response, ContractError> {
     // todo verify ownership to run raffle
 
-    let execution_date_time = run_date.unwrap_or(env.block.time);
+    let execution_date_time = run_date
+        .map(|v| Timestamp::from_seconds(v.u64()))
+        .unwrap_or(env.block.time);
     println!("execution date time = {}", execution_date_time);
     let execution_date = time_utils::normalize_to_date(execution_date_time).seconds();
 
@@ -102,7 +104,6 @@ fn execute_run(
             deps.branch(),
             tribute_address.clone(),
             token_allocator_address,
-            execution_date_time,
             execution_date,
             config.deficit,
             exchange_rate.day_type,
@@ -272,7 +273,6 @@ fn schedule_executions(
     deps: DepsMut,
     tribute_address: Addr,
     token_allocator_address: Addr,
-    execution_date_time: Timestamp,
     execution_date: u64,
     deficit: Decimal,
     day_type: DayType,
@@ -291,7 +291,7 @@ fn schedule_executions(
         let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
             &tribute_address,
             &tribute::query::QueryMsg::DailyTributes {
-                date: execution_date_time,
+                date: execution_date,
             },
         )?;
         let all_tributes = all_tributes.tributes;

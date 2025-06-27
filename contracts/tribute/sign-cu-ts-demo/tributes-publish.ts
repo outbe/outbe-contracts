@@ -2,60 +2,18 @@ import {promises as fs} from "fs";
 import {DirectSecp256k1Wallet} from "@cosmjs/proto-signing";
 import {CosmWasmClient, SigningCosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {parseCoins} from "@cosmjs/amino";
+import {WalletKeyInfo} from "./generate-wallets";
 
 
 const walletsFile = "wallets.json";
 
-const TRIBUTE_CONTRACT_ADDRESS = "outbe1wjraj7nqnq8s6qchxds4sl0vdhlymf8mn4hqrg4ez9glwpj0lf2sszdrvh"
-const METADOSIS_CONTRACT_ADDRESS = "outbe105pes6h7xmnw4zw4slyhcywga5m2m529uqxj25y6gxdpw46rt7jqqctwpe"
+const TRIBUTE_CONTRACT_ADDRESS = "outbe1rle2gp6qcz6jvzjrhz2vwkvew286e3pd3wn65l5mwltzw6u3psgsjdg3t7"
+const METADOSIS_CONTRACT_ADDRESS = "outbe12j3gvpmcte38khlkez28wysp3dwrw0gwwss7w5qxg7hzxmk9ku9s463evk"
 
-export class WalletKeyInfo {
-    constructor(
-        public outbe_address: string,
-        public privateKey: string,
-        public publicKey: string
-    ) {
-    }
+export class AllocationResponse {
+    public total_allocation: string
+    public pool_allocation: string
 }
-
-export class TributeData {
-    constructor(
-        tribute_id: string,
-        owner: string,
-        settlement_amount: string,
-        settlement_currency: { "cw20": "usdc" },
-        worldwide_day: bigint,
-    ) {
-    }
-}
-
-export class MintExtension {
-    constructor(
-        data: TributeData,
-        signature: string,
-        public_key: string,
-    ) {
-    }
-}
-
-export class MintPayload {
-    constructor(
-        /// Unique ID of the NFT
-        token_id: string,
-        /// The owner of the newly minter NFT
-        owner: string,
-        extension: MintExtension
-    ) {
-    }
-}
-
-export class MintTribute {
-    constructor(
-        mint: MintPayload,
-    ) {
-    }
-}
-
 
 async function readWalletsFromFile(): Promise<WalletKeyInfo[]> {
     try {
@@ -104,42 +62,35 @@ async function main() {
     })
     console.log("Number of Tribute Tokens before execution: ", tokensResp)
 
-    let mintTribute = new MintTribute({
-        mint: new MintPayload(
-            "1",
-            "outbe1zus30tvmrh2qfazxqcvcvl3n22hsll5z43ujcu",
-            new MintExtension(
-                new TributeData(
-                    "1",
-                    "outbe1zus30tvmrh2qfazxqcvcvl3n22hsll5z43ujcu",
-                    "100",
-                    {"cw20": "usdc"},
-                    BigInt(1638400000000000000)
-                ),
-                "signature",
-                "public_key"
-            )
-        )
-    })
-
     console.log("Trying to mint tx...")
 
     let walletClient = await SigningCosmWasmClient.connectWithSigner(endpoint, runnerWallet)
 
-    let current_timestamp = getCurrentUnixTimestamp();
-    let current_date = normalize_to_date(current_timestamp);
-    console.log("Current timestamp: ", current_timestamp)
-    console.log("Current date: ", current_date)
+    // let current_timestamp = getCurrentUnixTimestamp();
+    // let current_date = normalize_to_date(current_timestamp);
+    // console.log("Current timestamp: ", current_timestamp)
+    // console.log("Current date: ", current_date)
 
-    let tribute = randomTribute("outbe1e8r7rng6lratxymrakgqtndkqcnenun54s0uaw", current_date.toString())
-
-    let tx = await walletClient.execute(address, TRIBUTE_CONTRACT_ADDRESS, tribute, {
-        amount: parseCoins("1unit"),
-        gas: "500000",
+    let allocationResp: AllocationResponse = await client.queryContractSmart(METADOSIS_CONTRACT_ADDRESS, {
+        allocation: {}
     })
+    let total_alloc = Number(allocationResp.total_allocation)
+    let avg_price = Math.floor(total_alloc / wallets.length)
+    console.log("Total Allocation: ", BigInt(allocationResp.total_allocation))
+    console.log("Pool Allocation: ", BigInt(allocationResp.pool_allocation))
+    console.log("avg_price: ", avg_price)
 
-    console.log("Transaction: ", tx)
+    for (let i = 0; i < wallets.length; i++) {
+        let tribute = randomTribute(wallets[i].outbe_address, "1751032239445134172", avg_price)
 
+        let tx = await walletClient.execute(address, TRIBUTE_CONTRACT_ADDRESS, tribute, {
+            amount: parseCoins("1unit"),
+            gas: "500000",
+        })
+
+        console.log(i, " : created Tribute ", tribute.mint.token_id, "amount = ",
+            tribute.mint.extension.data.settlement_amount, " , tx ", tx.transactionHash)
+    }
 }
 
 function getRandomInt(min: number, max: number): number {
@@ -157,9 +108,9 @@ function normalize_to_date(ts: number): number {
 }
 
 
-function randomTribute(owner: string, day: string): any {
+function randomTribute(owner: string, day: string, avgPrice: number): any {
     let tribute_id = require('crypto').randomUUID().toString();
-    let settlement_amount = getRandomInt(100, 1000).toString();
+    let settlement_amount = getRandomInt(avgPrice - 1000, avgPrice + 1000).toString();
 
     return {
         mint: {

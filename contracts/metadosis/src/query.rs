@@ -3,7 +3,7 @@ use crate::state::{DailyRunInfo, CONFIG, DAILY_RUNS, DAILY_RUNS_INFO, TRIBUTES_D
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Binary, Deps, Env, Order, StdResult, Timestamp, Uint128};
+use cosmwasm_std::{to_json_binary, Binary, Deps, Env, Order, StdResult, Uint128};
 
 #[cw_serde]
 #[derive(QueryResponses)]
@@ -18,8 +18,8 @@ pub enum QueryMsg {
 
 #[cw_serde]
 pub struct DailyRunsData {
-    /// timestamp of the date when raffles were made
-    pub timestamp: Timestamp,
+    /// timestamp of the date when raffles were made (seconds)
+    pub timestamp: u64,
     /// counter of the raffles in that day
     pub runs_happened: usize,
     pub info: DailyRunInfo,
@@ -70,7 +70,7 @@ fn query_daily_runs(deps: Deps, _env: Env) -> StdResult<DailyRunsResponse> {
                 let runs_happened = DAILY_RUNS.load(deps.storage, k).unwrap_or(0);
 
                 Some(Ok(DailyRunsData {
-                    timestamp: Timestamp::from_seconds(k),
+                    timestamp: k,
                     info: v,
                     runs_happened,
                 }))
