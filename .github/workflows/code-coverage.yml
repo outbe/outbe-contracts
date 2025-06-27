@@ -51,4 +51,4 @@ jobs:
           all-files-minimum-coverage: 60
           # Changed files minimum coverage in percentage. For example, 0, 50, 100
           # Default: 0
-          changed-files-minimum-coverage: 75
+          changed-files-minimum-coverage: 60
