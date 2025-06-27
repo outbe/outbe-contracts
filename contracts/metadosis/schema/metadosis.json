@@ -152,6 +152,19 @@
       {
         "type": "object",
         "required": [
+          "daily_runs"
+        ],
+        "properties": {
+          "daily_runs": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
           "tributes_distribution"
         ],
         "properties": {
@@ -200,6 +213,145 @@
       "definitions": {
         "Uint128": {
           "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "daily_runs": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DailyRunsResponse",
+      "type": "object",
+      "required": [
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DailyRunsData"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "DailyRunInfo": {
+          "type": "object",
+          "required": [
+            "data",
+            "number_of_runs"
+          ],
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/RunInfo"
+              }
+            },
+            "number_of_runs": {
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "DailyRunsData": {
+          "type": "object",
+          "required": [
+            "info",
+            "runs_happened",
+            "timestamp"
+          ],
+          "properties": {
+            "info": {
+              "$ref": "#/definitions/DailyRunInfo"
+            },
+            "runs_happened": {
+              "description": "counter of the raffles in that day",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0.0
+            },
+            "timestamp": {
+              "description": "timestamp of the date when raffles were made",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Timestamp"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "RunInfo": {
+          "type": "object",
+          "required": [
+            "assigned_tributes",
+            "assigned_tributes_sum",
+            "pool_allocation",
+            "pool_capacity",
+            "pool_deficit",
+            "run_type",
+            "total_allocation",
+            "total_deficit",
+            "vector_index"
+          ],
+          "properties": {
+            "assigned_tributes": {
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0.0
+            },
+            "assigned_tributes_sum": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "pool_allocation": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "pool_capacity": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "pool_deficit": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "run_type": {
+              "$ref": "#/definitions/RunType"
+            },
+            "total_allocation": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "total_deficit": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "vector_index": {
+              "type": "integer",
+              "format": "uint16",
+              "minimum": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "RunType": {
+          "type": "string",
+          "enum": [
+            "lysis",
+            "touch"
+          ]
+        },
+        "Timestamp": {
+          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Uint64"
+            }
+          ]
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        },
+        "Uint64": {
+          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
           "type": "string"
         }
       }
