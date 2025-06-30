@@ -62,7 +62,7 @@ async function main() {
                 gas: "500000",
             }
         );
-        console.log("Sent 1 coin to ", wallets[i].outbe_address, " tx ", result.transactionHash)
+        console.log(i ,": Sent 1 coin to ", wallets[i].outbe_address, " tx ", result.transactionHash)
     }
 }
 

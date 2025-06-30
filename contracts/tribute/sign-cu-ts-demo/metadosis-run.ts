@@ -1,7 +1,7 @@
 import {DirectSecp256k1Wallet} from "@cosmjs/proto-signing";
 import {CosmWasmClient, SigningCosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {parseCoins} from "@cosmjs/amino";
-import {RPC_ENDPOINT, METADOSIS_CONTRACT_ADDRESS} from "./consts";
+import {METADOSIS_CONTRACT_ADDRESS, RPC_ENDPOINT} from "./consts";
 
 async function runner(): Promise<DirectSecp256k1Wallet> {
     let private_key = Buffer.from(
@@ -15,6 +15,9 @@ async function runner(): Promise<DirectSecp256k1Wallet> {
 
     return wallet;
 }
+
+
+const NUMBER_OF_RUNS = 22;
 
 async function main() {
     let runnerWallet = await runner()
@@ -33,23 +36,24 @@ async function main() {
     console.log("Current timestamp: ", current_timestamp)
     console.log("Current date: ", current_date)
 
-    let tx = await walletClient.execute(address, METADOSIS_CONTRACT_ADDRESS, {
-        execute: {
-            run_date: "1751288793"
-        }
-    }, {
-        amount: parseCoins("1unit"),
-        gas: "50000000",
-    })
+    for (let i = 1; i <= NUMBER_OF_RUNS; i++) {
+        let tx = await walletClient.execute(address, METADOSIS_CONTRACT_ADDRESS, {
+            execute: {
+                run_date: "1751288793"
+            }
+        }, {
+            amount: parseCoins("1unit"),
+            gas: "50000000",
+        })
 
-    console.log(" Executed Metadosis, tx ", tx.transactionHash)
-
+        console.log(i + ": Executed Metadosis, tx ", tx.transactionHash)
+    }
 
     let runInfo = await client.queryContractSmart(METADOSIS_CONTRACT_ADDRESS, {
         daily_runs: {}
     })
     console.log("runInfo:")
-    console.log(JSON.stringify(runInfo, null,  2))
+    console.log(JSON.stringify(runInfo, null, 2))
 }
 
 
