@@ -170,8 +170,16 @@ fn execute_lysis_or_touch(
             )
         }
         RunType::Touch => {
-            let tributes_for_touch: Vec<FullTributeData> = vec![];
             // TODO add tributes query that were not selected for metadosis
+            let all_tributes: tribute::query::DailyTributesResponse =
+                deps.querier.query_wasm_smart(
+                    &tribute_address,
+                    &tribute::query::QueryMsg::DailyTributes {
+                        date: execution_date,
+                    },
+                )?;
+            let tributes_for_touch = all_tributes.tributes;
+
             execute_touch(
                 tributes_for_touch,
                 run_info.pool_allocation,
@@ -429,7 +437,7 @@ fn execute_touch(
 
     // todo implement random. Now first tribute will win.
     // todo implement query gold price
-    let winner = tributes.first().unwrap();
+    let winner = tributes.last().unwrap();
 
     let mut messages: Vec<SubMsg> = vec![];
     let nod_id = format!("{}_{}", winner.token_id, run_today);
