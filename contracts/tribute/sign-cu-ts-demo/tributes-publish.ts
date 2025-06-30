@@ -80,7 +80,7 @@ async function main() {
 
     let instructions: ExecuteInstruction[] = [];
     for (let i = 0; i < wallets.length; i++) {
-        let tribute = randomTribute(wallets[i].outbe_address, "1751288793", avg_price)
+        let tribute = randomTribute(wallets[i].outbe_address, 1751288793, avg_price)
         instructions.push({
                 contractAddress: TRIBUTE_CONTRACT_ADDRESS,
                 msg: tribute,
@@ -115,7 +115,7 @@ function normalize_to_date(ts: number): number {
 }
 
 
-function randomTribute(owner: string, day: string, avgPrice: number): any {
+function randomTribute(owner: string, day: number, avgPrice: number): any {
     let tribute_id = require('crypto').randomUUID().toString();
     let settlement_amount = getRandomInt(avgPrice - 1000000, avgPrice + 1000000).toString();
 
@@ -127,10 +127,10 @@ function randomTribute(owner: string, day: string, avgPrice: number): any {
             extension: {
                 data: {
                     tribute_id: tribute_id,
+                    worldwide_day: day,
                     owner: owner,
                     settlement_amount_minor: settlement_amount,
                     settlement_currency: {"cw20": "usd"},
-                    worldwide_day: day,
                 },
                 signature: "b4f0e146c41699ffe66c144402ea53de9b65f354b8cfcaf884f8b1c33e39726a3c39658859c3d57df77ed62b071f44f9de7b6005e6f7c7721bb39242f554f042",
                 public_key: "02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d",

@@ -16,7 +16,6 @@ async function runner(): Promise<DirectSecp256k1Wallet> {
     return wallet;
 }
 
-
 const NUMBER_OF_RUNS = 22;
 
 async function main() {
