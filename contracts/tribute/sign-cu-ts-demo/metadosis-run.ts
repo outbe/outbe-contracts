@@ -35,7 +35,7 @@ async function main() {
 
     let tx = await walletClient.execute(address, METADOSIS_CONTRACT_ADDRESS, {
         execute: {
-            run_date: "1750982400"
+            run_date: "1751288793"
         }
     }, {
         amount: parseCoins("1unit"),

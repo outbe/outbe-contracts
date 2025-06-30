@@ -80,7 +80,7 @@ async function main() {
 
     let instructions: ExecuteInstruction[] = [];
     for (let i = 0; i < wallets.length; i++) {
-        let tribute = randomTribute(wallets[i].outbe_address, "1751032239445134172", avg_price)
+        let tribute = randomTribute(wallets[i].outbe_address, "1751288793", avg_price)
         instructions.push({
                 contractAddress: TRIBUTE_CONTRACT_ADDRESS,
                 msg: tribute,
@@ -128,7 +128,7 @@ function randomTribute(owner: string, day: string, avgPrice: number): any {
                 data: {
                     tribute_id: tribute_id,
                     owner: owner,
-                    settlement_amount: settlement_amount,
+                    settlement_amount_minor: settlement_amount,
                     settlement_currency: {"cw20": "usd"},
                     worldwide_day: day,
                 },
