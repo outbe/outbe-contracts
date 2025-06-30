@@ -73,7 +73,7 @@ async function main() {
         allocation: {}
     })
     let total_alloc = Number(allocationResp.total_allocation)
-    let avg_price = Math.floor(total_alloc / wallets.length * 7)
+    let avg_price = Math.floor(total_alloc / wallets.length * 30)
     console.log("Total Allocation: ", BigInt(allocationResp.total_allocation))
     console.log("Pool Allocation: ", BigInt(allocationResp.pool_allocation))
     console.log("avg_price: ", avg_price)
@@ -129,7 +129,7 @@ function randomTribute(owner: string, day: string, avgPrice: number): any {
                     tribute_id: tribute_id,
                     owner: owner,
                     settlement_amount: settlement_amount,
-                    settlement_currency: {"cw20": "usdc"},
+                    settlement_currency: {"cw20": "usd"},
                     worldwide_day: day,
                 },
                 signature: "b4f0e146c41699ffe66c144402ea53de9b65f354b8cfcaf884f8b1c33e39726a3c39658859c3d57df77ed62b071f44f9de7b6005e6f7c7721bb39242f554f042",
