@@ -18,19 +18,20 @@ impl Cw721CollectionConfig for TributeConfig {}
 #[cw_serde]
 pub struct TributeData {
     /// Value of the Tribute in Settlement Tokens
-    pub settlement_amount: Uint128,
+    pub settlement_amount_minor: Uint128,
     /// Tribute settlement token
     pub settlement_currency: Denom,
     /// Value of the Tribute in Native Coins
-    pub nominal_qty: Uint128,
+    pub nominal_qty_minor: Uint128,
     /// Price in Native coins with a rate on the moment of the transaction
-    pub tribute_rate: Decimal,
+    pub tribute_price_minor: Decimal,
+    /// Divisor to calculate symbolic_load
+    pub symbolic_divisor: Decimal,
     /// Signals an eligible interest to the network
     pub symbolic_load: Uint128,
     /// Date of Consumption
     pub worldwide_day: Timestamp,
 
-    pub fidelity_index: i32,
     /// Time when the Tribute NFT was created on the network
     pub created_at: Timestamp,
 }

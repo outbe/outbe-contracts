@@ -482,7 +482,7 @@
         "type": "object",
         "required": [
           "owner",
-          "settlement_amount",
+          "settlement_amount_minor",
           "settlement_currency",
           "tribute_id",
           "worldwide_day"
@@ -491,7 +491,7 @@
           "owner": {
             "type": "string"
           },
-          "settlement_amount": {
+          "settlement_amount_minor": {
             "description": "Value of the Tribute in Settlement Tokens",
             "allOf": [
               {
@@ -512,11 +512,9 @@
           },
           "worldwide_day": {
             "description": "Date of the Tribute creation",
-            "allOf": [
-              {
-                "$ref": "#/definitions/Timestamp"
-              }
-            ]
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
           }
         },
         "additionalProperties": false
@@ -956,12 +954,12 @@
           "type": "object",
           "required": [
             "created_at",
-            "fidelity_index",
-            "nominal_qty",
-            "settlement_amount",
+            "nominal_qty_minor",
+            "settlement_amount_minor",
             "settlement_currency",
+            "symbolic_divisor",
             "symbolic_load",
-            "tribute_rate",
+            "tribute_price_minor",
             "worldwide_day"
           ],
           "properties": {
@@ -973,11 +971,7 @@
                 }
               ]
             },
-            "fidelity_index": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nominal_qty": {
+            "nominal_qty_minor": {
               "description": "Value of the Tribute in Native Coins",
               "allOf": [
                 {
@@ -985,7 +979,7 @@
                 }
               ]
             },
-            "settlement_amount": {
+            "settlement_amount_minor": {
               "description": "Value of the Tribute in Settlement Tokens",
               "allOf": [
                 {
@@ -1001,6 +995,14 @@
                 }
               ]
             },
+            "symbolic_divisor": {
+              "description": "Divisor to calculate symbolic_load",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Decimal"
+                }
+              ]
+            },
             "symbolic_load": {
               "description": "Signals an eligible interest to the network",
               "allOf": [
@@ -1009,7 +1011,7 @@
                 }
               ]
             },
-            "tribute_rate": {
+            "tribute_price_minor": {
               "description": "Price in Native coins with a rate on the moment of the transaction",
               "allOf": [
                 {
@@ -1304,12 +1306,12 @@
           "type": "object",
           "required": [
             "created_at",
-            "fidelity_index",
-            "nominal_qty",
-            "settlement_amount",
+            "nominal_qty_minor",
+            "settlement_amount_minor",
             "settlement_currency",
+            "symbolic_divisor",
             "symbolic_load",
-            "tribute_rate",
+            "tribute_price_minor",
             "worldwide_day"
           ],
           "properties": {
@@ -1321,11 +1323,7 @@
                 }
               ]
             },
-            "fidelity_index": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nominal_qty": {
+            "nominal_qty_minor": {
               "description": "Value of the Tribute in Native Coins",
               "allOf": [
                 {
@@ -1333,7 +1331,7 @@
                 }
               ]
             },
-            "settlement_amount": {
+            "settlement_amount_minor": {
               "description": "Value of the Tribute in Settlement Tokens",
               "allOf": [
                 {
@@ -1349,6 +1347,14 @@
                 }
               ]
             },
+            "symbolic_divisor": {
+              "description": "Divisor to calculate symbolic_load",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Decimal"
+                }
+              ]
+            },
             "symbolic_load": {
               "description": "Signals an eligible interest to the network",
               "allOf": [
@@ -1357,7 +1363,7 @@
                 }
               ]
             },
-            "tribute_rate": {
+            "tribute_price_minor": {
               "description": "Price in Native coins with a rate on the moment of the transaction",
               "allOf": [
                 {

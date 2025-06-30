@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Decimal, HexBinary, Timestamp, Uint128};
+use cosmwasm_std::{Addr, Decimal, HexBinary, Uint128};
 use cw20::Denom;
 use outbe_nft::msg::{CollectionInfoMsg, Cw721InstantiateMsg};
 
@@ -59,13 +59,13 @@ pub struct MintExtension {
 #[cw_serde]
 pub struct TributeMintData {
     pub tribute_id: String,
+    /// Date of the Tribute creation
+    pub worldwide_day: u64,
     pub owner: String,
     /// Value of the Tribute in Settlement Tokens
-    pub settlement_amount: Uint128,
+    pub settlement_amount_minor: Uint128,
     /// Tribute settlement token
     pub settlement_currency: Denom,
-    /// Date of the Tribute creation
-    pub worldwide_day: Timestamp,
     // /// Hashes identifying consumption records batch. Each hash should be a valid unique
     // /// sha256 hash in hex format
     // pub hashes: Vec<HexBinary>,

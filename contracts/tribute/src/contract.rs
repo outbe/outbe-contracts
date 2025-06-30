@@ -7,7 +7,8 @@ use crate::types::{TributeConfig, TributeData, TributeNft};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Uint128,
+    to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Timestamp,
+    Uint128,
 };
 use outbe_nft::msg::CollectionInfoMsg;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
@@ -156,7 +157,7 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
-    if entity.settlement_amount == Uint128::zero() {
+    if entity.settlement_amount_minor == Uint128::zero() {
         return Err(ContractError::WrongInput {});
     }
 
@@ -179,22 +180,22 @@ fn execute_mint(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let (nominal_qty, load) = calc_sybolics(
-        entity.settlement_amount,
+    let (nominal_qty, load, symbolic_divisor) = calc_sybolics(
+        entity.settlement_amount_minor,
         exchange_rate.price,
         col_config.symbolic_rate,
     );
 
     // create the token
     let data = TributeData {
-        settlement_amount: entity.settlement_amount,
+        settlement_amount_minor: entity.settlement_amount_minor,
         settlement_currency: entity.settlement_currency,
-        tribute_rate: exchange_rate.price,
-        nominal_qty,
+        tribute_price_minor: exchange_rate.price,
+        nominal_qty_minor: nominal_qty,
+        symbolic_divisor,
         symbolic_load: load,
-        worldwide_day: entity.worldwide_day,
+        worldwide_day: Timestamp::from_seconds(entity.worldwide_day),
         // hashes: entity.hashes.clone(),
-        fidelity_index: 0, // TODO implement fidelity index
         created_at: env.block.time,
     };
 
@@ -233,14 +234,18 @@ fn calc_sybolics(
     settlement_value: Uint128,
     exchange_rate: Decimal,
     symbolic_rate: Decimal,
-) -> (Uint128, Uint128) {
+) -> (Uint128, Uint128, Decimal) {
     let settlement_value_dec = Decimal::from_atomics(settlement_value, 0).unwrap();
-    let nominal_qty = settlement_value_dec * exchange_rate;
+    let nominal_qty = settlement_value_dec / exchange_rate;
 
     let symbolic_divisor = settlement_value_dec / nominal_qty * (Decimal::one() + symbolic_rate);
     let load = settlement_value_dec * symbolic_rate / symbolic_divisor;
 
-    (nominal_qty.to_uint_floor(), load.to_uint_floor())
+    (
+        nominal_qty.to_uint_floor(),
+        load.to_uint_floor(),
+        symbolic_divisor,
+    )
 }
 
 #[allow(dead_code)]
@@ -326,13 +331,13 @@ mod tests {
 
     #[test]
     fn test_symbolics_calc() {
-        let (nominal, load) = calc_sybolics(
+        let (nominal, load, _) = calc_sybolics(
             Uint128::new(1500u128),
             Decimal::from_str("0.2").unwrap(),
             Decimal::from_str("0.08").unwrap(),
         );
-        assert_eq!(nominal, Uint128::new(300u128));
-        assert_eq!(load, Uint128::new(22u128));
+        assert_eq!(nominal, Uint128::new(7500u128));
+        assert_eq!(load, Uint128::new(555u128));
     }
 
     #[ignore] // ignored such as signature verification is temporarily disabled

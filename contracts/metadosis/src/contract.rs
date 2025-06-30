@@ -243,7 +243,7 @@ fn do_lysis_tier(
                         nod_id,
                         settlement_token: tribute.extension.settlement_currency.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
-                        nominal_minor_rate: tribute.extension.nominal_qty,
+                        nominal_minor_rate: tribute.extension.nominal_qty_minor,
                         symbolic_minor_load: tribute.extension.symbolic_load,
                         vector_minor_rate: vector.vector_rate,
                         issuance_minor_rate: exchange_rate,
@@ -299,9 +299,6 @@ fn schedule_executions(
             "Metadosis {} tributes distribution for date ",
             all_tributes.len()
         );
-
-        // TODO do sort by fidelity index
-        //  such as fidelity_index = 0 for all tributes we avoid sorting as redundant operation
 
         let total_interest = all_tributes
             .iter()
@@ -447,8 +444,8 @@ fn execute_touch(
                 entity: nod::msg::NodEntity {
                     nod_id,
                     settlement_token: winner.data.settlement_currency.clone(),
-                    symbolic_rate: winner.data.tribute_rate,
-                    nominal_minor_rate: winner.data.nominal_qty,
+                    symbolic_rate: winner.data.tribute_price_minor,
+                    nominal_minor_rate: winner.data.nominal_qty_minor,
                     symbolic_minor_load: allocation,
                     vector_minor_rate: Uint128::zero(),
                     issuance_minor_rate: exchange_rate,
