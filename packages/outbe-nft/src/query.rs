@@ -117,3 +117,48 @@ pub fn query_all_tokens(
 
     Ok(TokensResponse { tokens: tokens? })
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::query::query_all_tokens;
+    use crate::state::{Cw721Config, NftInfo};
+    use cosmwasm_std::testing::{mock_dependencies, mock_env};
+    use cosmwasm_std::{Addr, Empty};
+
+    #[test]
+    fn test_query_all_tokens() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let config = Cw721Config::<Option<Empty>, Option<Empty>>::default();
+
+        for i in 0..10 {
+            config
+                .nft_info
+                .save(
+                    &mut deps.storage,
+                    i.to_string().as_str(),
+                    &NftInfo {
+                        owner: Addr::unchecked("me"),
+                        token_uri: None,
+                        extension: None,
+                    },
+                )
+                .unwrap();
+        }
+        assert!(!config.nft_info.is_empty(&deps.storage));
+
+        let response = query_all_tokens(deps.as_ref(), &env, None, None).unwrap();
+        assert_eq!(response.tokens.len(), 10);
+        assert_eq!(response.tokens.first().unwrap(), "9");
+
+        let response = query_all_tokens(deps.as_ref(), &env, None, Some(3)).unwrap();
+        assert_eq!(response.tokens.len(), 3);
+        assert_eq!(response.tokens.first().unwrap(), "9");
+        assert_eq!(response.tokens.last().unwrap(), "7");
+
+        let response =
+            query_all_tokens(deps.as_ref(), &env, Some("7".to_string()), Some(2)).unwrap();
+        assert_eq!(response.tokens.first().unwrap(), "6");
+        assert_eq!(response.tokens.last().unwrap(), "5");
+    }
+}
