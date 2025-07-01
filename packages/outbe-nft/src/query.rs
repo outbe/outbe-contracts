@@ -92,7 +92,7 @@ pub fn query_tokens(
         .idx
         .owner
         .prefix(owner_addr)
-        .keys(deps.storage, start, None, Order::Ascending)
+        .keys(deps.storage, None, start, Order::Descending)
         .take(limit)
         .collect::<StdResult<Vec<_>>>()?;
 
