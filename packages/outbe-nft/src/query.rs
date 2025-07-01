@@ -110,7 +110,7 @@ pub fn query_all_tokens(
 
     let tokens: StdResult<Vec<String>> = Cw721Config::<Option<Empty>, Option<Empty>>::default()
         .nft_info
-        .range(deps.storage, None, start, Order::Descending)
+        .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|item| item.map(|(k, _)| k))
         .collect();
