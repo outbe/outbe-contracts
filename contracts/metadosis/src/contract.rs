@@ -292,25 +292,27 @@ fn schedule_executions(
         total_allocation, allocation_per_tier
     );
 
+    let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+        &tribute_address,
+        &tribute::query::QueryMsg::DailyTributes {
+            date: execution_date,
+        },
+    )?;
+    let all_tributes = all_tributes.tributes;
+    let all_tributes_len = all_tributes.len();
+    println!(
+        "Metadosis {} tributes distribution for date ",
+        all_tributes_len
+    );
+
     let mut run_data: Vec<RunInfo> = Vec::with_capacity(24);
+
+    let total_interest = all_tributes
+        .iter()
+        .fold(Uint128::zero(), |acc, t| acc + t.data.symbolic_load);
 
     if day_type == DayType::Green {
         // distribute tokens
-        let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
-            &tribute_address,
-            &tribute::query::QueryMsg::DailyTributes {
-                date: execution_date,
-            },
-        )?;
-        let all_tributes = all_tributes.tributes;
-        println!(
-            "Metadosis {} tributes distribution for date ",
-            all_tributes.len()
-        );
-
-        let total_interest = all_tributes
-            .iter()
-            .fold(Uint128::zero(), |acc, t| acc + t.data.symbolic_load);
 
         let total_deficit = calc_total_deficit(total_allocation, total_interest, deficit);
 
@@ -390,8 +392,8 @@ fn schedule_executions(
         total_deficit: Uint128::zero(),
         pool_deficit: Uint128::zero(),
         pool_capacity: allocation_per_tier,
-        assigned_tributes: 0,
-        assigned_tributes_sum: Uint128::zero(),
+        assigned_tributes: all_tributes_len,
+        assigned_tributes_sum: total_interest,
     });
 
     let runs_num = run_data.len();
