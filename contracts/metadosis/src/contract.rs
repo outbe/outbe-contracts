@@ -323,7 +323,6 @@ fn schedule_executions(
         let lysis_deficit = total_deficit / Uint128::new(23);
         let lysis_capacity = allocation_per_tier + lysis_deficit;
 
-        // + 8%
         println!("total_allocation = {}", total_allocation);
         println!("total_interest = {}", total_interest);
         println!("allocation_per_pool = {}", allocation_per_tier);
