@@ -1,5 +1,4 @@
 import {promises as fs} from "fs";
-import {DirectSecp256k1Wallet} from "@cosmjs/proto-signing";
 import {CosmWasmClient, SigningCosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {parseCoins} from "@cosmjs/amino";
 import {WalletKeyInfo} from "./generate-wallets";
