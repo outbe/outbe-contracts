@@ -7,8 +7,8 @@ use crate::state::{
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Addr, Decimal, Deps, DepsMut, Env, Event, MessageInfo, Response, SubMsg,
-    Timestamp, Uint128, WasmMsg,
+    to_json_binary, Addr, Decimal, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
+    SubMsg, Timestamp, Uint128, Uint64, WasmMsg,
 };
 use outbe_utils::time_utils;
 use price_oracle::types::DayType;
@@ -69,11 +69,13 @@ fn execute_run(
     mut deps: DepsMut,
     env: Env,
     _info: MessageInfo,
-    run_date: Option<Timestamp>,
+    run_date: Option<Uint64>,
 ) -> Result<Response, ContractError> {
     // todo verify ownership to run raffle
 
-    let execution_date_time = run_date.unwrap_or(env.block.time);
+    let execution_date_time = run_date
+        .map(|v| Timestamp::from_seconds(v.u64()))
+        .unwrap_or(env.block.time);
     println!("execution date time = {}", execution_date_time);
     let execution_date = time_utils::normalize_to_date(execution_date_time).seconds();
 
@@ -102,7 +104,6 @@ fn execute_run(
             deps.branch(),
             tribute_address.clone(),
             token_allocator_address,
-            execution_date_time,
             execution_date,
             config.deficit,
             exchange_rate.day_type,
@@ -169,8 +170,16 @@ fn execute_lysis_or_touch(
             )
         }
         RunType::Touch => {
-            let tributes_for_touch: Vec<FullTributeData> = vec![];
             // TODO add tributes query that were not selected for metadosis
+            let all_tributes: tribute::query::DailyTributesResponse =
+                deps.querier.query_wasm_smart(
+                    &tribute_address,
+                    &tribute::query::QueryMsg::DailyTributes {
+                        date: execution_date,
+                    },
+                )?;
+            let tributes_for_touch = all_tributes.tributes;
+
             execute_touch(
                 tributes_for_touch,
                 run_info.pool_allocation,
@@ -242,7 +251,7 @@ fn do_lysis_tier(
                         nod_id,
                         settlement_token: tribute.extension.settlement_currency.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
-                        nominal_minor_rate: tribute.extension.nominal_qty,
+                        nominal_minor_rate: tribute.extension.nominal_qty_minor,
                         symbolic_minor_load: tribute.extension.symbolic_load,
                         vector_minor_rate: vector.vector_rate,
                         issuance_minor_rate: exchange_rate,
@@ -272,7 +281,6 @@ fn schedule_executions(
     deps: DepsMut,
     tribute_address: Addr,
     token_allocator_address: Addr,
-    execution_date_time: Timestamp,
     execution_date: u64,
     deficit: Decimal,
     day_type: DayType,
@@ -284,28 +292,27 @@ fn schedule_executions(
         total_allocation, allocation_per_tier
     );
 
+    let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+        &tribute_address,
+        &tribute::query::QueryMsg::DailyTributes {
+            date: execution_date,
+        },
+    )?;
+    let all_tributes = all_tributes.tributes;
+    let all_tributes_len = all_tributes.len();
+    println!(
+        "Metadosis {} tributes distribution for date ",
+        all_tributes_len
+    );
+
     let mut run_data: Vec<RunInfo> = Vec::with_capacity(24);
+
+    let total_interest = all_tributes
+        .iter()
+        .fold(Uint128::zero(), |acc, t| acc + t.data.symbolic_load);
 
     if day_type == DayType::Green {
         // distribute tokens
-        let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
-            &tribute_address,
-            &tribute::query::QueryMsg::DailyTributes {
-                date: execution_date_time,
-            },
-        )?;
-        let all_tributes = all_tributes.tributes;
-        println!(
-            "Metadosis {} tributes distribution for date ",
-            all_tributes.len()
-        );
-
-        // TODO do sort by fidelity index
-        //  such as fidelity_index = 0 for all tributes we avoid sorting as redundant operation
-
-        let total_interest = all_tributes
-            .iter()
-            .fold(Uint128::zero(), |acc, t| acc + t.data.symbolic_load);
 
         let total_deficit = calc_total_deficit(total_allocation, total_interest, deficit);
 
@@ -316,7 +323,6 @@ fn schedule_executions(
         let lysis_deficit = total_deficit / Uint128::new(23);
         let lysis_capacity = allocation_per_tier + lysis_deficit;
 
-        // + 8%
         println!("total_allocation = {}", total_allocation);
         println!("total_interest = {}", total_interest);
         println!("allocation_per_pool = {}", allocation_per_tier);
@@ -385,8 +391,8 @@ fn schedule_executions(
         total_deficit: Uint128::zero(),
         pool_deficit: Uint128::zero(),
         pool_capacity: allocation_per_tier,
-        assigned_tributes: 0,
-        assigned_tributes_sum: Uint128::zero(),
+        assigned_tributes: all_tributes_len,
+        assigned_tributes_sum: total_interest,
     });
 
     let runs_num = run_data.len();
@@ -432,7 +438,7 @@ fn execute_touch(
 
     // todo implement random. Now first tribute will win.
     // todo implement query gold price
-    let winner = tributes.first().unwrap();
+    let winner = tributes.last().unwrap();
 
     let mut messages: Vec<SubMsg> = vec![];
     let nod_id = format!("{}_{}", winner.token_id, run_today);
@@ -447,8 +453,8 @@ fn execute_touch(
                 entity: nod::msg::NodEntity {
                     nod_id,
                     settlement_token: winner.data.settlement_currency.clone(),
-                    symbolic_rate: winner.data.tribute_rate,
-                    nominal_minor_rate: winner.data.nominal_qty,
+                    symbolic_rate: winner.data.tribute_price_minor,
+                    nominal_minor_rate: winner.data.nominal_qty_minor,
                     symbolic_minor_load: allocation,
                     vector_minor_rate: Uint128::zero(),
                     issuance_minor_rate: exchange_rate,
@@ -489,10 +495,10 @@ fn execute_burn_all(
         ))
 }
 
-fn calc_allocation(
+pub(crate) fn calc_allocation(
     deps: Deps,
     token_allocator_address: Addr,
-) -> Result<(Uint128, Uint128), ContractError> {
+) -> StdResult<(Uint128, Uint128)> {
     let allocation_per_block: token_allocator::types::TokenAllocatorData =
         deps.querier.query_wasm_smart(
             &token_allocator_address,

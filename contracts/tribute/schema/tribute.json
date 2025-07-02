@@ -482,7 +482,7 @@
         "type": "object",
         "required": [
           "owner",
-          "settlement_amount",
+          "settlement_amount_minor",
           "settlement_currency",
           "tribute_id",
           "worldwide_day"
@@ -491,7 +491,7 @@
           "owner": {
             "type": "string"
           },
-          "settlement_amount": {
+          "settlement_amount_minor": {
             "description": "Value of the Tribute in Settlement Tokens",
             "allOf": [
               {
@@ -512,11 +512,9 @@
           },
           "worldwide_day": {
             "description": "Date of the Tribute creation",
-            "allOf": [
-              {
-                "$ref": "#/definitions/Timestamp"
-              }
-            ]
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
           }
         },
         "additionalProperties": false
@@ -709,7 +707,9 @@
             ],
             "properties": {
               "date": {
-                "$ref": "#/definitions/Timestamp"
+                "type": "integer",
+                "format": "uint64",
+                "minimum": 0.0
               }
             },
             "additionalProperties": false
@@ -717,21 +717,7 @@
         },
         "additionalProperties": false
       }
-    ],
-    "definitions": {
-      "Timestamp": {
-        "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
-        "allOf": [
-          {
-            "$ref": "#/definitions/Uint64"
-          }
-        ]
-      },
-      "Uint64": {
-        "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
-        "type": "string"
-      }
-    }
+    ]
   },
   "migrate": {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -968,12 +954,12 @@
           "type": "object",
           "required": [
             "created_at",
-            "fidelity_index",
-            "nominal_qty",
-            "settlement_amount",
+            "nominal_qty_minor",
+            "settlement_amount_minor",
             "settlement_currency",
+            "symbolic_divisor",
             "symbolic_load",
-            "tribute_rate",
+            "tribute_price_minor",
             "worldwide_day"
           ],
           "properties": {
@@ -985,11 +971,7 @@
                 }
               ]
             },
-            "fidelity_index": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nominal_qty": {
+            "nominal_qty_minor": {
               "description": "Value of the Tribute in Native Coins",
               "allOf": [
                 {
@@ -997,7 +979,7 @@
                 }
               ]
             },
-            "settlement_amount": {
+            "settlement_amount_minor": {
               "description": "Value of the Tribute in Settlement Tokens",
               "allOf": [
                 {
@@ -1013,6 +995,14 @@
                 }
               ]
             },
+            "symbolic_divisor": {
+              "description": "Divisor to calculate symbolic_load",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Decimal"
+                }
+              ]
+            },
             "symbolic_load": {
               "description": "Signals an eligible interest to the network",
               "allOf": [
@@ -1021,7 +1011,7 @@
                 }
               ]
             },
-            "tribute_rate": {
+            "tribute_price_minor": {
               "description": "Price in Native coins with a rate on the moment of the transaction",
               "allOf": [
                 {
@@ -1316,12 +1306,12 @@
           "type": "object",
           "required": [
             "created_at",
-            "fidelity_index",
-            "nominal_qty",
-            "settlement_amount",
+            "nominal_qty_minor",
+            "settlement_amount_minor",
             "settlement_currency",
+            "symbolic_divisor",
             "symbolic_load",
-            "tribute_rate",
+            "tribute_price_minor",
             "worldwide_day"
           ],
           "properties": {
@@ -1333,11 +1323,7 @@
                 }
               ]
             },
-            "fidelity_index": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nominal_qty": {
+            "nominal_qty_minor": {
               "description": "Value of the Tribute in Native Coins",
               "allOf": [
                 {
@@ -1345,7 +1331,7 @@
                 }
               ]
             },
-            "settlement_amount": {
+            "settlement_amount_minor": {
               "description": "Value of the Tribute in Settlement Tokens",
               "allOf": [
                 {
@@ -1361,6 +1347,14 @@
                 }
               ]
             },
+            "symbolic_divisor": {
+              "description": "Divisor to calculate symbolic_load",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Decimal"
+                }
+              ]
+            },
             "symbolic_load": {
               "description": "Signals an eligible interest to the network",
               "allOf": [
@@ -1369,7 +1363,7 @@
                 }
               ]
             },
-            "tribute_rate": {
+            "tribute_price_minor": {
               "description": "Price in Native coins with a rate on the moment of the transaction",
               "allOf": [
                 {
