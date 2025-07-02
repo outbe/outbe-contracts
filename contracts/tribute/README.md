@@ -47,7 +47,7 @@ If that's the case for your protocol, the signature needs to be tested for low-S
 
 Please see an example of the signature creation [in Rust](./src/contract.rs:335).
 
-Please see an example of the signature creation [in TypeScript](./sign-cu-ts-demo/README.md).
+Please see an example of the signature creation [in TypeScript](tribute-ts-scripts/README.md).
 
 ## Consumption Unit deployment info
 
