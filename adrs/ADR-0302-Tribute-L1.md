@@ -11,30 +11,29 @@ PROPOSED
 ## Context
 
 Tribute is a non-fungible token that represents a user consumption reflection for a given worldwide day.
-This document aims to describe logic and data fields required for successful management of the Tributes on 
+This document aims to describe logic and data fields required for successful management of the Tributes on
 L1 outbe chain.
-
 
 ### Glossary
 
-*   **Consumption Units** – are bundles of transaction representation aggregated per User's 
-Bank Account and Worldwide Day that persisted on L2.
-*   **Tribute Draft** – are units automatically created on the L2 Network by aggregating Consumption Units (CUs)
-per Account and Worldwide Day. They serve as the pre-stage of any Tribute offered on L1.
-*   **Tribute** – is NFT; an aggregate record that represents user's consumption by a given worldwide day.
+* **Consumption Units** – are bundles of transaction representation aggregated per User's
+  Bank Account and Worldwide Day that persisted on L2.
+* **Tribute Draft** – are units automatically created on the L2 Network by aggregating Consumption Units (CUs)
+  per Account and Worldwide Day. They serve as the pre-stage of any Tribute offered on L1.
+* **Tribute** – is NFT; an aggregate record that represents user's consumption by a given worldwide day.
 
 ## Decision
 
-We will implement Tribute smart contract using cosmwasm to satisfy the needs to represent a Tribute NFTs 
+We will implement Tribute smart contract using cosmwasm to satisfy the needs to represent a Tribute NFTs
 onchain.
 
-The Tribute is published by an end user via Wallet App using Tribute Draft entity on L2 as well as 
+The Tribute is published by an end user via Wallet App using Tribute Draft entity on L2 as well as
 cryptographic proof of the data validity.
 
 The Tribute itself is a non-fungible non-transferable token that represents act of consumption for the given date
 and it's a responsibility of a user to submit (or not submit) the Tribute.
 
-Tribute has no state and status and should be burned after Metadosis run. This functionality will be in-details 
+Tribute has no state and status and should be burned after Metadosis run. This functionality will be in-details
 described in the following ARDs.
 
 Tribute Draft structure:
@@ -60,7 +59,6 @@ pub struct TributeDraftPayload {
 ```
 
 Such a structure will cover all the fields required to represent consumption and help to create Tribute on L1.
-
 
 Tribute structure:
 
@@ -90,7 +88,7 @@ pub struct TributePayload {
 ### Data Integrity and Verification
 
 To make sure that the provided data is correct the smart contract should have a verification mechanics to check that
-the submitted Tribute is correct and not modified. 
+the submitted Tribute is correct and not modified.
 
 The target solution for this problem is to use zero knowledge proofs Plonk algorithm verification.
 
@@ -118,7 +116,7 @@ To verify that the Tribute is correct, the following data should be submitted to
 - verification key – cryptographic public key to verify the proof
 - tribute hash – sha256 hash that can be calculated on the flight based on the tribute payload.
 - owner's signature – such as Tribute is published by the end user i.e., owner it's
-signature verified as a standard tx signature. I.e., it wouldn't be possible to submit tx with the wrong signature. 
+  signature verified as a standard tx signature. I.e., it wouldn't be possible to submit tx with the wrong signature.
 
 Zk Proof should be passed as Structured Reference String and based on PlonK alghoritm.
 
@@ -130,7 +128,6 @@ Helpful links:
 Plonk paper: https://eprint.iacr.org/2019/953.pdf
 Zksync umbrella repo for ZK proofs in Rust: https://github.com/matter-labs/zksync-crypto
 ZK in cosmwasm examples: https://github.com/DoraFactory/zk-cosmwasm/tree/main
-
 
 ### Related Changes
 
@@ -149,13 +146,12 @@ pub enum Denom {
 pub enum Iso4217 {
     Usd,
     Eur,
-    ....
+... .
 }
 ```
 
 And the corresponding changes should be made to Price Oracle so it contains the pairs between settlement currency and
 native token.
-
 
 ## Solution
 
@@ -165,13 +161,13 @@ version of the tribute described in [ADR-0300](ADR-0300-Tribute.md).
 
 ## Open Questions
 
-Q: Tribute Draft: Should it have `nominal_base_qty` i.e. amount in native coins? 
+Q: Tribute Draft: Should it have `nominal_base_qty` i.e. amount in native coins?
 A: Looks like this property should be calculated on L1 using Price Oracle when Tribute is minting.
 
 Q: Tribute Draft: Should it have separate properties for `settlement_base_amount` and `settlement_atto_amount`?  
 A: It looks like overcomplicated, and the amount can be stored in the smallest currency units,
 for example, for 123.45 Euro -> 12345 integer value in euro cents.
 
-Q: Tribute: should a mint operation be named `offer`? 
+Q: Tribute: should a mint operation be named `offer`?
 A: TBD. It brakes compatibility with CW721 standard because creating a new tokens is `mint` operation.
 
