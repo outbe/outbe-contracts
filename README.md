@@ -14,6 +14,9 @@ Main contracts:
 - **tribute**: please see [docs](contracts/tribute/README.md) for more info.
 - **vector**: please see [docs](contracts/vector/README.md) for more info.
 
+
+
+
 ## Requirements
 
 Please check requirements at the official [CosmWasm book](https://book.cosmwasm.com/setting-up-env.html).
@@ -89,7 +92,7 @@ add some tokens to wallet on testnet
 
 ### Onchain Deployment
 
-Now you can deploy the contracts on-chain. To do so run the following script: 
+Now you can deploy the contracts on-chain. To do so run the following script:
 
 ```shell
 CHAIN_ID=localchain_90001-1
