@@ -1,0 +1,11 @@
+{
+  "name": "tribute",
+  "symbol": "tbt",
+  "collection_info_extension": {
+    "native_token": {
+      "native": "unit"
+    },
+    "symbolic_rate": "0.08",
+    "price_oracle": $price_oracle
+  }
+}
