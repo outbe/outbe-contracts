@@ -1441,6 +1441,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "tribute-factory"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "hex",
+ "price-oracle",
+ "secp256k1",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "typenum"
 version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
