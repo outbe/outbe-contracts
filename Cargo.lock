@@ -907,6 +907,7 @@ name = "outbe-utils"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-std",
+ "thiserror 1.0.69",
 ]
 
 [[package]]

@@ -10,6 +10,7 @@ pub struct InstantiateMsg {
     pub owner: Option<Addr>,
     /// Trusted execution environment config
     pub tee_config: Option<TeeSetup>,
+    pub zk_config: Option<ZkSetup>,
 }
 
 #[cw_serde]
@@ -18,6 +19,12 @@ pub struct TeeSetup {
     pub private_key: HexBinary,
     /// Salt to be used in hashing operations
     pub salt: HexBinary,
+}
+
+#[cw_serde]
+pub struct ZkSetup {
+    /// ZK circuit used to verify proofs
+    pub circuit: HexBinary,
 }
 
 #[cw_serde]
@@ -36,15 +43,32 @@ pub enum ExecuteMsg {
         nonce: HexBinary,
         /// Ephemeral public key to decrypt the data
         ephemeral_pubkey: HexBinary,
-        // TODO: TBD zk proofs
-        // zk_proof:
+        /// Zero knowledge proof
+        zk_proof: ZkProof,
     },
 
     /// Accepts raw tribute data and mints a new Tribute
     /// TEST PURPOSE ONLY
     OfferInsecure {
         tribute_input: TributeInputPayload,
-        // TODO: TBD zk proofs
-        // zk_proof:
+        zk_proof: ZkProof,
     },
+}
+
+#[cw_serde]
+pub struct ZkProof {
+    /// Zero knowledge proof as Structured Reference String and based on PlonK algorithm
+    pub proof: HexBinary,
+    /// ZK public data
+    pub public_data: ZkProofPublicData,
+    /// ZK verification key
+    pub verification_key: HexBinary,
+}
+
+#[cw_serde]
+pub struct ZkProofPublicData {
+    /// Public key of the user that created a proof
+    pub public_key: HexBinary,
+    /// Merkle root of the L2 state
+    pub merkle_root: HexBinary,
 }

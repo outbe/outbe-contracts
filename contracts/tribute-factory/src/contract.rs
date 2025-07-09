@@ -1,5 +1,5 @@
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, TeeSetup};
+use crate::msg::{ExecuteMsg, InstantiateMsg, TeeSetup, ZkProof};
 use crate::state::{Config, CONFIG, OWNER, USED_CU_HASHES, USED_IDS};
 use crate::types::TributeInputPayload;
 use cosmwasm_std::{entry_point, Addr, DepsMut, Empty, Env, Event, MessageInfo, Response, Storage};
@@ -57,9 +57,10 @@ pub fn execute(
         ExecuteMsg::Offer { .. } => {
             unimplemented!()
         }
-        ExecuteMsg::OfferInsecure { tribute_input } => {
-            execute_offer_insecure(deps, env, info, tribute_input)
-        }
+        ExecuteMsg::OfferInsecure {
+            tribute_input,
+            zk_proof,
+        } => execute_offer_insecure(deps, env, info, tribute_input, zk_proof),
     }
 }
 
@@ -106,6 +107,7 @@ fn execute_offer_insecure(
     _env: Env,
     _info: MessageInfo,
     tribute_input: TributeInputPayload,
+    _zk_proof: ZkProof,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     let _tribute_address = config
