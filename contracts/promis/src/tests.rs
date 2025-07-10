@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod test_promis {
     use crate::contract::{execute, query, CONTRACT_NAME, CONTRACT_VERSION};
     use crate::msg::{CheckTicketResponse, ExecuteMsg, QueryMsg};
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};

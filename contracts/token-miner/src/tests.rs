@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod test_token_miner {
     use crate::contract::{execute, instantiate, query};
     use crate::msg::{
         AccessListResponse, AccessPermissionsResponse, CanMintResponse, ConfigResponse, ExecuteMsg,
@@ -226,8 +226,8 @@ mod tests {
         let permissions_response: AccessPermissionsResponse = from_json(&res).unwrap();
         assert!(permissions_response.permissions.is_some());
         let saved_permissions = permissions_response.permissions.unwrap();
-        assert_eq!(saved_permissions.can_mint_gratis, true);
-        assert_eq!(saved_permissions.can_mint_promis, false);
+        assert!(saved_permissions.can_mint_gratis);
+        assert!(!saved_permissions.can_mint_promis);
     }
 
     #[test]
@@ -367,8 +367,8 @@ mod tests {
         .unwrap();
         let permissions_response: AccessPermissionsResponse = from_json(&res).unwrap();
         let updated_permissions = permissions_response.permissions.unwrap();
-        assert_eq!(updated_permissions.can_mint_gratis, false);
-        assert_eq!(updated_permissions.can_mint_promis, true);
+        assert!(!updated_permissions.can_mint_gratis);
+        assert!(updated_permissions.can_mint_promis);
     }
 
     #[test]

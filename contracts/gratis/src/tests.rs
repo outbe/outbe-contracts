@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod test_gratis {
     use crate::contract::{execute, query, CONTRACT_NAME, CONTRACT_VERSION};
     use crate::msg::{CheckTicketResponse, ExecuteMsg, QueryMsg};
     use cosmwasm_std::from_json;
