@@ -39,6 +39,16 @@
             "type": "null"
           }
         ]
+      },
+      "zk_config": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/ZkSetup"
+          },
+          {
+            "type": "null"
+          }
+        ]
       }
     },
     "additionalProperties": false,
@@ -68,6 +78,23 @@
           },
           "salt": {
             "description": "Salt to be used in hashing operations",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZkSetup": {
+        "type": "object",
+        "required": [
+          "circuit"
+        ],
+        "properties": {
+          "circuit": {
+            "description": "ZK circuit used to verify proofs",
             "allOf": [
               {
                 "$ref": "#/definitions/HexBinary"
@@ -140,7 +167,8 @@
             "required": [
               "cipher_text",
               "ephemeral_pubkey",
-              "nonce"
+              "nonce",
+              "zk_proof"
             ],
             "properties": {
               "cipher_text": {
@@ -166,6 +194,14 @@
                     "$ref": "#/definitions/HexBinary"
                   }
                 ]
+              },
+              "zk_proof": {
+                "description": "Zero knowledge proof",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/ZkProof"
+                  }
+                ]
               }
             },
             "additionalProperties": false
@@ -183,11 +219,15 @@
           "offer_insecure": {
             "type": "object",
             "required": [
-              "tribute_input"
+              "tribute_input",
+              "zk_proof"
             ],
             "properties": {
               "tribute_input": {
                 "$ref": "#/definitions/TributeInputPayload"
+              },
+              "zk_proof": {
+                "$ref": "#/definitions/ZkProof"
               }
             },
             "additionalProperties": false
@@ -294,6 +334,67 @@
           "worldwide_day": {
             "description": "ISO 8601",
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZkProof": {
+        "type": "object",
+        "required": [
+          "proof",
+          "public_data",
+          "verification_key"
+        ],
+        "properties": {
+          "proof": {
+            "description": "Zero knowledge proof as Structured Reference String and based on PlonK algorithm",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          },
+          "public_data": {
+            "description": "ZK public data",
+            "allOf": [
+              {
+                "$ref": "#/definitions/ZkProofPublicData"
+              }
+            ]
+          },
+          "verification_key": {
+            "description": "ZK verification key",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZkProofPublicData": {
+        "type": "object",
+        "required": [
+          "merkle_root",
+          "public_key"
+        ],
+        "properties": {
+          "merkle_root": {
+            "description": "Merkle root of the L2 state",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          },
+          "public_key": {
+            "description": "Public key of the user that created a proof",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
           }
         },
         "additionalProperties": false

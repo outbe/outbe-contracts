@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Decimal;
-use cw20::Denom;
+use outbe_utils::denom::Denom;
 
 #[cw_serde]
 pub struct TokenPairPrice {

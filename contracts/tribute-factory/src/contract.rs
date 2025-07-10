@@ -1,9 +1,17 @@
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, TeeSetup, ZkProof};
-use crate::state::{Config, CONFIG, OWNER, USED_CU_HASHES, USED_IDS};
+use crate::msg::{
+    ExecuteMsg, InstantiateMsg, TeeSetup, TributeMintData, TributeMintExtension, TributeMsg,
+    ZkProof,
+};
+use crate::state::{Config, CONFIG, OWNER, UNUSED_TOKEN_ID, USED_CU_HASHES, USED_IDS};
 use crate::types::TributeInputPayload;
-use cosmwasm_std::{entry_point, Addr, DepsMut, Empty, Env, Event, MessageInfo, Response, Storage};
+use cosmwasm_std::{
+    entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, MessageInfo, Response,
+    Storage, WasmMsg,
+};
 use cw_ownable::Action;
+use outbe_utils::amount_utils::normalize_amount;
+use outbe_utils::denom::Denom;
 
 const CONTRACT_NAME: &str = "outbe.net:tribute-factory";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -24,6 +32,8 @@ pub fn instantiate(
             tee_config: None, // todo impl, in scope of tee
         },
     )?;
+
+    UNUSED_TOKEN_ID.save(deps.storage, &0)?;
 
     // ---- set owner ----
     let owner = msg.owner.unwrap_or(info.sender);
@@ -105,21 +115,53 @@ fn execute_update_config(
 fn execute_offer_insecure(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     tribute_input: TributeInputPayload,
     _zk_proof: ZkProof,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    let _tribute_address = config
+    let tribute_address = config
         .tribute_address
         .ok_or(ContractError::NotInitialized {})?;
 
     let tribute = tee_obfuscate(tribute_input)?;
-    update_used_state(deps.storage, tribute)?;
+    update_used_state(deps.storage, &tribute)?;
 
-    // todo issue tribute
+    let tribute_id =
+        UNUSED_TOKEN_ID.update(deps.storage, |old| Ok::<u64, ContractError>(old + 1))?;
+
+    let tribute_owner = info.sender;
+
+    let settlement_amount = normalize_amount(
+        tribute.settlement_base_amount,
+        tribute.settlement_atto_amount,
+    )?;
+    let settlement_qty = normalize_amount(tribute.nominal_base_qty, tribute.nominal_atto_qty)?;
+    let tribute_price = settlement_amount / settlement_qty;
+
+    let msg = WasmMsg::Execute {
+        contract_addr: tribute_address.to_string(),
+        msg: to_json_binary(&TributeMsg::Mint {
+            token_id: tribute_id.to_string(),
+            owner: tribute_owner.to_string(),
+            token_uri: None,
+            extension: Box::new(TributeMintExtension {
+                data: TributeMintData {
+                    tribute_id: tribute_id.to_string(),
+                    worldwide_day: tribute.worldwide_day,
+                    owner: tribute_owner.to_string(),
+                    settlement_amount_minor: settlement_amount,
+                    settlement_currency: Denom::Native(tribute.settlement_currency), // TODO use native
+                    nominal_qty_minor: settlement_qty,
+                    tribute_price_minor: Decimal::new(tribute_price),
+                },
+            }),
+        })?,
+        funds: vec![],
+    };
 
     Ok(Response::new()
+        .add_message(msg)
         .add_attribute("action", "tribute-factory::offer_insecure")
         .add_event(Event::new("tribute-factory::offer_insecure")))
 }
@@ -132,7 +174,7 @@ fn tee_obfuscate(tribute_input: TributeInputPayload) -> Result<TributeInputPaylo
 
 fn update_used_state(
     storage: &mut dyn Storage,
-    tribute: TributeInputPayload,
+    tribute: &TributeInputPayload,
 ) -> Result<Empty, ContractError> {
     let tribute_draft_id = tribute.tribute_draft_id.to_hex();
 
@@ -141,7 +183,7 @@ fn update_used_state(
         None => Ok(Empty::default()),
     })?;
 
-    for cu_hash in tribute.cu_hashes {
+    for cu_hash in tribute.cu_hashes.clone() {
         let cu_hash_hex = cu_hash.to_hex();
         USED_CU_HASHES.update(storage, cu_hash_hex, |old| match old {
             Some(_) => Err(ContractError::CUAlreadyExists {}),

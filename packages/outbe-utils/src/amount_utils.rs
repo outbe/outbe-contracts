@@ -3,7 +3,7 @@ use thiserror::Error;
 
 pub const FRACTIONAL: Uint128 = Uint128::new(1000000000000000000u128); // 1*10**18
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum AmountError {
     #[error("Wrong Atto amount")]
     WrongAtto {},
