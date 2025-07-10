@@ -1406,7 +1406,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "token-minter"
+name = "token-miner"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",

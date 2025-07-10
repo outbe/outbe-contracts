@@ -75,7 +75,7 @@ mod tests {
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Mint Gratis tokens
-        let mint_msg = ExecuteMsg::Mint {
+        let mint_msg = ExecuteMsg::Mine {
             recipient: USER1.to_string(),
             amount: Uint128::from(1000u128),
             token_type: TokenType::Gratis,
@@ -118,7 +118,7 @@ mod tests {
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Mint Promis tokens
-        let mint_msg = ExecuteMsg::Mint {
+        let mint_msg = ExecuteMsg::Mine {
             recipient: USER1.to_string(),
             amount: Uint128::from(500u128),
             token_type: TokenType::Promis,
@@ -154,7 +154,7 @@ mod tests {
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Try to mint with unauthorized user
-        let mint_msg = ExecuteMsg::Mint {
+        let mint_msg = ExecuteMsg::Mine {
             recipient: USER1.to_string(),
             amount: Uint128::from(1000u128),
             token_type: TokenType::Gratis,
@@ -176,7 +176,7 @@ mod tests {
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Try to mint zero amount
-        let mint_msg = ExecuteMsg::Mint {
+        let mint_msg = ExecuteMsg::Mine {
             recipient: USER1.to_string(),
             amount: Uint128::zero(),
             token_type: TokenType::Gratis,
@@ -552,7 +552,7 @@ mod tests {
         execute(deps.as_mut(), mock_env(), info, add_msg).unwrap();
 
         // User should be able to mint Gratis
-        let mint_msg = ExecuteMsg::Mint {
+        let mint_msg = ExecuteMsg::Mine {
             recipient: USER2.to_string(),
             amount: Uint128::from(1000u128),
             token_type: TokenType::Gratis,
@@ -562,7 +562,7 @@ mod tests {
         assert_eq!(res.messages.len(), 1);
 
         // User should NOT be able to mint Promis
-        let mint_msg = ExecuteMsg::Mint {
+        let mint_msg = ExecuteMsg::Mine {
             recipient: USER2.to_string(),
             amount: Uint128::from(1000u128),
             token_type: TokenType::Promis,

@@ -204,9 +204,6 @@ impl From<Cw20ContractError> for ContractError {
             Cw20ContractError::Std(std_err) => ContractError::Std(std_err),
             Cw20ContractError::Unauthorized {} => ContractError::Unauthorized {},
             Cw20ContractError::CannotSetOwnAccount {} => ContractError::CannotSetOwnAccount {},
-            Cw20ContractError::InvalidZeroAmount {} => {
-                ContractError::Std(cosmwasm_std::StdError::generic_err("Invalid zero amount"))
-            }
             Cw20ContractError::Expired {} => ContractError::Expired {},
             Cw20ContractError::NoAllowance {} => ContractError::NoAllowance {},
             Cw20ContractError::CannotExceedCap {} => ContractError::CannotExceedCap {},
@@ -217,6 +214,7 @@ impl From<Cw20ContractError> for ContractError {
                 ContractError::DuplicateInitialBalanceAddresses {}
             }
             Cw20ContractError::InvalidExpiration {} => ContractError::Expired {},
+            _ => ContractError::Std(cosmwasm_std::StdError::generic_err("Unhandled cw20 error")),
         }
     }
 }

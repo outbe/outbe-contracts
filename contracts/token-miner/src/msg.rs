@@ -17,7 +17,7 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     /// Mint tokens to a recipient address
     /// Only addresses in the access list with appropriate permissions can call this
-    Mint {
+    Mine {
         /// Address to receive the minted tokens
         recipient: String,
         /// Amount of tokens to mint

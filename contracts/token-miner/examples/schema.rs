@@ -2,8 +2,8 @@ use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
 use std::env::current_dir;
 use std::fs::create_dir_all;
 
-use token_minter::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use token_minter::state::{AccessPermissions, Config, TokenType};
+use token_miner::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use token_miner::state::{AccessPermissions, Config, TokenType};
 
 fn main() {
     let mut out_dir = current_dir().unwrap();

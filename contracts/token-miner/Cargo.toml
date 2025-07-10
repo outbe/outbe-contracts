@@ -1,5 +1,5 @@
 [package]
-name = "token-minter"
+name = "token-miner"
 version = { workspace = true }
 edition = { workspace = true }
 

@@ -67,7 +67,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Mint {
+        ExecuteMsg::Mine {
             recipient,
             amount,
             token_type,
