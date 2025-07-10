@@ -751,10 +751,10 @@ version = "0.1.0"
 dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
- "cw20",
  "metadosis",
  "nod",
  "outbe-nft",
+ "outbe-utils",
  "price-oracle",
  "token-allocator",
  "tribute",
@@ -846,8 +846,8 @@ dependencies = [
  "cw-ownable",
  "cw-storage-plus",
  "cw2",
- "cw20",
  "outbe-nft",
+ "outbe-utils",
  "serde",
  "thiserror 1.0.69",
 ]
@@ -906,7 +906,9 @@ dependencies = [
 name = "outbe-utils"
 version = "0.1.0"
 dependencies = [
+ "cosmwasm-schema",
  "cosmwasm-std",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -945,7 +947,7 @@ dependencies = [
  "cw-ownable",
  "cw-storage-plus",
  "cw2",
- "cw20",
+ "outbe-utils",
  "thiserror 1.0.69",
 ]
 
@@ -1350,14 +1352,30 @@ dependencies = [
  "cw-ownable",
  "cw-storage-plus",
  "cw2",
- "cw20",
- "hex",
  "outbe-nft",
+ "outbe-utils",
  "price-oracle",
  "secp256k1",
  "serde",
  "sha2",
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "tribute-factory"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "outbe-utils",
+ "secp256k1",
+ "serde",
+ "thiserror 1.0.69",
+ "tribute",
 ]
 
 [[package]]

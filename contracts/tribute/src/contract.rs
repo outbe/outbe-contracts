@@ -1,18 +1,14 @@
 use crate::error::ContractError;
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, MigrateMsg, MintExtension, TributeCollectionExtension,
-    TributeMintData,
 };
 use crate::types::{TributeConfig, TributeData, TributeNft};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    to_json_binary, Api, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Response, Timestamp,
-    Uint128,
-};
+use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128};
+use outbe_nft::execute::assert_minter;
 use outbe_nft::msg::CollectionInfoMsg;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
-use sha2::{Digest, Sha256};
 
 const CONTRACT_NAME: &str = "outbe.net:tribute";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -141,14 +137,13 @@ pub fn update_collection_info(
 fn execute_mint(
     deps: DepsMut,
     env: &Env,
-    _info: &MessageInfo,
+    info: &MessageInfo,
     token_id: String,
     owner: String,
     token_uri: Option<String>,
     extension: MintExtension,
 ) -> Result<Response, ContractError> {
-    // TODO temporary disable for demo purpose
-    // assert_minter(deps.storage, &info.sender)?;
+    assert_minter(deps.storage, &info.sender)?;
     // validate owner
     let owner_addr = deps.api.addr_validate(&owner)?;
 
@@ -160,18 +155,6 @@ fn execute_mint(
     if entity.settlement_amount_minor == Uint128::zero() {
         return Err(ContractError::WrongInput {});
     }
-
-    // if entity.hashes.is_empty() == Uint128::zero() {
-    //     return Err(ContractError::WrongInput {});
-    // }
-
-    // TODO verify signature temporary disabled
-    // verify_signature(
-    //     deps.api,
-    //     entity.clone(),
-    //     extension.signature,
-    //     extension.public_key,
-    // )?;
 
     let config = Cw721Config::<TributeData, TributeConfig>::default();
     let col_config = config.collection_config.load(deps.storage)?;
@@ -194,8 +177,7 @@ fn execute_mint(
         nominal_qty_minor: nominal_qty,
         symbolic_divisor,
         symbolic_load: load,
-        worldwide_day: Timestamp::from_seconds(entity.worldwide_day),
-        // hashes: entity.hashes.clone(),
+        worldwide_day: entity.worldwide_day,
         created_at: env.block.time,
     };
 
@@ -246,25 +228,6 @@ fn calc_sybolics(
         load.to_uint_floor(),
         symbolic_divisor,
     )
-}
-
-#[allow(dead_code)]
-fn verify_signature(
-    api: &dyn Api,
-    entity: TributeMintData,
-    signature: HexBinary,
-    public_key: HexBinary,
-) -> Result<(), ContractError> {
-    let serialized_entity = to_json_binary(&entity)?;
-    let data_hash = Sha256::digest(serialized_entity.clone());
-
-    let signature_ok =
-        api.secp256k1_verify(&data_hash, signature.as_slice(), public_key.as_slice())?;
-    if signature_ok {
-        Ok(())
-    } else {
-        Err(ContractError::WrongDigest {})
-    }
 }
 
 fn execute_burn(
@@ -320,13 +283,8 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
 
 #[cfg(test)]
 mod tests {
-    use crate::contract::{calc_sybolics, verify_signature};
-    use crate::msg::TributeMintData;
-    use cosmwasm_schema::schemars::_serde_json::from_str;
-    use cosmwasm_std::testing::mock_dependencies;
-    use cosmwasm_std::{to_json_binary, Decimal, HexBinary, Uint128};
-    use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
-    use sha2::{Digest, Sha256};
+    use crate::contract::calc_sybolics;
+    use cosmwasm_std::{Decimal, Uint128};
     use std::str::FromStr;
 
     #[test]
@@ -338,63 +296,5 @@ mod tests {
         );
         assert_eq!(nominal, Uint128::new(7500u128));
         assert_eq!(load, Uint128::new(555u128));
-    }
-
-    #[ignore] // ignored such as signature verification is temporarily disabled
-    #[test]
-    fn test_signature_creation() {
-        let deps = mock_dependencies();
-        let secp = Secp256k1::new();
-
-        // prepare test keys
-        let private_key =
-            SecretKey::from_str("4236627b5a03b3f2e601141a883ccdb23aeef15c910a0789e4343aad394cbf6d")
-                .unwrap();
-        let public_key = PublicKey::from_secret_key(&secp, &private_key);
-
-        // prepare raw json data
-        let raw_json = r#"{
-            "token_id": "1",
-            "owner": "cosmwasm1j2mmggve9m6fpuahtzvwcrj3rud9cqjz9qva39cekgpk9vprae8s4haddx",
-            "settlement_value": "100000000",
-            "settlement_token": { "cw20": "usdc" },
-            "tribute_date": null,
-            "hashes": [
-              "872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d"
-            ]
-        }"#;
-        let entity: TributeMintData = from_str(raw_json).unwrap();
-
-        // sign the data
-        let message_binary = to_json_binary(&entity).unwrap();
-        println!("message_binary {:?}", hex::encode(message_binary.clone()));
-        let message_hash = Sha256::digest(message_binary);
-
-        println!("message_hash {:?}", hex::encode(message_hash));
-
-        // Sign the hashed message
-        let msg = Message::from_digest_slice(&message_hash).unwrap();
-        // Sign message (produces low-S normalized signature)
-        let sig = secp.sign_ecdsa(&msg, &private_key);
-
-        // verify the signature using standard lib
-        secp.verify_ecdsa(&msg, &sig, &public_key)
-            .map(|_| println!("Signature is valid."))
-            .unwrap();
-
-        // Verify signature on the smart contract side
-        // Serialize signature in compact 64-byte form
-        let signature_hex = HexBinary::from(sig.serialize_compact());
-        println!("Compact Signature (64 bytes): {}", signature_hex);
-
-        // Serialize public key compressed (33 bytes)
-        let public_key_hex = HexBinary::from(public_key.serialize());
-
-        println!("Public key (compressed, 33 bytes): {}", public_key_hex);
-
-        assert_eq!(
-            verify_signature(&deps.api, entity, signature_hex, public_key_hex),
-            Ok(())
-        );
     }
 }

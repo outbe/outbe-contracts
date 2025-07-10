@@ -1,5 +1,5 @@
 [package]
-name = "tribute"
+name = "tribute-factory"
 version = { workspace = true }
 edition = { workspace = true }
 
@@ -16,13 +16,10 @@ cosmwasm-schema = { workspace = true }
 cw-storage-plus = { workspace = true }
 serde = { workspace = true }
 cw2 = { workspace = true }
-outbe-nft = { workspace = true }
 thiserror = { workspace = true }
 cw-ownable = { workspace = true }
-sha2 = { workspace = true }
 outbe-utils = { workspace = true }
-
-price-oracle = { workspace = true }
+tribute = { version = "*", path = "../tribute", features = ["library"] }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

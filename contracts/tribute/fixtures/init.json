@@ -7,5 +7,6 @@
     },
     "symbolic_rate": "0.08",
     "price_oracle": $price_oracle
-  }
+  },
+  "minter": $minter
 }

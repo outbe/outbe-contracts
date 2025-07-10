@@ -1,0 +1,5 @@
+{
+  "update_config": {
+    "new_tribute_address": $tribute_address
+  }
+}
