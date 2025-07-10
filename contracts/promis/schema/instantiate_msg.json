@@ -3,9 +3,13 @@
   "title": "InstantiateMsg",
   "type": "object",
   "required": [
+    "admin",
     "gratis_contract"
   ],
   "properties": {
+    "admin": {
+      "type": "string"
+    },
     "gratis_contract": {
       "type": "string"
     },
