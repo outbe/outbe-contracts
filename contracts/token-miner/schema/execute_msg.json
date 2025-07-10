@@ -7,10 +7,10 @@
       "description": "Mint tokens to a recipient address Only addresses in the access list with appropriate permissions can call this",
       "type": "object",
       "required": [
-        "mint"
+        "mine"
       ],
       "properties": {
-        "mint": {
+        "mine": {
           "type": "object",
           "required": [
             "amount",
@@ -209,7 +209,8 @@
             "null"
           ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "TokenType": {
       "description": "Token types that can be minted",
