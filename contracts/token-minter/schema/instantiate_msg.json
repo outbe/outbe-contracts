@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InstantiateMsg",
+  "description": "Message to instantiate the contract",
+  "type": "object",
+  "required": [
+    "gratis_contract",
+    "promis_contract"
+  ],
+  "properties": {
+    "gratis_contract": {
+      "description": "Address of the Gratis token contract",
+      "type": "string"
+    },
+    "promis_contract": {
+      "description": "Address of the Promis token contract",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

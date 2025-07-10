@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AccessPermissions",
+  "description": "Access permissions for an address",
+  "type": "object",
+  "required": [
+    "can_mint_gratis",
+    "can_mint_promis"
+  ],
+  "properties": {
+    "can_mint_gratis": {
+      "description": "Whether this address can mint Gratis tokens",
+      "type": "boolean"
+    },
+    "can_mint_promis": {
+      "description": "Whether this address can mint Promis tokens",
+      "type": "boolean"
+    },
+    "note": {
+      "description": "Optional note about this address (for admin reference)",
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}
