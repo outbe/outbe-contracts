@@ -133,8 +133,10 @@ fn query_daily_tributes(deps: Deps, _env: &Env, date: u64) -> StdResult<DailyTri
             .range(deps.storage, None, None, Order::Ascending)
             .filter_map(|item| match item {
                 Ok((id, tribute))
-                    if tribute.extension.worldwide_day >= start_date
-                        && tribute.extension.worldwide_day < end_date =>
+                // TODO convert date to timestamp??
+                //     if tribute.extension.worldwide_day >= start_date
+                //         && tribute.extension.worldwide_day < end_date =>
+                    if start_date <= end_date =>
                 {
                     Some(Ok(FullTributeData {
                         token_id: id,
@@ -167,9 +169,9 @@ mod tests {
     use crate::msg::{InstantiateMsg, TributeCollectionExtension};
     use crate::query::{query, QueryMsg};
     use cosmwasm_std::{Addr, Decimal};
-    use cw20::Denom;
     use cw_multi_test::{App, ContractWrapper, Executor};
     use cw_ownable::Ownership;
+    use outbe_utils::denom::Denom;
     use std::str::FromStr;
 
     #[test]

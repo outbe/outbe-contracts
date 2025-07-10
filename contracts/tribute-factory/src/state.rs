@@ -19,6 +19,7 @@ pub struct TeeConfig {
 }
 
 pub const CONFIG: Item<Config> = Item::new("config");
+pub const UNUSED_TOKEN_ID: Item<u64> = Item::new("unused_token_id");
 pub const USED_IDS: Map<String, Empty> = Map::new("used_ids");
 
 pub const USED_CU_HASHES: Map<String, Empty> = Map::new("used_cu_hashes");

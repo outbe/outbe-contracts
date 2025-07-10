@@ -1,7 +1,6 @@
 pub mod contract;
-pub mod msg;
-pub mod types;
-
 pub mod error;
+pub mod msg;
 pub mod query;
 mod state;
+pub mod types;

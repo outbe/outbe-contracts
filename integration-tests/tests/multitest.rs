@@ -1,7 +1,7 @@
 use crate::setup::{setup_test_env, DeployedContract, NATIVE_DENOM};
-use cosmwasm_std::{Addr, Decimal, HexBinary, Uint128};
-use cw20::Denom;
+use cosmwasm_std::{Addr, Decimal, Uint128};
 use cw_multi_test::{App, ContractWrapper, Executor};
+use outbe_utils::denom::Denom;
 use std::str::FromStr;
 use tribute::msg::ExecuteMsg::Mint;
 use tribute::msg::{MintExtension, TributeCollectionExtension, TributeMintData};
@@ -31,12 +31,11 @@ fn test_tribute() {
                     tribute_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
                     settlement_currency: Denom::Cw20(Addr::unchecked("usdc")),
+                    nominal_qty_minor: Uint128::from(100000000u32),
                     settlement_amount_minor: Uint128::from(100000000u32),
-                    // hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
-                    worldwide_day: app.block_info().time.seconds(),
+                    worldwide_day: "2025-07-01".to_string(),
+                    tribute_price_minor: Decimal::one(),
                 },
-                signature: HexBinary::from_hex("3e0ecd67d3f2bd932abb5f7df70f6c5cc5923ba90e5b2992b0f9540970f4ffe7481d41858cef4f124036de071756d91c2369c40e5d6c1ce00812bfd08d102f42").unwrap(),
-                public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
             }),
         },
         &[],
@@ -124,16 +123,15 @@ fn test_metadosis() {
                     owner: config.user_addr.to_string(),
                     settlement_currency: Denom::Cw20(Addr::unchecked("usdc")),
                     settlement_amount_minor: Uint128::from(5u32),
-                    worldwide_day: app.block_info().time.seconds(),
-                    // hashes: vec![HexBinary::from_hex("872be89dd82bcc6cf949d718f9274a624c927cfc91905f2bbb72fa44c9ea876d").unwrap()],
+                    nominal_qty_minor: Uint128::from(10u32),
+                    worldwide_day: "2025-07-01".to_string(),
+                    tribute_price_minor: Decimal::from_str("0.5").unwrap(),
                 },
-                signature: HexBinary::from_hex("504339506d74751f7660b5f57709d68929a5d394d33a9769dd65077aaf7070e67231067426f3647b5b67f35a8df05237ff7f4f37523bd5ca3289412d80b8af2c").unwrap(),
-                public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
             }),
         },
         &[],
     )
-        .unwrap();
+    .unwrap();
 
     app.execute_contract(
         config.owner_addr.clone(),
@@ -148,16 +146,15 @@ fn test_metadosis() {
                     settlement_currency: Denom::Cw20(Addr::unchecked("usdc")),
                     owner: config.user_addr.to_string(),
                     settlement_amount_minor: Uint128::from(15u32),
-                    worldwide_day: app.block_info().time.seconds(),
-                    // hashes: vec![HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap()],
+                    nominal_qty_minor: Uint128::from(5u32),
+                    worldwide_day: "2025-07-01".to_string(),
+                    tribute_price_minor: Decimal::from_str("3").unwrap(),
                 },
-                signature: HexBinary::from_hex("b5188dd0dd759db3b3592708fb57665267d1268557a463b30d00f070239f69db290df316baaf6ff46c0afd9ab9f425b1f0ac05ab6fb333c78b2770748eed7b85").unwrap(),
-                public_key: HexBinary::from_hex("02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d").unwrap(),
             }),
         },
         &[],
     )
-        .unwrap();
+    .unwrap();
 
     let response: outbe_nft::msg::TokensResponse = app
         .wrap()
@@ -283,7 +280,7 @@ fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedCon
         symbol: "cu".to_string(),
         collection_info_extension: TributeCollectionExtension {
             symbolic_rate: Decimal::from_str("0.08").unwrap(),
-            native_token: cw20::Denom::Native(NATIVE_DENOM.to_string()),
+            native_token: Denom::Native(NATIVE_DENOM.to_string()),
             price_oracle,
         },
         minter: None,

@@ -1,8 +1,8 @@
 use crate::types::State;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Timestamp, Uint128};
-use cw20::Denom;
 use outbe_nft::msg::Cw721InstantiateMsg;
+use outbe_utils::denom::Denom;
 
 /// Custom collection extension for instantiate
 #[cw_serde]

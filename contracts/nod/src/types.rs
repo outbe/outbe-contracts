@@ -1,8 +1,8 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Timestamp, Uint128};
-use cw20::Denom;
 use outbe_nft::state::NftInfo;
 use outbe_nft::traits::{Cw721CollectionConfig, Cw721CustomMsg, Cw721State};
+use outbe_utils::denom::Denom;
 
 /// Configuration for the Nod NFT collection (empty)
 #[cw_serde]

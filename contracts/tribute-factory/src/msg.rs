@@ -2,6 +2,10 @@ use crate::types::TributeInputPayload;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, HexBinary};
 
+pub type TributeMsg = tribute::msg::ExecuteMsg;
+pub type TributeMintExtension = tribute::msg::MintExtension;
+pub type TributeMintData = tribute::msg::TributeMintData;
+
 #[cw_serde]
 pub struct InstantiateMsg {
     /// Tribute smart contract address

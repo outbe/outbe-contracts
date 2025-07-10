@@ -1,9 +1,9 @@
 use crate::types::DayType;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Timestamp};
-use cw20::Denom;
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::Item;
+use outbe_utils::denom::Denom;
 use std::fmt;
 
 pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
