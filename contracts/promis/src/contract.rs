@@ -4,12 +4,8 @@ use cosmwasm_std::{
     OverflowOperation, Response, StdResult, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
-use cw20_base::contract::{
-    execute as cw20_execute, instantiate as cw20_instantiate,
-};
-use cw20_base::msg::{
-    ExecuteMsg as Cw20ExecuteMsg, InstantiateMsg as Cw20InstantiateMsg,
-};
+use cw20_base::contract::{execute as cw20_execute, instantiate as cw20_instantiate};
+use cw20_base::msg::{ExecuteMsg as Cw20ExecuteMsg, InstantiateMsg as Cw20InstantiateMsg};
 use cw20_base::state::{BALANCES, TOKEN_INFO};
 use cw20_base::ContractError as Cw20ContractError;
 
@@ -224,4 +220,3 @@ impl From<Cw20ContractError> for ContractError {
         }
     }
 }
-

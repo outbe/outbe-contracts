@@ -1,5 +1,5 @@
 use cosmwasm_std::Addr;
-use cw_storage_plus::{Map, Item};
+use cw_storage_plus::{Item, Map};
 
 // Map of ticket_hash -> exists
 pub const TICKETS: Map<String, bool> = Map::new("tickets");

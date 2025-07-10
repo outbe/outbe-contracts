@@ -7,7 +7,7 @@ mod tests {
     };
     use crate::state::{AccessPermissions, TokenType};
     use crate::ContractError;
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, message_info};
+    use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
     use cosmwasm_std::{from_json, Addr, Uint128, WasmMsg};
     use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
 

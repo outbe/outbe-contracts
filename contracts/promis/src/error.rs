@@ -12,7 +12,6 @@ pub enum ContractError {
     #[error("Cannot set to own account")]
     CannotSetOwnAccount {},
 
-
     #[error("Allowance is expired")]
     Expired {},
 
@@ -33,7 +32,7 @@ pub enum ContractError {
 
     #[error("DuplicateInitialBalanceAddresses")]
     DuplicateInitialBalanceAddresses {},
-    
+
     #[error("User already burned tokens in this block")]
     AlreadyBurnedInBlock {},
 }

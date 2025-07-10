@@ -3,7 +3,9 @@ mod tests {
     use crate::contract::{execute, query, CONTRACT_NAME, CONTRACT_VERSION};
     use crate::msg::{CheckTicketResponse, ExecuteMsg, QueryMsg};
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
-    use cosmwasm_std::{from_json, to_json_binary, Addr, DepsMut, Response, SubMsg, Uint128, WasmMsg};
+    use cosmwasm_std::{
+        from_json, to_json_binary, Addr, DepsMut, Response, SubMsg, Uint128, WasmMsg,
+    };
     use cw2::set_contract_version;
     use cw20::TokenInfoResponse;
     use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;

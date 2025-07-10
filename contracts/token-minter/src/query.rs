@@ -58,9 +58,9 @@ fn query_access_list(
 
     let mut addresses = Vec::new();
     let mut iter = ACCESS_LIST.range(deps.storage, None, None, Order::Ascending);
-    
+
     let has_start_after = start_after.is_some();
-    
+
     // Skip to start_after if provided
     if let Some(start_addr) = start_after {
         let start_validated = if cfg!(test) {
@@ -76,7 +76,7 @@ fn query_access_list(
             }
         }
     }
-    
+
     // Collect remaining items up to limit
     for item in iter.take(if has_start_after { limit - 1 } else { limit }) {
         let (addr, permissions) = item?;
@@ -87,7 +87,11 @@ fn query_access_list(
 }
 
 /// Query if an address can mint a specific token type
-fn query_can_mint(deps: Deps, address: String, token_type: TokenType) -> StdResult<CanMintResponse> {
+fn query_can_mint(
+    deps: Deps,
+    address: String,
+    token_type: TokenType,
+) -> StdResult<CanMintResponse> {
     let addr = if cfg!(test) {
         Addr::unchecked(&address)
     } else {
