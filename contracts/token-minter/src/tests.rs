@@ -1,13 +1,13 @@
 #[cfg(test)]
 mod tests {
     use crate::contract::{execute, instantiate, query};
-    use crate::ContractError;
     use crate::msg::{
-        AccessListResponse, AccessPermissionsResponse, CanMintResponse, ConfigResponse,
-        ExecuteMsg, InstantiateMsg, QueryMsg,
+        AccessListResponse, AccessPermissionsResponse, CanMintResponse, ConfigResponse, ExecuteMsg,
+        InstantiateMsg, QueryMsg,
     };
     use crate::state::{AccessPermissions, TokenType};
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use crate::ContractError;
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, message_info};
     use cosmwasm_std::{from_json, Addr, Uint128, WasmMsg};
     use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
 
@@ -28,7 +28,7 @@ mod tests {
     fn test_instantiate() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
 
         // Instantiate the contract
         let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -71,7 +71,7 @@ mod tests {
     fn test_mint_gratis_success() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Mint Gratis tokens
@@ -80,12 +80,12 @@ mod tests {
             amount: Uint128::from(1000u128),
             token_type: TokenType::Gratis,
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         let res = execute(deps.as_mut(), mock_env(), info, mint_msg).unwrap();
 
         // Check that a WASM message was created
         assert_eq!(res.messages.len(), 1);
-        
+
         if let cosmwasm_std::CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr,
             msg,
@@ -114,7 +114,7 @@ mod tests {
     fn test_mint_promis_success() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Mint Promis tokens
@@ -123,12 +123,12 @@ mod tests {
             amount: Uint128::from(500u128),
             token_type: TokenType::Promis,
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         let res = execute(deps.as_mut(), mock_env(), info, mint_msg).unwrap();
 
         // Check that a WASM message was created
         assert_eq!(res.messages.len(), 1);
-        
+
         if let cosmwasm_std::CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr,
             msg,
@@ -150,7 +150,7 @@ mod tests {
     fn test_mint_unauthorized() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Try to mint with unauthorized user
@@ -159,9 +159,9 @@ mod tests {
             amount: Uint128::from(1000u128),
             token_type: TokenType::Gratis,
         };
-        let info = mock_info(USER1, &[]);
+        let info = message_info(&Addr::unchecked(USER1), &[]);
         let err = execute(deps.as_mut(), mock_env(), info, mint_msg).unwrap_err();
-        
+
         match err {
             ContractError::AddressNotInAccessList {} => {}
             _ => panic!("Expected AddressNotInAccessList error"),
@@ -172,7 +172,7 @@ mod tests {
     fn test_mint_zero_amount() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Try to mint zero amount
@@ -181,9 +181,9 @@ mod tests {
             amount: Uint128::zero(),
             token_type: TokenType::Gratis,
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         let err = execute(deps.as_mut(), mock_env(), info, mint_msg).unwrap_err();
-        
+
         match err {
             ContractError::InvalidAmount {} => {}
             _ => panic!("Expected InvalidAmount error"),
@@ -194,7 +194,7 @@ mod tests {
     fn test_add_to_access_list() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Add user to access list
@@ -207,7 +207,7 @@ mod tests {
             address: USER1.to_string(),
             permissions: permissions.clone(),
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         let res = execute(deps.as_mut(), mock_env(), info, add_msg).unwrap();
 
         // Check response
@@ -234,7 +234,7 @@ mod tests {
     fn test_add_to_access_list_unauthorized() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Try to add user with non-admin account
@@ -247,9 +247,9 @@ mod tests {
             address: USER2.to_string(),
             permissions,
         };
-        let info = mock_info(USER1, &[]);
+        let info = message_info(&Addr::unchecked(USER1), &[]);
         let err = execute(deps.as_mut(), mock_env(), info, add_msg).unwrap_err();
-        
+
         match err {
             ContractError::Unauthorized {} => {}
             _ => panic!("Expected Unauthorized error"),
@@ -260,7 +260,7 @@ mod tests {
     fn test_remove_from_access_list() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Add user first
@@ -273,14 +273,14 @@ mod tests {
             address: USER1.to_string(),
             permissions,
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         execute(deps.as_mut(), mock_env(), info, add_msg).unwrap();
 
         // Remove user from access list
         let remove_msg = ExecuteMsg::RemoveFromAccessList {
             address: USER1.to_string(),
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         let res = execute(deps.as_mut(), mock_env(), info, remove_msg).unwrap();
 
         // Check response
@@ -304,16 +304,16 @@ mod tests {
     fn test_cannot_remove_admin() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Try to remove admin from access list
         let remove_msg = ExecuteMsg::RemoveFromAccessList {
             address: ADMIN.to_string(),
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         let err = execute(deps.as_mut(), mock_env(), info, remove_msg).unwrap_err();
-        
+
         match err {
             ContractError::CannotRemoveAdmin {} => {}
             _ => panic!("Expected CannotRemoveAdmin error"),
@@ -324,7 +324,7 @@ mod tests {
     fn test_update_permissions() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Add user first
@@ -337,7 +337,7 @@ mod tests {
             address: USER1.to_string(),
             permissions,
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         execute(deps.as_mut(), mock_env(), info, add_msg).unwrap();
 
         // Update permissions
@@ -350,7 +350,7 @@ mod tests {
             address: USER1.to_string(),
             permissions: new_permissions.clone(),
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         let res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
 
         // Check response
@@ -375,14 +375,14 @@ mod tests {
     fn test_transfer_admin() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Transfer admin to new user
         let transfer_msg = ExecuteMsg::TransferAdmin {
             new_admin: USER1.to_string(),
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         let res = execute(deps.as_mut(), mock_env(), info, transfer_msg).unwrap();
 
         // Check response
@@ -414,7 +414,7 @@ mod tests {
     fn test_query_can_mint() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Add user with limited permissions
@@ -427,7 +427,7 @@ mod tests {
             address: USER1.to_string(),
             permissions,
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         execute(deps.as_mut(), mock_env(), info, add_msg).unwrap();
 
         // Check if user can mint Gratis
@@ -477,7 +477,7 @@ mod tests {
     fn test_query_access_list() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Add users to access list
@@ -490,7 +490,7 @@ mod tests {
             address: USER1.to_string(),
             permissions: permissions1,
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         execute(deps.as_mut(), mock_env(), info, add_msg1).unwrap();
 
         let permissions2 = AccessPermissions {
@@ -502,7 +502,7 @@ mod tests {
             address: USER2.to_string(),
             permissions: permissions2,
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         execute(deps.as_mut(), mock_env(), info, add_msg2).unwrap();
 
         // Query access list
@@ -516,10 +516,10 @@ mod tests {
         )
         .unwrap();
         let access_list_response: AccessListResponse = from_json(&res).unwrap();
-        
+
         // Should include admin, user1, and user2
         assert_eq!(access_list_response.addresses.len(), 3);
-        
+
         // Check that all addresses are present (order might vary)
         let addresses: Vec<String> = access_list_response
             .addresses
@@ -535,7 +535,7 @@ mod tests {
     fn test_mint_with_limited_permissions() {
         let mut deps = mock_dependencies();
         let msg = default_instantiate_msg();
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Add user with limited permissions (only Gratis)
@@ -548,7 +548,7 @@ mod tests {
             address: USER1.to_string(),
             permissions,
         };
-        let info = mock_info(ADMIN, &[]);
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
         execute(deps.as_mut(), mock_env(), info, add_msg).unwrap();
 
         // User should be able to mint Gratis
@@ -557,7 +557,7 @@ mod tests {
             amount: Uint128::from(1000u128),
             token_type: TokenType::Gratis,
         };
-        let info = mock_info(USER1, &[]);
+        let info = message_info(&Addr::unchecked(USER1), &[]);
         let res = execute(deps.as_mut(), mock_env(), info, mint_msg).unwrap();
         assert_eq!(res.messages.len(), 1);
 
@@ -567,9 +567,9 @@ mod tests {
             amount: Uint128::from(1000u128),
             token_type: TokenType::Promis,
         };
-        let info = mock_info(USER1, &[]);
+        let info = message_info(&Addr::unchecked(USER1), &[]);
         let err = execute(deps.as_mut(), mock_env(), info, mint_msg).unwrap_err();
-        
+
         match err {
             ContractError::NoMintPermission { token_type } => {
                 assert_eq!(token_type, "Promis");

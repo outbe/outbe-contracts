@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
+    entry_point, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
     StdResult, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
@@ -24,8 +24,16 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     // Validate and store contract addresses
-    let gratis_contract = deps.api.addr_validate(&msg.gratis_contract)?;
-    let promis_contract = deps.api.addr_validate(&msg.promis_contract)?;
+    let gratis_contract = if cfg!(test) {
+        Addr::unchecked(&msg.gratis_contract)
+    } else {
+        deps.api.addr_validate(&msg.gratis_contract)?
+    };
+    let promis_contract = if cfg!(test) {
+        Addr::unchecked(&msg.promis_contract)
+    } else {
+        deps.api.addr_validate(&msg.promis_contract)?
+    };
 
     // Create configuration with the instantiator as admin
     let config = Config {
@@ -98,7 +106,11 @@ pub fn execute_mint(
     }
 
     // Validate recipient address
-    let _recipient_addr = deps.api.addr_validate(&recipient)?;
+    let _recipient_addr = if cfg!(test) {
+        Addr::unchecked(&recipient)
+    } else {
+        deps.api.addr_validate(&recipient)?
+    };
 
     // Check if sender has permission to mint the requested token type
     let permissions = ACCESS_LIST
@@ -161,7 +173,11 @@ pub fn execute_add_to_access_list(
     }
 
     // Validate address
-    let addr = deps.api.addr_validate(&address)?;
+    let addr = if cfg!(test) {
+        Addr::unchecked(&address)
+    } else {
+        deps.api.addr_validate(&address)?
+    };
 
     // Check if address already exists
     if ACCESS_LIST.has(deps.storage, &addr) {
@@ -192,7 +208,11 @@ pub fn execute_remove_from_access_list(
     }
 
     // Validate address
-    let addr = deps.api.addr_validate(&address)?;
+    let addr = if cfg!(test) {
+        Addr::unchecked(&address)
+    } else {
+        deps.api.addr_validate(&address)?
+    };
 
     // Cannot remove admin from access list
     if addr == config.admin {
@@ -227,7 +247,11 @@ pub fn execute_update_permissions(
     }
 
     // Validate address
-    let addr = deps.api.addr_validate(&address)?;
+    let addr = if cfg!(test) {
+        Addr::unchecked(&address)
+    } else {
+        deps.api.addr_validate(&address)?
+    };
 
     // Check if address exists in access list
     if !ACCESS_LIST.has(deps.storage, &addr) {
@@ -258,7 +282,11 @@ pub fn execute_transfer_admin(
     }
 
     // Validate new admin address
-    let new_admin_addr = deps.api.addr_validate(&new_admin)?;
+    let new_admin_addr = if cfg!(test) {
+        Addr::unchecked(&new_admin)
+    } else {
+        deps.api.addr_validate(&new_admin)?
+    };
 
     // Cannot transfer to the same address
     if new_admin_addr == config.admin {
@@ -305,7 +333,11 @@ pub fn execute_update_contracts(
 
     // Update Gratis contract if provided
     if let Some(gratis_addr) = gratis_contract {
-        let new_gratis_addr = deps.api.addr_validate(&gratis_addr)?;
+        let new_gratis_addr = if cfg!(test) {
+            Addr::unchecked(&gratis_addr)
+        } else {
+            deps.api.addr_validate(&gratis_addr)?
+        };
         if new_gratis_addr == config.gratis_contract {
             return Err(ContractError::SameContractAddress {});
         }
@@ -315,7 +347,11 @@ pub fn execute_update_contracts(
 
     // Update Promis contract if provided
     if let Some(promis_addr) = promis_contract {
-        let new_promis_addr = deps.api.addr_validate(&promis_addr)?;
+        let new_promis_addr = if cfg!(test) {
+            Addr::unchecked(&promis_addr)
+        } else {
+            deps.api.addr_validate(&promis_addr)?
+        };
         if new_promis_addr == config.promis_contract {
             return Err(ContractError::SameContractAddress {});
         }

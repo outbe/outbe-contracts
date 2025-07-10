@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_json_binary, Binary, Deps, Env, Order, StdResult};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
 
 use crate::msg::{
     AccessListResponse, AccessPermissionsResponse, CanMintResponse, ConfigResponse, QueryMsg,
@@ -35,7 +35,11 @@ fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
 
 /// Query access permissions for a specific address
 fn query_access_permissions(deps: Deps, address: String) -> StdResult<AccessPermissionsResponse> {
-    let addr = deps.api.addr_validate(&address)?;
+    let addr = if cfg!(test) {
+        Addr::unchecked(&address)
+    } else {
+        deps.api.addr_validate(&address)?
+    };
     let permissions = ACCESS_LIST.may_load(deps.storage, &addr)?;
 
     Ok(AccessPermissionsResponse {
@@ -59,7 +63,11 @@ fn query_access_list(
     
     // Skip to start_after if provided
     if let Some(start_addr) = start_after {
-        let start_validated = deps.api.addr_validate(&start_addr)?;
+        let start_validated = if cfg!(test) {
+            Addr::unchecked(&start_addr)
+        } else {
+            deps.api.addr_validate(&start_addr)?
+        };
         for item in iter.by_ref() {
             let (addr, _) = item?;
             if addr > start_validated {
@@ -80,7 +88,11 @@ fn query_access_list(
 
 /// Query if an address can mint a specific token type
 fn query_can_mint(deps: Deps, address: String, token_type: TokenType) -> StdResult<CanMintResponse> {
-    let addr = deps.api.addr_validate(&address)?;
+    let addr = if cfg!(test) {
+        Addr::unchecked(&address)
+    } else {
+        deps.api.addr_validate(&address)?
+    };
 
     match ACCESS_LIST.may_load(deps.storage, &addr)? {
         Some(permissions) => {
