@@ -6,17 +6,22 @@ mod test_gratis {
     use cosmwasm_std::testing::{message_info, mock_dependencies_with_balance, mock_env};
     use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
     use cw2::set_contract_version;
+    use cw20::MinterResponse;
     use cw20::TokenInfoResponse;
     use cw20_base::state::{BALANCES, TOKEN_INFO};
 
     const CREATOR: &str = "creator";
+    const TEST_ADMIN: &str = "admin";
     const USER1: &str = "user1";
     const USER2: &str = "user2";
+    const NEW_ADMIN: &str = "new_admin";
+    const NEW_MINTER: &str = "new_minter";
 
     fn init_contract(deps: DepsMut) -> Result<Response, crate::ContractError> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
         // Manually initialize basic CW20 state to bypass address validation
+        use crate::state::ADMIN;
         use cosmwasm_std::Addr;
         use cw20_base::state::{MinterData, TokenInfo, TOKEN_INFO};
 
@@ -32,6 +37,35 @@ mod test_gratis {
         };
 
         TOKEN_INFO.save(deps.storage, &token_info)?;
+        ADMIN.save(deps.storage, &Addr::unchecked(TEST_ADMIN))?;
+
+        Ok(Response::new())
+    }
+
+    fn init_contract_with_admin(
+        deps: DepsMut,
+        admin: &str,
+    ) -> Result<Response, crate::ContractError> {
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+        // Manually initialize basic CW20 state to bypass address validation
+        use crate::state::ADMIN;
+        use cosmwasm_std::Addr;
+        use cw20_base::state::{MinterData, TokenInfo, TOKEN_INFO};
+
+        let token_info = TokenInfo {
+            name: "Gratis".to_string(),
+            symbol: "GRATIS".to_string(),
+            decimals: 6,
+            total_supply: Uint128::zero(),
+            mint: Some(MinterData {
+                minter: Addr::unchecked(CREATOR),
+                cap: None,
+            }),
+        };
+
+        TOKEN_INFO.save(deps.storage, &token_info)?;
+        ADMIN.save(deps.storage, &Addr::unchecked(admin))?;
 
         Ok(Response::new())
     }
@@ -321,5 +355,142 @@ mod test_gratis {
 
         // Tickets should be different (different block heights)
         assert_ne!(ticket1, ticket2);
+    }
+
+    #[test]
+    fn test_admin_instantiation() {
+        let mut deps = mock_dependencies_with_balance(&[]);
+        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+
+        // Check admin is set correctly
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::Admin {}).unwrap();
+        let admin_addr: String = from_json(&res).unwrap();
+        assert_eq!(admin_addr, TEST_ADMIN);
+    }
+
+    #[test]
+    fn test_admin_update_minter() {
+        let mut deps = mock_dependencies_with_balance(&[]);
+        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+
+        // Admin should be able to update minter
+        let update_msg = ExecuteMsg::UpdateMinter {
+            new_minter: Some(NEW_MINTER.to_string()),
+        };
+        let info = message_info(&Addr::unchecked(TEST_ADMIN), &[]);
+        let _res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
+
+        // Check minter was updated
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::Minter {}).unwrap();
+        let minter_response: MinterResponse = from_json(&res).unwrap();
+        assert_eq!(minter_response.minter, NEW_MINTER);
+    }
+
+    #[test]
+    fn test_non_admin_cannot_update_minter() {
+        let mut deps = mock_dependencies_with_balance(&[]);
+        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+
+        // Non-admin should not be able to update minter
+        let update_msg = ExecuteMsg::UpdateMinter {
+            new_minter: Some(NEW_MINTER.to_string()),
+        };
+        let info = message_info(&Addr::unchecked(USER1), &[]);
+        let err = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap_err();
+        match err {
+            crate::ContractError::Unauthorized {} => {}
+            _ => panic!("Expected Unauthorized error"),
+        }
+    }
+
+    #[test]
+    fn test_admin_update_admin() {
+        let mut deps = mock_dependencies_with_balance(&[]);
+        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+
+        // Admin should be able to update admin
+        let update_msg = ExecuteMsg::UpdateAdmin {
+            new_admin: NEW_ADMIN.to_string(),
+        };
+        let info = message_info(&Addr::unchecked(TEST_ADMIN), &[]);
+        let res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
+
+        // Check response attributes
+        assert_eq!(res.attributes.len(), 3);
+        assert_eq!(res.attributes[0].key, "action");
+        assert_eq!(res.attributes[0].value, "update_admin");
+        assert_eq!(res.attributes[1].key, "old_admin");
+        assert_eq!(res.attributes[1].value, TEST_ADMIN);
+        assert_eq!(res.attributes[2].key, "new_admin");
+        assert_eq!(res.attributes[2].value, NEW_ADMIN);
+
+        // Check admin was updated
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::Admin {}).unwrap();
+        let admin_addr: String = from_json(&res).unwrap();
+        assert_eq!(admin_addr, NEW_ADMIN);
+    }
+
+    #[test]
+    fn test_non_admin_cannot_update_admin() {
+        let mut deps = mock_dependencies_with_balance(&[]);
+        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+
+        // Non-admin should not be able to update admin
+        let update_msg = ExecuteMsg::UpdateAdmin {
+            new_admin: NEW_ADMIN.to_string(),
+        };
+        let info = message_info(&Addr::unchecked(USER1), &[]);
+        let err = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap_err();
+        match err {
+            crate::ContractError::Unauthorized {} => {}
+            _ => panic!("Expected Unauthorized error"),
+        }
+    }
+
+    #[test]
+    fn test_admin_transfer_workflow() {
+        let mut deps = mock_dependencies_with_balance(&[]);
+        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+
+        // Original admin updates admin to new admin
+        let update_msg = ExecuteMsg::UpdateAdmin {
+            new_admin: NEW_ADMIN.to_string(),
+        };
+        let info = message_info(&Addr::unchecked(TEST_ADMIN), &[]);
+        let _res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
+
+        // Original admin should no longer be able to update minter
+        let update_msg = ExecuteMsg::UpdateMinter {
+            new_minter: Some(NEW_MINTER.to_string()),
+        };
+        let info = message_info(&Addr::unchecked(TEST_ADMIN), &[]);
+        let err = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap_err();
+        match err {
+            crate::ContractError::Unauthorized {} => {}
+            _ => panic!("Expected Unauthorized error"),
+        }
+
+        // New admin should be able to update minter
+        let update_msg = ExecuteMsg::UpdateMinter {
+            new_minter: Some(NEW_MINTER.to_string()),
+        };
+        let info = message_info(&Addr::unchecked(NEW_ADMIN), &[]);
+        let _res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
+
+        // Check minter was updated
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::Minter {}).unwrap();
+        let minter_response: MinterResponse = from_json(&res).unwrap();
+        assert_eq!(minter_response.minter, NEW_MINTER);
+    }
+
+    #[test]
+    fn test_query_admin() {
+        let mut deps = mock_dependencies_with_balance(&[]);
+        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+
+        // Query admin
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::Admin {}).unwrap();
+        let admin_addr: String = from_json(&res).unwrap();
+        assert_eq!(admin_addr, TEST_ADMIN);
     }
 }

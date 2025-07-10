@@ -11,7 +11,7 @@ use cw20_base::ContractError as Cw20ContractError;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{TICKETS, USER_BURNS_PER_BLOCK};
+use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
 
 pub const CONTRACT_NAME: &str = "outbe.net:gratis";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -24,6 +24,9 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    let admin_addr = deps.api.addr_validate(&msg.admin)?;
+    ADMIN.save(deps.storage, &admin_addr)?;
 
     let cw20_msg = Cw20InstantiateMsg {
         name: "Gratis".to_string(),
@@ -52,9 +55,9 @@ pub fn execute(
             Ok(cw20_execute(deps, env, info, cw20_msg)?)
         }
         ExecuteMsg::UpdateMinter { new_minter } => {
-            let cw20_msg = Cw20ExecuteMsg::UpdateMinter { new_minter };
-            Ok(cw20_execute(deps, env, info, cw20_msg)?)
+            execute_update_minter(deps, env, info, new_minter)
         }
+        ExecuteMsg::UpdateAdmin { new_admin } => execute_update_admin(deps, env, info, new_admin),
     }
 }
 
@@ -121,6 +124,77 @@ pub fn execute_burn(
         .add_attribute("block_height", block_height.to_string());
 
     Ok(res)
+}
+
+pub fn execute_update_minter(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    new_minter: Option<String>,
+) -> Result<Response, ContractError> {
+    let admin = ADMIN.load(deps.storage)?;
+    if info.sender != admin {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Update minter directly in token info
+    let mut token_info = TOKEN_INFO.load(deps.storage)?;
+    let old_minter = token_info.mint.as_ref().map(|m| m.minter.to_string());
+    let new_minter_str = new_minter.clone();
+
+    token_info.mint = match new_minter {
+        Some(minter) => {
+            let validated_minter = if cfg!(test) {
+                cosmwasm_std::Addr::unchecked(&minter)
+            } else {
+                deps.api.addr_validate(&minter)?
+            };
+            Some(cw20_base::state::MinterData {
+                minter: validated_minter,
+                cap: token_info.mint.as_ref().and_then(|m| m.cap),
+            })
+        }
+        None => None,
+    };
+
+    TOKEN_INFO.save(deps.storage, &token_info)?;
+
+    let res = Response::new()
+        .add_attribute("action", "update_minter")
+        .add_attribute(
+            "old_minter",
+            old_minter.unwrap_or_else(|| "none".to_string()),
+        )
+        .add_attribute(
+            "new_minter",
+            new_minter_str.unwrap_or_else(|| "none".to_string()),
+        );
+
+    Ok(res)
+}
+
+pub fn execute_update_admin(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    new_admin: String,
+) -> Result<Response, ContractError> {
+    let admin = ADMIN.load(deps.storage)?;
+    if info.sender != admin {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let new_admin_addr = if cfg!(test) {
+        cosmwasm_std::Addr::unchecked(&new_admin)
+    } else {
+        deps.api.addr_validate(&new_admin)?
+    };
+    ADMIN.save(deps.storage, &new_admin_addr)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "update_admin")
+        .add_attribute("old_admin", admin)
+        .add_attribute("new_admin", new_admin_addr))
 }
 
 #[entry_point]

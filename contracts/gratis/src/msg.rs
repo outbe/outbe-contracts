@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub mint: Option<MinterResponse>,
+    pub admin: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -14,6 +15,7 @@ pub enum ExecuteMsg {
     Burn { amount: Uint128 },
     Mint { recipient: String, amount: Uint128 },
     UpdateMinter { new_minter: Option<String> },
+    UpdateAdmin { new_admin: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -31,6 +33,7 @@ pub enum QueryMsg {
     CheckTicket {
         ticket: String,
     },
+    Admin {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

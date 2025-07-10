@@ -3,7 +3,7 @@ use cw20_base::contract::query as cw20_query;
 use cw20_base::msg::QueryMsg as Cw20QueryMsg;
 
 use crate::msg::{CheckTicketResponse, QueryMsg};
-use crate::state::TICKETS;
+use crate::state::{ADMIN, TICKETS};
 
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -24,10 +24,16 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             let cw20_msg = Cw20QueryMsg::AllAccounts { start_after, limit };
             cw20_query(deps, env, cw20_msg)
         }
+        QueryMsg::Admin {} => to_json_binary(&query_admin(deps)?),
     }
 }
 
 fn query_check_ticket(deps: Deps, ticket: String) -> StdResult<CheckTicketResponse> {
     let exists = TICKETS.may_load(deps.storage, ticket)?.unwrap_or(false);
     Ok(CheckTicketResponse { exists })
+}
+
+fn query_admin(deps: Deps) -> StdResult<String> {
+    let admin = ADMIN.load(deps.storage)?;
+    Ok(admin.to_string())
 }

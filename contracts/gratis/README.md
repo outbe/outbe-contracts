@@ -39,6 +39,7 @@ This ensures:
 
 - `TICKETS`: Map<String, bool> - Stores generated ticket hashes
 - `USER_BURNS_PER_BLOCK`: Map<(Addr, u64), bool> - Tracks burns per user per block
+- `ADMIN`: Item<Addr> - Stores the admin address who can update minter
 
 ## Installation
 
@@ -67,7 +68,8 @@ cargo test
   "mint": {
     "minter": "outbe1...",
     "cap": null
-  }
+  },
+  "admin": "outbe1..."
 }
 ```
 
@@ -102,11 +104,20 @@ Burns tokens and generates a permanent ticket.
 }
 ```
 
-#### Update Minter (Current Minter Only)
+#### Update Minter (Admin Only)
 ```json
 {
   "update_minter": {
     "new_minter": "cosmos1..."
+  }
+}
+```
+
+#### Update Admin (Current Admin Only)
+```json
+{
+  "update_admin": {
+    "new_admin": "cosmos1..."
   }
 }
 ```
@@ -174,12 +185,27 @@ Verifies if a ticket exists in the contract state.
 }
 ```
 
+#### Get Admin
+```json
+{
+  "admin": {}
+}
+```
+
+**Response**:
+```json
+{
+  "admin": "outbe1..."
+}
+```
+
 ## Security Features
 
 1. **Soulbound Implementation**: Completely prevents all token transfers
 2. **One Burn Per Block**: Prevents spam attacks and ensures fair distribution
 3. **Blake3 Hashing**: Cryptographically secure ticket generation
-4. **Minter Controls**: Only authorized minter can create new tokens
+4. **Admin Controls**: Only admin can update minter and change admin
+5. **Minter Controls**: Only authorized minter can create new tokens
 
 ## Error Handling
 

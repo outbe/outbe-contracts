@@ -45,6 +45,7 @@ The conversion process:
 - `TICKETS`: Map<String, bool> - Stores generated ticket hashes
 - `USER_BURNS_PER_BLOCK`: Map<(Addr, u64), bool> - Tracks burns per user per block
 - `GRATIS_CONTRACT`: Item<Addr> - Address of Gratis contract for conversion
+- `ADMIN`: Item<Addr> - Stores the admin address who can update minter
 
 ## Installation
 
@@ -74,7 +75,8 @@ cargo test
     "minter": "outbe1...",
     "cap": null
   },
-  "gratis_contract": "outbe1..."
+  "gratis_contract": "outbe1...",
+  "admin": "outbe1..."
 }
 ```
 
@@ -141,11 +143,20 @@ Converts Promis tokens to Gratis tokens at 1:1 ratio.
 }
 ```
 
-#### Update Minter (Current Minter Only)
+#### Update Minter (Admin Only)
 ```json
 {
   "update_minter": {
     "new_minter": "outbe1..."
+  }
+}
+```
+
+#### Update Admin (Current Admin Only)
+```json
+{
+  "update_admin": {
+    "new_admin": "outbe1..."
   }
 }
 ```
@@ -213,6 +224,20 @@ Verifies if a ticket exists in the contract state.
 }
 ```
 
+#### Get Admin
+```json
+{
+  "admin": {}
+}
+```
+
+**Response**:
+```json
+{
+  "admin": "outbe1..."
+}
+```
+
 ## Security Features
 
 1. **Soulbound Implementation**: Completely prevents all token transfers
@@ -220,7 +245,8 @@ Verifies if a ticket exists in the contract state.
 3. **Address Validation**: Strict validation of Gratis contract address
 4. **Blake3 Hashing**: Cryptographically secure ticket generation
 5. **Cross-contract Security**: Validated addresses for inter-contract communication
-6. **Minter Controls**: Only authorized minter can create new tokens
+6. **Admin Controls**: Only admin can update minter and change admin
+7. **Minter Controls**: Only authorized minter can create new tokens
 
 ## Error Handling
 

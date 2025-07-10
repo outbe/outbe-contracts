@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct InstantiateMsg {
     pub mint: Option<MinterResponse>,
     pub gratis_contract: String,
+    pub admin: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -16,6 +17,7 @@ pub enum ExecuteMsg {
     Mint { recipient: String, amount: Uint128 },
     UpdateMinter { new_minter: Option<String> },
     ConvertToGratis { amount: Uint128 },
+    UpdateAdmin { new_admin: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -33,6 +35,7 @@ pub enum QueryMsg {
     CheckTicket {
         ticket: String,
     },
+    Admin {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
