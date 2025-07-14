@@ -152,20 +152,26 @@ fn execute_mint(
         return Err(ContractError::WrongInput {});
     }
 
-    if entity.settlement_amount_minor == Uint128::zero() {
+    if entity.settlement_amount_minor == Uint128::zero()
+        || entity.nominal_qty_minor == Uint128::zero()
+        || entity.tribute_price_minor == Decimal::zero()
+    {
         return Err(ContractError::WrongInput {});
     }
 
     let config = Cw721Config::<TributeData, TributeConfig>::default();
     let col_config = config.collection_config.load(deps.storage)?;
-    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
-        &col_config.price_oracle,
-        &price_oracle::query::QueryMsg::GetPrice {},
-    )?;
+
+    // TODO here we need to check that given exchange_rate is in daily bounds
+    // let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
+    //     &col_config.price_oracle,
+    //     &price_oracle::query::QueryMsg::GetPrice {},
+    // )?;
+    //
 
     let (nominal_qty, load, symbolic_divisor) = calc_sybolics(
         entity.settlement_amount_minor,
-        exchange_rate.price,
+        entity.tribute_price_minor,
         col_config.symbolic_rate,
     );
 
@@ -173,7 +179,7 @@ fn execute_mint(
     let data = TributeData {
         settlement_amount_minor: entity.settlement_amount_minor,
         settlement_currency: entity.settlement_currency,
-        tribute_price_minor: exchange_rate.price,
+        tribute_price_minor: entity.tribute_price_minor,
         nominal_qty_minor: nominal_qty,
         symbolic_divisor,
         symbolic_load: load,
@@ -194,13 +200,6 @@ fn execute_mint(
             None => Ok(token),
         })?;
 
-    // for hash in entity.hashes {
-    //     HASHES.update(deps.storage, &hash.to_hex(), |old| match old {
-    //         Some(_) => Err(ContractError::HashAlreadyExists {}),
-    //         None => Ok(token_id.clone()),
-    //     })?;
-    // }
-
     config.increment_tokens(deps.storage)?;
 
     Ok(Response::new()
@@ -217,7 +216,10 @@ fn calc_sybolics(
     exchange_rate: Decimal,
     symbolic_rate: Decimal,
 ) -> (Uint128, Uint128, Decimal) {
-    let settlement_value_dec = Decimal::from_atomics(settlement_value, 0).unwrap();
+    println!("settlement_value: {}", settlement_value);
+    println!("exchange_rate: {}", exchange_rate);
+    println!("symbolic_rate: {}", symbolic_rate);
+    let settlement_value_dec = Decimal::from_atomics(settlement_value, 18).unwrap();
     let nominal_qty = settlement_value_dec / exchange_rate;
 
     let symbolic_divisor = settlement_value_dec / nominal_qty * (Decimal::one() + symbolic_rate);
@@ -290,11 +292,11 @@ mod tests {
     #[test]
     fn test_symbolics_calc() {
         let (nominal, load, _) = calc_sybolics(
-            Uint128::new(1500u128),
+            Uint128::new(500_000000000000000000u128),
             Decimal::from_str("0.2").unwrap(),
             Decimal::from_str("0.08").unwrap(),
         );
-        assert_eq!(nominal, Uint128::new(7500u128));
-        assert_eq!(load, Uint128::new(555u128));
+        assert_eq!(nominal, Uint128::new(2500u128));
+        assert_eq!(load, Uint128::new(185u128));
     }
 }

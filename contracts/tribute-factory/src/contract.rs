@@ -137,7 +137,13 @@ fn execute_offer_insecure(
         tribute.settlement_atto_amount,
     )?;
     let settlement_qty = normalize_amount(tribute.nominal_base_qty, tribute.nominal_atto_qty)?;
-    let tribute_price = settlement_amount / settlement_qty;
+    // todo use safe convertion
+    let tribute_price = Decimal::from_atomics(settlement_amount, 18).unwrap()
+        / Decimal::from_atomics(settlement_qty, 18).unwrap();
+
+    println!("settlement_amount {}", settlement_amount);
+    println!("settlement_qty {}", settlement_qty);
+    println!("tribute_price {}", tribute_price);
 
     let msg = WasmMsg::Execute {
         contract_addr: tribute_address.to_string(),
@@ -153,7 +159,7 @@ fn execute_offer_insecure(
                     settlement_amount_minor: settlement_amount,
                     settlement_currency: Denom::Native(tribute.settlement_currency), // TODO use native
                     nominal_qty_minor: settlement_qty,
-                    tribute_price_minor: Decimal::new(tribute_price),
+                    tribute_price_minor: tribute_price,
                 },
             }),
         })?,
@@ -191,4 +197,127 @@ fn update_used_state(
         })?;
     }
     Ok(Empty::default())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::msg::ZkProofPublicData;
+    use cosmwasm_std::HexBinary;
+    use cw_multi_test::{App, Contract, ContractWrapper, Executor};
+    use std::str::FromStr;
+
+    fn tribute_contract() -> Box<dyn Contract<Empty>> {
+        let contract = ContractWrapper::new(
+            tribute::contract::execute,
+            tribute::contract::instantiate,
+            tribute::query::query,
+        );
+        Box::new(contract)
+    }
+
+    #[test]
+    fn test_mint_tribute_flow() {
+        let mut app = App::default();
+        let owner = app.api().addr_make("owner");
+        let sender = app.api().addr_make("sender");
+        let oracle = app.api().addr_make("oracle");
+
+        println!("Deploy tribute-factory contract code");
+        let factory_code = ContractWrapper::new(execute, instantiate, crate::query::query);
+        let factory_code_id = app.store_code(Box::new(factory_code));
+
+        // Instantiate tribute-factory contract
+        let factory_addr = app
+            .instantiate_contract(
+                factory_code_id,
+                owner.clone(),
+                &InstantiateMsg {
+                    owner: Some(owner.clone()),
+                    tee_config: None,
+                    tribute_address: None,
+                    zk_config: None,
+                },
+                &[],
+                "tribute-factory",
+                None,
+            )
+            .unwrap();
+
+        println!("Deploy tribute contract code");
+        let tribute_code_id = app.store_code(tribute_contract());
+
+        let tribute_addr = app
+            .instantiate_contract(
+                tribute_code_id,
+                owner.clone(),
+                &tribute::msg::InstantiateMsg {
+                    name: "tribute".to_string(),
+                    symbol: "tt".to_string(),
+                    collection_info_extension: tribute::msg::TributeCollectionExtension {
+                        symbolic_rate: Decimal::from_str("0.8").unwrap(),
+                        native_token: Denom::Native("coen".to_string()),
+                        price_oracle: oracle.clone(),
+                    },
+                    minter: Some(factory_addr.to_string()),
+                    burner: None,
+                    creator: None,
+                },
+                &[],
+                "mock-tribute",
+                None,
+            )
+            .unwrap();
+
+        println!("Update tribute address");
+        app.execute_contract(
+            owner.clone(),
+            factory_addr.clone(),
+            &ExecuteMsg::UpdateConfig {
+                new_tribute_address: Some(tribute_addr.clone()),
+                new_owner: None,
+                new_tee_config: None,
+            },
+            &[],
+        )
+        .unwrap();
+
+        // Prepare inputs for execution
+        let tribute_draft_id = [42; 32];
+        let cu_hash_1 = [11; 32];
+        let cu_hash_2 = [22; 32];
+        let tribute_input = TributeInputPayload {
+            tribute_draft_id: HexBinary::from(tribute_draft_id),
+            cu_hashes: vec![HexBinary::from(cu_hash_1), HexBinary::from(cu_hash_2)],
+            worldwide_day: "2022-03-22".to_string(),
+            settlement_currency: "usd".to_string(),
+            settlement_base_amount: 500, // 500 USD
+            settlement_atto_amount: 0,
+            nominal_base_qty: 1000,
+            nominal_atto_qty: 0,
+            owner: sender.to_string(),
+        };
+
+        // Execute the insecure offer
+        app.execute_contract(
+            sender.clone(),
+            factory_addr.clone(),
+            &ExecuteMsg::OfferInsecure {
+                tribute_input: tribute_input.clone(),
+                zk_proof: ZkProof {
+                    proof: Default::default(),
+                    public_data: ZkProofPublicData {
+                        public_key: Default::default(),
+                        merkle_root: Default::default(),
+                    },
+                    verification_key: Default::default(),
+                },
+            },
+            &[],
+        )
+        .unwrap();
+
+        // --- Assertions ---
+        // todo add assertions
+    }
 }
