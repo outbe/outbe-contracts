@@ -38,7 +38,6 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
         query_order: Option<Order>,
-
     },
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.
@@ -47,7 +46,6 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
         query_order: Option<Order>,
-
     },
 
     /// Returns all tokens created in the given date with an optional filter by status.
@@ -101,7 +99,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             owner,
             start_after,
             limit,
-            query_order
+            query_order,
         )?),
         QueryMsg::AllTokens {
             start_after,

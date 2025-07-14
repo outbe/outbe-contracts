@@ -80,8 +80,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             owner,
             start_after,
             limit,
-            query_order
-            ,
+            query_order,
         )?),
         QueryMsg::AllTokens {
             start_after,
@@ -222,7 +221,7 @@ mod tests {
         assert_eq!(resp.extension.state, entity.state);
         assert_eq!(resp.extension.address, entity.address);
         assert_eq!(resp.extension.created_at, submit_ext.created_at.unwrap());
-        
+
         let ascending_order = Some(Order::Ascending);
         // Tokens for recipient should include token_id
         let resp: outbe_nft::msg::TokensResponse = app
@@ -234,12 +233,11 @@ mod tests {
                     start_after: None,
                     limit: None,
                     query_order: ascending_order,
-
                 },
             )
             .unwrap();
         assert_eq!(resp.tokens, vec![token_id.clone()]);
-        
+
         // AllTokens should include token_id
         let resp: outbe_nft::msg::TokensResponse = app
             .wrap()
@@ -248,7 +246,7 @@ mod tests {
                 &QueryMsg::AllTokens {
                     start_after: None,
                     limit: None,
-                    query_order:ascending_order,
+                    query_order: ascending_order,
                 },
             )
             .unwrap();

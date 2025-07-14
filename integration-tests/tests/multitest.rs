@@ -42,7 +42,7 @@ fn test_tribute() {
         &[],
     )
     .unwrap();
-    
+
     let ascending_order = Some(Order::Ascending);
     let response: outbe_nft::msg::TokensResponse = app
         .wrap()
