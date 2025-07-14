@@ -82,12 +82,11 @@ pub fn query_tokens(
     owner: String,
     start_after: Option<String>,
     limit: Option<u32>,
-    query_order: Option<Order>
+    query_order: Option<Order>,
 ) -> StdResult<TokensResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
     let order = query_order.unwrap_or(Order::Ascending);
-
 
     let owner_addr = deps.api.addr_validate(&owner)?;
     let tokens: Vec<String> = Cw721Config::<Option<Empty>, Option<Empty>>::default()
@@ -111,20 +110,14 @@ pub fn query_all_tokens(
 ) -> StdResult<TokensResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let order = query_order.unwrap_or(Order::Ascending);
-    
+
     let (start, end) = match order {
-        Order::Ascending => (
-            start_after.as_deref().map(Bound::exclusive),
-            None,
-        ),
-        Order::Descending => (
-            None,
-            start_after.as_deref().map(Bound::exclusive),
-        ),
+        Order::Ascending => (start_after.as_deref().map(Bound::exclusive), None),
+        Order::Descending => (None, start_after.as_deref().map(Bound::exclusive)),
     };
     let tokens: StdResult<Vec<String>> = Cw721Config::<Option<Empty>, Option<Empty>>::default()
         .nft_info
-        .range(deps.storage,  start, end, order)
+        .range(deps.storage, start, end, order)
         .take(limit)
         .map(|item| item.map(|(k, _)| k))
         .collect();
@@ -138,9 +131,8 @@ mod tests {
     use crate::query::query_all_tokens;
     use crate::state::{Cw721Config, NftInfo};
     use cosmwasm_std::testing::{mock_dependencies, mock_env};
-    use cosmwasm_std::{Addr, Empty};
     use cosmwasm_std::Order;
-
+    use cosmwasm_std::{Addr, Empty};
 
     #[test]
     fn test_query_all_tokens() {
@@ -166,19 +158,28 @@ mod tests {
         assert!(!config.nft_info.is_empty(&deps.storage));
 
         // Ascending
-        let response = query_all_tokens(deps.as_ref(), &env, None, Some(10), Some(Order::Ascending)).unwrap();
+        let response =
+            query_all_tokens(deps.as_ref(), &env, None, Some(10), Some(Order::Ascending)).unwrap();
         assert_eq!(response.tokens.len(), 10);
         assert_eq!(response.tokens.first().unwrap(), "0");
         assert_eq!(response.tokens.last().unwrap(), "9");
 
         // Descending
-        let response = query_all_tokens(deps.as_ref(), &env, None, Some(10), Some(Order::Descending)).unwrap();
+        let response =
+            query_all_tokens(deps.as_ref(), &env, None, Some(10), Some(Order::Descending)).unwrap();
         assert_eq!(response.tokens.len(), 10);
         assert_eq!(response.tokens.first().unwrap(), "9");
         assert_eq!(response.tokens.last().unwrap(), "0");
 
         // Ascending, start_after = "2", limit 3
-        let response = query_all_tokens(deps.as_ref(), &env, Some("2".to_string()), Some(3), Some(Order::Ascending)).unwrap();
+        let response = query_all_tokens(
+            deps.as_ref(),
+            &env,
+            Some("2".to_string()),
+            Some(3),
+            Some(Order::Ascending),
+        )
+        .unwrap();
         println!("res {:?}", response.tokens);
 
         assert_eq!(response.tokens.len(), 3);
@@ -186,12 +187,18 @@ mod tests {
         assert_eq!(response.tokens.last().unwrap(), "5");
 
         // Descending, start_after = "7", limit 3
-        let response = query_all_tokens(deps.as_ref(), &env, Some("7".to_string()), Some(3), Some(Order::Descending)).unwrap();
+        let response = query_all_tokens(
+            deps.as_ref(),
+            &env,
+            Some("7".to_string()),
+            Some(3),
+            Some(Order::Descending),
+        )
+        .unwrap();
         println!("res {:?}", response.tokens);
 
         assert_eq!(response.tokens.len(), 3);
         assert_eq!(response.tokens.first().unwrap(), "6");
         assert_eq!(response.tokens.last().unwrap(), "4");
-
     }
 }
