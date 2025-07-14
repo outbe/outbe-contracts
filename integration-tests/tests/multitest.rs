@@ -1,5 +1,5 @@
 use crate::setup::{setup_test_env, DeployedContract, NATIVE_DENOM};
-use cosmwasm_std::{Addr, Decimal, HexBinary, Uint128};
+use cosmwasm_std::{Addr, Decimal, HexBinary, Order, Uint128};
 use cw20::Denom;
 use cw_multi_test::{App, ContractWrapper, Executor};
 use std::str::FromStr;
@@ -42,7 +42,8 @@ fn test_tribute() {
         &[],
     )
     .unwrap();
-
+    
+    let ascending_order = Some(Order::Ascending);
     let response: outbe_nft::msg::TokensResponse = app
         .wrap()
         .query_wasm_smart(
@@ -51,6 +52,7 @@ fn test_tribute() {
                 owner: config.user_addr.to_string(),
                 start_after: None,
                 limit: None,
+                query_order: ascending_order,
             },
         )
         .unwrap();
@@ -157,6 +159,7 @@ fn test_metadosis() {
         &[],
     )
         .unwrap();
+    let ascending_order = Some(Order::Ascending);
 
     let response: outbe_nft::msg::TokensResponse = app
         .wrap()
@@ -165,6 +168,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
+                query_order: ascending_order,
             },
         )
         .unwrap();
@@ -199,6 +203,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
+                query_order: ascending_order,
             },
         )
         .unwrap();
@@ -221,6 +226,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
+                query_order: ascending_order,
             },
         )
         .unwrap();
@@ -243,6 +249,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
+                query_order: ascending_order,
             },
         )
         .unwrap();

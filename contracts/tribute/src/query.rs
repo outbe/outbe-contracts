@@ -37,6 +37,8 @@ pub enum QueryMsg {
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
+        query_order: Option<Order>,
+
     },
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.
@@ -44,6 +46,8 @@ pub enum QueryMsg {
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,
+        query_order: Option<Order>,
+
     },
 
     /// Returns all tokens created in the given date with an optional filter by status.
@@ -90,16 +94,26 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             owner,
             start_after,
             limit,
+            query_order,
         } => to_json_binary(&outbe_nft::query::query_tokens(
             deps,
             &env,
             owner,
             start_after,
             limit,
+            query_order
         )?),
-        QueryMsg::AllTokens { start_after, limit } => to_json_binary(
-            &outbe_nft::query::query_all_tokens(deps, &env, start_after, limit)?,
-        ),
+        QueryMsg::AllTokens {
+            start_after,
+            limit,
+            query_order,
+        } => to_json_binary(&outbe_nft::query::query_all_tokens(
+            deps,
+            &env,
+            start_after,
+            limit,
+            query_order,
+        )?),
         QueryMsg::DailyTributes { date } => {
             to_json_binary(&query_daily_tributes(deps, &env, date)?)
         }
