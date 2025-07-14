@@ -18,8 +18,8 @@ Gratis is a soulbound CW20 token that implements a unique burn mechanism generat
 
 - **Name**: "Gratis"
 - **Symbol**: "GRATIS"
-- **Decimals**: 6
-- **Initial Supply**: 0 (minted as needed)
+- **Decimals**: 18
+- **Initial Supply**: 0 (mined as needed)
 
 ## Technical Specifications
 
@@ -39,7 +39,7 @@ This ensures:
 
 - `TICKETS`: Map<String, bool> - Stores generated ticket hashes
 - `USER_BURNS_PER_BLOCK`: Map<(Addr, u64), bool> - Tracks burns per user per block
-- `ADMIN`: Item<Addr> - Stores the admin address who can update minter
+- `ADMIN`: Item<Addr> - Stores the admin address who can update miner
 
 ## Installation
 
@@ -65,8 +65,8 @@ cargo test
 
 ```json
 {
-  "mint": {
-    "minter": "outbe1...",
+  "mine": {
+    "miner": "outbe1...",
     "cap": null
   },
   "admin": "outbe1..."
@@ -94,21 +94,21 @@ Burns tokens and generates a permanent ticket.
 - `block_height`: block height when burned
 
 
-#### Mint Tokens (Minter Only)
+#### Mine Tokens (miner Only)
 ```json
 {
-  "mint": {
+  "mine": {
     "recipient": "outbe1...",
     "amount": "1000000"
   }
 }
 ```
 
-#### Update Minter (Admin Only)
+#### Update miner (Admin Only)
 ```json
 {
-  "update_minter": {
-    "new_minter": "cosmos1..."
+  "update_miner": {
+    "new_miner": "cosmos1..."
   }
 }
 ```
@@ -168,10 +168,10 @@ Verifies if a ticket exists in the contract state.
 }
 ```
 
-#### Get Minter Info
+#### Get miner Info
 ```json
 {
-  "minter": {}
+  "miner": {}
 }
 ```
 
@@ -204,13 +204,13 @@ Verifies if a ticket exists in the contract state.
 1. **Soulbound Implementation**: Completely prevents all token transfers
 2. **One Burn Per Block**: Prevents spam attacks and ensures fair distribution
 3. **Blake3 Hashing**: Cryptographically secure ticket generation
-4. **Admin Controls**: Only admin can update minter and change admin
-5. **Minter Controls**: Only authorized minter can create new tokens
+4. **Admin Controls**: Only admin can update miner and change admin
+5. **Mine Controls**: Only authorized miner can create new tokens
 
 ## Error Handling
 
 - `AlreadyBurnedInBlock`: User attempted multiple burns in same block
-- `Unauthorized`: Insufficient permissions for minting operations
+- `Unauthorized`: Insufficient permissions for mining operations
 - `InvalidZeroAmount`: Attempted operation with zero amount
 - `InsufficientFunds`: Insufficient token balance for operation
 

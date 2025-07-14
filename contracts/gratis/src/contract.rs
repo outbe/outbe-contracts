@@ -10,7 +10,7 @@ use cw20_base::state::{BALANCES, TOKEN_INFO};
 use cw20_base::ContractError as Cw20ContractError;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
 
 pub const CONTRACT_NAME: &str = "outbe.net:gratis";
@@ -31,7 +31,7 @@ pub fn instantiate(
     let cw20_msg = Cw20InstantiateMsg {
         name: "Gratis".to_string(),
         symbol: "GRATIS".to_string(),
-        decimals: 6,
+        decimals: 18,
         initial_balances: vec![],
         mint: msg.mint,
         marketing: None,
@@ -200,6 +200,15 @@ pub fn execute_update_admin(
 #[entry_point]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     crate::query::query(deps, env, msg)
+}
+
+#[entry_point]
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    match msg {
+        MigrateMsg::Migrate {} => Ok(Response::new()),
+    }
 }
 
 impl From<Cw20ContractError> for ContractError {
