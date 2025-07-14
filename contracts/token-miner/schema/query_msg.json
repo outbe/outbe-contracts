@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryMsg",
+  "description": "Query messages for the contract",
+  "oneOf": [
+    {
+      "description": "Get contract configuration",
+      "type": "object",
+      "required": [
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Get access permissions for a specific address",
+      "type": "object",
+      "required": [
+        "access_permissions"
+      ],
+      "properties": {
+        "access_permissions": {
+          "type": "object",
+          "required": [
+            "address"
+          ],
+          "properties": {
+            "address": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "List all addresses in the access list with optional pagination",
+      "type": "object",
+      "required": [
+        "access_list"
+      ],
+      "properties": {
+        "access_list": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Maximum number of addresses to return",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "start_after": {
+              "description": "Address to start listing from (optional, for pagination)",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Check if an address can mint a specific token type",
+      "type": "object",
+      "required": [
+        "can_mint"
+      ],
+      "properties": {
+        "can_mint": {
+          "type": "object",
+          "required": [
+            "address",
+            "token_type"
+          ],
+          "properties": {
+            "address": {
+              "description": "Address to check",
+              "type": "string"
+            },
+            "token_type": {
+              "description": "Token type to check",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/TokenType"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "TokenType": {
+      "description": "Token types that can be minted",
+      "type": "string",
+      "enum": [
+        "Gratis",
+        "Promis"
+      ]
+    }
+  }
+}

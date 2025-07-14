@@ -18,12 +18,14 @@ cosmwasm-schema = { version = "2.0.0" }
 cosmwasm-std = { version = "2.0.0" }
 
 sha2 = { version = "0.10.8" }
+blake3 = { version = "1.5" }
 hex = { version = "0.4.3" }
 
 cw-multi-test = { version = "2.0.0" }
 cw-storage-plus = { version = "2.0.0" }
 cw-utils = { version = "2.0.0" }
 cw-ownable = "2.1.0"
+
 
 serde = { version = "1.0.204" }
 schemars = { version = "0.8.15" }
@@ -38,8 +40,14 @@ cw20-base = { version = "2.0.0" }
 outbe-nft = { version = "*", path = "packages/outbe-nft" }
 outbe-utils = { version = "*", path = "packages/outbe-utils" }
 tribute = { version = "*", path = "contracts/tribute", features = ["library"] }
-price-oracle = { version = "*", path = "contracts/price-oracle", features = ["library"] }
+price-oracle = { version = "*", path = "contracts/price-oracle", features = [
+    "library",
+] }
 nod = { version = "*", path = "contracts/nod", features = ["library"] }
 vector = { version = "*", path = "contracts/vector", features = ["library"] }
-metadosis = { version = "*", path = "contracts/metadosis", features = ["library"] }
-token-allocator = { version = "*", path = "contracts/token-allocator", features = ["library"] }
+metadosis = { version = "*", path = "contracts/metadosis", features = [
+    "library",
+] }
+token-allocator = { version = "*", path = "contracts/token-allocator", features = [
+    "library",
+] }
