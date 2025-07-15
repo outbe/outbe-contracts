@@ -85,17 +85,20 @@ pub fn query_tokens(
     query_order: Option<Order>,
 ) -> StdResult<TokensResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
-    let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
     let order = query_order.unwrap_or(Order::Ascending);
-
+    let (start, end) = match order {
+        Order::Ascending => (start_after.as_deref().map(Bound::exclusive), None),
+        Order::Descending => (None, start_after.as_deref().map(Bound::exclusive)),
+    };
     let owner_addr = deps.api.addr_validate(&owner)?;
     let tokens: Vec<String> = Cw721Config::<Option<Empty>, Option<Empty>>::default()
         .nft_info
         .idx
         .owner
         .prefix(owner_addr)
-        .keys(deps.storage, None, start, order)
+        .range(deps.storage, start, end, order)
         .take(limit)
+        .map(|item| item.map(|(k, _)| k))
         .collect::<StdResult<Vec<_>>>()?;
 
     Ok(TokensResponse { tokens })
@@ -135,7 +138,7 @@ mod tests {
     use cosmwasm_std::{Addr, Empty};
 
     #[test]
-    fn test_query_all_tokens() {
+    fn test_query_all_tokens_asc() {
         let mut deps = mock_dependencies();
         let env = mock_env();
         let config = Cw721Config::<Option<Empty>, Option<Empty>>::default();
@@ -163,14 +166,6 @@ mod tests {
         assert_eq!(response.tokens.len(), 10);
         assert_eq!(response.tokens.first().unwrap(), "0");
         assert_eq!(response.tokens.last().unwrap(), "9");
-
-        // Descending
-        let response =
-            query_all_tokens(deps.as_ref(), &env, None, Some(10), Some(Order::Descending)).unwrap();
-        assert_eq!(response.tokens.len(), 10);
-        assert_eq!(response.tokens.first().unwrap(), "9");
-        assert_eq!(response.tokens.last().unwrap(), "0");
-
         // Ascending, start_after = "2", limit 3
         let response = query_all_tokens(
             deps.as_ref(),
@@ -185,7 +180,38 @@ mod tests {
         assert_eq!(response.tokens.len(), 3);
         assert_eq!(response.tokens.first().unwrap(), "3");
         assert_eq!(response.tokens.last().unwrap(), "5");
+        
+    }
 
+    #[test]
+    fn test_query_all_tokens_desc() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let config = Cw721Config::<Option<Empty>, Option<Empty>>::default();
+
+        for i in 0..10 {
+            config
+                .nft_info
+                .save(
+                    &mut deps.storage,
+                    i.to_string().as_str(),
+                    &NftInfo {
+                        owner: Addr::unchecked("me"),
+                        token_uri: None,
+                        extension: None,
+                    },
+                )
+                .unwrap();
+        }
+
+        assert!(!config.nft_info.is_empty(&deps.storage));
+
+        // Descending
+        let response =
+            query_all_tokens(deps.as_ref(), &env, None, Some(10), Some(Order::Descending)).unwrap();
+        assert_eq!(response.tokens.len(), 10);
+        assert_eq!(response.tokens.first().unwrap(), "9");
+        assert_eq!(response.tokens.last().unwrap(), "0");
         // Descending, start_after = "7", limit 3
         let response = query_all_tokens(
             deps.as_ref(),
