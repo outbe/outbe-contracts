@@ -28,7 +28,7 @@ mod test_gratis {
         let token_info = TokenInfo {
             name: "Gratis".to_string(),
             symbol: "GRATIS".to_string(),
-            decimals: 6,
+            decimals: 18,
             total_supply: Uint128::zero(),
             mint: Some(MinterData {
                 minter: Addr::unchecked(CREATOR),
@@ -56,7 +56,7 @@ mod test_gratis {
         let token_info = TokenInfo {
             name: "Gratis".to_string(),
             symbol: "GRATIS".to_string(),
-            decimals: 6,
+            decimals: 18,
             total_supply: Uint128::zero(),
             mint: Some(MinterData {
                 minter: Addr::unchecked(CREATOR),
@@ -81,7 +81,7 @@ mod test_gratis {
         let token_info: TokenInfoResponse = from_json(&res).unwrap();
         assert_eq!(token_info.name, "Gratis");
         assert_eq!(token_info.symbol, "GRATIS");
-        assert_eq!(token_info.decimals, 6);
+        assert_eq!(token_info.decimals, 18);
         assert_eq!(token_info.total_supply, Uint128::zero());
     }
 
