@@ -222,7 +222,6 @@ mod tests {
         assert_eq!(resp.extension.address, entity.address);
         assert_eq!(resp.extension.created_at, submit_ext.created_at.unwrap());
 
-        let ascending_order = Some(Order::Ascending);
         // Tokens for recipient should include token_id
         let resp: outbe_nft::msg::TokensResponse = app
             .wrap()
@@ -232,7 +231,7 @@ mod tests {
                     owner: recipient.to_string(),
                     start_after: None,
                     limit: None,
-                    query_order: ascending_order,
+                    query_order: None,
                 },
             )
             .unwrap();
@@ -246,7 +245,7 @@ mod tests {
                 &QueryMsg::AllTokens {
                     start_after: None,
                     limit: None,
-                    query_order: ascending_order,
+                    query_order: None,
                 },
             )
             .unwrap();

@@ -43,7 +43,6 @@ fn test_tribute() {
     )
     .unwrap();
 
-    let ascending_order = Some(Order::Ascending);
     let response: outbe_nft::msg::TokensResponse = app
         .wrap()
         .query_wasm_smart(
@@ -52,7 +51,7 @@ fn test_tribute() {
                 owner: config.user_addr.to_string(),
                 start_after: None,
                 limit: None,
-                query_order: ascending_order,
+                query_order: None,
             },
         )
         .unwrap();
@@ -159,7 +158,6 @@ fn test_metadosis() {
         &[],
     )
         .unwrap();
-    let ascending_order = Some(Order::Ascending);
 
     let response: outbe_nft::msg::TokensResponse = app
         .wrap()
@@ -168,7 +166,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
-                query_order: ascending_order,
+                query_order: None,
             },
         )
         .unwrap();
@@ -203,7 +201,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
-                query_order: ascending_order,
+                query_order: None,
             },
         )
         .unwrap();
@@ -226,7 +224,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
-                query_order: ascending_order,
+                query_order: None,
             },
         )
         .unwrap();
@@ -249,7 +247,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
-                query_order: ascending_order,
+                query_order: None,
             },
         )
         .unwrap();
