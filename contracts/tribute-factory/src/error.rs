@@ -19,4 +19,8 @@ pub enum ContractError {
     IdAlreadyExists {},
     #[error("Consumption Unit already exists")]
     CUAlreadyExists {},
+    #[error("Consumption Units are empty")]
+    CUEmpty {},
+    #[error("Invalid date format")]
+    InvalidDateFormat {},
 }

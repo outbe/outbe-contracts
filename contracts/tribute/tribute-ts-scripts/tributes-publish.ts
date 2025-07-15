@@ -2,7 +2,14 @@ import {promises as fs} from "fs";
 import {CosmWasmClient, SigningCosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {parseCoins} from "@cosmjs/amino";
 import {WalletKeyInfo} from "./generate-wallets";
-import {getRandomInt, METADOSIS_CONTRACT_ADDRESS, RPC_ENDPOINT, runner, TRIBUTE_CONTRACT_ADDRESS} from "./consts";
+import {
+    getRandomInt,
+    METADOSIS_CONTRACT_ADDRESS,
+    RPC_ENDPOINT,
+    runner,
+    TRIBUTE_CONTRACT_ADDRESS,
+    TRIBUTE_FACTORY_CONTRACT_ADDRESS
+} from "./consts";
 import {ExecuteInstruction} from "@cosmjs/cosmwasm-stargate/build/signingcosmwasmclient";
 
 
@@ -44,7 +51,7 @@ async function main() {
     })
     console.log("Number of Tribute Tokens before execution: ", tokensResp)
 
-    console.log("Trying to mint tx...")
+    console.log("Trying to mint Tributes tx...")
 
     let walletClient = await SigningCosmWasmClient.connectWithSigner(RPC_ENDPOINT, runnerWallet)
 
@@ -64,9 +71,9 @@ async function main() {
 
     let instructions: ExecuteInstruction[] = [];
     for (let i = 0; i < wallets.length; i++) {
-        let tribute = randomTribute(wallets[i].outbe_address, 1751288793, avg_price)
+        let tribute = randomTribute(wallets[i].outbe_address, "2025-07-15", avg_price)
         instructions.push({
-                contractAddress: TRIBUTE_CONTRACT_ADDRESS,
+                contractAddress: TRIBUTE_FACTORY_CONTRACT_ADDRESS,
                 msg: tribute,
             }
         )
@@ -84,26 +91,33 @@ async function main() {
     console.log("Number of Tribute tokens: ", r)
 }
 
-function randomTribute(owner: string, day: number, avgPrice: number): any {
-    let tribute_id = require('crypto').randomUUID().toString();
-    let settlement_amount = getRandomInt(avgPrice - 1000000, avgPrice + 1000000).toString();
+function randomTribute(owner: string, day: string, avgPrice: number): any {
+    let uuid_id = require('crypto').randomUUID().toString()
+    let tribute_draft_id = require('crypto').createHash('sha256').update(uuid_id).digest('hex');
+    let settlement_amount = getRandomInt(avgPrice - 100, avgPrice + 100);
+    
 
     return {
-        mint: {
-            token_id: tribute_id,
-            owner: owner,
-            token_uri: null,
-            extension: {
-                data: {
-                    tribute_id: tribute_id,
-                    worldwide_day: day,
-                    owner: owner,
-                    settlement_amount_minor: settlement_amount,
-                    settlement_currency: {"cw20": "usd"},
-                },
-                signature: "b4f0e146c41699ffe66c144402ea53de9b65f354b8cfcaf884f8b1c33e39726a3c39658859c3d57df77ed62b071f44f9de7b6005e6f7c7721bb39242f554f042",
-                public_key: "02c21cb8a373fb63ee91d6133edcd18aefd7fa804adb2a0a55b1cb2f6f8aef068d",
+        offer_insecure: {
+            tribute_input: {
+                tribute_draft_id: tribute_draft_id,
+                owner: owner,
+                worldwide_day: day,
+                settlement_currency: "usd",
+                settlement_base_amount: settlement_amount,
+                settlement_atto_amount: 0,
+                nominal_base_qty: settlement_amount * 2,
+                nominal_atto_qty: 0,
+                cu_hashes: [tribute_draft_id]
             },
+            zk_proof: {
+                proof: "",
+                public_data: {
+                    public_key: "",
+                    merkle_root: "",
+                },
+                verification_key: "",
+            }
         }
     }
 }

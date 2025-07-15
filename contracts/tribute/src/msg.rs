@@ -54,7 +54,7 @@ pub struct MintExtension {
 pub struct TributeMintData {
     pub tribute_id: String,
     /// Date of the Tribute creation
-    pub worldwide_day: String,
+    pub worldwide_day: u64,
     pub owner: String,
     /// Value of the Tribute in Settlement Tokens
     pub settlement_amount_minor: Uint128,

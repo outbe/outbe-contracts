@@ -30,7 +30,7 @@ pub struct TributeData {
     /// Signals an eligible interest to the network
     pub symbolic_load: Uint128,
     /// Date of Consumption
-    pub worldwide_day: String,
+    pub worldwide_day: u64,
 
     /// Time when the Tribute NFT was created on the network
     pub created_at: Timestamp,
