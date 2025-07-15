@@ -178,47 +178,57 @@
         "description": "Entity data for each Nod NFT",
         "type": "object",
         "required": [
-          "address",
-          "floor_minor_price",
-          "issuance_minor_rate",
+          "floor_price_minor",
+          "floor_rate",
+          "gratis_load_minor",
+          "issuance_price_minor",
           "nod_id",
-          "nominal_minor_rate",
-          "settlement_token",
+          "nominal_price_minor",
+          "owner",
+          "settlement_currency",
           "state",
-          "symbolic_minor_load",
-          "symbolic_rate",
-          "vector_minor_rate"
+          "symbolic_rate"
         ],
         "properties": {
-          "address": {
-            "type": "string"
+          "floor_price_minor": {
+            "$ref": "#/definitions/Uint128"
           },
-          "floor_minor_price": {
-            "$ref": "#/definitions/Decimal"
+          "floor_rate": {
+            "$ref": "#/definitions/Uint128"
           },
-          "issuance_minor_rate": {
-            "$ref": "#/definitions/Decimal"
+          "gratis_load_minor": {
+            "$ref": "#/definitions/Uint128"
+          },
+          "issuance_price_minor": {
+            "$ref": "#/definitions/Uint128"
           },
           "nod_id": {
             "type": "string"
           },
-          "nominal_minor_rate": {
+          "nominal_price_minor": {
             "$ref": "#/definitions/Uint128"
           },
-          "settlement_token": {
+          "owner": {
+            "type": "string"
+          },
+          "qualified_at": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "settlement_currency": {
             "$ref": "#/definitions/Denom"
           },
           "state": {
             "$ref": "#/definitions/State"
           },
-          "symbolic_minor_load": {
-            "$ref": "#/definitions/Uint128"
-          },
           "symbolic_rate": {
             "$ref": "#/definitions/Decimal"
-          },
-          "vector_minor_rate": {
-            "$ref": "#/definitions/Uint128"
           }
         },
         "additionalProperties": false
@@ -228,7 +238,7 @@
         "type": "string",
         "enum": [
           "issued",
-          "settled"
+          "qualified"
         ]
       },
       "SubmitExtension": {
@@ -808,24 +818,52 @@
           "description": "Public data for each Nod NFT",
           "type": "object",
           "required": [
-            "address",
-            "created_at",
-            "floor_minor_price",
-            "issuance_minor_rate",
+            "floor_price_minor",
+            "floor_rate",
+            "gratis_load_minor",
+            "issuance_price_minor",
+            "issued_at",
             "nod_id",
-            "nominal_minor_rate",
-            "settlement_token",
+            "nominal_price_minor",
+            "owner",
+            "settlement_currency",
             "state",
-            "symbolic_minor_load",
-            "symbolic_rate",
-            "vector_minor_rate"
+            "symbolic_rate"
           ],
           "properties": {
-            "address": {
-              "description": "Address entitled to claim the Nod",
-              "type": "string"
+            "floor_price_minor": {
+              "description": "Floor price in minor units",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
             },
-            "created_at": {
+            "floor_rate": {
+              "description": "Account specific, from Lysis",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "gratis_load_minor": {
+              "description": "From Tribute Symbolic Load",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "issuance_price_minor": {
+              "description": "coen Price at the moment of Nod issuance",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "issued_at": {
               "description": "Creation timestamp",
               "allOf": [
                 {
@@ -833,36 +871,35 @@
                 }
               ]
             },
-            "floor_minor_price": {
-              "description": "Floor minor price threshold",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Decimal"
-                }
-              ]
-            },
-            "issuance_minor_rate": {
-              "description": "Issuance minor rate at issuance time",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Decimal"
-                }
-              ]
-            },
             "nod_id": {
               "description": "Identifier of the Nod",
               "type": "string"
             },
-            "nominal_minor_rate": {
-              "description": "Nominal minor rate at transaction time",
+            "nominal_price_minor": {
+              "description": "From Tribute",
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
                 }
               ]
             },
-            "settlement_token": {
-              "description": "Settlement token denomination",
+            "owner": {
+              "description": "Address entitled to mine Gratis",
+              "type": "string"
+            },
+            "qualified_at": {
+              "description": "Timestamp when the Nod was qualified",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "settlement_currency": {
+              "description": "Settlement Currency",
               "allOf": [
                 {
                   "$ref": "#/definitions/Denom"
@@ -877,27 +914,11 @@
                 }
               ]
             },
-            "symbolic_minor_load": {
-              "description": "Symbolic minor load",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Uint128"
-                }
-              ]
-            },
             "symbolic_rate": {
               "description": "Symbolic rate",
               "allOf": [
                 {
                   "$ref": "#/definitions/Decimal"
-                }
-              ]
-            },
-            "vector_minor_rate": {
-              "description": "Vector minor rate from account",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Uint128"
                 }
               ]
             }
@@ -909,7 +930,7 @@
           "type": "string",
           "enum": [
             "issued",
-            "settled"
+            "qualified"
           ]
         },
         "Timestamp": {
