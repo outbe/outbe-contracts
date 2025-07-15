@@ -2,7 +2,7 @@ use crate::types::{NodConfig, NodData};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Binary, Deps, Env, StdResult};
+use cosmwasm_std::{to_json_binary, Binary, Deps, Env, Order, StdResult};
 use cw_ownable::Ownership;
 use outbe_nft::msg::{
     ContractInfoResponse, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
@@ -35,12 +35,14 @@ pub enum QueryMsg {
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
+        query_order: Option<Order>,
     },
 
     #[returns(TokensResponse)]
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,
+        query_order: Option<Order>,
     },
 }
 
@@ -71,16 +73,26 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             owner,
             start_after,
             limit,
+            query_order,
         } => to_json_binary(&outbe_nft::query::query_tokens(
             deps,
             &env,
             owner,
             start_after,
             limit,
+            query_order,
         )?),
-        QueryMsg::AllTokens { start_after, limit } => to_json_binary(
-            &outbe_nft::query::query_all_tokens(deps, &env, start_after, limit)?,
-        ),
+        QueryMsg::AllTokens {
+            start_after,
+            limit,
+            query_order,
+        } => to_json_binary(&outbe_nft::query::query_all_tokens(
+            deps,
+            &env,
+            start_after,
+            limit,
+            query_order,
+        )?),
     }
 }
 
@@ -219,6 +231,7 @@ mod tests {
                     owner: recipient.to_string(),
                     start_after: None,
                     limit: None,
+                    query_order: None,
                 },
             )
             .unwrap();
@@ -232,6 +245,7 @@ mod tests {
                 &QueryMsg::AllTokens {
                     start_after: None,
                     limit: None,
+                    query_order: None,
                 },
             )
             .unwrap();

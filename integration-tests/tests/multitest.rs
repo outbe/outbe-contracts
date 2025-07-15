@@ -51,6 +51,7 @@ fn test_tribute() {
                 owner: config.user_addr.to_string(),
                 start_after: None,
                 limit: None,
+                query_order: None,
             },
         )
         .unwrap();
@@ -165,6 +166,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
+                query_order: None,
             },
         )
         .unwrap();
@@ -199,6 +201,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
+                query_order: None,
             },
         )
         .unwrap();
@@ -221,6 +224,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
+                query_order: None,
             },
         )
         .unwrap();
@@ -243,6 +247,7 @@ fn test_metadosis() {
             &QueryMsg::AllTokens {
                 start_after: None,
                 limit: None,
+                query_order: None,
             },
         )
         .unwrap();
