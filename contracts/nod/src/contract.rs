@@ -84,18 +84,18 @@ fn execute_submit(
 
     let data = NodData {
         nod_id: entity.nod_id.clone(),
-        settlement_token: entity.settlement_token.clone(),
+        settlement_currency: entity.settlement_currency.clone(),
         symbolic_rate: entity.symbolic_rate,
-        nominal_minor_rate: entity.nominal_minor_rate,
-        issuance_minor_rate: entity.issuance_minor_rate,
-        symbolic_minor_load: entity.symbolic_minor_load,
-        vector_minor_rate: entity.vector_minor_rate,
-        floor_minor_price: entity.floor_minor_price,
-        state: entity.state,
-        address: entity.address.clone(),
-        created_at: extension.created_at.unwrap_or(env.block.time),
+        floor_rate: entity.floor_rate,
+        nominal_price_minor: entity.nominal_price_minor,
+        issuance_price_minor: entity.issuance_price_minor,
+        gratis_load_minor: entity.gratis_load_minor,
+        floor_price_minor: entity.floor_price_minor,
+        state: entity.state.clone(),
+        owner: entity.owner.clone(),
+        issued_at: extension.created_at.unwrap_or(env.block.time),
+        qualified_at: entity.qualified_at,
     };
-
     let token = NodNft {
         owner: owner_addr,
         token_uri: None, // todo populate
