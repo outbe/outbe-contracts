@@ -1,5 +1,5 @@
 use crate::setup::{setup_test_env, DeployedContract, NATIVE_DENOM};
-use cosmwasm_std::{Addr, Decimal, HexBinary, Order, Uint128};
+use cosmwasm_std::{Addr, Decimal, HexBinary, Uint128};
 use cw20::Denom;
 use cw_multi_test::{App, ContractWrapper, Executor};
 use std::str::FromStr;
