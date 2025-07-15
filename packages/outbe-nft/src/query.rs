@@ -180,7 +180,6 @@ mod tests {
         assert_eq!(response.tokens.len(), 3);
         assert_eq!(response.tokens.first().unwrap(), "3");
         assert_eq!(response.tokens.last().unwrap(), "5");
-        
     }
 
     #[test]
