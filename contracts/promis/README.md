@@ -20,7 +20,7 @@ Promis is an advanced soulbound CW20 token that extends the burn-to-ticket funct
 
 - **Name**: "Promis"
 - **Symbol**: "PROMIS"
-- **Decimals**: 6
+- **Decimals**: 18
 - **Initial Supply**: 0 (minted as needed)
 
 ## Technical Specifications

@@ -36,7 +36,7 @@ pub fn instantiate(
     let cw20_msg = Cw20InstantiateMsg {
         name: "Promis".to_string(),
         symbol: "PROMIS".to_string(),
-        decimals: 6,
+        decimals: 18,
         initial_balances: vec![],
         mint: msg.mint,
         marketing: None,
