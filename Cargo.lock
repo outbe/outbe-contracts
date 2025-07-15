@@ -1452,7 +1452,6 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "outbe-utils",
- "secp256k1",
  "serde",
  "thiserror 1.0.69",
  "tribute",

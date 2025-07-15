@@ -7,7 +7,7 @@ use crate::state::{Config, CONFIG, OWNER, UNUSED_TOKEN_ID, USED_CU_HASHES, USED_
 use crate::types::TributeInputPayload;
 use cosmwasm_std::{
     entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, MessageInfo, Response,
-    Storage, WasmMsg,
+    Storage, Timestamp, WasmMsg,
 };
 use cw_ownable::Action;
 use outbe_utils::amount_utils::normalize_amount;
