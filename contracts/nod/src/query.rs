@@ -206,11 +206,20 @@ mod tests {
             )
             .unwrap();
         assert_eq!(resp.extension.nod_id, entity.nod_id);
-        assert_eq!(resp.extension.settlement_currency, entity.settlement_currency);
+        assert_eq!(
+            resp.extension.settlement_currency,
+            entity.settlement_currency
+        );
         assert_eq!(resp.extension.symbolic_rate, entity.symbolic_rate);
         assert_eq!(resp.extension.floor_rate, entity.floor_rate);
-        assert_eq!(resp.extension.nominal_price_minor, entity.nominal_price_minor);
-        assert_eq!(resp.extension.issuance_price_minor, entity.issuance_price_minor);
+        assert_eq!(
+            resp.extension.nominal_price_minor,
+            entity.nominal_price_minor
+        );
+        assert_eq!(
+            resp.extension.issuance_price_minor,
+            entity.issuance_price_minor
+        );
         assert_eq!(resp.extension.gratis_load_minor, entity.gratis_load_minor);
         assert_eq!(resp.extension.floor_price_minor, entity.floor_price_minor);
         assert_eq!(resp.extension.state, entity.state);

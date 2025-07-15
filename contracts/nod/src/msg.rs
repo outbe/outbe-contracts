@@ -47,11 +47,10 @@ pub struct NodEntity {
     pub nominal_price_minor: Uint128,
     pub issuance_price_minor: Uint128,
     pub gratis_load_minor: Uint128,
-    pub floor_price_minor:Uint128,
+    pub floor_price_minor: Uint128,
     pub state: State,
     pub owner: String,
     pub qualified_at: Option<Timestamp>,
-    
 }
 
 /// Migrate message for Nod contract

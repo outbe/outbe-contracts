@@ -28,7 +28,7 @@ pub struct NodData {
     /// From Tribute Symbolic Load
     pub gratis_load_minor: Uint128,
     /// Floor price in minor units
-    pub floor_price_minor:Uint128,
+    pub floor_price_minor: Uint128,
     /// Current state of the Nod
     pub state: State,
     /// Address entitled to mine Gratis

@@ -262,7 +262,6 @@ fn do_lysis_tier(
                     },
                     created_at: None,
                 }),
-               
             })?,
             funds: vec![],
         };
