@@ -5,7 +5,6 @@ use crate::msg::{
 };
 use crate::state::{Config, CONFIG, OWNER, UNUSED_TOKEN_ID, USED_CU_HASHES, USED_TRIBUTE_IDS};
 use crate::types::TributeInputPayload;
-use chrono::NaiveDate;
 use cosmwasm_std::{
     entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, MessageInfo, Response,
     Storage, WasmMsg,
@@ -129,7 +128,8 @@ fn execute_offer_insecure(
     if tribute_input.cu_hashes.is_empty() {
         return Err(ContractError::CUEmpty {});
     }
-    let timestamp_date = iso_to_ts(&tribute_input.worldwide_day)?;
+    // let timestamp_date = iso_to_ts(&tribute_input.worldwide_day)?;
+    let timestamp_date = _env.block.time.seconds();
 
     let tribute = tee_obfuscate(tribute_input)?;
     update_used_state(deps.storage, &tribute)?;
@@ -179,22 +179,22 @@ fn execute_offer_insecure(
         .add_event(Event::new("tribute-factory::offer_insecure")))
 }
 
-fn iso_to_ts(date: &str) -> Result<u64, ContractError> {
-    match NaiveDate::parse_from_str(date, "%Y-%m-%d") {
-        Ok(parsed_date) => {
-            let timestamp_seconds = parsed_date
-                .and_hms_opt(0, 0, 0)
-                .ok_or(ContractError::InvalidDateFormat {})?
-                .and_utc()
-                .timestamp();
-            if timestamp_seconds < 0 {
-                return Err(ContractError::InvalidDateFormat {});
-            }
-            Ok(timestamp_seconds.unsigned_abs())
-        }
-        Err(_) => Err(ContractError::InvalidDateFormat {}),
-    }
-}
+// fn iso_to_ts(date: &str) -> Result<u64, ContractError> {
+//     match NaiveDate::parse_from_str(date, "%Y-%m-%d") {
+//         Ok(parsed_date) => {
+//             let timestamp_seconds = parsed_date
+//                 .and_hms_opt(0, 0, 0)
+//                 .ok_or(ContractError::InvalidDateFormat {})?
+//                 .and_utc()
+//                 .timestamp();
+//             if timestamp_seconds < 0 {
+//                 return Err(ContractError::InvalidDateFormat {});
+//             }
+//             Ok(timestamp_seconds.unsigned_abs())
+//         }
+//         Err(_) => Err(ContractError::InvalidDateFormat {}),
+//     }
+// }
 
 fn tee_obfuscate(tribute_input: TributeInputPayload) -> Result<TributeInputPayload, ContractError> {
     // TODO implement tee obfuscation
@@ -231,23 +231,23 @@ mod tests {
     use cw_multi_test::{App, Contract, ContractWrapper, Executor};
     use std::str::FromStr;
 
-    #[test]
-    fn test_iso_to_ts_valid() {
-        let result = iso_to_ts("2024-01-15").unwrap();
-        assert_eq!(result, 1705276800);
-    }
-
-    #[test]
-    fn test_iso_to_ts_invalid_format() {
-        let result = iso_to_ts("15-01-2024");
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_iso_to_ts_negative_date() {
-        let result = iso_to_ts("1800-01-01");
-        assert!(result.is_err());
-    }
+    // #[test]
+    // fn test_iso_to_ts_valid() {
+    //     let result = iso_to_ts("2024-01-15").unwrap();
+    //     assert_eq!(result, 1705276800);
+    // }
+    //
+    // #[test]
+    // fn test_iso_to_ts_invalid_format() {
+    //     let result = iso_to_ts("15-01-2024");
+    //     assert!(result.is_err());
+    // }
+    //
+    // #[test]
+    // fn test_iso_to_ts_negative_date() {
+    //     let result = iso_to_ts("1800-01-01");
+    //     assert!(result.is_err());
+    // }
 
     fn tribute_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(

@@ -20,7 +20,6 @@ thiserror = { workspace = true }
 cw-ownable = { workspace = true }
 outbe-utils = { workspace = true }
 tribute = { version = "*", path = "../tribute", features = ["library"] }
-chrono = { workspace = true }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
