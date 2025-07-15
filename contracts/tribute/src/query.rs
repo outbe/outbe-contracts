@@ -2,7 +2,7 @@ use crate::types::{TributeConfig, TributeData};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Binary, Deps, Empty, Env, Order, StdResult, Timestamp};
+use cosmwasm_std::{to_json_binary, Binary, Deps, Empty, Env, Order, StdResult};
 use outbe_nft::state::Cw721Config;
 
 pub type TributeInfoResponse = outbe_nft::msg::NftInfoResponse<TributeData>;
@@ -120,12 +120,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 fn query_daily_tributes(deps: Deps, _env: &Env, date: u64) -> StdResult<DailyTributesResponse> {
     let (start_date, end_date) = date_bounds(date);
 
-    println!(
-        "dates {} {} {}",
-        date,
-        start_date.seconds(),
-        end_date.seconds()
-    );
+    println!("dates {} {} {}", date, start_date, end_date);
 
     let tokens: StdResult<Vec<FullTributeData>> =
         Cw721Config::<TributeData, Option<Empty>>::default()
@@ -133,10 +128,8 @@ fn query_daily_tributes(deps: Deps, _env: &Env, date: u64) -> StdResult<DailyTri
             .range(deps.storage, None, None, Order::Ascending)
             .filter_map(|item| match item {
                 Ok((id, tribute))
-                // TODO convert date to timestamp??
-                //     if tribute.extension.worldwide_day >= start_date
-                //         && tribute.extension.worldwide_day < end_date =>
-                    if start_date <= end_date =>
+                    if tribute.extension.worldwide_day >= start_date
+                        && tribute.extension.worldwide_day < end_date =>
                 {
                     Some(Ok(FullTributeData {
                         token_id: id,
@@ -152,13 +145,10 @@ fn query_daily_tributes(deps: Deps, _env: &Env, date: u64) -> StdResult<DailyTri
 }
 
 /// Normalize any timestamp to midnight UTC of that day.
-fn date_bounds(seconds: u64) -> (Timestamp, Timestamp) {
+fn date_bounds(seconds: u64) -> (u64, u64) {
     // 86400 seconds in a day
     let days = seconds / 86400;
-    (
-        Timestamp::from_seconds(days * 86400),
-        Timestamp::from_seconds((days + 1) * 86400),
-    )
+    (days * 86400, (days + 1) * 86400)
 }
 
 // Query
