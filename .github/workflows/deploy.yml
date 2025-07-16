@@ -65,7 +65,7 @@ jobs:
         run: |
           PROMIS_CODE_ID=$(./scripts/store_code.sh artifacts/promis.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/promis/fixtures/init.json)
-          GRATIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Promis" $PROMIS_CODE_ID "$INIT_PAYLOAD")
+          PROMIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Promis" $PROMIS_CODE_ID "$INIT_PAYLOAD")
           echo "PROMIS_CONTRACT_ADDRESS=$PROMIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Token Miner
