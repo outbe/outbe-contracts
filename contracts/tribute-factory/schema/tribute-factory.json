@@ -1,0 +1,486 @@
+{
+  "contract_name": "tribute-factory",
+  "contract_version": "0.1.0",
+  "idl_version": "1.0.0",
+  "instantiate": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InstantiateMsg",
+    "type": "object",
+    "properties": {
+      "owner": {
+        "description": "Sets the owner.",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Addr"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "tee_config": {
+        "description": "Trusted execution environment config",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/TeeSetup"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "tribute_address": {
+        "description": "Tribute smart contract address",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Addr"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "zk_config": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/ZkSetup"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "additionalProperties": false,
+    "definitions": {
+      "Addr": {
+        "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+        "type": "string"
+      },
+      "HexBinary": {
+        "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+        "type": "string"
+      },
+      "TeeSetup": {
+        "type": "object",
+        "required": [
+          "private_key",
+          "salt"
+        ],
+        "properties": {
+          "private_key": {
+            "description": "Ed25519 private key for messages encryption",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          },
+          "salt": {
+            "description": "Salt to be used in hashing operations",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZkSetup": {
+        "type": "object",
+        "required": [
+          "circuit"
+        ],
+        "properties": {
+          "circuit": {
+            "description": "ZK circuit used to verify proofs",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "execute": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ExecuteMsg",
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "update_config"
+        ],
+        "properties": {
+          "update_config": {
+            "type": "object",
+            "properties": {
+              "new_owner": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Addr"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "new_tee_config": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/TeeSetup"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "new_tribute_address": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Addr"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Accepts encrypted data and mints a new Tribute",
+        "type": "object",
+        "required": [
+          "offer"
+        ],
+        "properties": {
+          "offer": {
+            "type": "object",
+            "required": [
+              "cipher_text",
+              "ephemeral_pubkey",
+              "nonce",
+              "zk_proof"
+            ],
+            "properties": {
+              "cipher_text": {
+                "description": "Encrypted TributeInputPayload",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/HexBinary"
+                  }
+                ]
+              },
+              "ephemeral_pubkey": {
+                "description": "Ephemeral public key to decrypt the data",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/HexBinary"
+                  }
+                ]
+              },
+              "nonce": {
+                "description": "Public nonce to decrypt the data",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/HexBinary"
+                  }
+                ]
+              },
+              "zk_proof": {
+                "description": "Zero knowledge proof",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/ZkProof"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Accepts raw tribute data and mints a new Tribute TEST PURPOSE ONLY",
+        "type": "object",
+        "required": [
+          "offer_insecure"
+        ],
+        "properties": {
+          "offer_insecure": {
+            "type": "object",
+            "required": [
+              "tribute_input",
+              "zk_proof"
+            ],
+            "properties": {
+              "tribute_input": {
+                "$ref": "#/definitions/TributeInputPayload"
+              },
+              "zk_proof": {
+                "$ref": "#/definitions/ZkProof"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ],
+    "definitions": {
+      "Addr": {
+        "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+        "type": "string"
+      },
+      "HexBinary": {
+        "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+        "type": "string"
+      },
+      "TeeSetup": {
+        "type": "object",
+        "required": [
+          "private_key",
+          "salt"
+        ],
+        "properties": {
+          "private_key": {
+            "description": "Ed25519 private key for messages encryption",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          },
+          "salt": {
+            "description": "Salt to be used in hashing operations",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "TributeInputPayload": {
+        "type": "object",
+        "required": [
+          "cu_hashes",
+          "nominal_atto_qty",
+          "nominal_base_qty",
+          "owner",
+          "settlement_atto_amount",
+          "settlement_base_amount",
+          "settlement_currency",
+          "tribute_draft_id",
+          "worldwide_day"
+        ],
+        "properties": {
+          "cu_hashes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/HexBinary"
+            }
+          },
+          "nominal_atto_qty": {
+            "description": "Amount expressed in fractional units, `0 >= nominal_atto_qty < 1e18`",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "nominal_base_qty": {
+            "description": "Quantity expressed in natural units, `nominal_base_qty >= 0`",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "owner": {
+            "description": "Owner is a derivative address on L2 network based on blake3 hashing",
+            "type": "string"
+          },
+          "settlement_atto_amount": {
+            "description": "Amount expressed in fractional units, `0 >= settlement_atto_amount < 1e18`",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "settlement_base_amount": {
+            "description": "Amount expressed in natural units, `settlement_base_amount >= 0`",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "settlement_currency": {
+            "description": "ISO 4217",
+            "type": "string"
+          },
+          "tribute_draft_id": {
+            "description": "ID of the draft tribute",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          },
+          "worldwide_day": {
+            "description": "ISO 8601",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZkProof": {
+        "type": "object",
+        "required": [
+          "proof",
+          "public_data",
+          "verification_key"
+        ],
+        "properties": {
+          "proof": {
+            "description": "Zero knowledge proof as Structured Reference String and based on PlonK algorithm",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          },
+          "public_data": {
+            "description": "ZK public data",
+            "allOf": [
+              {
+                "$ref": "#/definitions/ZkProofPublicData"
+              }
+            ]
+          },
+          "verification_key": {
+            "description": "ZK verification key",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZkProofPublicData": {
+        "type": "object",
+        "required": [
+          "merkle_root",
+          "public_key"
+        ],
+        "properties": {
+          "merkle_root": {
+            "description": "Merkle root of the L2 state",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          },
+          "public_key": {
+            "description": "Public key of the user that created a proof",
+            "allOf": [
+              {
+                "$ref": "#/definitions/HexBinary"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "query": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "QueryMsg",
+    "oneOf": [
+      {
+        "description": "Returns config",
+        "type": "object",
+        "required": [
+          "get_config"
+        ],
+        "properties": {
+          "get_config": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Returns TEE Ed25519 public key",
+        "type": "object",
+        "required": [
+          "pubkey"
+        ],
+        "properties": {
+          "pubkey": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
+  },
+  "migrate": null,
+  "sudo": null,
+  "responses": {
+    "get_config": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ConfigResponse",
+      "type": "object",
+      "properties": {
+        "tribute_address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Addr"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Addr": {
+          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+          "type": "string"
+        }
+      }
+    },
+    "pubkey": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PubkeyResponse",
+      "type": "object",
+      "required": [
+        "public_key"
+      ],
+      "properties": {
+        "public_key": {
+          "$ref": "#/definitions/HexBinary"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "HexBinary": {
+          "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

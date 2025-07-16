@@ -1,4 +1,4 @@
-use cw20::Denom;
+use outbe_utils::denom::Denom;
 
 pub fn denom_to_string(denom: &Denom) -> String {
     match &denom {

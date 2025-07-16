@@ -11,3 +11,5 @@ tmp.json
 node_modules
 
 /docker_output
+
+*.env

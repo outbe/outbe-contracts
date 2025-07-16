@@ -105,8 +105,8 @@ mod tests {
     };
     use crate::types::{NodData, State};
     use cosmwasm_std::{Decimal, Timestamp, Uint128};
-    use cw20::Denom;
     use cw_multi_test::{App, ContractWrapper, Executor};
+    use outbe_utils::denom::Denom;
     use std::str::FromStr;
 
     #[test]
