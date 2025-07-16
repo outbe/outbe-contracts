@@ -1,44 +1,41 @@
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Uint128;
-use cw20::MinterResponse;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
-    pub mint: Option<MinterResponse>,
-    pub gratis_contract: String,
-    pub admin: String,
+    pub mint: Option<cw20::MinterResponse>,
+    pub admin: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg {
     Burn { amount: Uint128 },
     Mint { recipient: String, amount: Uint128 },
     UpdateMinter { new_minter: Option<String> },
-    ConvertToGratis { amount: Uint128 },
     UpdateAdmin { new_admin: String },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
-    Balance {
-        address: String,
-    },
+    #[returns(cw20::BalanceResponse)]
+    Balance { address: String },
+    #[returns(cw20::TokenInfoResponse)]
     TokenInfo {},
+    #[returns(cw20::MinterResponse)]
     Minter {},
+    #[returns(cw20::AllAccountsResponse)]
     AllAccounts {
         start_after: Option<String>,
         limit: Option<u32>,
     },
-    CheckTicket {
-        ticket: String,
-    },
+    #[returns(CheckTicketResponse)]
+    CheckTicket { ticket: String },
+    #[returns(String)]
     Admin {},
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct CheckTicketResponse {
     pub exists: bool,
 }
