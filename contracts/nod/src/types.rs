@@ -1,12 +1,15 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Decimal, Timestamp, Uint128};
+use cosmwasm_std::{Addr, Decimal, Timestamp, Uint128};
 use cw20::Denom;
 use outbe_nft::state::NftInfo;
 use outbe_nft::traits::{Cw721CollectionConfig, Cw721CustomMsg, Cw721State};
 
-/// Configuration for the Nod NFT collection (empty)
+/// Configuration for the Nod NFT collection
 #[cw_serde]
-pub struct NodConfig {}
+pub struct NodConfig {
+    pub price_oracle_contract: Addr,
+    pub token_miner_contract: Addr,
+}
 
 impl Cw721CollectionConfig for NodConfig {}
 

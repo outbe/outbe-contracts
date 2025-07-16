@@ -6,7 +6,10 @@ use outbe_nft::msg::Cw721InstantiateMsg;
 
 /// Custom collection extension for instantiate
 #[cw_serde]
-pub struct NodCollectionExtension {}
+pub struct NodCollectionExtension {
+    pub price_oracle_contract: String,
+    pub token_miner_contract: String,
+}
 
 pub type InstantiateMsg = Cw721InstantiateMsg<NodCollectionExtension>;
 
@@ -25,6 +28,15 @@ pub enum ExecuteMsg {
     /// Burn an existing Nod NFT
     Burn {
         token_id: String,
+    },
+    /// Claim gratis tokens if price oracle conditions are met
+    Claim {
+        token_id: String,
+    },
+    /// Update contract addresses (admin only)
+    UpdateSettings {
+        price_oracle_contract: Option<String>,
+        token_miner_contract: Option<String>,
     },
     // todo remove after demo
     BurnAll {},

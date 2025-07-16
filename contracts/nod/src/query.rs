@@ -99,28 +99,108 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::contract::{execute, instantiate};
+    use crate::contract::{
+        execute, instantiate, PriceOracleQueryMsg, TokenMinerExecuteMsg, TokenPairPrice,
+    };
+    use crate::error::ContractError;
     use crate::msg::{
         ExecuteMsg, InstantiateMsg, NodCollectionExtension, NodEntity, SubmitExtension,
     };
     use crate::types::{NodData, State};
-    use cosmwasm_std::{Decimal, Timestamp, Uint128};
+    use cosmwasm_std::{Decimal, Response, StdResult, Timestamp, Uint128};
     use cw20::Denom;
     use cw_multi_test::{App, ContractWrapper, Executor};
     use std::str::FromStr;
 
-    #[test]
-    fn test_instantiate_submit_query_and_burn() {
-        let mut app = App::default();
-        let owner = app.api().addr_make("owner");
+    fn setup_contracts(
+        app: &mut App,
+        owner: &cosmwasm_std::Addr,
+    ) -> (cosmwasm_std::Addr, cosmwasm_std::Addr, cosmwasm_std::Addr) {
+        // Create mock oracle contract
+        let oracle_code = ContractWrapper::new(
+            |_deps, _env, _info, _msg: ExecuteMsg| -> Result<Response, ContractError> {
+                Ok(Response::new())
+            },
+            |_deps, _env, _info, _msg: InstantiateMsg| -> Result<Response, ContractError> {
+                Ok(Response::new())
+            },
+            |_deps, _env, msg| match msg {
+                PriceOracleQueryMsg::GetPrice {} => {
+                    use cosmwasm_std::to_json_binary;
+                    to_json_binary(&TokenPairPrice {
+                        token1: Denom::Native("token1".to_string()),
+                        token2: Denom::Native("token2".to_string()),
+                        price: Decimal::from_str("100").unwrap(),
+                        day_type: "working".to_string(),
+                    })
+                }
+            },
+        );
+        let oracle_code_id = app.store_code(Box::new(oracle_code));
+        let oracle_addr = app
+            .instantiate_contract(
+                oracle_code_id,
+                owner.clone(),
+                &InstantiateMsg {
+                    name: "oracle".to_string(),
+                    symbol: "ORC".to_string(),
+                    collection_info_extension: NodCollectionExtension {
+                        price_oracle_contract: "dummy".to_string(),
+                        token_miner_contract: "dummy".to_string(),
+                    },
+                    minter: None,
+                    creator: None,
+                    burner: None,
+                },
+                &[],
+                "oracle",
+                None,
+            )
+            .unwrap();
 
+        // Create mock miner contract
+        let miner_code = ContractWrapper::new(
+            |_deps, _env, _info, _msg: TokenMinerExecuteMsg| -> Result<Response, ContractError> {
+                Ok(Response::new().add_attribute("action", "mine"))
+            },
+            |_deps, _env, _info, _msg: InstantiateMsg| -> Result<Response, ContractError> {
+                Ok(Response::new())
+            },
+            |_deps, _env, _msg: QueryMsg| -> StdResult<Binary> { to_json_binary(&()) },
+        );
+        let miner_code_id = app.store_code(Box::new(miner_code));
+        let miner_addr = app
+            .instantiate_contract(
+                miner_code_id,
+                owner.clone(),
+                &InstantiateMsg {
+                    name: "miner".to_string(),
+                    symbol: "MIN".to_string(),
+                    collection_info_extension: NodCollectionExtension {
+                        price_oracle_contract: "dummy".to_string(),
+                        token_miner_contract: "dummy".to_string(),
+                    },
+                    minter: None,
+                    creator: None,
+                    burner: None,
+                },
+                &[],
+                "miner",
+                None,
+            )
+            .unwrap();
+
+        // Create main nod contract
         let code = ContractWrapper::new(execute, instantiate, query);
         let code_id = app.store_code(Box::new(code));
 
         let init_msg = InstantiateMsg {
             name: "nod".to_string(),
             symbol: "NOD".to_string(),
-            collection_info_extension: NodCollectionExtension {},
+            collection_info_extension: NodCollectionExtension {
+                price_oracle_contract: oracle_addr.to_string(),
+                token_miner_contract: miner_addr.to_string(),
+            },
             minter: None,
             creator: None,
             burner: None,
@@ -128,6 +208,16 @@ mod tests {
         let contract_addr = app
             .instantiate_contract(code_id, owner.clone(), &init_msg, &[], "nod1", None)
             .unwrap();
+
+        (contract_addr, oracle_addr, miner_addr)
+    }
+
+    #[test]
+    fn test_instantiate_submit_query_and_burn() {
+        let mut app = App::default();
+        let owner = app.api().addr_make("owner");
+
+        let (contract_addr, _oracle_addr, _miner_addr) = setup_contracts(&mut app, &owner);
 
         // initially no tokens
         let resp: outbe_nft::msg::NumTokensResponse = app
@@ -264,5 +354,151 @@ mod tests {
             .query_wasm_smart(contract_addr.clone(), &QueryMsg::NumTokens {})
             .unwrap();
         assert_eq!(resp.count, 0);
+    }
+
+    #[test]
+    fn test_claim_success() {
+        let mut app = App::default();
+        let owner = app.api().addr_make("owner");
+        let recipient = app.api().addr_make("recipient");
+
+        let (contract_addr, _oracle_addr, _miner_addr) = setup_contracts(&mut app, &owner);
+
+        // Submit (mint) a new Nod NFT
+        let token_id = "token1".to_string();
+        let entity = NodEntity {
+            nod_id: "nod123".to_string(),
+            settlement_token: Denom::Native("uset".to_string()),
+            symbolic_rate: Decimal::from_str("1.23").unwrap(),
+            nominal_minor_rate: Uint128::new(1000), // gratis amount
+            issuance_minor_rate: Decimal::from_str("20").unwrap(),
+            symbolic_minor_load: Uint128::new(30),
+            vector_minor_rate: Uint128::new(40),
+            floor_minor_price: Decimal::from_str("50").unwrap(), // Lower than oracle price
+            state: State::Issued,
+            address: recipient.to_string(),
+        };
+        let submit_ext = SubmitExtension {
+            entity: entity.clone(),
+            created_at: Some(Timestamp::from_seconds(12345)),
+        };
+        let exec_msg = ExecuteMsg::Submit {
+            token_id: token_id.clone(),
+            owner: recipient.to_string(),
+            extension: Box::new(submit_ext.clone()),
+        };
+        app.execute_contract(owner.clone(), contract_addr.clone(), &exec_msg, &[])
+            .unwrap();
+
+        // Test claim by recipient (should succeed)
+        let claim_msg = ExecuteMsg::Claim {
+            token_id: token_id.clone(),
+        };
+        let result =
+            app.execute_contract(recipient.clone(), contract_addr.clone(), &claim_msg, &[]);
+
+        // Now that we have proper mock contracts set up, this should succeed
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_claim_unauthorized() {
+        let mut app = App::default();
+        let owner = app.api().addr_make("owner");
+        let recipient = app.api().addr_make("recipient");
+        let unauthorized = app.api().addr_make("unauthorized");
+
+        let (contract_addr, _oracle_addr, _miner_addr) = setup_contracts(&mut app, &owner);
+
+        // Submit (mint) a new Nod NFT
+        let token_id = "token1".to_string();
+        let entity = NodEntity {
+            nod_id: "nod123".to_string(),
+            settlement_token: Denom::Native("uset".to_string()),
+            symbolic_rate: Decimal::from_str("1.23").unwrap(),
+            nominal_minor_rate: Uint128::new(1000),
+            issuance_minor_rate: Decimal::from_str("20").unwrap(),
+            symbolic_minor_load: Uint128::new(30),
+            vector_minor_rate: Uint128::new(40),
+            floor_minor_price: Decimal::from_str("50").unwrap(),
+            state: State::Issued,
+            address: recipient.to_string(),
+        };
+        let submit_ext = SubmitExtension {
+            entity: entity.clone(),
+            created_at: Some(Timestamp::from_seconds(12345)),
+        };
+        let exec_msg = ExecuteMsg::Submit {
+            token_id: token_id.clone(),
+            owner: recipient.to_string(),
+            extension: Box::new(submit_ext.clone()),
+        };
+        app.execute_contract(owner.clone(), contract_addr.clone(), &exec_msg, &[])
+            .unwrap();
+
+        // Test claim by unauthorized user (should fail)
+        let claim_msg = ExecuteMsg::Claim {
+            token_id: token_id.clone(),
+        };
+        let result =
+            app.execute_contract(unauthorized.clone(), contract_addr.clone(), &claim_msg, &[]);
+        assert!(result.is_err());
+
+        // Check that the error contains "Unauthorized" or similar
+        let err_msg = format!("{:?}", result.unwrap_err());
+        assert!(err_msg.contains("Unauthorized") || err_msg.contains("not found"));
+    }
+
+    #[test]
+    fn test_update_settings() {
+        let mut app = App::default();
+        let owner = app.api().addr_make("owner");
+
+        let (contract_addr, _oracle_addr, _miner_addr) = setup_contracts(&mut app, &owner);
+
+        // Create additional mock contracts for updating
+        let new_oracle_addr = app.api().addr_make("new_oracle");
+        let new_miner_addr = app.api().addr_make("new_miner");
+
+        // Test updating both contract addresses
+        let update_msg = ExecuteMsg::UpdateSettings {
+            price_oracle_contract: Some(new_oracle_addr.to_string()),
+            token_miner_contract: Some(new_miner_addr.to_string()),
+        };
+        let result = app.execute_contract(owner.clone(), contract_addr.clone(), &update_msg, &[]);
+        assert!(result.is_ok());
+
+        // Test updating only oracle address
+        let another_oracle_addr = app.api().addr_make("another_oracle");
+        let update_msg = ExecuteMsg::UpdateSettings {
+            price_oracle_contract: Some(another_oracle_addr.to_string()),
+            token_miner_contract: None,
+        };
+        let result = app.execute_contract(owner.clone(), contract_addr.clone(), &update_msg, &[]);
+        assert!(result.is_ok());
+
+        // Test updating only miner address
+        let another_miner_addr = app.api().addr_make("another_miner");
+        let update_msg = ExecuteMsg::UpdateSettings {
+            price_oracle_contract: None,
+            token_miner_contract: Some(another_miner_addr.to_string()),
+        };
+        let result = app.execute_contract(owner.clone(), contract_addr.clone(), &update_msg, &[]);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_claim_nonexistent_token() {
+        let mut app = App::default();
+        let owner = app.api().addr_make("owner");
+
+        let (contract_addr, _oracle_addr, _miner_addr) = setup_contracts(&mut app, &owner);
+
+        // Test claim on non-existent token
+        let claim_msg = ExecuteMsg::Claim {
+            token_id: "nonexistent".to_string(),
+        };
+        let result = app.execute_contract(owner.clone(), contract_addr.clone(), &claim_msg, &[]);
+        assert!(result.is_err());
     }
 }

@@ -88,11 +88,16 @@ fn test_metadosis() {
         price_oracle.address.clone(),
     );
 
-    println!("📦 Deploy Node");
-    let nod = deploy_nod(&mut app, config.owner_addr.clone());
-
     println!("📦 Deploy Token Allocator");
     let token_allocator = deploy_token_allocator(&mut app, config.owner_addr.clone());
+
+    println!("📦 Deploy Node");
+    let nod = deploy_nod(
+        &mut app,
+        config.owner_addr.clone(),
+        price_oracle.address.clone(),
+        token_allocator.address.clone(),
+    );
 
     println!("📦 Deploy Vector");
     let vector = deploy_vector(&mut app, config.owner_addr.clone());
@@ -302,7 +307,12 @@ fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedCon
         .unwrap();
     DeployedContract { address, code_id }
 }
-fn deploy_nod(app: &mut App, owner: Addr) -> DeployedContract {
+fn deploy_nod(
+    app: &mut App,
+    owner: Addr,
+    price_oracle: Addr,
+    token_miner: Addr,
+) -> DeployedContract {
     use nod::contract::{execute, instantiate};
     use nod::msg::InstantiateMsg;
     use nod::query::query;
@@ -313,7 +323,10 @@ fn deploy_nod(app: &mut App, owner: Addr) -> DeployedContract {
     let instantiate_msg = InstantiateMsg {
         name: "nod".to_string(),
         symbol: "nod".to_string(),
-        collection_info_extension: nod::msg::NodCollectionExtension {},
+        collection_info_extension: nod::msg::NodCollectionExtension {
+            price_oracle_contract: price_oracle.to_string(),
+            token_miner_contract: token_miner.to_string(),
+        },
         minter: None,
         creator: None,
         burner: None,
