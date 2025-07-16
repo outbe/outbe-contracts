@@ -7,10 +7,10 @@ use cosmwasm_std::{
 };
 use outbe_nft::error::Cw721ContractError;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
+use outbe_utils::denom::Denom;
 
 // External contract message types
 use cosmwasm_schema::cw_serde;
-use cw20::Denom;
 
 #[cw_serde]
 pub enum PriceOracleQueryMsg {
@@ -220,7 +220,7 @@ fn execute_claim(
     }
 
     // Get the nominal_minor_rate (gratis amount) from the NFT
-    let gratis_amount = nft.extension.nominal_minor_rate;
+    let gratis_amount = nft.extension.gratis_load_minor;
 
     // Query the price oracle to get the current price
     let price_query = QueryRequest::Wasm(WasmQuery::Smart {
@@ -230,8 +230,8 @@ fn execute_claim(
 
     let price_response: TokenPairPrice = deps.querier.query(&price_query)?;
 
-    // Compare floor_minor_price with oracle price
-    if nft.extension.floor_minor_price < price_response.price {
+    // Compare floor_minor_price with oracle price (Get price as decimal 18.)
+    if nft.extension.floor_price_minor <= price_response.price.atomics() {
         // Call token-miner to mine gratis tokens
         let mine_msg = TokenMinerExecuteMsg::Mine {
             recipient: info.sender.to_string(),
@@ -251,7 +251,7 @@ fn execute_claim(
             .add_attribute("token_id", token_id)
             .add_attribute("claimer", info.sender.to_string())
             .add_attribute("gratis_amount", gratis_amount.to_string())
-            .add_attribute("floor_price", nft.extension.floor_minor_price.to_string())
+            .add_attribute("floor_price", nft.extension.floor_price_minor.to_string())
             .add_attribute("oracle_price", price_response.price.to_string()))
     } else {
         Err(ContractError::ClaimConditionNotMet {})

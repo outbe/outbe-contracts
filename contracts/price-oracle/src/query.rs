@@ -2,8 +2,8 @@ use crate::state::{CREATOR, TOKEN_PAIR_PRICE};
 use crate::types::TokenPairPrice;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdError, StdResult, Storage};
-use cw20::Denom;
 use cw_ownable::Ownership;
+use outbe_utils::denom::Denom;
 
 #[cw_serde]
 #[derive(QueryResponses)]
@@ -11,10 +11,7 @@ pub enum QueryMsg {
     #[returns(TokenPairPrice)]
     GetPrice {},
     #[returns(TokenPairPrice)]
-    GetPriceByTokenPair {
-        token1: cw20::Denom,
-        token2: cw20::Denom,
-    },
+    GetPriceByTokenPair { token1: Denom, token2: Denom },
     #[returns(cw_ownable::Ownership<String>)]
     GetCreatorOwnership {},
 }
