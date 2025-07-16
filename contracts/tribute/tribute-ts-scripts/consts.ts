@@ -1,8 +1,9 @@
 import {DirectSecp256k1Wallet} from "@cosmjs/proto-signing";
 
-export const METADOSIS_CONTRACT_ADDRESS = "outbe15q49eke6jt2c4r6apd5axf6qaqjnm6da249trtv5q0tnaudm5jhs6gz3t8"
-export const NOD_CONTRACT_ADDRESS = "outbe16nrccj8vy5lkla4lnzuumkcmq9gwmw93huty7ad4mp2artm4raxqa204zk"
-export const TRIBUTE_CONTRACT_ADDRESS = "outbe12wl9h6ud8w6uamvzzwefxulwnc56xjwzgy876dqt8tmrvprjdnjsxhsr92"
+export const METADOSIS_CONTRACT_ADDRESS = "outbe1h6hlywm80jkecemk4nrq5dy5vlw8t3dlf2tkp6umlnq606plxg9qlwgl9z"
+export const NOD_CONTRACT_ADDRESS = "outbe1n7kht5ecttguvp90wq4xzjs3gl2qzqccj88efw98433vyqfl9gps3aexm6"
+export const TRIBUTE_CONTRACT_ADDRESS = "outbe1v9ka95pt9gfvzgvnashe6sjtklp96qyhtfxyt3x5834aeuqyases4qkvpt"
+export const TRIBUTE_FACTORY_CONTRACT_ADDRESS = "outbe1l52ywrxduvvc9ypvucn7myslx4jhly3nclzqz4pftqph8p0vgrqsjs0g0h"
 
 export const RPC_ENDPOINT = "https://rpc.dev.outbe.net";
 

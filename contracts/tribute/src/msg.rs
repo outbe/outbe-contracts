@@ -1,7 +1,7 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Decimal, HexBinary, Uint128};
-use cw20::Denom;
+use cosmwasm_std::{Addr, Decimal, Uint128};
 use outbe_nft::msg::{CollectionInfoMsg, Cw721InstantiateMsg};
+use outbe_utils::denom::Denom;
 
 #[cw_serde]
 pub struct TributeCollectionExtension {
@@ -48,12 +48,6 @@ pub enum ExecuteMsg {
 #[cw_serde]
 pub struct MintExtension {
     pub data: TributeMintData,
-
-    // TODO currently not checked but remains there for compatibility
-    /// Serialized "compact" signature (64 bytes) of the `entity` in hex
-    pub signature: HexBinary,
-    /// Serialized according to SEC 2 (33 or 65 bytes) public key in hex
-    pub public_key: HexBinary,
 }
 
 #[cw_serde]
@@ -66,9 +60,10 @@ pub struct TributeMintData {
     pub settlement_amount_minor: Uint128,
     /// Tribute settlement token
     pub settlement_currency: Denom,
-    // /// Hashes identifying consumption records batch. Each hash should be a valid unique
-    // /// sha256 hash in hex format
-    // pub hashes: Vec<HexBinary>,
+    /// Value of the Tribute in Native Coins
+    pub nominal_qty_minor: Uint128,
+    /// Price in Native coins with a rate on the moment of the transaction
+    pub tribute_price_minor: Decimal,
 }
 
 #[cw_serde]

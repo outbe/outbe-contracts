@@ -416,36 +416,14 @@
           }
         ]
       },
-      "HexBinary": {
-        "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
-        "type": "string"
-      },
       "MintExtension": {
         "type": "object",
         "required": [
-          "data",
-          "public_key",
-          "signature"
+          "data"
         ],
         "properties": {
           "data": {
             "$ref": "#/definitions/TributeMintData"
-          },
-          "public_key": {
-            "description": "Serialized according to SEC 2 (33 or 65 bytes) public key in hex",
-            "allOf": [
-              {
-                "$ref": "#/definitions/HexBinary"
-              }
-            ]
-          },
-          "signature": {
-            "description": "Serialized \"compact\" signature (64 bytes) of the `entity` in hex",
-            "allOf": [
-              {
-                "$ref": "#/definitions/HexBinary"
-              }
-            ]
           }
         },
         "additionalProperties": false
@@ -481,13 +459,23 @@
       "TributeMintData": {
         "type": "object",
         "required": [
+          "nominal_qty_minor",
           "owner",
           "settlement_amount_minor",
           "settlement_currency",
           "tribute_id",
+          "tribute_price_minor",
           "worldwide_day"
         ],
         "properties": {
+          "nominal_qty_minor": {
+            "description": "Value of the Tribute in Native Coins",
+            "allOf": [
+              {
+                "$ref": "#/definitions/Uint128"
+              }
+            ]
+          },
           "owner": {
             "type": "string"
           },
@@ -509,6 +497,14 @@
           },
           "tribute_id": {
             "type": "string"
+          },
+          "tribute_price_minor": {
+            "description": "Price in Native coins with a rate on the moment of the transaction",
+            "allOf": [
+              {
+                "$ref": "#/definitions/Decimal"
+              }
+            ]
           },
           "worldwide_day": {
             "description": "Date of the Tribute creation",
@@ -1050,11 +1046,9 @@
             },
             "worldwide_day": {
               "description": "Date of Consumption",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Timestamp"
-                }
-              ]
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
             }
           },
           "additionalProperties": false
@@ -1402,11 +1396,9 @@
             },
             "worldwide_day": {
               "description": "Date of Consumption",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Timestamp"
-                }
-              ]
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
             }
           },
           "additionalProperties": false

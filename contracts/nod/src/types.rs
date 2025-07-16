@@ -1,15 +1,12 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Decimal, Timestamp, Uint128};
-use cw20::Denom;
+use cosmwasm_std::{Decimal, Timestamp, Uint128};
 use outbe_nft::state::NftInfo;
 use outbe_nft::traits::{Cw721CollectionConfig, Cw721CustomMsg, Cw721State};
+use outbe_utils::denom::Denom;
 
-/// Configuration for the Nod NFT collection
+/// Configuration for the Nod NFT collection (empty)
 #[cw_serde]
-pub struct NodConfig {
-    pub price_oracle_contract: Addr,
-    pub token_miner_contract: Addr,
-}
+pub struct NodConfig {}
 
 impl Cw721CollectionConfig for NodConfig {}
 
@@ -18,33 +15,35 @@ impl Cw721CollectionConfig for NodConfig {}
 pub struct NodData {
     /// Identifier of the Nod
     pub nod_id: String,
-    /// Settlement token denomination
-    pub settlement_token: Denom,
+    /// Settlement Currency
+    pub settlement_currency: Denom,
     /// Symbolic rate
     pub symbolic_rate: Decimal,
-    /// Nominal minor rate at transaction time
-    pub nominal_minor_rate: Uint128,
-    /// Issuance minor rate at issuance time
-    pub issuance_minor_rate: Decimal,
-    /// Symbolic minor load
-    pub symbolic_minor_load: Uint128,
-    /// Vector minor rate from account
-    pub vector_minor_rate: Uint128,
-    /// Floor minor price threshold
-    pub floor_minor_price: Decimal,
+    /// Account specific, from Lysis
+    pub floor_rate: Uint128,
+    /// From Tribute
+    pub nominal_price_minor: Uint128,
+    /// coen Price at the moment of Nod issuance
+    pub issuance_price_minor: Uint128,
+    /// From Tribute Symbolic Load
+    pub gratis_load_minor: Uint128,
+    /// Floor price in minor units
+    pub floor_price_minor: Uint128,
     /// Current state of the Nod
     pub state: State,
-    /// Address entitled to claim the Nod
-    pub address: String,
+    /// Address entitled to mine Gratis
+    pub owner: String,
     /// Creation timestamp
-    pub created_at: Timestamp,
+    pub issued_at: Timestamp,
+    /// Timestamp when the Nod was qualified
+    pub qualified_at: Option<Timestamp>,
 }
 
 /// Possible states for a Nod
 #[cw_serde]
 pub enum State {
     Issued,
-    Settled,
+    Qualified,
 }
 
 pub type NodNft = NftInfo<NodData>;
