@@ -41,15 +41,16 @@ pub struct SubmitExtension {
 #[cw_serde]
 pub struct NodEntity {
     pub nod_id: String,
-    pub settlement_token: Denom,
+    pub settlement_currency: Denom,
     pub symbolic_rate: Decimal,
-    pub nominal_minor_rate: Uint128,
-    pub issuance_minor_rate: Decimal,
-    pub symbolic_minor_load: Uint128,
-    pub vector_minor_rate: Uint128,
-    pub floor_minor_price: Decimal,
+    pub floor_rate: Uint128,
+    pub nominal_price_minor: Uint128,
+    pub issuance_price_minor: Uint128,
+    pub gratis_load_minor: Uint128,
+    pub floor_price_minor: Uint128,
     pub state: State,
-    pub address: String,
+    pub owner: String,
+    pub qualified_at: Option<Timestamp>,
 }
 
 /// Migrate message for Nod contract

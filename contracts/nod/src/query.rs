@@ -153,15 +153,16 @@ mod tests {
         let recipient = app.api().addr_make("recipient");
         let entity = NodEntity {
             nod_id: "nod123".to_string(),
-            settlement_token: Denom::Native("uset".to_string()),
+            settlement_currency: Denom::Native("uset".to_string()),
             symbolic_rate: Decimal::from_str("1.23").unwrap(),
-            nominal_minor_rate: Uint128::new(10),
-            issuance_minor_rate: Decimal::from_str("20").unwrap(),
-            symbolic_minor_load: Uint128::new(30),
-            vector_minor_rate: Uint128::new(40),
-            floor_minor_price: Decimal::from_str("50").unwrap(),
+            floor_rate: Uint128::new(10),
+            nominal_price_minor: Uint128::new(100),
+            issuance_price_minor: Uint128::new(200),
+            gratis_load_minor: Uint128::new(300),
+            floor_price_minor: Uint128::new(400),
             state: State::Issued,
-            address: recipient.to_string(),
+            owner: recipient.to_string(),
+            qualified_at: None,
         };
         let submit_ext = SubmitExtension {
             entity: entity.clone(),
@@ -205,22 +206,25 @@ mod tests {
             )
             .unwrap();
         assert_eq!(resp.extension.nod_id, entity.nod_id);
-        assert_eq!(resp.extension.settlement_token, entity.settlement_token);
+        assert_eq!(
+            resp.extension.settlement_currency,
+            entity.settlement_currency
+        );
         assert_eq!(resp.extension.symbolic_rate, entity.symbolic_rate);
-        assert_eq!(resp.extension.nominal_minor_rate, entity.nominal_minor_rate);
+        assert_eq!(resp.extension.floor_rate, entity.floor_rate);
         assert_eq!(
-            resp.extension.issuance_minor_rate,
-            entity.issuance_minor_rate
+            resp.extension.nominal_price_minor,
+            entity.nominal_price_minor
         );
         assert_eq!(
-            resp.extension.symbolic_minor_load,
-            entity.symbolic_minor_load
+            resp.extension.issuance_price_minor,
+            entity.issuance_price_minor
         );
-        assert_eq!(resp.extension.vector_minor_rate, entity.vector_minor_rate);
-        assert_eq!(resp.extension.floor_minor_price, entity.floor_minor_price);
+        assert_eq!(resp.extension.gratis_load_minor, entity.gratis_load_minor);
+        assert_eq!(resp.extension.floor_price_minor, entity.floor_price_minor);
         assert_eq!(resp.extension.state, entity.state);
-        assert_eq!(resp.extension.address, entity.address);
-        assert_eq!(resp.extension.created_at, submit_ext.created_at.unwrap());
+        assert_eq!(resp.extension.issued_at, submit_ext.created_at.unwrap());
+        assert_eq!(resp.extension.qualified_at, entity.qualified_at);
 
         // Tokens for recipient should include token_id
         let resp: outbe_nft::msg::TokensResponse = app
