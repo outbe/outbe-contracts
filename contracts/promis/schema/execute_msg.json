@@ -72,27 +72,6 @@
     {
       "type": "object",
       "required": [
-        "convert_to_gratis"
-      ],
-      "properties": {
-        "convert_to_gratis": {
-          "type": "object",
-          "required": [
-            "amount"
-          ],
-          "properties": {
-            "amount": {
-              "$ref": "#/definitions/Uint128"
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "required": [
         "update_admin"
       ],
       "properties": {

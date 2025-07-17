@@ -365,8 +365,8 @@ mod test_gratis {
 
         // Check admin is set correctly
         let res = query(deps.as_ref(), mock_env(), QueryMsg::Admin {}).unwrap();
-        let admin_addr: String = from_json(&res).unwrap();
-        assert_eq!(admin_addr, admin_addr.to_string());
+        let admin: String = from_json(&res).unwrap();
+        assert_eq!(admin, admin_addr.to_string());
     }
 
     #[test]
@@ -435,8 +435,8 @@ mod test_gratis {
 
         // Check admin was updated
         let res = query(deps.as_ref(), mock_env(), QueryMsg::Admin {}).unwrap();
-        let admin_addr: String = from_json(&res).unwrap();
-        assert_eq!(admin_addr, new_admin_addr.to_string());
+        let admin: String = from_json(&res).unwrap();
+        assert_eq!(admin, new_admin_addr.to_string());
     }
 
     #[test]

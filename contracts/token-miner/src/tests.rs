@@ -8,7 +8,6 @@ mod test_token_miner {
     use crate::state::{AccessPermissions, TokenType};
     use crate::ContractError;
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env, MockApi};
-    use cosmwasm_std::Addr;
     use cosmwasm_std::{
         from_json, to_json_binary, ContractResult, Decimal, SystemError, SystemResult, Timestamp,
         Uint128, WasmMsg, WasmQuery,

@@ -1,0 +1,6 @@
+{
+  "gratis_contract": $gratis_address,
+  "promis_contract": $promis_address,
+  "nod_contract": $nod_address,
+  "price_oracle_contract": $price_oracle_address
+}

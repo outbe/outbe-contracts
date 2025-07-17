@@ -1,3 +1,6 @@
+use crate::error::ContractError;
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
 use blake3;
 use cosmwasm_std::{
     entry_point, Binary, Deps, DepsMut, Env, MessageInfo, OverflowError, OverflowOperation,
@@ -8,10 +11,6 @@ use cw20_base::contract::{execute as cw20_execute, instantiate as cw20_instantia
 use cw20_base::msg::{ExecuteMsg as Cw20ExecuteMsg, InstantiateMsg as Cw20InstantiateMsg};
 use cw20_base::state::{BALANCES, TOKEN_INFO};
 use cw20_base::ContractError as Cw20ContractError;
-
-use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
 
 pub const CONTRACT_NAME: &str = "outbe.net:gratis";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -25,7 +24,11 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let admin_addr = deps.api.addr_validate(&msg.admin)?;
+    let admin_addr = msg
+        .admin
+        .map(|it| deps.api.addr_validate(&it))
+        .unwrap_or(Ok(info.clone().sender))?;
+
     ADMIN.save(deps.storage, &admin_addr)?;
 
     let cw20_msg = Cw20InstantiateMsg {
