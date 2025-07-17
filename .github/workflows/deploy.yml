@@ -127,11 +127,12 @@ jobs:
           INIT_PAYLOAD=$(jq -n --arg gratis_address $GRATIS_CONTRACT_ADDRESS --arg promis_address $PROMIS_CONTRACT_ADDRESS --arg nod_address $NOD_CONTRACT_ADDRESS --arg price_oracle_address $PRICE_ORACLE_CONTRACT_ADDRESS --from-file ./contracts/token-miner/fixtures/init.json)
           TOKEN_MINER_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Token Miner" $TOKEN_MINER_CODE_ID "$INIT_PAYLOAD")
           echo "TOKEN_MINER_CONTRACT_ADDRESS=$TOKEN_MINER_CONTRACT_ADDRESS" >> $GITHUB_ENV
-          echo "Link Gratis Promis and Token Miner contracts"
+          echo "Link Gratis and Token Miner contracts"
           UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/gratis/fixtures/update-minter.json)
           ./scripts/execute_tx.sh $GRATIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          echo "Link Promis and Token Miner contracts"
           UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/promis/fixtures/update-minter.json)
-          ./scripts/execute_tx.sh $NOD_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          ./scripts/execute_tx.sh $PROMIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Print output
         run: |
