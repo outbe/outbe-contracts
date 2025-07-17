@@ -31,10 +31,10 @@ mod test_token_miner {
 
     fn default_instantiate_msg(api: &MockApi) -> InstantiateMsg {
         InstantiateMsg {
-            gratis_contract: api.addr_make(&GRATIS_CONTRACT).into_string(),
-            promis_contract: api.addr_make(&PROMIS_CONTRACT).to_string(),
-            price_oracle_contract: api.addr_make(&PRICE_ORACLE_CONTRACT).to_string(),
-            nod_contract: api.addr_make(&NOD_CONTRACT).to_string(),
+            gratis_contract: api.addr_make(GRATIS_CONTRACT).into_string(),
+            promis_contract: api.addr_make(PROMIS_CONTRACT).to_string(),
+            price_oracle_contract: api.addr_make(PRICE_ORACLE_CONTRACT).to_string(),
+            nod_contract: api.addr_make(NOD_CONTRACT).to_string(),
         }
     }
 
@@ -676,7 +676,7 @@ mod test_token_miner {
                     match query_msg {
                         NodQueryMsg::NftInfo { token_id: _ } => {
                             let nod_data = mock_nod_data(
-                                &user1_addr.to_string(),
+                                user1_addr.to_string().as_ref(),
                                 NodState::Issued,
                                 Uint128::new(100),
                                 Uint128::new(500),
@@ -787,7 +787,7 @@ mod test_token_miner {
             WasmQuery::Smart { contract_addr, msg } => {
                 if contract_addr == &nod_contract_addr.to_string() {
                     let nod_data = mock_nod_data(
-                        &user2_addr.to_string(),
+                        user2_addr.to_string().as_ref(),
                         NodState::Issued,
                         Uint128::new(100),
                         Uint128::new(500),
@@ -893,7 +893,7 @@ mod test_token_miner {
             WasmQuery::Smart { contract_addr, msg } => {
                 if contract_addr == &nod_contract_addr.to_string() {
                     let nod_data = mock_nod_data(
-                        &user1_addr.as_str(),
+                        user1_addr.as_str(),
                         NodState::Issued,
                         Uint128::new(200),
                         Uint128::new(500),

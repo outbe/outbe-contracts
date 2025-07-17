@@ -361,7 +361,8 @@ mod test_gratis {
     fn test_admin_instantiation() {
         let mut deps = mock_dependencies_with_balance(&[]);
         let admin_addr = &deps.api.addr_make(TEST_ADMIN);
-        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
+        let _res =
+            init_contract_with_admin(deps.as_mut(), admin_addr.to_string().as_ref()).unwrap();
 
         // Check admin is set correctly
         let res = query(deps.as_ref(), mock_env(), QueryMsg::Admin {}).unwrap();
@@ -374,13 +375,14 @@ mod test_gratis {
         let mut deps = mock_dependencies_with_balance(&[]);
         let admin_addr = &deps.api.addr_make(TEST_ADMIN);
         let new_minter_addr = &deps.api.addr_make(NEW_MINTER);
-        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
+        let _res =
+            init_contract_with_admin(deps.as_mut(), admin_addr.to_string().as_ref()).unwrap();
 
         // Admin should be able to update minter
         let update_msg = ExecuteMsg::UpdateMinter {
             new_minter: Some(new_minter_addr.to_string()),
         };
-        let info = message_info(&admin_addr, &[]);
+        let info = message_info(admin_addr, &[]);
         let _res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
 
         // Check minter was updated
@@ -395,13 +397,14 @@ mod test_gratis {
         let admin_addr = &deps.api.addr_make(TEST_ADMIN);
         let new_minter_addr = &deps.api.addr_make(NEW_MINTER);
         let user1_addr = &deps.api.addr_make(USER1);
-        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
+        let _res =
+            init_contract_with_admin(deps.as_mut(), admin_addr.to_string().as_ref()).unwrap();
 
         // Non-admin should not be able to update minter
         let update_msg = ExecuteMsg::UpdateMinter {
             new_minter: Some(new_minter_addr.to_string()),
         };
-        let info = message_info(&user1_addr, &[]);
+        let info = message_info(user1_addr, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap_err();
         match err {
             crate::ContractError::Unauthorized {} => {}
@@ -415,13 +418,14 @@ mod test_gratis {
         let admin_addr = &deps.api.addr_make(TEST_ADMIN);
         let new_admin_addr = &deps.api.addr_make(NEW_ADMIN);
 
-        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
+        let _res =
+            init_contract_with_admin(deps.as_mut(), admin_addr.to_string().as_ref()).unwrap();
 
         // Admin should be able to update admin
         let update_msg = ExecuteMsg::UpdateAdmin {
             new_admin: new_admin_addr.to_string(),
         };
-        let info = message_info(&admin_addr, &[]);
+        let info = message_info(admin_addr, &[]);
         let res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
 
         // Check response attributes
@@ -446,13 +450,14 @@ mod test_gratis {
         let new_admin_addr = &deps.api.addr_make(NEW_ADMIN);
         let user1_addr = &deps.api.addr_make(USER1);
 
-        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
+        let _res =
+            init_contract_with_admin(deps.as_mut(), admin_addr.to_string().as_ref()).unwrap();
 
         // Non-admin should not be able to update admin
         let update_msg = ExecuteMsg::UpdateAdmin {
             new_admin: new_admin_addr.to_string(),
         };
-        let info = message_info(&user1_addr, &[]);
+        let info = message_info(user1_addr, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap_err();
         match err {
             crate::ContractError::Unauthorized {} => {}
@@ -467,13 +472,14 @@ mod test_gratis {
         let new_admin_addr = &deps.api.addr_make(NEW_ADMIN);
         let new_minter_addr = &deps.api.addr_make(NEW_MINTER);
 
-        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
+        let _res =
+            init_contract_with_admin(deps.as_mut(), admin_addr.to_string().as_ref()).unwrap();
 
         // Original admin updates admin to new admin
         let update_msg = ExecuteMsg::UpdateAdmin {
             new_admin: new_admin_addr.to_string(),
         };
-        let info = message_info(&admin_addr, &[]);
+        let info = message_info(admin_addr, &[]);
         let _res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
 
         // Original admin should no longer be able to update minter
@@ -491,7 +497,7 @@ mod test_gratis {
         let update_msg = ExecuteMsg::UpdateMinter {
             new_minter: Some(new_minter_addr.to_string()),
         };
-        let info = message_info(&new_admin_addr, &[]);
+        let info = message_info(new_admin_addr, &[]);
         let _res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
 
         // Check minter was updated
