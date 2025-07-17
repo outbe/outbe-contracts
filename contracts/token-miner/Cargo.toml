@@ -15,6 +15,10 @@ cw20-base = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
+outbe-nft = { workspace = true }
+outbe-utils = { workspace = true }
+nod = { workspace = true }
+price-oracle = { workspace = true }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

@@ -147,11 +147,7 @@ pub fn execute_update_minter(
 
     token_info.mint = match new_minter {
         Some(minter) => {
-            let validated_minter = if cfg!(test) {
-                cosmwasm_std::Addr::unchecked(&minter)
-            } else {
-                deps.api.addr_validate(&minter)?
-            };
+            let validated_minter = deps.api.addr_validate(&minter)?;
             Some(cw20_base::state::MinterData {
                 minter: validated_minter,
                 cap: token_info.mint.as_ref().and_then(|m| m.cap),
@@ -187,11 +183,7 @@ pub fn execute_update_admin(
         return Err(ContractError::Unauthorized {});
     }
 
-    let new_admin_addr = if cfg!(test) {
-        cosmwasm_std::Addr::unchecked(&new_admin)
-    } else {
-        deps.api.addr_validate(&new_admin)?
-    };
+    let new_admin_addr = deps.api.addr_validate(&new_admin)?;
     ADMIN.save(deps.storage, &new_admin_addr)?;
 
     Ok(Response::new()

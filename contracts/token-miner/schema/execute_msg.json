@@ -45,6 +45,29 @@
       "additionalProperties": false
     },
     {
+      "description": "Mine Gratis tokens using a qualified Nod NFT This will check if the current price from Price Oracle is >= floor_price_minor If qualified, it will mint Gratis tokens based on gratis_load_minor and burn the Nod NFT",
+      "type": "object",
+      "required": [
+        "mine_gratis_with_nod"
+      ],
+      "properties": {
+        "mine_gratis_with_nod": {
+          "type": "object",
+          "required": [
+            "nod_token_id"
+          ],
+          "properties": {
+            "nod_token_id": {
+              "description": "Token ID of the Nod NFT to use for mining",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "description": "Add an address to the access list (admin only)",
       "type": "object",
       "required": [
@@ -166,6 +189,20 @@
           "properties": {
             "gratis_contract": {
               "description": "New Gratis contract address (optional)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "nod_contract": {
+              "description": "New Nod NFT contract address (optional)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "price_oracle_contract": {
+              "description": "New Price Oracle contract address (optional)",
               "type": [
                 "string",
                 "null"

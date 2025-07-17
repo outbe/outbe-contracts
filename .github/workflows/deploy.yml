@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       is_latest:
-        description: 'Mark as latest'
+        description: "Mark as latest"
         required: false
         type: boolean
 
@@ -68,18 +68,6 @@ jobs:
           PROMIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Promis" $PROMIS_CODE_ID "$INIT_PAYLOAD")
           echo "PROMIS_CONTRACT_ADDRESS=$PROMIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
-      - name: Deploy Token Miner
-        run: |
-          TOKEN_MINER_CODE_ID=$(./scripts/store_code.sh artifacts/token_miner.wasm)
-          INIT_PAYLOAD=$(jq -n --arg gratis_address $GRATIS_CONTRACT_ADDRESS --arg promis_address $PROMIS_CONTRACT_ADDRESS --from-file ./contracts/token-miner/fixtures/init.json)
-          TOKEN_MINER_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Token Miner" $TOKEN_MINER_CODE_ID "$INIT_PAYLOAD")
-          echo "TOKEN_MINER_CONTRACT_ADDRESS=$TOKEN_MINER_CONTRACT_ADDRESS" >> $GITHUB_ENV
-          echo "Link Gratis Promis and Token Miner contracts"
-          UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/gratis/fixtures/update-minter.json)
-          ./scripts/execute_tx.sh $GRATIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"      
-          UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/promis/fixtures/update-minter.json)
-          ./scripts/execute_tx.sh $PROMIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"      
-
       - name: Deploy Price Oracle
         run: |
           PRICE_ORACLE_CODE_ID=$(./scripts/store_code.sh artifacts/price_oracle.wasm)
@@ -114,10 +102,10 @@ jobs:
           INIT_PAYLOAD=$(jq -n --arg price_oracle $PRICE_ORACLE_CONTRACT_ADDRESS --arg minter $TRIBUTE_FACTORY_CONTRACT_ADDRESS --from-file ./contracts/tribute/fixtures/init.json)
           TRIBUTE_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Tribute" $TRIBUTE_CODE_ID "$INIT_PAYLOAD")
           echo "TRIBUTE_CONTRACT_ADDRESS=$TRIBUTE_CONTRACT_ADDRESS" >> $GITHUB_ENV
-          
+
           echo "Link Tribute Factory and Tribute contracts"
           UPDATE_PAYLOAD=$(jq -n --arg tribute_address $TRIBUTE_CONTRACT_ADDRESS -f ./contracts/tribute-factory/fixtures/update-tribute-address.json)
-          ./scripts/execute_tx.sh $TRIBUTE_FACTORY_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"      
+          ./scripts/execute_tx.sh $TRIBUTE_FACTORY_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Deploy Nod
         run: |
@@ -133,6 +121,22 @@ jobs:
           METADOSIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Metadosis" $METADOSIS_CODE_ID "$INIT_PAYLOAD")
           echo "METADOSIS_CONTRACT_ADDRESS=$METADOSIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
+      - name: Deploy Token Miner
+        run: |
+          TOKEN_MINER_CODE_ID=$(./scripts/store_code.sh artifacts/token_miner.wasm)
+          INIT_PAYLOAD=$(jq -n --arg gratis_address $GRATIS_CONTRACT_ADDRESS --arg promis_address $PROMIS_CONTRACT_ADDRESS --arg nod_address $NOD_CONTRACT_ADDRESS --arg price_oracle_address $PRICE_ORACLE_CONTRACT_ADDRESS --from-file ./contracts/token-miner/fixtures/init.json)
+          TOKEN_MINER_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Token Miner" $TOKEN_MINER_CODE_ID "$INIT_PAYLOAD")
+          echo "TOKEN_MINER_CONTRACT_ADDRESS=$TOKEN_MINER_CONTRACT_ADDRESS" >> $GITHUB_ENV
+          echo "Link Gratis and Token Miner contracts"
+          UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/gratis/fixtures/update-minter.json)
+          ./scripts/execute_tx.sh $GRATIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          echo "Link Promis and Token Miner contracts"
+          UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/promis/fixtures/update-minter.json)
+          ./scripts/execute_tx.sh $PROMIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          echo "Grant access"
+          UPDATE_PAYLOAD=$(jq -n --arg address outbe10np732vf0mcf5lc3czlf7x7vfzj4dcmny2x4ja -f ./contracts/token-miner/fixtures/add_to_access_list.json)
+          ./scripts/execute_tx.sh $TOKEN_MINER_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+
       - name: Print output
         run: |
           echo "Deploy output:"
@@ -142,7 +146,7 @@ jobs:
       - name: Update Contract Registry
         run: |
           COMMIT_ID=${{ github.sha }}
-          IS_LATEST=${{ inputs.is_latest }} 
+          IS_LATEST=${{ inputs.is_latest }}
           echo "Updating Contract Registry with commit=$COMMIT_ID and latest=$IS_LATEST"
           CONTRACTS=$(./scripts/parse_contracts.sh output.txt)
           UPDATE_PAYLOAD=$(jq -n --arg commit_id $COMMIT_ID --argjson contracts "$CONTRACTS" --argjson is_latest $IS_LATEST --from-file ./contracts/contract-registry/fixtures/publish.json)

@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    entry_point, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult, Uint128, WasmMsg,
+    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, QueryRequest, Response,
+    StdResult, Uint128, WasmMsg, WasmQuery,
 };
 use cw2::set_contract_version;
 use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
@@ -8,6 +8,16 @@ use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{AccessPermissions, Config, TokenType, ACCESS_LIST, CONFIG};
+
+// Import types from other contracts
+use outbe_nft::msg::NftInfoResponse;
+
+// Import types from nod and price-oracle libraries
+use nod::msg::ExecuteMsg as NodExecuteMsg;
+use nod::query::QueryMsg as NodQueryMsg;
+use nod::types::{NodData, State as NodState};
+use price_oracle::query::QueryMsg as PriceOracleQueryMsg;
+use price_oracle::types::TokenPairPrice;
 
 /// Contract name and version for migration info
 pub const CONTRACT_NAME: &str = "outbe.net:token-minter";
@@ -24,22 +34,18 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     // Validate and store contract addresses
-    let gratis_contract = if cfg!(test) {
-        Addr::unchecked(&msg.gratis_contract)
-    } else {
-        deps.api.addr_validate(&msg.gratis_contract)?
-    };
-    let promis_contract = if cfg!(test) {
-        Addr::unchecked(&msg.promis_contract)
-    } else {
-        deps.api.addr_validate(&msg.promis_contract)?
-    };
+    let gratis_contract = deps.api.addr_validate(&msg.gratis_contract)?;
+    let promis_contract = deps.api.addr_validate(&msg.promis_contract)?;
+    let price_oracle_contract = deps.api.addr_validate(&msg.price_oracle_contract)?;
+    let nod_contract = deps.api.addr_validate(&msg.nod_contract)?;
 
     // Create configuration with the instantiator as admin
     let config = Config {
         admin: info.sender.clone(),
         gratis_contract,
         promis_contract,
+        price_oracle_contract,
+        nod_contract,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -55,7 +61,9 @@ pub fn instantiate(
         .add_attribute("method", "instantiate")
         .add_attribute("admin", info.sender)
         .add_attribute("gratis_contract", msg.gratis_contract)
-        .add_attribute("promis_contract", msg.promis_contract))
+        .add_attribute("promis_contract", msg.promis_contract)
+        .add_attribute("price_oracle_contract", msg.price_oracle_contract)
+        .add_attribute("nod_contract", msg.nod_contract))
 }
 
 /// Contract execution entry point
@@ -71,7 +79,10 @@ pub fn execute(
             recipient,
             amount,
             token_type,
-        } => execute_mint(deps, env, info, recipient, amount, token_type),
+        } => execute_mine(deps, env, info, recipient, amount, token_type),
+        ExecuteMsg::MineGratisWithNod { nod_token_id } => {
+            execute_mine_gratis_with_nod(deps, env, info, nod_token_id)
+        }
         ExecuteMsg::AddToAccessList {
             address,
             permissions,
@@ -87,12 +98,21 @@ pub fn execute(
         ExecuteMsg::UpdateContracts {
             gratis_contract,
             promis_contract,
-        } => execute_update_contracts(deps, info, gratis_contract, promis_contract),
+            price_oracle_contract,
+            nod_contract,
+        } => execute_update_contracts(
+            deps,
+            info,
+            gratis_contract,
+            promis_contract,
+            price_oracle_contract,
+            nod_contract,
+        ),
     }
 }
 
 /// Execute mint function - mints tokens by calling the appropriate token contract
-pub fn execute_mint(
+pub fn execute_mine(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
@@ -106,11 +126,7 @@ pub fn execute_mint(
     }
 
     // Validate recipient address
-    let _recipient_addr = if cfg!(test) {
-        Addr::unchecked(&recipient)
-    } else {
-        deps.api.addr_validate(&recipient)?
-    };
+    let _recipient_addr = deps.api.addr_validate(&recipient)?;
 
     // Check if sender has permission to mint the requested token type
     let permissions = ACCESS_LIST
@@ -159,6 +175,91 @@ pub fn execute_mint(
         .add_attribute("target_contract", target_contract))
 }
 
+/// Execute mine gratis with nod - mines Gratis tokens using a qualified Nod NFT
+/// This function checks if the current price from Price Oracle is >= floor_price_minor
+/// If qualified, it will mint Gratis tokens based on gratis_load_minor and burn the Nod NFT
+pub fn execute_mine_gratis_with_nod(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    nod_token_id: String,
+) -> Result<Response, ContractError> {
+    // Get contract configuration
+    let config = CONFIG.load(deps.storage)?;
+
+    // Query the Nod NFT to get its data
+    let nod_info_query = QueryRequest::Wasm(WasmQuery::Smart {
+        contract_addr: config.nod_contract.to_string(),
+        msg: to_json_binary(&NodQueryMsg::NftInfo {
+            token_id: nod_token_id.clone(),
+        })?,
+    });
+
+    let nod_info_response: NftInfoResponse<NodData> = deps.querier.query(&nod_info_query)?;
+    let nod_data = nod_info_response.extension;
+
+    // Check if the sender is the owner of the Nod NFT (entitled to mine Gratis)
+    if info.sender.as_str() != nod_data.owner {
+        return Err(ContractError::NotNodOwner {});
+    }
+
+    // Check if the Nod is in Issued state (can only mine from Issued state)
+    if nod_data.state != NodState::Issued {
+        return Err(ContractError::NodNotIssued {});
+    }
+
+    // Query the Price Oracle to get the current price
+    let price_query = QueryRequest::Wasm(WasmQuery::Smart {
+        contract_addr: config.price_oracle_contract.to_string(),
+        msg: to_json_binary(&PriceOracleQueryMsg::GetPrice {})?,
+    });
+
+    let price_response: TokenPairPrice = deps.querier.query(&price_query)?;
+
+    // Check if current price is >= floor price (Nod is qualified)
+    if price_response.price.atomics() < nod_data.floor_price_minor {
+        return Err(ContractError::NodNotQualified {
+            current_price: price_response.price.atomics(),
+            floor_price: nod_data.floor_price_minor,
+        });
+    }
+
+    // Create mint message for Gratis tokens using gratis_load_minor from Nod
+    let mint_msg = Cw20ExecuteMsg::Mint {
+        recipient: info.sender.to_string(),
+        amount: nod_data.gratis_load_minor,
+    };
+
+    let mint_wasm_msg = WasmMsg::Execute {
+        contract_addr: config.gratis_contract.to_string(),
+        msg: to_json_binary(&mint_msg)?,
+        funds: vec![],
+    };
+
+    // Create burn message for the Nod NFT
+    let burn_msg = NodExecuteMsg::Burn {
+        token_id: nod_token_id.clone(),
+    };
+
+    let burn_wasm_msg = WasmMsg::Execute {
+        contract_addr: config.nod_contract.to_string(),
+        msg: to_json_binary(&burn_msg)?,
+        funds: vec![],
+    };
+
+    Ok(Response::new()
+        .add_message(mint_wasm_msg)
+        .add_message(burn_wasm_msg)
+        .add_attribute("method", "mine_gratis_with_nod")
+        .add_attribute("miner", info.sender)
+        .add_attribute("nod_token_id", nod_token_id)
+        .add_attribute("amount", nod_data.gratis_load_minor)
+        .add_attribute("current_price", price_response.price.atomics())
+        .add_attribute("floor_price", nod_data.floor_price_minor)
+        .add_attribute("gratis_contract", config.gratis_contract)
+        .add_attribute("nod_contract", config.nod_contract))
+}
+
 /// Execute add to access list - admin only function
 pub fn execute_add_to_access_list(
     deps: DepsMut,
@@ -173,11 +274,7 @@ pub fn execute_add_to_access_list(
     }
 
     // Validate address
-    let addr = if cfg!(test) {
-        Addr::unchecked(&address)
-    } else {
-        deps.api.addr_validate(&address)?
-    };
+    let addr = deps.api.addr_validate(&address)?;
 
     // Check if address already exists
     if ACCESS_LIST.has(deps.storage, &addr) {
@@ -208,11 +305,7 @@ pub fn execute_remove_from_access_list(
     }
 
     // Validate address
-    let addr = if cfg!(test) {
-        Addr::unchecked(&address)
-    } else {
-        deps.api.addr_validate(&address)?
-    };
+    let addr = deps.api.addr_validate(&address)?;
 
     // Cannot remove admin from access list
     if addr == config.admin {
@@ -247,11 +340,7 @@ pub fn execute_update_permissions(
     }
 
     // Validate address
-    let addr = if cfg!(test) {
-        Addr::unchecked(&address)
-    } else {
-        deps.api.addr_validate(&address)?
-    };
+    let addr = deps.api.addr_validate(&address)?;
 
     // Check if address exists in access list
     if !ACCESS_LIST.has(deps.storage, &addr) {
@@ -282,11 +371,7 @@ pub fn execute_transfer_admin(
     }
 
     // Validate new admin address
-    let new_admin_addr = if cfg!(test) {
-        Addr::unchecked(&new_admin)
-    } else {
-        deps.api.addr_validate(&new_admin)?
-    };
+    let new_admin_addr = deps.api.addr_validate(&new_admin)?;
 
     // Cannot transfer to the same address
     if new_admin_addr == config.admin {
@@ -320,6 +405,8 @@ pub fn execute_update_contracts(
     info: MessageInfo,
     gratis_contract: Option<String>,
     promis_contract: Option<String>,
+    price_oracle_contract: Option<String>,
+    nod_contract: Option<String>,
 ) -> Result<Response, ContractError> {
     // Check if sender is admin
     let mut config = CONFIG.load(deps.storage)?;
@@ -333,11 +420,7 @@ pub fn execute_update_contracts(
 
     // Update Gratis contract if provided
     if let Some(gratis_addr) = gratis_contract {
-        let new_gratis_addr = if cfg!(test) {
-            Addr::unchecked(&gratis_addr)
-        } else {
-            deps.api.addr_validate(&gratis_addr)?
-        };
+        let new_gratis_addr = deps.api.addr_validate(&gratis_addr)?;
         if new_gratis_addr == config.gratis_contract {
             return Err(ContractError::SameContractAddress {});
         }
@@ -347,16 +430,32 @@ pub fn execute_update_contracts(
 
     // Update Promis contract if provided
     if let Some(promis_addr) = promis_contract {
-        let new_promis_addr = if cfg!(test) {
-            Addr::unchecked(&promis_addr)
-        } else {
-            deps.api.addr_validate(&promis_addr)?
-        };
+        let new_promis_addr = deps.api.addr_validate(&promis_addr)?;
         if new_promis_addr == config.promis_contract {
             return Err(ContractError::SameContractAddress {});
         }
         config.promis_contract = new_promis_addr;
         response = response.add_attribute("new_promis_contract", promis_addr);
+    }
+
+    // Update Price Oracle contract if provided
+    if let Some(price_oracle_addr) = price_oracle_contract {
+        let new_price_oracle_addr = deps.api.addr_validate(&price_oracle_addr)?;
+        if new_price_oracle_addr == config.price_oracle_contract {
+            return Err(ContractError::SameContractAddress {});
+        }
+        config.price_oracle_contract = new_price_oracle_addr;
+        response = response.add_attribute("new_price_oracle_contract", price_oracle_addr);
+    }
+
+    // Update Nod contract if provided
+    if let Some(nod_addr) = nod_contract {
+        let new_nod_addr = deps.api.addr_validate(&nod_addr)?;
+        if new_nod_addr == config.nod_contract {
+            return Err(ContractError::SameContractAddress {});
+        }
+        config.nod_contract = new_nod_addr;
+        response = response.add_attribute("new_nod_contract", nod_addr);
     }
 
     // Save updated config
