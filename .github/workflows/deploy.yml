@@ -133,6 +133,9 @@ jobs:
           echo "Link Promis and Token Miner contracts"
           UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/promis/fixtures/update-minter.json)
           ./scripts/execute_tx.sh $PROMIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          echo "Grant access"
+          UPDATE_PAYLOAD=$(jq -n --arg address outbe10np732vf0mcf5lc3czlf7x7vfzj4dcmny2x4ja -f ./contracts/token-miner/fixtures/add_to_access_list.json)
+          ./scripts/execute_tx.sh $TOKEN_MINER_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Print output
         run: |

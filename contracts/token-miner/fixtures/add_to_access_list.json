@@ -1,0 +1,9 @@
+{
+  "add_to_access_list": {
+    "address": $address,
+    "permissions": {
+      "can_mint_gratis": true,
+      "can_mint_promis": true
+    }
+  }
+}
