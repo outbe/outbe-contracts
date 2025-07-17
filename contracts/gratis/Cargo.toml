@@ -19,6 +19,7 @@ cw-ownable = { workspace = true }
 
 schemars = { workspace = true }
 blake3 = { workspace = true }
+outbe-utils = { workspace = true }
 
 [dev-dependencies]
 cosmwasm-schema = { workspace = true }

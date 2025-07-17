@@ -1,4 +1,4 @@
-use cosmwasm_std::StdError;
+use cosmwasm_std::{StdError, Uint128};
 use thiserror::Error;
 
 /// Custom error types for the token minter contract
@@ -42,4 +42,19 @@ pub enum ContractError {
     /// Cannot transfer admin to the same address
     #[error("Cannot transfer admin to the same address")]
     SameAdminAddress {},
+
+    /// Sender is not the owner of the Nod NFT
+    #[error("Not authorized: sender is not the owner of the Nod NFT")]
+    NotNodOwner {},
+
+    /// Nod NFT is not in Issued state
+    #[error("Nod NFT is not in Issued state - cannot mine Gratis")]
+    NodNotIssued {},
+
+    /// Nod NFT is not qualified for mining (current price < floor price)
+    #[error("Nod NFT is not qualified for mining: current price {current_price} < floor price {floor_price}")]
+    NodNotQualified {
+        current_price: Uint128,
+        floor_price: Uint128,
+    },
 }

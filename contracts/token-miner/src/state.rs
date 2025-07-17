@@ -12,6 +12,10 @@ pub struct Config {
     pub gratis_contract: Addr,
     /// Address of the Promis token contract
     pub promis_contract: Addr,
+    /// Address of the Price Oracle contract
+    pub price_oracle_contract: Addr,
+    /// Address of the Nod NFT contract
+    pub nod_contract: Addr,
 }
 
 /// Token types that can be minted

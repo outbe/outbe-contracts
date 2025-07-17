@@ -8,19 +8,33 @@ mod test_token_miner {
     use crate::state::{AccessPermissions, TokenType};
     use crate::ContractError;
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
-    use cosmwasm_std::{from_json, Addr, Uint128, WasmMsg};
+    use cosmwasm_std::{
+        from_json, to_json_binary, Addr, ContractResult, Decimal, SystemError, SystemResult,
+        Timestamp, Uint128, WasmMsg, WasmQuery,
+    };
     use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
+    use nod::msg::ExecuteMsg as NodExecuteMsg;
+    use nod::query::QueryMsg as NodQueryMsg;
+    use nod::types::{NodData, State as NodState};
+    use outbe_nft::msg::NftInfoResponse;
+    use outbe_utils::denom::Denom;
+    use price_oracle::query::QueryMsg as PriceOracleQueryMsg;
+    use price_oracle::types::{DayType, TokenPairPrice};
 
     const ADMIN: &str = "admin";
     const USER1: &str = "user1";
     const USER2: &str = "user2";
     const GRATIS_CONTRACT: &str = "gratis_contract";
     const PROMIS_CONTRACT: &str = "promis_contract";
+    const PRICE_ORACLE_CONTRACT: &str = "price_oracle_contract";
+    const NOD_CONTRACT: &str = "nod_contract";
 
     fn default_instantiate_msg() -> InstantiateMsg {
         InstantiateMsg {
             gratis_contract: GRATIS_CONTRACT.to_string(),
             promis_contract: PROMIS_CONTRACT.to_string(),
+            price_oracle_contract: PRICE_ORACLE_CONTRACT.to_string(),
+            nod_contract: NOD_CONTRACT.to_string(),
         }
     }
 
@@ -34,7 +48,7 @@ mod test_token_miner {
         let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Check response attributes
-        assert_eq!(res.attributes.len(), 4);
+        assert_eq!(res.attributes.len(), 6);
         assert_eq!(res.attributes[0].key, "method");
         assert_eq!(res.attributes[0].value, "instantiate");
 
@@ -49,6 +63,14 @@ mod test_token_miner {
         assert_eq!(
             config_response.config.promis_contract,
             Addr::unchecked(PROMIS_CONTRACT)
+        );
+        assert_eq!(
+            config_response.config.price_oracle_contract,
+            Addr::unchecked(PRICE_ORACLE_CONTRACT)
+        );
+        assert_eq!(
+            config_response.config.nod_contract,
+            Addr::unchecked(NOD_CONTRACT)
         );
 
         // Check that admin was added to access list with full permissions
@@ -575,6 +597,306 @@ mod test_token_miner {
                 assert_eq!(token_type, "Promis");
             }
             _ => panic!("Expected NoMintPermission error"),
+        }
+    }
+
+    // Helper function to create a mock Nod NFT data
+    fn mock_nod_data(
+        owner: &str,
+        state: NodState,
+        floor_price_minor: Uint128,
+        gratis_load_minor: Uint128,
+    ) -> NodData {
+        NodData {
+            nod_id: "test_nod_1".to_string(),
+            settlement_currency: Denom::Native("usdt".to_string()),
+            symbolic_rate: Decimal::one(),
+            floor_rate: Uint128::new(100),
+            nominal_price_minor: Uint128::new(1000),
+            issuance_price_minor: Uint128::new(900),
+            gratis_load_minor,
+            floor_price_minor,
+            state,
+            owner: owner.to_string(),
+            issued_at: Timestamp::from_seconds(1234567890),
+            qualified_at: None,
+        }
+    }
+
+    // Helper function to create a mock TokenPairPrice
+    fn mock_token_pair_price(price: Decimal) -> TokenPairPrice {
+        TokenPairPrice {
+            token1: Denom::Native("usdt".to_string()),
+            token2: Denom::Native("token".to_string()),
+            day_type: DayType::Green,
+            price,
+        }
+    }
+
+    #[test]
+    fn test_mine_gratis_with_nod_success() {
+        let mut deps = mock_dependencies();
+
+        // Setup mock querier to return proper responses
+        deps.querier.update_wasm(|query| match query {
+            WasmQuery::Smart { contract_addr, msg } => {
+                if contract_addr == NOD_CONTRACT {
+                    let query_msg: NodQueryMsg = from_json(msg).unwrap();
+                    match query_msg {
+                        NodQueryMsg::NftInfo { token_id: _ } => {
+                            let nod_data = mock_nod_data(
+                                USER1,
+                                NodState::Issued,
+                                Uint128::new(100),
+                                Uint128::new(500),
+                            );
+                            let response = NftInfoResponse {
+                                extension: nod_data,
+                                owner: Addr::unchecked(USER1),
+                                token_id: "test_nod_1".to_string(),
+                            };
+                            SystemResult::Ok(ContractResult::Ok(to_json_binary(&response).unwrap()))
+                        }
+                        _ => SystemResult::Err(SystemError::UnsupportedRequest {
+                            kind: "Only NftInfo supported in tests".to_string(),
+                        }),
+                    }
+                } else if contract_addr == PRICE_ORACLE_CONTRACT {
+                    let query_msg: PriceOracleQueryMsg = from_json(msg).unwrap();
+                    match query_msg {
+                        PriceOracleQueryMsg::GetPrice {} => {
+                            let price_response =
+                                mock_token_pair_price(Decimal::from_atomics(150u128, 0).unwrap());
+                            SystemResult::Ok(ContractResult::Ok(
+                                to_json_binary(&price_response).unwrap(),
+                            ))
+                        }
+                        _ => SystemResult::Err(SystemError::UnsupportedRequest {
+                            kind: "Only GetPrice supported in tests".to_string(),
+                        }),
+                    }
+                } else {
+                    SystemResult::Err(SystemError::InvalidRequest {
+                        error: "Unknown contract".to_string(),
+                        request: msg.clone(),
+                    })
+                }
+            }
+            _ => SystemResult::Err(SystemError::UnsupportedRequest {
+                kind: "Only WasmQuery::Smart supported".to_string(),
+            }),
+        });
+
+        // Instantiate contract
+        let msg = default_instantiate_msg();
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
+        instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // Mine Gratis with Nod
+        let mine_msg = ExecuteMsg::MineGratisWithNod {
+            nod_token_id: "test_nod_1".to_string(),
+        };
+        let info = message_info(&Addr::unchecked(USER1), &[]);
+        let res = execute(deps.as_mut(), mock_env(), info, mine_msg).unwrap();
+
+        // Check that two WASM messages were created (mint and burn)
+        assert_eq!(res.messages.len(), 2);
+
+        // Check mint message
+        if let cosmwasm_std::CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr,
+            msg,
+            funds: _,
+        }) = &res.messages[0].msg
+        {
+            assert_eq!(contract_addr, GRATIS_CONTRACT);
+            let expected_mint_msg = Cw20ExecuteMsg::Mint {
+                recipient: USER1.to_string(),
+                amount: Uint128::new(500), // gratis_load_minor
+            };
+            assert_eq!(msg, &to_json_binary(&expected_mint_msg).unwrap());
+        } else {
+            panic!("Expected first message to be mint WasmMsg::Execute");
+        }
+
+        // Check burn message
+        if let cosmwasm_std::CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr,
+            msg,
+            funds: _,
+        }) = &res.messages[1].msg
+        {
+            assert_eq!(contract_addr, NOD_CONTRACT);
+            let expected_burn_msg = NodExecuteMsg::Burn {
+                token_id: "test_nod_1".to_string(),
+            };
+            assert_eq!(msg, &to_json_binary(&expected_burn_msg).unwrap());
+        } else {
+            panic!("Expected second message to be burn WasmMsg::Execute");
+        }
+
+        // Check response attributes
+        assert_eq!(res.attributes[0].value, "mine_gratis_with_nod");
+        assert_eq!(res.attributes[1].value, USER1);
+        assert_eq!(res.attributes[2].value, "test_nod_1");
+        assert_eq!(res.attributes[3].value, "500"); // gratis_load_minor
+    }
+
+    #[test]
+    fn test_mine_gratis_with_nod_not_owner() {
+        let mut deps = mock_dependencies();
+
+        deps.querier.update_wasm(|query| match query {
+            WasmQuery::Smart { contract_addr, msg } => {
+                if contract_addr == NOD_CONTRACT {
+                    let nod_data = mock_nod_data(
+                        USER2,
+                        NodState::Issued,
+                        Uint128::new(100),
+                        Uint128::new(500),
+                    );
+                    let response = NftInfoResponse {
+                        extension: nod_data,
+                        owner: Addr::unchecked(USER2),
+                        token_id: "test_nod_1".to_string(),
+                    };
+                    SystemResult::Ok(ContractResult::Ok(to_json_binary(&response).unwrap()))
+                } else {
+                    SystemResult::Err(SystemError::InvalidRequest {
+                        error: "Unknown contract".to_string(),
+                        request: msg.clone(),
+                    })
+                }
+            }
+            _ => SystemResult::Err(SystemError::UnsupportedRequest {
+                kind: "Only WasmQuery::Smart supported".to_string(),
+            }),
+        });
+
+        // Instantiate contract
+        let msg = default_instantiate_msg();
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
+        instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // Try to mine Gratis with Nod owned by someone else
+        let mine_msg = ExecuteMsg::MineGratisWithNod {
+            nod_token_id: "test_nod_1".to_string(),
+        };
+        let info = message_info(&Addr::unchecked(USER1), &[]);
+        let err = execute(deps.as_mut(), mock_env(), info, mine_msg).unwrap_err();
+
+        match err {
+            ContractError::NotNodOwner {} => {}
+            _ => panic!("Expected NotNodOwner error"),
+        }
+    }
+
+    #[test]
+    fn test_mine_gratis_with_nod_not_qualified() {
+        let mut deps = mock_dependencies();
+
+        deps.querier.update_wasm(|query| match query {
+            WasmQuery::Smart { contract_addr, msg } => {
+                if contract_addr == NOD_CONTRACT {
+                    let nod_data = mock_nod_data(
+                        USER1,
+                        NodState::Qualified,
+                        Uint128::new(100),
+                        Uint128::new(500),
+                    );
+                    let response = NftInfoResponse {
+                        extension: nod_data,
+                        owner: Addr::unchecked(USER1),
+                        token_id: "test_nod_1".to_string(),
+                    };
+                    SystemResult::Ok(ContractResult::Ok(to_json_binary(&response).unwrap()))
+                } else {
+                    SystemResult::Err(SystemError::InvalidRequest {
+                        error: "Unknown contract".to_string(),
+                        request: msg.clone(),
+                    })
+                }
+            }
+            _ => SystemResult::Err(SystemError::UnsupportedRequest {
+                kind: "Only WasmQuery::Smart supported".to_string(),
+            }),
+        });
+
+        // Instantiate contract
+        let msg = default_instantiate_msg();
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
+        instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // Try to mine Gratis with Nod that is not in Issued state
+        let mine_msg = ExecuteMsg::MineGratisWithNod {
+            nod_token_id: "test_nod_1".to_string(),
+        };
+        let info = message_info(&Addr::unchecked(USER1), &[]);
+        let err = execute(deps.as_mut(), mock_env(), info, mine_msg).unwrap_err();
+
+        match err {
+            ContractError::NodNotIssued {} => {}
+            _ => panic!("Expected NodNotIssued error"),
+        }
+    }
+
+    #[test]
+    fn test_mine_gratis_with_nod_price_not_qualified() {
+        let mut deps = mock_dependencies();
+
+        deps.querier.update_wasm(|query| match query {
+            WasmQuery::Smart { contract_addr, msg } => {
+                if contract_addr == NOD_CONTRACT {
+                    let nod_data = mock_nod_data(
+                        USER1,
+                        NodState::Issued,
+                        Uint128::new(200),
+                        Uint128::new(500),
+                    );
+                    let response = NftInfoResponse {
+                        extension: nod_data,
+                        owner: Addr::unchecked(USER1),
+                        token_id: "test_nod_1".to_string(),
+                    };
+                    SystemResult::Ok(ContractResult::Ok(to_json_binary(&response).unwrap()))
+                } else if contract_addr == PRICE_ORACLE_CONTRACT {
+                    // Price too low - create a decimal that when converted to atomics is less than 200
+                    let price_response =
+                        mock_token_pair_price(Decimal::from_atomics(150u128, 18).unwrap());
+                    SystemResult::Ok(ContractResult::Ok(to_json_binary(&price_response).unwrap()))
+                } else {
+                    SystemResult::Err(SystemError::InvalidRequest {
+                        error: "Unknown contract".to_string(),
+                        request: msg.clone(),
+                    })
+                }
+            }
+            _ => SystemResult::Err(SystemError::UnsupportedRequest {
+                kind: "Only WasmQuery::Smart supported".to_string(),
+            }),
+        });
+
+        // Instantiate contract
+        let msg = default_instantiate_msg();
+        let info = message_info(&Addr::unchecked(ADMIN), &[]);
+        instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // Try to mine Gratis with Nod when price is too low
+        let mine_msg = ExecuteMsg::MineGratisWithNod {
+            nod_token_id: "test_nod_1".to_string(),
+        };
+        let info = message_info(&Addr::unchecked(USER1), &[]);
+        let err = execute(deps.as_mut(), mock_env(), info, mine_msg).unwrap_err();
+
+        match err {
+            ContractError::NodNotQualified {
+                current_price,
+                floor_price,
+            } => {
+                assert_eq!(current_price, Uint128::new(150));
+                assert_eq!(floor_price, Uint128::new(200));
+            }
+            _ => panic!("Expected NodNotQualified error"),
         }
     }
 }
