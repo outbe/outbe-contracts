@@ -80,7 +80,7 @@ pub fn execute(
             recipient,
             amount,
             token_type,
-        } => execute_mint(deps, env, info, recipient, amount, token_type),
+        } => execute_mine(deps, env, info, recipient, amount, token_type),
         ExecuteMsg::MineGratisWithNod { nod_token_id } => {
             execute_mine_gratis_with_nod(deps, env, info, nod_token_id)
         }
@@ -113,7 +113,7 @@ pub fn execute(
 }
 
 /// Execute mint function - mints tokens by calling the appropriate token contract
-pub fn execute_mint(
+pub fn execute_mine(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
