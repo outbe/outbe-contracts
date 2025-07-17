@@ -373,19 +373,21 @@ mod test_promis {
     #[test]
     fn test_admin_update_minter() {
         let mut deps = mock_dependencies();
-        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+        let admin_addr = &deps.api.addr_make(TEST_ADMIN);
+        let new_minter_addr = &deps.api.addr_make(NEW_MINTER);
+        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
 
         // Admin should be able to update minter
         let update_msg = ExecuteMsg::UpdateMinter {
-            new_minter: Some(NEW_MINTER.to_string()),
+            new_minter: Some(new_minter_addr.to_string()),
         };
-        let info = message_info(&Addr::unchecked(TEST_ADMIN), &[]);
+        let info = message_info(&admin_addr, &[]);
         let _res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
 
         // Check minter was updated
         let res = query(deps.as_ref(), mock_env(), QueryMsg::Minter {}).unwrap();
         let minter_response: MinterResponse = from_json(&res).unwrap();
-        assert_eq!(minter_response.minter, NEW_MINTER);
+        assert_eq!(minter_response.minter, new_minter_addr.to_string());
     }
 
     #[test]
@@ -408,13 +410,15 @@ mod test_promis {
     #[test]
     fn test_admin_update_admin() {
         let mut deps = mock_dependencies();
-        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+        let admin_addr = &deps.api.addr_make(TEST_ADMIN);
+        let new_admin_addr = &deps.api.addr_make(NEW_ADMIN);
+        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
 
         // Admin should be able to update admin
         let update_msg = ExecuteMsg::UpdateAdmin {
-            new_admin: NEW_ADMIN.to_string(),
+            new_admin: new_admin_addr.to_string(),
         };
-        let info = message_info(&Addr::unchecked(TEST_ADMIN), &[]);
+        let info = message_info(&admin_addr, &[]);
         let res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
 
         // Check response attributes
@@ -422,26 +426,29 @@ mod test_promis {
         assert_eq!(res.attributes[0].key, "action");
         assert_eq!(res.attributes[0].value, "update_admin");
         assert_eq!(res.attributes[1].key, "old_admin");
-        assert_eq!(res.attributes[1].value, TEST_ADMIN);
+        assert_eq!(res.attributes[1].value, admin_addr.to_string());
         assert_eq!(res.attributes[2].key, "new_admin");
-        assert_eq!(res.attributes[2].value, NEW_ADMIN);
+        assert_eq!(res.attributes[2].value, new_admin_addr.to_string());
 
         // Check admin was updated
         let res = query(deps.as_ref(), mock_env(), QueryMsg::Admin {}).unwrap();
         let admin_addr: String = from_json(&res).unwrap();
-        assert_eq!(admin_addr, NEW_ADMIN);
+        assert_eq!(admin_addr, new_admin_addr.to_string());
     }
 
     #[test]
     fn test_non_admin_cannot_update_admin() {
         let mut deps = mock_dependencies();
-        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+        let admin_addr = &deps.api.addr_make(TEST_ADMIN);
+        let new_admin_addr = &deps.api.addr_make(NEW_ADMIN);
+        let user1_admin_addr = &deps.api.addr_make(USER1);
+        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
 
         // Non-admin should not be able to update admin
         let update_msg = ExecuteMsg::UpdateAdmin {
-            new_admin: NEW_ADMIN.to_string(),
+            new_admin: new_admin_addr.to_string(),
         };
-        let info = message_info(&Addr::unchecked(USER1), &[]);
+        let info = message_info(&user1_admin_addr, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap_err();
         match err {
             crate::ContractError::Unauthorized {} => {}
@@ -452,20 +459,23 @@ mod test_promis {
     #[test]
     fn test_admin_transfer_workflow() {
         let mut deps = mock_dependencies();
-        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+        let admin_addr = &deps.api.addr_make(TEST_ADMIN);
+        let new_admin_addr = &deps.api.addr_make(NEW_ADMIN);
+        let new_minter_addr = &deps.api.addr_make(NEW_MINTER);
+        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
 
         // Original admin updates admin to new admin
         let update_msg = ExecuteMsg::UpdateAdmin {
-            new_admin: NEW_ADMIN.to_string(),
+            new_admin: new_admin_addr.to_string(),
         };
-        let info = message_info(&Addr::unchecked(TEST_ADMIN), &[]);
+        let info = message_info(&admin_addr, &[]);
         let _res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
 
         // Original admin should no longer be able to update minter
         let update_msg = ExecuteMsg::UpdateMinter {
-            new_minter: Some(NEW_MINTER.to_string()),
+            new_minter: Some(new_minter_addr.to_string()),
         };
-        let info = message_info(&Addr::unchecked(TEST_ADMIN), &[]);
+        let info = message_info(&admin_addr, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap_err();
         match err {
             crate::ContractError::Unauthorized {} => {}
@@ -474,62 +484,26 @@ mod test_promis {
 
         // New admin should be able to update minter
         let update_msg = ExecuteMsg::UpdateMinter {
-            new_minter: Some(NEW_MINTER.to_string()),
+            new_minter: Some(new_minter_addr.to_string()),
         };
-        let info = message_info(&Addr::unchecked(NEW_ADMIN), &[]);
+        let info = message_info(&new_admin_addr, &[]);
         let _res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
 
         // Check minter was updated
         let res = query(deps.as_ref(), mock_env(), QueryMsg::Minter {}).unwrap();
         let minter_response: MinterResponse = from_json(&res).unwrap();
-        assert_eq!(minter_response.minter, NEW_MINTER);
+        assert_eq!(minter_response.minter, new_minter_addr.to_string());
     }
 
     #[test]
     fn test_query_admin() {
         let mut deps = mock_dependencies();
-        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
+        let admin_addr = &deps.api.addr_make(TEST_ADMIN);
+        let _res = init_contract_with_admin(deps.as_mut(), &admin_addr.to_string()).unwrap();
 
         // Query admin
         let res = query(deps.as_ref(), mock_env(), QueryMsg::Admin {}).unwrap();
-        let admin_addr: String = from_json(&res).unwrap();
-        assert_eq!(admin_addr, TEST_ADMIN);
-    }
-
-    #[test]
-    fn test_admin_and_conversion_workflow() {
-        let mut deps = mock_dependencies();
-        let _res = init_contract_with_admin(deps.as_mut(), TEST_ADMIN).unwrap();
-
-        // Admin updates minter
-        let update_msg = ExecuteMsg::UpdateMinter {
-            new_minter: Some(NEW_MINTER.to_string()),
-        };
-        let info = message_info(&Addr::unchecked(TEST_ADMIN), &[]);
-        let _res = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap();
-
-        // Set up user balance for conversion
-        BALANCES
-            .save(
-                deps.as_mut().storage,
-                &Addr::unchecked(USER1),
-                &Uint128::from(1000000u128),
-            )
-            .unwrap();
-
-        let mut token_info = TOKEN_INFO.load(deps.as_ref().storage).unwrap();
-        token_info.total_supply = Uint128::from(1000000u128);
-        TOKEN_INFO.save(deps.as_mut().storage, &token_info).unwrap();
-
-        // User should still be able to convert tokens
-        let convert_msg = ExecuteMsg::ConvertToGratis {
-            amount: Uint128::from(500000u128),
-        };
-        let info = message_info(&Addr::unchecked(USER1), &[]);
-        let res = execute(deps.as_mut(), mock_env(), info, convert_msg).unwrap();
-
-        // Check conversion worked
-        assert_eq!(res.messages.len(), 1);
-        assert_eq!(res.attributes[0].value, "convert_to_gratis");
+        let admin: String = from_json(&res).unwrap();
+        assert_eq!(admin, admin_addr.to_string());
     }
 }

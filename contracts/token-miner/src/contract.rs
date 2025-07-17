@@ -8,7 +8,6 @@ use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{AccessPermissions, Config, TokenType, ACCESS_LIST, CONFIG};
-use outbe_utils::address_utils::validate_address_with_deps_mut;
 
 // Import types from other contracts
 use outbe_nft::msg::NftInfoResponse;
@@ -35,10 +34,10 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     // Validate and store contract addresses
-    let gratis_contract = validate_address_with_deps_mut(&deps, &msg.gratis_contract)?;
-    let promis_contract = validate_address_with_deps_mut(&deps, &msg.promis_contract)?;
-    let price_oracle_contract = validate_address_with_deps_mut(&deps, &msg.price_oracle_contract)?;
-    let nod_contract = validate_address_with_deps_mut(&deps, &msg.nod_contract)?;
+    let gratis_contract = deps.api.addr_validate(&msg.gratis_contract)?;
+    let promis_contract = deps.api.addr_validate(&msg.promis_contract)?;
+    let price_oracle_contract = deps.api.addr_validate(&msg.price_oracle_contract)?;
+    let nod_contract = deps.api.addr_validate(&msg.nod_contract)?;
 
     // Create configuration with the instantiator as admin
     let config = Config {
@@ -127,7 +126,7 @@ pub fn execute_mine(
     }
 
     // Validate recipient address
-    let _recipient_addr = validate_address_with_deps_mut(&deps, &recipient)?;
+    let _recipient_addr = deps.api.addr_validate(&recipient)?;
 
     // Check if sender has permission to mint the requested token type
     let permissions = ACCESS_LIST
@@ -275,7 +274,7 @@ pub fn execute_add_to_access_list(
     }
 
     // Validate address
-    let addr = validate_address_with_deps_mut(&deps, &address)?;
+    let addr = deps.api.addr_validate(&address)?;
 
     // Check if address already exists
     if ACCESS_LIST.has(deps.storage, &addr) {
@@ -306,7 +305,7 @@ pub fn execute_remove_from_access_list(
     }
 
     // Validate address
-    let addr = validate_address_with_deps_mut(&deps, &address)?;
+    let addr = deps.api.addr_validate(&address)?;
 
     // Cannot remove admin from access list
     if addr == config.admin {
@@ -341,7 +340,7 @@ pub fn execute_update_permissions(
     }
 
     // Validate address
-    let addr = validate_address_with_deps_mut(&deps, &address)?;
+    let addr = deps.api.addr_validate(&address)?;
 
     // Check if address exists in access list
     if !ACCESS_LIST.has(deps.storage, &addr) {
@@ -372,7 +371,7 @@ pub fn execute_transfer_admin(
     }
 
     // Validate new admin address
-    let new_admin_addr = validate_address_with_deps_mut(&deps, &new_admin)?;
+    let new_admin_addr = deps.api.addr_validate(&new_admin)?;
 
     // Cannot transfer to the same address
     if new_admin_addr == config.admin {
@@ -421,7 +420,7 @@ pub fn execute_update_contracts(
 
     // Update Gratis contract if provided
     if let Some(gratis_addr) = gratis_contract {
-        let new_gratis_addr = validate_address_with_deps_mut(&deps, &gratis_addr)?;
+        let new_gratis_addr = deps.api.addr_validate(&gratis_addr)?;
         if new_gratis_addr == config.gratis_contract {
             return Err(ContractError::SameContractAddress {});
         }
@@ -431,7 +430,7 @@ pub fn execute_update_contracts(
 
     // Update Promis contract if provided
     if let Some(promis_addr) = promis_contract {
-        let new_promis_addr = validate_address_with_deps_mut(&deps, &promis_addr)?;
+        let new_promis_addr = deps.api.addr_validate(&promis_addr)?;
         if new_promis_addr == config.promis_contract {
             return Err(ContractError::SameContractAddress {});
         }
@@ -441,7 +440,7 @@ pub fn execute_update_contracts(
 
     // Update Price Oracle contract if provided
     if let Some(price_oracle_addr) = price_oracle_contract {
-        let new_price_oracle_addr = validate_address_with_deps_mut(&deps, &price_oracle_addr)?;
+        let new_price_oracle_addr = deps.api.addr_validate(&price_oracle_addr)?;
         if new_price_oracle_addr == config.price_oracle_contract {
             return Err(ContractError::SameContractAddress {});
         }
@@ -451,7 +450,7 @@ pub fn execute_update_contracts(
 
     // Update Nod contract if provided
     if let Some(nod_addr) = nod_contract {
-        let new_nod_addr = validate_address_with_deps_mut(&deps, &nod_addr)?;
+        let new_nod_addr = deps.api.addr_validate(&nod_addr)?;
         if new_nod_addr == config.nod_contract {
             return Err(ContractError::SameContractAddress {});
         }

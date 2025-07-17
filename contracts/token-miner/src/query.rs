@@ -4,7 +4,6 @@ use crate::msg::{
     AccessListResponse, AccessPermissionsResponse, CanMintResponse, ConfigResponse, QueryMsg,
 };
 use crate::state::{TokenType, ACCESS_LIST, CONFIG};
-use outbe_utils::address_utils::validate_address_with_deps;
 
 /// Maximum number of addresses to return in a single query
 const MAX_LIMIT: u32 = 100;
@@ -36,7 +35,7 @@ fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
 
 /// Query access permissions for a specific address
 fn query_access_permissions(deps: Deps, address: String) -> StdResult<AccessPermissionsResponse> {
-    let addr = validate_address_with_deps(&deps, &address)?;
+    let addr = deps.api.addr_validate(&address)?;
     let permissions = ACCESS_LIST.may_load(deps.storage, &addr)?;
 
     Ok(AccessPermissionsResponse {
@@ -60,7 +59,7 @@ fn query_access_list(
 
     // Skip to start_after if provided
     if let Some(start_addr) = start_after {
-        let start_validated = validate_address_with_deps(&deps, &start_addr)?;
+        let start_validated = deps.api.addr_validate(&start_addr)?;
         for item in iter.by_ref() {
             let (addr, _) = item?;
             if addr > start_validated {
@@ -85,7 +84,7 @@ fn query_can_mint(
     address: String,
     token_type: TokenType,
 ) -> StdResult<CanMintResponse> {
-    let addr = validate_address_with_deps(&deps, &address)?;
+    let addr = deps.api.addr_validate(&address)?;
 
     match ACCESS_LIST.may_load(deps.storage, &addr)? {
         Some(permissions) => {
