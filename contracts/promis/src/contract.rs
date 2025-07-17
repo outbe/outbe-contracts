@@ -1,7 +1,7 @@
 use blake3;
 use cosmwasm_std::{
-    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, OverflowError,
-    OverflowOperation, Response, StdResult, Uint128, WasmMsg,
+    entry_point, Binary, Deps, DepsMut, Env, MessageInfo, OverflowError, OverflowOperation,
+    Response, StdResult, Uint128,
 };
 use cw2::set_contract_version;
 use cw20_base::contract::{execute as cw20_execute, instantiate as cw20_instantiate};
@@ -11,7 +11,7 @@ use cw20_base::ContractError as Cw20ContractError;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{ADMIN, GRATIS_CONTRACT, TICKETS, USER_BURNS_PER_BLOCK};
+use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
 
 pub const CONTRACT_NAME: &str = "outbe.net:promis";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -25,12 +25,12 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    // Save Gratis contract address
-    let gratis_addr = deps.api.addr_validate(&msg.gratis_contract)?;
-    GRATIS_CONTRACT.save(deps.storage, &gratis_addr)?;
-
     // Save admin address
-    let admin_addr = deps.api.addr_validate(&msg.admin)?;
+    let admin_addr = msg
+        .admin
+        .map(|it| deps.api.addr_validate(&it))
+        .unwrap_or(Ok(info.clone().sender))?;
+
     ADMIN.save(deps.storage, &admin_addr)?;
 
     let cw20_msg = Cw20InstantiateMsg {
@@ -62,9 +62,6 @@ pub fn execute(
         }
         ExecuteMsg::UpdateMinter { new_minter } => {
             execute_update_minter(deps, env, info, new_minter)
-        }
-        ExecuteMsg::ConvertToGratis { amount } => {
-            execute_convert_to_gratis(deps, env, info, amount)
         }
         ExecuteMsg::UpdateAdmin { new_admin } => execute_update_admin(deps, env, info, new_admin),
     }
@@ -138,68 +135,6 @@ pub fn execute_burn(
 #[entry_point]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     crate::query::query(deps, env, msg)
-}
-
-pub fn execute_convert_to_gratis(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    amount: Uint128,
-) -> Result<Response, ContractError> {
-    if amount.is_zero() {
-        return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
-            "Invalid zero amount",
-        )));
-    }
-
-    // Check if user has enough Promis tokens
-    let sender_balance = BALANCES.load(deps.storage, &info.sender)?;
-    if sender_balance < amount {
-        return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
-            "Insufficient Promis balance",
-        )));
-    }
-
-    // Burn the Promis tokens
-    BALANCES.update(
-        deps.storage,
-        &info.sender,
-        |balance: Option<Uint128>| -> StdResult<_> {
-            Ok(balance.unwrap_or_default().checked_sub(amount)?)
-        },
-    )?;
-
-    let mut token_info = TOKEN_INFO.load(deps.storage)?;
-    token_info.total_supply = token_info.total_supply.checked_sub(amount).map_err(|_| {
-        ContractError::Std(cosmwasm_std::StdError::overflow(OverflowError::new(
-            OverflowOperation::Sub,
-        )))
-    })?;
-    TOKEN_INFO.save(deps.storage, &token_info)?;
-
-    // Get Gratis contract address
-    let gratis_contract = GRATIS_CONTRACT.load(deps.storage)?;
-
-    // Create message to mint Gratis tokens 1:1
-    let mint_msg = Cw20ExecuteMsg::Mint {
-        recipient: info.sender.to_string(),
-        amount,
-    };
-
-    let gratis_msg = WasmMsg::Execute {
-        contract_addr: gratis_contract.to_string(),
-        msg: to_json_binary(&mint_msg)?,
-        funds: vec![],
-    };
-
-    let res = Response::new()
-        .add_message(gratis_msg)
-        .add_attribute("action", "convert_to_gratis")
-        .add_attribute("from", &info.sender)
-        .add_attribute("amount", amount)
-        .add_attribute("gratis_contract", gratis_contract);
-
-    Ok(res)
 }
 
 pub fn execute_update_minter(

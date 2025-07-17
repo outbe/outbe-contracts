@@ -2,16 +2,12 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "InstantiateMsg",
   "type": "object",
-  "required": [
-    "admin",
-    "gratis_contract"
-  ],
   "properties": {
     "admin": {
-      "type": "string"
-    },
-    "gratis_contract": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "mint": {
       "anyOf": [

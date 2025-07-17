@@ -1,0 +1,5 @@
+{
+  "update_minter": {
+    "new_minter": $new_minter
+  }
+}

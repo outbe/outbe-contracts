@@ -54,6 +54,32 @@ jobs:
           WUSDC_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "wUSDC" $CW20_CODE_ID "$INIT_PAYLOAD")
           echo "WUSDC_CONTRACT_ADDRESS=$WUSDC_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
+      - name: Deploy Gratis
+        run: |
+          GRATIS_CODE_ID=$(./scripts/store_code.sh artifacts/gratis.wasm)
+          INIT_PAYLOAD=$(jq -n --from-file ./contracts/gratis/fixtures/init.json)
+          GRATIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Gratis" $GRATIS_CODE_ID "$INIT_PAYLOAD")
+          echo "GRATIS_CONTRACT_ADDRESS=$GRATIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Promis
+        run: |
+          PROMIS_CODE_ID=$(./scripts/store_code.sh artifacts/promis.wasm)
+          INIT_PAYLOAD=$(jq -n --from-file ./contracts/promis/fixtures/init.json)
+          PROMIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Promis" $PROMIS_CODE_ID "$INIT_PAYLOAD")
+          echo "PROMIS_CONTRACT_ADDRESS=$PROMIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Token Miner
+        run: |
+          TOKEN_MINER_CODE_ID=$(./scripts/store_code.sh artifacts/token_miner.wasm)
+          INIT_PAYLOAD=$(jq -n --arg gratis_address $GRATIS_CONTRACT_ADDRESS --arg promis_address $PROMIS_CONTRACT_ADDRESS --from-file ./contracts/token-miner/fixtures/init.json)
+          TOKEN_MINER_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Token Miner" $TOKEN_MINER_CODE_ID "$INIT_PAYLOAD")
+          echo "TOKEN_MINER_CONTRACT_ADDRESS=$TOKEN_MINER_CONTRACT_ADDRESS" >> $GITHUB_ENV
+          echo "Link Gratis Promis and Token Miner contracts"
+          UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/gratis/fixtures/update-minter.json)
+          ./scripts/execute_tx.sh $GRATIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"      
+          UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/promis/fixtures/update-minter.json)
+          ./scripts/execute_tx.sh $PROMIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"      
+
       - name: Deploy Price Oracle
         run: |
           PRICE_ORACLE_CODE_ID=$(./scripts/store_code.sh artifacts/price_oracle.wasm)
