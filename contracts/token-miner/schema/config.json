@@ -6,6 +6,8 @@
   "required": [
     "admin",
     "gratis_contract",
+    "nod_contract",
+    "price_oracle_contract",
     "promis_contract"
   ],
   "properties": {
@@ -19,6 +21,22 @@
     },
     "gratis_contract": {
       "description": "Address of the Gratis token contract",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Addr"
+        }
+      ]
+    },
+    "nod_contract": {
+      "description": "Address of the Nod NFT contract",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Addr"
+        }
+      ]
+    },
+    "price_oracle_contract": {
+      "description": "Address of the Price Oracle contract",
       "allOf": [
         {
           "$ref": "#/definitions/Addr"

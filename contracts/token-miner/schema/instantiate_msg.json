@@ -5,11 +5,21 @@
   "type": "object",
   "required": [
     "gratis_contract",
+    "nod_contract",
+    "price_oracle_contract",
     "promis_contract"
   ],
   "properties": {
     "gratis_contract": {
       "description": "Address of the Gratis token contract",
+      "type": "string"
+    },
+    "nod_contract": {
+      "description": "Address of the Nod NFT contract",
+      "type": "string"
+    },
+    "price_oracle_contract": {
+      "description": "Address of the Price Oracle contract",
       "type": "string"
     },
     "promis_contract": {
