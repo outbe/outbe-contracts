@@ -1,10 +1,9 @@
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 /// Configuration for the token minter contract
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct Config {
     /// Address of the admin who can manage the access list
     pub admin: Addr,
@@ -19,14 +18,14 @@ pub struct Config {
 }
 
 /// Token types that can be minted
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub enum TokenType {
     Gratis,
     Promis,
 }
 
 /// Access permissions for an address
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct AccessPermissions {
     /// Whether this address can mint Gratis tokens
     pub can_mint_gratis: bool,

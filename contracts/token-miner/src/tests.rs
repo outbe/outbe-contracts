@@ -35,6 +35,7 @@ mod test_token_miner {
             promis_contract: api.addr_make(PROMIS_CONTRACT).to_string(),
             price_oracle_contract: api.addr_make(PRICE_ORACLE_CONTRACT).to_string(),
             nod_contract: api.addr_make(NOD_CONTRACT).to_string(),
+            access_list: Vec::new(),
         }
     }
 

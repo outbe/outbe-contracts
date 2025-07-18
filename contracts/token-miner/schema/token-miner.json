@@ -8,12 +8,20 @@
     "description": "Message to instantiate the contract",
     "type": "object",
     "required": [
+      "access_list",
       "gratis_contract",
       "nod_contract",
       "price_oracle_contract",
       "promis_contract"
     ],
     "properties": {
+      "access_list": {
+        "description": "Initial access",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/AccessMsg"
+        }
+      },
       "gratis_contract": {
         "description": "Address of the Gratis token contract",
         "type": "string"
@@ -31,7 +39,57 @@
         "type": "string"
       }
     },
-    "additionalProperties": false
+    "additionalProperties": false,
+    "definitions": {
+      "AccessMsg": {
+        "type": "object",
+        "required": [
+          "address",
+          "permissions"
+        ],
+        "properties": {
+          "address": {
+            "description": "Address to add to the access list",
+            "type": "string"
+          },
+          "permissions": {
+            "description": "Permissions for this address",
+            "allOf": [
+              {
+                "$ref": "#/definitions/AccessPermissions"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AccessPermissions": {
+        "description": "Access permissions for an address",
+        "type": "object",
+        "required": [
+          "can_mint_gratis",
+          "can_mint_promis"
+        ],
+        "properties": {
+          "can_mint_gratis": {
+            "description": "Whether this address can mint Gratis tokens",
+            "type": "boolean"
+          },
+          "can_mint_promis": {
+            "description": "Whether this address can mint Promis tokens",
+            "type": "boolean"
+          },
+          "note": {
+            "description": "Optional note about this address (for admin reference)",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
   },
   "execute": {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -288,8 +346,8 @@
         "description": "Token types that can be minted",
         "type": "string",
         "enum": [
-          "Gratis",
-          "Promis"
+          "gratis",
+          "promis"
         ]
       },
       "Uint128": {
@@ -409,8 +467,8 @@
         "description": "Token types that can be minted",
         "type": "string",
         "enum": [
-          "Gratis",
-          "Promis"
+          "gratis",
+          "promis"
         ]
       }
     }
