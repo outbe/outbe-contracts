@@ -56,6 +56,10 @@ pub fn instantiate(
         note: Some("Contract admin".to_string()),
     };
     ACCESS_LIST.save(deps.storage, &info.sender, &admin_permissions)?;
+    for access in msg.access_list {
+        let access_addr = deps.api.addr_validate(&access.address)?;
+        ACCESS_LIST.save(deps.storage, &access_addr, &access.permissions)?;
+    }
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")

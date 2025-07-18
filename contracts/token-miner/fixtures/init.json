@@ -2,5 +2,15 @@
   "gratis_contract": $gratis_address,
   "promis_contract": $promis_address,
   "nod_contract": $nod_address,
-  "price_oracle_contract": $price_oracle_address
+  "price_oracle_contract": $price_oracle_address,
+  "access_list": [
+    {
+      "address": $faucet_address,
+      "permissions": {
+        "can_mint_gratis": true,
+        "can_mint_promis": true,
+        "note": "faucet"
+      }
+    }
+  ]
 }

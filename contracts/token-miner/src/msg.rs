@@ -14,6 +14,16 @@ pub struct InstantiateMsg {
     pub price_oracle_contract: String,
     /// Address of the Nod NFT contract
     pub nod_contract: String,
+    /// Initial access
+    pub access_list: Vec<AccessMsg>,
+}
+
+#[cw_serde]
+pub struct AccessMsg {
+    /// Address to add to the access list
+    pub address: String,
+    /// Permissions for this address
+    pub permissions: AccessPermissions,
 }
 
 /// Execute messages for the contract
