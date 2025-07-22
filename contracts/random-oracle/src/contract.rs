@@ -1,5 +1,5 @@
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, RandomResponse};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, RandomResponse, SeedResponse};
 use crate::state::RND;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -58,6 +58,10 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractErro
             let value = get_random_value(deps, env, from_range, to_range, count_values)?;
             Ok(to_json_binary(&value)?)
         }
+        QueryMsg::RandomSeed {} => {
+            let value = get_seed(deps, env)?;
+            Ok(to_json_binary(&value)?)
+        }
     }
 }
 
@@ -85,4 +89,10 @@ fn get_random_value(
     Ok(RandomResponse {
         random_values: result,
     })
+}
+
+fn get_seed(deps: Deps, env: Env) -> Result<SeedResponse, ContractError> {
+    let stored_random = RND.may_load(deps.storage)?;
+    let random_value = stored_random.unwrap_or(env.block.height);
+    Ok(SeedResponse { seed: random_value })
 }
