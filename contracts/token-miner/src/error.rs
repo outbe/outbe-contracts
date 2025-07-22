@@ -1,4 +1,4 @@
-use cosmwasm_std::{StdError, Uint128};
+use cosmwasm_std::{Decimal, StdError};
 use thiserror::Error;
 
 /// Custom error types for the token minter contract
@@ -54,7 +54,7 @@ pub enum ContractError {
     /// Nod NFT is not qualified for mining (current price < floor price)
     #[error("Nod NFT is not qualified for mining: current price {current_price} < floor price {floor_price}")]
     NodNotQualified {
-        current_price: Uint128,
-        floor_price: Uint128,
+        current_price: Decimal,
+        floor_price: Decimal,
     },
 }
