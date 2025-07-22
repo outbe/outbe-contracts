@@ -191,7 +191,7 @@
         ],
         "properties": {
           "floor_price_minor": {
-            "$ref": "#/definitions/Uint128"
+            "$ref": "#/definitions/Decimal"
           },
           "floor_rate": {
             "$ref": "#/definitions/Uint128"
@@ -200,13 +200,13 @@
             "$ref": "#/definitions/Uint128"
           },
           "issuance_price_minor": {
-            "$ref": "#/definitions/Uint128"
+            "$ref": "#/definitions/Decimal"
           },
           "nod_id": {
             "type": "string"
           },
           "nominal_price_minor": {
-            "$ref": "#/definitions/Uint128"
+            "$ref": "#/definitions/Decimal"
           },
           "owner": {
             "type": "string"
@@ -832,10 +832,10 @@
           ],
           "properties": {
             "floor_price_minor": {
-              "description": "Floor price in minor units",
+              "description": "Floor price",
               "allOf": [
                 {
-                  "$ref": "#/definitions/Uint128"
+                  "$ref": "#/definitions/Decimal"
                 }
               ]
             },
@@ -859,7 +859,7 @@
               "description": "coen Price at the moment of Nod issuance",
               "allOf": [
                 {
-                  "$ref": "#/definitions/Uint128"
+                  "$ref": "#/definitions/Decimal"
                 }
               ]
             },
@@ -879,7 +879,7 @@
               "description": "From Tribute",
               "allOf": [
                 {
-                  "$ref": "#/definitions/Uint128"
+                  "$ref": "#/definitions/Decimal"
                 }
               ]
             },
