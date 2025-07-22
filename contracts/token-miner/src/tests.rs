@@ -20,6 +20,7 @@ mod test_token_miner {
     use outbe_utils::denom::Denom;
     use price_oracle::query::QueryMsg as PriceOracleQueryMsg;
     use price_oracle::types::{DayType, TokenPairPrice};
+    use std::str::FromStr;
 
     const ADMIN: &str = "admin";
     const USER1: &str = "user1";
@@ -633,7 +634,7 @@ mod test_token_miner {
     fn mock_nod_data(
         owner: &str,
         state: NodState,
-        floor_price_minor: Uint128,
+        floor_price_minor: Decimal,
         gratis_load_minor: Uint128,
     ) -> NodData {
         NodData {
@@ -641,8 +642,8 @@ mod test_token_miner {
             settlement_currency: Denom::Native("usdt".to_string()),
             symbolic_rate: Decimal::one(),
             floor_rate: Uint128::new(100),
-            nominal_price_minor: Uint128::new(1000),
-            issuance_price_minor: Uint128::new(900),
+            nominal_price_minor: Decimal::from_str("1000").unwrap(),
+            issuance_price_minor: Decimal::from_str("900").unwrap(),
             gratis_load_minor,
             floor_price_minor,
             state,
@@ -679,7 +680,7 @@ mod test_token_miner {
                             let nod_data = mock_nod_data(
                                 user1_addr.to_string().as_ref(),
                                 NodState::Issued,
-                                Uint128::new(100),
+                                Decimal::from_str("100").unwrap(),
                                 Uint128::new(500),
                             );
                             let response = NftInfoResponse {
@@ -790,7 +791,7 @@ mod test_token_miner {
                     let nod_data = mock_nod_data(
                         user2_addr.to_string().as_ref(),
                         NodState::Issued,
-                        Uint128::new(100),
+                        Decimal::from_str("100").unwrap(),
                         Uint128::new(500),
                     );
                     let response = NftInfoResponse {
@@ -842,7 +843,7 @@ mod test_token_miner {
                     let nod_data = mock_nod_data(
                         user1_addr.as_str(),
                         NodState::Qualified,
-                        Uint128::new(100),
+                        Decimal::from_str("100").unwrap(),
                         Uint128::new(500),
                     );
                     let response = NftInfoResponse {
@@ -896,7 +897,7 @@ mod test_token_miner {
                     let nod_data = mock_nod_data(
                         user1_addr.as_str(),
                         NodState::Issued,
-                        Uint128::new(200),
+                        Decimal::from_str("200").unwrap(),
                         Uint128::new(500),
                     );
                     let response = NftInfoResponse {
@@ -907,8 +908,7 @@ mod test_token_miner {
                     SystemResult::Ok(ContractResult::Ok(to_json_binary(&response).unwrap()))
                 } else if contract_addr == &price_oracle_addr.to_string() {
                     // Price too low - create a decimal that when converted to atomics is less than 200
-                    let price_response =
-                        mock_token_pair_price(Decimal::from_atomics(150u128, 18).unwrap());
+                    let price_response = mock_token_pair_price(Decimal::from_str("150").unwrap());
                     SystemResult::Ok(ContractResult::Ok(to_json_binary(&price_response).unwrap()))
                 } else {
                     SystemResult::Err(SystemError::InvalidRequest {
@@ -941,8 +941,8 @@ mod test_token_miner {
                 current_price,
                 floor_price,
             } => {
-                assert_eq!(current_price, Uint128::new(150));
-                assert_eq!(floor_price, Uint128::new(200));
+                assert_eq!(current_price, Decimal::from_str("150").unwrap());
+                assert_eq!(floor_price, Decimal::from_str("200").unwrap());
             }
             _ => panic!("Expected NodNotQualified error"),
         }
