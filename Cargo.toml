@@ -52,3 +52,6 @@ metadosis = { version = "*", path = "contracts/metadosis", features = [
 token-allocator = { version = "*", path = "contracts/token-allocator", features = [
     "library",
 ] }
+randao = { version = "*", path = "contracts/randao", features = [
+    "library",
+] }

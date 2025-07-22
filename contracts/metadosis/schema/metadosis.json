@@ -44,6 +44,16 @@
           }
         ]
       },
+      "randao": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Addr"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
       "token_allocator": {
         "anyOf": [
           {
