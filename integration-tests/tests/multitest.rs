@@ -91,7 +91,7 @@ fn test_metadosis() {
     let nod = deploy_nod(&mut app, config.owner_addr.clone());
 
     println!("📦 Deploy Node");
-    let randao = deploy_randao(&mut app, config.owner_addr.clone());
+    let random_oracle = deploy_random_oracle(&mut app, config.owner_addr.clone());
 
     println!("📦 Deploy Token Allocator");
     let token_allocator = deploy_token_allocator(&mut app, config.owner_addr.clone());
@@ -108,7 +108,7 @@ fn test_metadosis() {
         token_allocator.address.clone(),
         vector.address.clone(),
         price_oracle.address.clone(),
-        randao.address.clone(),
+        random_oracle.address.clone(),
     );
 
     println!("🧪 Perform tests");
@@ -332,17 +332,15 @@ fn deploy_nod(app: &mut App, owner: Addr) -> DeployedContract {
     DeployedContract { address, code_id }
 }
 
-fn deploy_randao(app: &mut App, owner: Addr) -> DeployedContract {
-    use randao::contract::{execute, instantiate};
-    use randao::msg::InstantiateMsg;
-    use randao::query::query;
+fn deploy_random_oracle(app: &mut App, owner: Addr) -> DeployedContract {
+    use random_oracle::contract::{execute, instantiate, query};
+    use random_oracle::msg::InstantiateMsg;
 
     let code = ContractWrapper::new(execute, instantiate, query);
     let code_id = app.store_code(Box::new(code));
 
     let instantiate_msg = InstantiateMsg {
-        creator: None,
-        seed: 123,
+        random_value: Some(123),
     };
     let address = app
         .instantiate_contract(
@@ -366,7 +364,7 @@ fn deploy_metadosis(
     token_allocator: Addr,
     vector: Addr,
     price_oracle: Addr,
-    randao: Addr,
+    random_oracle: Addr,
 ) -> DeployedContract {
     use metadosis::contract::{execute, instantiate};
     use metadosis::msg::InstantiateMsg;
@@ -382,7 +380,7 @@ fn deploy_metadosis(
         nod: Some(nod),
         token_allocator: Some(token_allocator),
         price_oracle: Some(price_oracle),
-        randao: Some(randao),
+        random_oracle: Some(random_oracle),
         deficit: Decimal::from_str("0.08").unwrap(),
     };
     let address = app

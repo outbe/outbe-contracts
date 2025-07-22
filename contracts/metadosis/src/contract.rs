@@ -43,7 +43,7 @@ pub fn instantiate(
             nod: msg.nod,
             token_allocator: msg.token_allocator,
             price_oracle: msg.price_oracle,
-            rand: msg.randao,
+            random_oracle: msg.random_oracle,
             deficit: msg.deficit,
         },
     )?;

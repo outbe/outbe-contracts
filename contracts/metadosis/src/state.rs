@@ -10,7 +10,7 @@ pub struct Config {
     pub nod: Option<Addr>,
     pub token_allocator: Option<Addr>,
     pub price_oracle: Option<Addr>,
-    pub rand: Option<Addr>,
+    pub random_oracle: Option<Addr>,
     pub deficit: Decimal,
 }
 

@@ -44,7 +44,7 @@
           }
         ]
       },
-      "randao": {
+      "random_oracle": {
         "anyOf": [
           {
             "$ref": "#/definitions/Addr"

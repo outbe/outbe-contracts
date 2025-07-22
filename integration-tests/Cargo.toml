@@ -15,4 +15,4 @@ metadosis = { workspace = true }
 price-oracle = { workspace = true }
 token-allocator = { workspace = true}
 vector = { workspace = true}
-randao = { workspace = true}
+random-oracle = { workspace = true}

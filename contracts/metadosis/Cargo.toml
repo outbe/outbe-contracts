@@ -26,9 +26,9 @@ nod = { workspace = true}
 vector = { workspace = true}
 token-allocator = { workspace = true}
 price-oracle = { workspace = true}
-randao = { workspace = true}
-rand = "0.8"
-rand_chacha = "0.3"
+random-oracle = { workspace = true}
+#rand = "0.8"
+#rand_chacha = "0.3"
 
 
 [dev-dependencies]
