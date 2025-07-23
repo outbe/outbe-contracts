@@ -1,5 +1,4 @@
 use crate::error::ContractError;
-use crate::helpers::denom_to_string;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::{TokenPairState, CREATOR, TOKEN_PAIR_PRICE};
 use crate::types::TokenPairPrice;
@@ -62,8 +61,8 @@ fn execute_update_price(
     info: MessageInfo,
     token_pair_price: TokenPairPrice,
 ) -> Result<Response, ContractError> {
-    let token1_str = denom_to_string(&token_pair_price.token1);
-    let token2_str = denom_to_string(&token_pair_price.token2);
+    let token1_str = token_pair_price.token1.to_string();
+    let token2_str = token_pair_price.token2.to_string();
 
     let token_pair = TokenPairState {
         token1: token_pair_price.token1,

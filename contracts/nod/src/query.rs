@@ -102,7 +102,7 @@ mod tests {
     use crate::types::{NodData, State};
     use cosmwasm_std::{Decimal, Timestamp, Uint128};
     use cw_multi_test::{App, ContractWrapper, Executor};
-    use outbe_utils::denom::Denom;
+    use outbe_utils::denom::{Currency, Denom};
     use std::str::FromStr;
 
     #[test]
@@ -149,7 +149,7 @@ mod tests {
         let recipient = app.api().addr_make("recipient");
         let entity = NodEntity {
             nod_id: "nod123".to_string(),
-            settlement_currency: Denom::Native("uset".to_string()),
+            settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::from_str("1.23").unwrap(),
             floor_rate: Uint128::new(10),
             nominal_price_minor: Decimal::from_str("100").unwrap(),
