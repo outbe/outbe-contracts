@@ -1,5 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::HexBinary;
+use outbe_utils::date::Iso8601Date;
 
 #[cw_serde]
 pub struct TributeInputPayload {
@@ -8,7 +9,7 @@ pub struct TributeInputPayload {
     /// Owner is a derivative address on L2 network based on blake3 hashing
     pub owner: String,
     /// ISO 8601
-    pub worldwide_day: String,
+    pub worldwide_day: Iso8601Date,
     /// ISO 4217
     pub settlement_currency: String,
     /// Amount expressed in natural units, `settlement_base_amount >= 0`

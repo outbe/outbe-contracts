@@ -1,6 +1,7 @@
 use cosmwasm_std::{StdError, VerificationError};
 use cw_ownable::OwnershipError;
 use outbe_utils::amount_utils::AmountError;
+use outbe_utils::date::DateError;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -21,6 +22,6 @@ pub enum ContractError {
     CUAlreadyExists {},
     #[error("Consumption Units are empty")]
     CUEmpty {},
-    #[error("Invalid date format")]
-    InvalidDateFormat {},
+    #[error(transparent)]
+    DateError(#[from] DateError),
 }

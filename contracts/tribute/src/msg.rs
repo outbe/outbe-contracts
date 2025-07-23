@@ -1,6 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Decimal, Uint128};
 use outbe_nft::msg::{CollectionInfoMsg, Cw721InstantiateMsg};
+use outbe_utils::date::WorldwideDay;
 use outbe_utils::denom::Denom;
 
 #[cw_serde]
@@ -54,7 +55,7 @@ pub struct MintExtension {
 pub struct TributeMintData {
     pub tribute_id: String,
     /// Date of the Tribute creation
-    pub worldwide_day: u64,
+    pub worldwide_day: WorldwideDay,
     pub owner: String,
     /// Value of the Tribute in Settlement Tokens
     pub settlement_amount_minor: Uint128,

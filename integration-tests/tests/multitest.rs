@@ -1,6 +1,7 @@
 use crate::setup::{setup_test_env, DeployedContract, NATIVE_DENOM};
 use cosmwasm_std::{Addr, Decimal, Uint128};
 use cw_multi_test::{App, ContractWrapper, Executor};
+use outbe_utils::date::normalize_to_date;
 use outbe_utils::denom::{Currency, Denom};
 use std::str::FromStr;
 use tribute::msg::ExecuteMsg::Mint;
@@ -33,7 +34,7 @@ fn test_tribute() {
                     settlement_currency: Denom::Fiat(Currency::Usd),
                     nominal_qty_minor: Uint128::from(100000000u32),
                     settlement_amount_minor: Uint128::from(100000000u32),
-                    worldwide_day: app.block_info().time.seconds(),
+                    worldwide_day: normalize_to_date(&app.block_info().time),
                     tribute_price_minor: Decimal::one(),
                 },
             }),
@@ -128,7 +129,7 @@ fn test_metadosis() {
                     settlement_currency: Denom::Fiat(Currency::Usd),
                     settlement_amount_minor: Uint128::from(5u32),
                     nominal_qty_minor: Uint128::from(10u32),
-                    worldwide_day: app.block_info().time.seconds(),
+                    worldwide_day: normalize_to_date(&app.block_info().time),
                     tribute_price_minor: Decimal::from_str("0.5").unwrap(),
                 },
             }),
@@ -151,7 +152,7 @@ fn test_metadosis() {
                     owner: config.user_addr.to_string(),
                     settlement_amount_minor: Uint128::from(15u32),
                     nominal_qty_minor: Uint128::from(5u32),
-                    worldwide_day: app.block_info().time.seconds(),
+                    worldwide_day: normalize_to_date(&app.block_info().time),
                     tribute_price_minor: Decimal::from_str("3").unwrap(),
                 },
             }),
@@ -179,7 +180,7 @@ fn test_metadosis() {
         .query_wasm_smart(
             tribute.address.clone(),
             &QueryMsg::DailyTributes {
-                date: app.block_info().time.seconds(),
+                date: normalize_to_date(&app.block_info().time),
             },
         )
         .unwrap();

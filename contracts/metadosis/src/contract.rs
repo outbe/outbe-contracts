@@ -8,9 +8,10 @@ use crate::state::{
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_json_binary, Addr, Decimal, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
-    SubMsg, Timestamp, Uint128, Uint64, WasmMsg,
+    SubMsg, Uint128, WasmMsg,
 };
-use outbe_utils::time_utils;
+use outbe_utils::date;
+use outbe_utils::date::WorldwideDay;
 use price_oracle::types::DayType;
 use std::collections::HashSet;
 use tribute::query::FullTributeData;
@@ -70,15 +71,12 @@ fn execute_run(
     mut deps: DepsMut,
     env: Env,
     _info: MessageInfo,
-    run_date: Option<Uint64>,
+    run_date: Option<WorldwideDay>,
 ) -> Result<Response, ContractError> {
     // todo verify ownership to run raffle
 
-    let execution_date_time = run_date
-        .map(|v| Timestamp::from_seconds(v.u64()))
-        .unwrap_or(env.block.time);
-    println!("execution date time = {}", execution_date_time);
-    let execution_date = time_utils::normalize_to_date(execution_date_time).seconds();
+    let execution_date = run_date.unwrap_or(date::normalize_to_date(&env.block.time));
+    println!("execution date time = {}", execution_date);
 
     let config = CONFIG.load(deps.storage)?;
     let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
@@ -128,7 +126,7 @@ fn execute_run(
 #[allow(clippy::too_many_arguments)]
 fn execute_lysis_or_touch(
     deps: DepsMut,
-    execution_date: u64,
+    execution_date: WorldwideDay,
     run_today: usize,
     tribute_address: Addr,
     nod_address: Addr,
