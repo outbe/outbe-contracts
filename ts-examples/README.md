@@ -5,8 +5,11 @@ This example shows how run scripts in TypeScript applications.
 How to run:
 
 ```shell
-npm install # install dependencies
-npm run codegen:generate # Generate Clients, Types from contract-Schema using @cosmwasm/ts-codegen
+# install dependencies
+npm install 
+# Generate Clients, Types from contract-Schema using @cosmwasm/ts-codegen
+npm run codegen:generate 
+
 npx ts-node scripts/clean-all.ts # Remove all Tributes, Metadosis, Nod
 npx ts-node scripts/generate-wallets.ts # Generate Random wallets
 npx ts-node scripts/tributes-publish.ts # Generate Tributes
