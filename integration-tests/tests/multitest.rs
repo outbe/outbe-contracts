@@ -1,7 +1,7 @@
 use crate::setup::{setup_test_env, DeployedContract, NATIVE_DENOM};
 use cosmwasm_std::{Addr, Decimal, Uint128};
 use cw_multi_test::{App, ContractWrapper, Executor};
-use outbe_utils::denom::Denom;
+use outbe_utils::denom::{Currency, Denom};
 use std::str::FromStr;
 use tribute::msg::ExecuteMsg::Mint;
 use tribute::msg::{MintExtension, TributeCollectionExtension, TributeMintData};
@@ -30,7 +30,7 @@ fn test_tribute() {
                 data: TributeMintData {
                     tribute_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
-                    settlement_currency: Denom::Cw20(Addr::unchecked("usdc")),
+                    settlement_currency: Denom::Fiat(Currency::Usd),
                     nominal_qty_minor: Uint128::from(100000000u32),
                     settlement_amount_minor: Uint128::from(100000000u32),
                     worldwide_day: app.block_info().time.seconds(),
@@ -125,7 +125,7 @@ fn test_metadosis() {
                 data: TributeMintData {
                     tribute_id: "1".to_string(),
                     owner: config.user_addr.to_string(),
-                    settlement_currency: Denom::Cw20(Addr::unchecked("usdc")),
+                    settlement_currency: Denom::Fiat(Currency::Usd),
                     settlement_amount_minor: Uint128::from(5u32),
                     nominal_qty_minor: Uint128::from(10u32),
                     worldwide_day: app.block_info().time.seconds(),
@@ -147,7 +147,7 @@ fn test_metadosis() {
             extension: Box::new(MintExtension {
                 data: TributeMintData {
                     tribute_id: "2".to_string(),
-                    settlement_currency: Denom::Cw20(Addr::unchecked("usdc")),
+                    settlement_currency: Denom::Fiat(Currency::Usd),
                     owner: config.user_addr.to_string(),
                     settlement_amount_minor: Uint128::from(15u32),
                     nominal_qty_minor: Uint128::from(5u32),

@@ -17,7 +17,7 @@ mod test_token_miner {
     use nod::query::QueryMsg as NodQueryMsg;
     use nod::types::{NodData, State as NodState};
     use outbe_nft::msg::NftInfoResponse;
-    use outbe_utils::denom::Denom;
+    use outbe_utils::denom::{Currency, Denom};
     use price_oracle::query::QueryMsg as PriceOracleQueryMsg;
     use price_oracle::types::{DayType, TokenPairPrice};
     use std::str::FromStr;
@@ -639,7 +639,7 @@ mod test_token_miner {
     ) -> NodData {
         NodData {
             nod_id: "test_nod_1".to_string(),
-            settlement_currency: Denom::Native("usdt".to_string()),
+            settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::one(),
             floor_rate: Uint128::new(100),
             nominal_price_minor: Decimal::from_str("1000").unwrap(),
@@ -656,7 +656,7 @@ mod test_token_miner {
     // Helper function to create a mock TokenPairPrice
     fn mock_token_pair_price(price: Decimal) -> TokenPairPrice {
         TokenPairPrice {
-            token1: Denom::Native("usdt".to_string()),
+            token1: Denom::Fiat(Currency::Usd),
             token2: Denom::Native("token".to_string()),
             day_type: DayType::Green,
             price,
