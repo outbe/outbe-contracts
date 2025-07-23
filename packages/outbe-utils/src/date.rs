@@ -43,7 +43,7 @@ pub fn iso_to_ts(date: &Iso8601Date) -> Result<WorldwideDay, DateError> {
 
 #[derive(Error, Debug, PartialEq)]
 pub enum DateError {
-    #[error("Invalid date format")]
+    #[error("Invalid date")]
     InvalidDate {},
 }
 
