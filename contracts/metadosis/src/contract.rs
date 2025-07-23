@@ -11,7 +11,7 @@ use cosmwasm_std::{
     SubMsg, Uint128, WasmMsg,
 };
 use outbe_utils::date;
-use outbe_utils::date::WorldwideDay;
+use outbe_utils::date::{is_valid, WorldwideDay};
 use price_oracle::types::DayType;
 use std::collections::HashSet;
 use tribute::query::FullTributeData;
@@ -76,6 +76,7 @@ fn execute_run(
     // todo verify ownership to run raffle
 
     let execution_date = run_date.unwrap_or(date::normalize_to_date(&env.block.time));
+    is_valid(&execution_date)?;
     println!("execution date time = {}", execution_date);
 
     let config = CONFIG.load(deps.storage)?;

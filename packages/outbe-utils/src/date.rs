@@ -10,6 +10,13 @@ pub fn normalize_to_date(timestamp: &Timestamp) -> WorldwideDay {
     let days = seconds / SECONDS_IN_DAY;
     days * SECONDS_IN_DAY
 }
+pub fn is_valid(date: &WorldwideDay) -> Result<(), DateError> {
+    if date % SECONDS_IN_DAY == 0 {
+        Ok(())
+    } else {
+        Err(DateError::InvalidDate {})
+    }
+}
 
 /// Worldwide day in seconds
 pub type WorldwideDay = u64;
@@ -22,22 +29,22 @@ pub fn iso_to_ts(date: &Iso8601Date) -> Result<WorldwideDay, DateError> {
         Ok(parsed_date) => {
             let timestamp_seconds = parsed_date
                 .and_hms_opt(0, 0, 0)
-                .ok_or(DateError::InvalidDateFormat {})?
+                .ok_or(DateError::InvalidDate {})?
                 .and_utc()
                 .timestamp();
             if timestamp_seconds < 0 {
-                return Err(DateError::InvalidDateFormat {});
+                return Err(DateError::InvalidDate {});
             }
             Ok(timestamp_seconds.unsigned_abs())
         }
-        Err(_) => Err(DateError::InvalidDateFormat {}),
+        Err(_) => Err(DateError::InvalidDate {}),
     }
 }
 
 #[derive(Error, Debug, PartialEq)]
 pub enum DateError {
     #[error("Invalid date format")]
-    InvalidDateFormat {},
+    InvalidDate {},
 }
 
 #[cfg(test)]
