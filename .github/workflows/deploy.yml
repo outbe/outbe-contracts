@@ -76,6 +76,13 @@ jobs:
           PRICE_ORACLE_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Price Oracle" $PRICE_ORACLE_CODE_ID "$INIT_PAYLOAD")
           echo "PRICE_ORACLE_CONTRACT_ADDRESS=$PRICE_ORACLE_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
+      - name: Deploy Random Oracle
+        run: |
+          RANDOM_ORACLE_CODE_ID=$(./scripts/store_code.sh artifacts/random_oracle.wasm)
+          INIT_PAYLOAD=$(jq -n --from-file ./contracts/random-oracle/fixtures/init.json)
+          RANDOM_ORACLE_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Random Oracle" $RANDOM_ORACLE_CODE_ID "$INIT_PAYLOAD")
+          echo "RANDOM_ORACLE_CONTRACT_ADDRESS=$RANDOM_ORACLE_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
       - name: Deploy Token Allocator
         run: |
           TOKEN_ALLOCATOR_CODE_ID=$(./scripts/store_code.sh artifacts/token_allocator.wasm)
@@ -118,7 +125,7 @@ jobs:
       - name: Deploy Metadosis
         run: |
           METADOSIS_CODE_ID=$(./scripts/store_code.sh artifacts/metadosis.wasm)
-          INIT_PAYLOAD=$(jq -n --arg price_oracle_address $PRICE_ORACLE_CONTRACT_ADDRESS --arg vector_address $VECTOR_CONTRACT_ADDRESS --arg tribute_address $TRIBUTE_CONTRACT_ADDRESS --arg nod_address $NOD_CONTRACT_ADDRESS --arg token_allocator_address $TOKEN_ALLOCATOR_CONTRACT_ADDRESS --from-file ./contracts/metadosis/fixtures/init.json)
+          INIT_PAYLOAD=$(jq -n --arg price_oracle_address $PRICE_ORACLE_CONTRACT_ADDRESS --arg random_oracle_address $RANDOM_ORACLE_CONTRACT_ADDRESS --arg vector_address $VECTOR_CONTRACT_ADDRESS --arg tribute_address $TRIBUTE_CONTRACT_ADDRESS --arg nod_address $NOD_CONTRACT_ADDRESS --arg token_allocator_address $TOKEN_ALLOCATOR_CONTRACT_ADDRESS --from-file ./contracts/metadosis/fixtures/init.json)
           METADOSIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Metadosis" $METADOSIS_CODE_ID "$INIT_PAYLOAD")
           echo "METADOSIS_CONTRACT_ADDRESS=$METADOSIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
 

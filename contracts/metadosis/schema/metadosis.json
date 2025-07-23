@@ -44,6 +44,16 @@
           }
         ]
       },
+      "random_oracle": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Addr"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
       "token_allocator": {
         "anyOf": [
           {

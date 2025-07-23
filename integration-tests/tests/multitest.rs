@@ -90,6 +90,9 @@ fn test_metadosis() {
     println!("📦 Deploy Node");
     let nod = deploy_nod(&mut app, config.owner_addr.clone());
 
+    println!("📦 Deploy Node");
+    let random_oracle = deploy_random_oracle(&mut app, config.owner_addr.clone());
+
     println!("📦 Deploy Token Allocator");
     let token_allocator = deploy_token_allocator(&mut app, config.owner_addr.clone());
 
@@ -105,6 +108,7 @@ fn test_metadosis() {
         token_allocator.address.clone(),
         vector.address.clone(),
         price_oracle.address.clone(),
+        random_oracle.address.clone(),
     );
 
     println!("🧪 Perform tests");
@@ -328,6 +332,30 @@ fn deploy_nod(app: &mut App, owner: Addr) -> DeployedContract {
     DeployedContract { address, code_id }
 }
 
+fn deploy_random_oracle(app: &mut App, owner: Addr) -> DeployedContract {
+    use random_oracle::contract::{execute, instantiate, query};
+    use random_oracle::msg::InstantiateMsg;
+
+    let code = ContractWrapper::new(execute, instantiate, query);
+    let code_id = app.store_code(Box::new(code));
+
+    let instantiate_msg = InstantiateMsg {
+        random_value: Some(123),
+    };
+    let address = app
+        .instantiate_contract(
+            code_id,
+            owner,
+            &instantiate_msg,
+            &[],
+            "randao".to_string(),
+            None,
+        )
+        .unwrap();
+    DeployedContract { address, code_id }
+}
+
+#[allow(clippy::too_many_arguments)]
 fn deploy_metadosis(
     app: &mut App,
     owner: Addr,
@@ -336,6 +364,7 @@ fn deploy_metadosis(
     token_allocator: Addr,
     vector: Addr,
     price_oracle: Addr,
+    random_oracle: Addr,
 ) -> DeployedContract {
     use metadosis::contract::{execute, instantiate};
     use metadosis::msg::InstantiateMsg;
@@ -351,6 +380,7 @@ fn deploy_metadosis(
         nod: Some(nod),
         token_allocator: Some(token_allocator),
         price_oracle: Some(price_oracle),
+        random_oracle: Some(random_oracle),
         deficit: Decimal::from_str("0.08").unwrap(),
     };
     let address = app

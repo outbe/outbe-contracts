@@ -3,34 +3,30 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, Env, Order, StdResult};
-use cw_ownable::Ownership;
-use outbe_nft::msg::{
-    ContractInfoResponse, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
-};
 
 /// Query messages for Nod contract
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(ContractInfoResponse<NodConfig>)]
+    #[returns(outbe_nft::msg::ContractInfoResponse<NodConfig>)]
     ContractInfo {},
 
-    #[returns(OwnerOfResponse)]
+    #[returns(outbe_nft::msg::OwnerOfResponse)]
     OwnerOf { token_id: String },
 
-    #[returns(NumTokensResponse)]
+    #[returns(outbe_nft::msg::NumTokensResponse)]
     NumTokens {},
 
-    #[returns(Ownership<String>)]
+    #[returns(cw_ownable::Ownership<String>)]
     GetMinterOwnership {},
 
-    #[returns(Ownership<String>)]
+    #[returns(cw_ownable::Ownership<String>)]
     GetCreatorOwnership {},
 
-    #[returns(NftInfoResponse<NodData>)]
+    #[returns(outbe_nft::msg::NftInfoResponse<NodData>)]
     NftInfo { token_id: String },
 
-    #[returns(TokensResponse)]
+    #[returns(outbe_nft::msg::TokensResponse)]
     Tokens {
         owner: String,
         start_after: Option<String>,
@@ -38,7 +34,7 @@ pub enum QueryMsg {
         query_order: Option<Order>,
     },
 
-    #[returns(TokensResponse)]
+    #[returns(outbe_nft::msg::TokensResponse)]
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,

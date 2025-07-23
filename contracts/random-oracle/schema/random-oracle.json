@@ -88,12 +88,42 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "description": "Returns a pseudo random seed value either previously supplied by `SetRandom` or depending on the current block number.",
+        "type": "object",
+        "required": [
+          "random_seed"
+        ],
+        "properties": {
+          "random_seed": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ]
   },
   "migrate": null,
   "sudo": null,
   "responses": {
+    "random_seed": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SeedResponse",
+      "type": "object",
+      "required": [
+        "seed"
+      ],
+      "properties": {
+        "seed": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false
+    },
     "random_value": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "RandomResponse",

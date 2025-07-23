@@ -43,6 +43,7 @@ pub fn instantiate(
             nod: msg.nod,
             token_allocator: msg.token_allocator,
             price_oracle: msg.price_oracle,
+            random_oracle: msg.random_oracle,
             deficit: msg.deficit,
         },
     )?;
@@ -229,6 +230,19 @@ fn do_lysis_tier(
         .iter()
         .find(|v| usize::from(v.vector_id) == run_today)
         .ok_or(ContractError::BadRunConfiguration {})?;
+
+    // TODO shuffle here like the following
+    // let seed: randao::query::QuerySeedResponse = deps
+    //     .querier
+    //     .query_wasm_smart(&rand_address, &randao::query::QueryMsg::Seed {})?;
+    //
+    // let mut rnd = ChaCha8Rng::seed_from_u64(123);
+    // // Simulate 20 candidates (IDs 1 to 20)
+    // let mut candidates: Vec<u32> = (1..=20).collect();
+    //
+    // // Shuffle and pick 10 winners
+    // candidates.shuffle(&mut rnd);
+    // let winners = &candidates[..10];
 
     for tribute_id in tributes_in_current_raffle {
         let tribute: tribute::query::TributeInfoResponse = deps.querier.query_wasm_smart(

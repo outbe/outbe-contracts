@@ -4,6 +4,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 pub struct InstantiateMsg {
     pub random_value: Option<u64>,
 }
+
 #[cw_serde]
 pub enum ExecuteMsg {
     /// Sets a predictable value as "random".
@@ -16,7 +17,6 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     /// Returns a pseudo random value either previously supplied by `SetRandom`
     /// or depending on the current block number.
-    ///  
     #[returns(RandomResponse)]
     RandomValue {
         from_range: u64,
@@ -24,9 +24,18 @@ pub enum QueryMsg {
         /// Number of random values to return
         count_values: u64,
     },
+    /// Returns a pseudo random seed value either previously supplied by `SetRandom`
+    /// or depending on the current block number.
+    #[returns(SeedResponse)]
+    RandomSeed {},
 }
 
 #[cw_serde]
 pub struct RandomResponse {
     pub random_values: Vec<u64>,
+}
+
+#[cw_serde]
+pub struct SeedResponse {
+    pub seed: u64,
 }

@@ -1,5 +1,5 @@
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, RandomResponse};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, RandomResponse, SeedResponse};
 use crate::state::RND;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -58,6 +58,10 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractErro
             let value = get_random_value(deps, env, from_range, to_range, count_values)?;
             Ok(to_json_binary(&value)?)
         }
+        QueryMsg::RandomSeed {} => {
+            let value = get_seed(deps, env)?;
+            Ok(to_json_binary(&value)?)
+        }
     }
 }
 
@@ -85,4 +89,37 @@ fn get_random_value(
     Ok(RandomResponse {
         random_values: result,
     })
+}
+
+fn get_seed(deps: Deps, env: Env) -> Result<SeedResponse, ContractError> {
+    let stored_random = RND.may_load(deps.storage)?;
+    let random_value = stored_random.unwrap_or(env.block.height);
+    Ok(SeedResponse { seed: random_value })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmwasm_std::testing::{mock_dependencies, mock_env};
+
+    #[test]
+    fn test_get_seed_with_stored_random() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let stored_value = 12345u64;
+
+        RND.save(deps.as_mut().storage, &stored_value).unwrap();
+
+        let result = get_seed(deps.as_ref(), env).unwrap();
+        assert_eq!(result.seed, stored_value);
+    }
+
+    #[test]
+    fn test_get_seed_without_stored_random() {
+        let deps = mock_dependencies();
+        let env = mock_env();
+
+        let result = get_seed(deps.as_ref(), env.clone()).unwrap();
+        assert_eq!(result.seed, env.block.height);
+    }
 }
