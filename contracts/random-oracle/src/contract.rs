@@ -96,3 +96,30 @@ fn get_seed(deps: Deps, env: Env) -> Result<SeedResponse, ContractError> {
     let random_value = stored_random.unwrap_or(env.block.height);
     Ok(SeedResponse { seed: random_value })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmwasm_std::testing::{mock_dependencies, mock_env};
+
+    #[test]
+    fn test_get_seed_with_stored_random() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let stored_value = 12345u64;
+
+        RND.save(deps.as_mut().storage, &stored_value).unwrap();
+
+        let result = get_seed(deps.as_ref(), env).unwrap();
+        assert_eq!(result.seed, stored_value);
+    }
+
+    #[test]
+    fn test_get_seed_without_stored_random() {
+        let deps = mock_dependencies();
+        let env = mock_env();
+
+        let result = get_seed(deps.as_ref(), env.clone()).unwrap();
+        assert_eq!(result.seed, env.block.height);
+    }
+}
