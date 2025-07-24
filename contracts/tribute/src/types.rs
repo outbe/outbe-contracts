@@ -2,6 +2,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Decimal, Timestamp, Uint128};
 use outbe_nft::state::NftInfo;
 use outbe_nft::traits::Cw721CollectionConfig;
+use outbe_utils::date::WorldwideDay;
 use outbe_utils::denom::Denom;
 
 /// ConsumptionUnit contract config
@@ -30,7 +31,7 @@ pub struct TributeData {
     /// Signals an eligible interest to the network
     pub symbolic_load: Uint128,
     /// Date of Consumption
-    pub worldwide_day: u64,
+    pub worldwide_day: WorldwideDay,
 
     /// Time when the Tribute NFT was created on the network
     pub created_at: Timestamp,

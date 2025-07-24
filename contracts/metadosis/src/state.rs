@@ -2,6 +2,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Decimal, Uint128};
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Item, Map};
+use outbe_utils::date::WorldwideDay;
 
 #[cw_serde]
 pub struct Config {
@@ -44,7 +45,7 @@ pub struct DailyRunInfo {
     pub number_of_runs: usize,
 }
 
-pub const DAILY_RUNS: Map<u64, usize> = Map::new("daily_runs");
-pub const DAILY_RUNS_INFO: Map<u64, DailyRunInfo> = Map::new("daily_runs_info");
+pub const DAILY_RUNS: Map<WorldwideDay, usize> = Map::new("daily_runs");
+pub const DAILY_RUNS_INFO: Map<WorldwideDay, DailyRunInfo> = Map::new("daily_runs_info");
 
 pub const TRIBUTES_DISTRIBUTION: Map<&str, String> = Map::new("tributes_distribution");

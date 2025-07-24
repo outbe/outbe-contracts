@@ -1,5 +1,6 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Decimal, Uint64};
+use cosmwasm_std::{Addr, Decimal};
+use outbe_utils::date::WorldwideDay;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -16,7 +17,7 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    Execute { run_date: Option<Uint64> },
+    Execute { run_date: Option<WorldwideDay> },
     // todo remove after demo
     BurnAll {},
 }

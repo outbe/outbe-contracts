@@ -4,6 +4,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, Empty, Env, Order, StdResult};
 use outbe_nft::state::Cw721Config;
+use outbe_utils::date::WorldwideDay;
 
 pub type TributeInfoResponse = outbe_nft::msg::NftInfoResponse<TributeData>;
 pub type TributeContractInfoResponse = outbe_nft::msg::ContractInfoResponse<TributeConfig>;
@@ -50,7 +51,7 @@ pub enum QueryMsg {
 
     /// Returns all tokens created in the given date with an optional filter by status.
     #[returns(DailyTributesResponse)]
-    DailyTributes { date: u64 },
+    DailyTributes { date: WorldwideDay },
 }
 
 #[cw_serde]
@@ -117,20 +118,17 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         }
     }
 }
-fn query_daily_tributes(deps: Deps, _env: &Env, date: u64) -> StdResult<DailyTributesResponse> {
-    let (start_date, end_date) = date_bounds(date);
-
-    println!("dates {} {} {}", date, start_date, end_date);
-
+fn query_daily_tributes(
+    deps: Deps,
+    _env: &Env,
+    date: WorldwideDay,
+) -> StdResult<DailyTributesResponse> {
     let tokens: StdResult<Vec<FullTributeData>> =
         Cw721Config::<TributeData, Option<Empty>>::default()
             .nft_info
             .range(deps.storage, None, None, Order::Ascending)
             .filter_map(|item| match item {
-                Ok((id, tribute))
-                    if tribute.extension.worldwide_day >= start_date
-                        && tribute.extension.worldwide_day < end_date =>
-                {
+                Ok((id, tribute)) if tribute.extension.worldwide_day == date => {
                     Some(Ok(FullTributeData {
                         token_id: id,
                         owner: tribute.owner.to_string(),
@@ -143,15 +141,6 @@ fn query_daily_tributes(deps: Deps, _env: &Env, date: u64) -> StdResult<DailyTri
 
     Ok(DailyTributesResponse { tributes: tokens? })
 }
-
-/// Normalize any timestamp to midnight UTC of that day.
-fn date_bounds(seconds: u64) -> (u64, u64) {
-    // 86400 seconds in a day
-    let days = seconds / 86400;
-    (days * 86400, (days + 1) * 86400)
-}
-
-// Query
 
 #[cfg(test)]
 mod tests {

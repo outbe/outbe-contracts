@@ -987,6 +987,7 @@ dependencies = [
 name = "outbe-utils"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "cosmwasm-schema",
  "cosmwasm-std",
  "thiserror 1.0.69",
@@ -1484,7 +1485,6 @@ dependencies = [
 name = "tribute-factory"
 version = "0.1.0"
 dependencies = [
- "chrono",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-multi-test",
