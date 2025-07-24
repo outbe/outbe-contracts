@@ -2,9 +2,8 @@
 mod test_gratis {
     use crate::contract::{execute, query, CONTRACT_NAME, CONTRACT_VERSION};
     use crate::msg::{CheckTicketResponse, ExecuteMsg, QueryMsg};
-    use cosmwasm_std::from_json;
     use cosmwasm_std::testing::{message_info, mock_dependencies_with_balance, mock_env};
-    use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
+    use cosmwasm_std::{from_json, Addr, BankMsg, CosmosMsg, DepsMut, Response, Uint128};
     use cw2::set_contract_version;
     use cw20::MinterResponse;
     use cw20::TokenInfoResponse;
@@ -112,11 +111,29 @@ mod test_gratis {
         assert_eq!(balance, Uint128::from(1000000u128));
 
         // Burn tokens
+        let burn_amount = Uint128::from(500_000u128);
+
         let burn_msg = ExecuteMsg::Burn {
-            amount: Uint128::from(500000u128),
+            amount: burn_amount,
         };
         let info = message_info(&Addr::unchecked(USER1), &[]);
         let res = execute(deps.as_mut(), mock_env(), info, burn_msg).unwrap();
+
+        // Check send coen message
+        assert_eq!(
+            res.messages.len(),
+            1,
+            "Expected one BankMsg::Send in response"
+        );
+        match &res.messages[0].msg {
+            CosmosMsg::Bank(BankMsg::Send { to_address, amount }) => {
+                assert_eq!(to_address, USER1);
+                assert_eq!(amount.len(), 1);
+                assert_eq!(amount[0].amount, burn_amount);
+                assert_eq!(amount[0].denom, "ucoen"); 
+            }
+            _ => panic!("Expected BankMsg::Send"),
+        }
 
         // Check burn response attributes
         assert_eq!(res.attributes.len(), 5);
