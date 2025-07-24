@@ -1,8 +1,8 @@
 import {DirectSecp256k1Wallet} from "@cosmjs/proto-signing";
 import {promises as fs} from "fs";
 import {randomBytes} from "crypto";
+import {NUMBER_OF_WALLETS} from "../config";
 
-const numberOfWallets = 200;
 const walletsFile = "wallets.json";
 
 export class WalletKeyInfo {
@@ -16,9 +16,9 @@ export class WalletKeyInfo {
 
 async function generateWallets() {
     const wallets: WalletKeyInfo[] = [];
-    console.log(`Generating ${numberOfWallets} wallets...`);
+    console.log(`Generating ${NUMBER_OF_WALLETS} wallets...`);
 
-    for (let i = 0; i < numberOfWallets; i++) {
+    for (let i = 0; i < NUMBER_OF_WALLETS; i++) {
         const privateKey = randomBytes(32);
         const wallet = await DirectSecp256k1Wallet.fromKey(privateKey, "outbe");
         const [account] = await wallet.getAccounts();
@@ -32,7 +32,7 @@ async function generateWallets() {
     }
 
     await fs.writeFile(walletsFile, JSON.stringify(wallets, null, 2));
-    console.log(`Successfully generated and saved ${numberOfWallets} wallets to ${walletsFile}`);
+    console.log(`Successfully generated and saved ${NUMBER_OF_WALLETS} wallets to ${walletsFile}`);
 }
 
 generateWallets().catch(error => {
