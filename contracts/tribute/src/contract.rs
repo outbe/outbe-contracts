@@ -2,6 +2,7 @@ use crate::error::ContractError;
 use crate::msg::{
     ExecuteMsg, InstantiateMsg, MigrateMsg, MintExtension, TributeCollectionExtension,
 };
+use crate::state::TributeState;
 use crate::types::{TributeConfig, TributeData, TributeNft};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -34,11 +35,7 @@ pub fn instantiate(
         updated_at: env.block.time,
     };
 
-    let config = Cw721Config::<TributeData, TributeConfig>::default();
-    config.collection_config.save(deps.storage, &cfg)?;
-    config
-        .collection_info
-        .save(deps.storage, &collection_info)?;
+    let _state = TributeState::init(deps.storage, &collection_info, &cfg)?;
 
     // ---- set minter and creator ----
     // use info.sender if None is passed
