@@ -17,7 +17,6 @@ mod test_gratis {
     const NEW_MINTER: &str = "new_minter";
     const NATIVE_DENOM: &str = "ucoen";
 
-
     fn init_contract(deps: DepsMut) -> Result<Response, crate::ContractError> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
@@ -141,7 +140,7 @@ mod test_gratis {
         // Check total supply updated
         let res = query(deps.as_ref(), mock_env(), QueryMsg::TokenInfo {}).unwrap();
         let token_info: TokenInfoResponse = from_json(&res).unwrap();
-        assert_eq!(token_info.total_supply,left_balance);
+        assert_eq!(token_info.total_supply, left_balance);
     }
 
     #[test]
@@ -526,7 +525,6 @@ mod test_gratis {
         assert_eq!(admin_addr, TEST_ADMIN);
     }
 
-
     #[test]
     fn test_burn_sends_native() {
         let fund_balance = Uint128::from(1000000u128);
@@ -573,5 +571,4 @@ mod test_gratis {
             _ => panic!("Expected BankMsg::Send"),
         }
     }
-    
 }
