@@ -1,4 +1,5 @@
 use cosmwasm_schema::cw_serde;
+use outbe_utils::date::WorldwideDay;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -6,7 +7,9 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
-pub enum ExecuteMsg {}
+pub enum ExecuteMsg {
+    AllocateTokens { date: WorldwideDay },
+}
 
 #[cw_serde]
 pub enum MigrateMsg {
