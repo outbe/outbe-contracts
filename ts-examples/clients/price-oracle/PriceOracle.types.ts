@@ -10,8 +10,11 @@ export type Denom = {
   native: string;
 } | {
   cw20: Addr;
+} | {
+  fiat: Currency;
 };
 export type Addr = string;
+export type Currency = "usd" | "eur";
 export interface InstantiateMsg {
   creator?: string | null;
   initial_price: TokenPairPrice;

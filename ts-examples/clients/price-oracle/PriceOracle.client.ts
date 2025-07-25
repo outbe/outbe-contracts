@@ -6,7 +6,7 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { DayType, Decimal, Denom, Addr, InstantiateMsg, TokenPairPrice, ExecuteMsg, QueryMsg, Expiration, Timestamp, Uint64, OwnershipForString } from "./PriceOracle.types";
+import { DayType, Decimal, Denom, Addr, Currency, InstantiateMsg, TokenPairPrice, ExecuteMsg, QueryMsg, Expiration, Timestamp, Uint64, OwnershipForString } from "./PriceOracle.types";
 export interface PriceOracleReadOnlyInterface {
   contractAddress: string;
   getPrice: () => Promise<TokenPairPrice>;

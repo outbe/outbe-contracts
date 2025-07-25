@@ -8,8 +8,11 @@ export type Denom = {
   native: string;
 } | {
   cw20: Addr;
+} | {
+  fiat: Currency;
 };
 export type Addr = string;
+export type Currency = "usd" | "eur";
 export type Decimal = string;
 export interface InstantiateMsg {
   burner?: string | null;

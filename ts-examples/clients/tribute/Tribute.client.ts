@@ -6,7 +6,7 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { Denom, Addr, Decimal, InstantiateMsg, TributeCollectionExtension, ExecuteMsg, Action, Expiration, Timestamp, Uint64, Uint128, CollectionInfoMsgForNullable_TributeCollectionExtension, MintExtension, TributeMintData, QueryMsg, Order, MigrateMsg, TokensResponse, ContractInfoResponseForTributeConfig, TributeConfig, CollectionInfo, DailyTributesResponse, FullTributeData, TributeData, OwnershipForString, NftInfoResponseForTributeData, NumTokensResponse, OwnerOfResponse } from "./Tribute.types";
+import { Denom, Addr, Currency, Decimal, InstantiateMsg, TributeCollectionExtension, ExecuteMsg, Action, Expiration, Timestamp, Uint64, Uint128, CollectionInfoMsgForNullable_TributeCollectionExtension, MintExtension, TributeMintData, QueryMsg, Order, MigrateMsg, TokensResponse, ContractInfoResponseForTributeConfig, TributeConfig, CollectionInfo, DailyTributesResponse, FullTributeData, TributeData, OwnershipForString, NftInfoResponseForTributeData, NumTokensResponse, OwnerOfResponse } from "./Tribute.types";
 export interface TributeReadOnlyInterface {
   contractAddress: string;
   contractInfo: () => Promise<ContractInfoResponseForTributeConfig>;

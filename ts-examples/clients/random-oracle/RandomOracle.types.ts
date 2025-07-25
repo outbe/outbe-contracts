@@ -18,7 +18,12 @@ export type QueryMsg = {
     from_range: number;
     to_range: number;
   };
+} | {
+  random_seed: {};
 };
+export interface SeedResponse {
+  seed: number;
+}
 export interface RandomResponse {
   random_values: number[];
 }

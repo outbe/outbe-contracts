@@ -6,7 +6,7 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { InstantiateMsg, ExecuteMsg, QueryMsg, RandomResponse } from "./RandomOracle.types";
+import { InstantiateMsg, ExecuteMsg, QueryMsg, SeedResponse, RandomResponse } from "./RandomOracle.types";
 export interface RandomOracleReadOnlyInterface {
   contractAddress: string;
   randomValue: ({
@@ -18,6 +18,7 @@ export interface RandomOracleReadOnlyInterface {
     fromRange: number;
     toRange: number;
   }) => Promise<RandomResponse>;
+  randomSeed: () => Promise<SeedResponse>;
 }
 export class RandomOracleQueryClient implements RandomOracleReadOnlyInterface {
   client: CosmWasmClient;
@@ -26,6 +27,7 @@ export class RandomOracleQueryClient implements RandomOracleReadOnlyInterface {
     this.client = client;
     this.contractAddress = contractAddress;
     this.randomValue = this.randomValue.bind(this);
+    this.randomSeed = this.randomSeed.bind(this);
   }
   randomValue = async ({
     countValues,
@@ -42,6 +44,11 @@ export class RandomOracleQueryClient implements RandomOracleReadOnlyInterface {
         from_range: fromRange,
         to_range: toRange
       }
+    });
+  };
+  randomSeed = async (): Promise<SeedResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      random_seed: {}
     });
   };
 }
