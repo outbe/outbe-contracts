@@ -34,8 +34,11 @@ export type Denom = {
   native: string;
 } | {
   cw20: Addr;
+} | {
+  fiat: Currency;
 };
 export type Addr = string;
+export type Currency = "usd" | "eur";
 export type State = "issued" | "qualified";
 export interface SubmitExtension {
   created_at?: Timestamp | null;

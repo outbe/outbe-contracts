@@ -11,18 +11,18 @@ export interface InstantiateMsg {
   deficit: Decimal;
   nod?: Addr | null;
   price_oracle?: Addr | null;
+  random_oracle?: Addr | null;
   token_allocator?: Addr | null;
   tribute?: Addr | null;
   vector?: Addr | null;
 }
 export type ExecuteMsg = {
   execute: {
-    run_date?: Uint64 | null;
+    run_date?: number | null;
   };
 } | {
   burn_all: {};
 };
-export type Uint64 = string;
 export type QueryMsg = {
   daily_runs: {};
 } | {

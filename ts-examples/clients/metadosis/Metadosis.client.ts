@@ -6,7 +6,7 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { Decimal, Addr, InstantiateMsg, ExecuteMsg, Uint64, QueryMsg, Uint128, AllocationResponse, RunType, DailyRunsResponse, DailyRunsData, DailyRunInfo, RunInfo, TributesDistributionResponse, TributesDistributionData } from "./Metadosis.types";
+import { Decimal, Addr, InstantiateMsg, ExecuteMsg, QueryMsg, Uint128, AllocationResponse, RunType, DailyRunsResponse, DailyRunsData, DailyRunInfo, RunInfo, TributesDistributionResponse, TributesDistributionData } from "./Metadosis.types";
 export interface MetadosisReadOnlyInterface {
   contractAddress: string;
   dailyRuns: () => Promise<DailyRunsResponse>;
@@ -45,7 +45,7 @@ export interface MetadosisInterface extends MetadosisReadOnlyInterface {
   execute: ({
     runDate
   }: {
-    runDate?: Uint64;
+    runDate?: number;
   }, fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
   burnAll: (fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
 }
@@ -64,7 +64,7 @@ export class MetadosisClient extends MetadosisQueryClient implements MetadosisIn
   execute = async ({
     runDate
   }: {
-    runDate?: Uint64;
+    runDate?: number;
   }, fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
     return await this.client.execute(this.sender, this.contractAddress, {
       execute: {

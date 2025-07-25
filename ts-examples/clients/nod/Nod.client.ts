@@ -6,7 +6,7 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { InstantiateMsg, NodCollectionExtension, ExecuteMsg, Timestamp, Uint64, Decimal, Uint128, Denom, Addr, State, SubmitExtension, NodEntity, QueryMsg, Order, MigrateMsg, TokensResponse, ContractInfoResponseForNodConfig, NodConfig, CollectionInfo, Expiration, OwnershipForString, NftInfoResponseForNodData, NodData, NumTokensResponse, OwnerOfResponse } from "./Nod.types";
+import { InstantiateMsg, NodCollectionExtension, ExecuteMsg, Timestamp, Uint64, Decimal, Uint128, Denom, Addr, Currency, State, SubmitExtension, NodEntity, QueryMsg, Order, MigrateMsg, TokensResponse, ContractInfoResponseForNodConfig, NodConfig, CollectionInfo, Expiration, OwnershipForString, NftInfoResponseForNodData, NodData, NumTokensResponse, OwnerOfResponse } from "./Nod.types";
 export interface NodReadOnlyInterface {
   contractAddress: string;
   contractInfo: () => Promise<ContractInfoResponseForNodConfig>;

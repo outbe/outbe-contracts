@@ -281,7 +281,6 @@
           "settlement_atto_amount",
           "settlement_base_amount",
           "settlement_currency",
-          "tribute_draft_id",
           "worldwide_day"
         ],
         "properties": {
@@ -322,14 +321,6 @@
           "settlement_currency": {
             "description": "ISO 4217",
             "type": "string"
-          },
-          "tribute_draft_id": {
-            "description": "ID of the draft tribute",
-            "allOf": [
-              {
-                "$ref": "#/definitions/HexBinary"
-              }
-            ]
           },
           "worldwide_day": {
             "description": "ISO 8601",

@@ -190,7 +190,7 @@ fn update_used_state(
     storage: &mut dyn Storage,
     tribute: &TributeInputPayload,
 ) -> Result<Empty, ContractError> {
-    let tribute_draft_id = generate_tribute_draft_id(&tribute);
+    let tribute_draft_id = generate_tribute_draft_id(tribute);
 
     USED_TRIBUTE_IDS.update(storage, tribute_draft_id, |old| match old {
         Some(_) => Err(ContractError::IdAlreadyExists {}),
