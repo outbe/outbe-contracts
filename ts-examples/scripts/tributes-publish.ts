@@ -74,7 +74,7 @@ async function main() {
 
 function randomTribute(owner: string, day: string, avgPrice: number): any {
   let uuid_id = require('crypto').randomUUID().toString()
-  let tribute_draft_id = require('crypto').createHash('sha256').update(uuid_id).digest('hex');
+  let cu_hashes = require('crypto').createHash('sha256').update(uuid_id).digest('hex');
   let settlement_amount = getRandomInt(avgPrice - 100, avgPrice + 100);
 
   let zk_proof: ZkProof = {
@@ -87,7 +87,6 @@ function randomTribute(owner: string, day: string, avgPrice: number): any {
   }
 
   let tribute_input: TributeInputPayload = {
-    tribute_draft_id: tribute_draft_id,
     owner: owner,
     worldwide_day: day,
     settlement_currency: "usd",
@@ -95,7 +94,7 @@ function randomTribute(owner: string, day: string, avgPrice: number): any {
     settlement_atto_amount: 0,
     nominal_base_qty: settlement_amount * 2,
     nominal_atto_qty: 0,
-    cu_hashes: [tribute_draft_id]
+    cu_hashes: [cu_hashes]
   }
 
   return {
