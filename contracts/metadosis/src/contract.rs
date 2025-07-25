@@ -62,9 +62,58 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
+        ExecuteMsg::Prepare { run_date } => execute_prepare(deps, env, info, run_date),
         ExecuteMsg::Execute { run_date } => execute_run(deps, env, info, run_date),
         ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
     }
+}
+
+// A unique ID for tokens allocation callback
+const ALLOCATE_NATIVE_TOKENS_REPLY_ID: u64 = 1;
+
+fn execute_prepare(
+    mut deps: DepsMut,
+    env: Env,
+    _info: MessageInfo,
+    run_date: Option<WorldwideDay>,
+) -> Result<Response, ContractError> {
+    // todo verify ownership to run raffle
+
+    let execution_date = run_date.unwrap_or(date::normalize_to_date(&env.block.time));
+    is_valid(&execution_date)?;
+    println!("execution date time = {}", execution_date);
+
+    let config = CONFIG.load(deps.storage)?;
+    let token_allocator_address = config
+        .token_allocator
+        .ok_or(ContractError::NotInitialized {})?;
+
+    let wasm_msg = WasmMsg::Execute {
+        contract_addr: token_allocator_address.to_string(),
+        msg: to_json_binary(&token_allocator::msg::ExecuteMsg::AllocateTokens {
+            date: execution_date,
+        })?,
+        funds: vec![],
+    };
+
+    // schedule_executions(
+    //     deps.branch(),
+    //     tribute_address.clone(),
+    //     token_allocator_address,
+    //     execution_date,
+    //     config.deficit,
+    //     exchange_rate.day_type,
+    // )?;
+
+    Ok(Response::new()
+        .add_submessage(SubMsg::reply_on_success(
+            wasm_msg,
+            ALLOCATE_NATIVE_TOKENS_REPLY_ID,
+        ))
+        .add_attribute("action", "metadosis::prepare")
+        .add_event(
+            Event::new("metadosis::prepare").add_attribute("date", execution_date.to_string()),
+        ))
 }
 
 fn execute_run(
