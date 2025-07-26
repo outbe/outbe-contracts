@@ -97,7 +97,7 @@ pub fn execute_burn(
     // Check if the contract has native funds
     let contract_balance: Coin = deps
         .querier
-        .query_balance(env.contract.address.clone(), "coen")?;
+        .query_balance(env.contract.address.clone(), "unit")?;
     if contract_balance.amount < amount {
         return Err(ContractError::InsufficientContractFunds {});
     }
@@ -131,7 +131,7 @@ pub fn execute_burn(
     let send_native_msg = cosmwasm_std::BankMsg::Send {
         to_address: info.sender.to_string(),
         amount: vec![Coin {
-            denom: "coen".to_string(),
+            denom: "unit".to_string(),
             amount,
         }],
     };
