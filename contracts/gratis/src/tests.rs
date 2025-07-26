@@ -15,7 +15,7 @@ mod test_gratis {
     const USER2: &str = "user2";
     const NEW_ADMIN: &str = "new_admin";
     const NEW_MINTER: &str = "new_minter";
-    const NATIVE_DENOM: &str = "ucoen";
+    const NATIVE_DENOM: &str = "coen";
 
     fn init_contract(deps: DepsMut) -> Result<Response, crate::ContractError> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;

@@ -35,4 +35,7 @@ pub enum ContractError {
 
     #[error("User already burned tokens in this block")]
     AlreadyBurnedInBlock {},
+
+    #[error("Contract has insufficient native funds")]
+    InsufficientContractFunds {},
 }
