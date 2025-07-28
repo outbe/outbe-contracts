@@ -2,9 +2,8 @@
 mod test_gratis {
     use crate::contract::{execute, query, CONTRACT_NAME, CONTRACT_VERSION};
     use crate::msg::{CheckTicketResponse, ExecuteMsg, QueryMsg};
-    use cosmwasm_std::from_json;
     use cosmwasm_std::testing::{message_info, mock_dependencies_with_balance, mock_env};
-    use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
+    use cosmwasm_std::{coin, from_json, Addr, BankMsg, CosmosMsg, DepsMut, Response, Uint128};
     use cw2::set_contract_version;
     use cw20::MinterResponse;
     use cw20::TokenInfoResponse;
@@ -16,6 +15,7 @@ mod test_gratis {
     const USER2: &str = "user2";
     const NEW_ADMIN: &str = "new_admin";
     const NEW_MINTER: &str = "new_minter";
+    const NATIVE_DENOM: &str = "unit";
 
     fn init_contract(deps: DepsMut) -> Result<Response, crate::ContractError> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
@@ -87,7 +87,8 @@ mod test_gratis {
 
     #[test]
     fn test_mint_and_burn() {
-        let mut deps = mock_dependencies_with_balance(&[]);
+        let fund_balance = Uint128::from(1000000u128);
+        let mut deps = mock_dependencies_with_balance(&[coin(fund_balance.u128(), NATIVE_DENOM)]);
         init_contract(deps.as_mut()).unwrap();
 
         // Manually add balance to USER1 to bypass address validation
@@ -96,24 +97,26 @@ mod test_gratis {
             .save(
                 deps.as_mut().storage,
                 &Addr::unchecked(USER1),
-                &Uint128::from(1000000u128),
+                &fund_balance,
             )
             .unwrap();
 
         // Update total supply
         let mut token_info = TOKEN_INFO.load(deps.as_ref().storage).unwrap();
-        token_info.total_supply = Uint128::from(1000000u128);
+        token_info.total_supply = fund_balance;
         TOKEN_INFO.save(deps.as_mut().storage, &token_info).unwrap();
 
         // Check balance directly from storage
         let balance = BALANCES
             .load(deps.as_ref().storage, &Addr::unchecked(USER1))
             .unwrap();
-        assert_eq!(balance, Uint128::from(1000000u128));
+        assert_eq!(balance, fund_balance);
 
         // Burn tokens
+        let burn_amount = Uint128::from(500_000u128);
+
         let burn_msg = ExecuteMsg::Burn {
-            amount: Uint128::from(500000u128),
+            amount: burn_amount,
         };
         let info = message_info(&Addr::unchecked(USER1), &[]);
         let res = execute(deps.as_mut(), mock_env(), info, burn_msg).unwrap();
@@ -128,20 +131,22 @@ mod test_gratis {
         assert_eq!(res.attributes[2].value, "500000");
 
         // Check updated balance directly from storage
+        let left_balance = fund_balance - burn_amount;
         let balance = BALANCES
             .load(deps.as_ref().storage, &Addr::unchecked(USER1))
             .unwrap();
-        assert_eq!(balance, Uint128::from(500000u128));
+        assert_eq!(balance, left_balance);
 
         // Check total supply updated
         let res = query(deps.as_ref(), mock_env(), QueryMsg::TokenInfo {}).unwrap();
         let token_info: TokenInfoResponse = from_json(&res).unwrap();
-        assert_eq!(token_info.total_supply, Uint128::from(500000u128));
+        assert_eq!(token_info.total_supply, left_balance);
     }
 
     #[test]
     fn test_ticket_generation() {
-        let mut deps = mock_dependencies_with_balance(&[]);
+        let fund_balance = Uint128::from(1000000u128);
+        let mut deps = mock_dependencies_with_balance(&[coin(fund_balance.u128(), NATIVE_DENOM)]);
         init_contract(deps.as_mut()).unwrap();
 
         // Manually add balance to USER1 to bypass address validation
@@ -150,13 +155,13 @@ mod test_gratis {
             .save(
                 deps.as_mut().storage,
                 &Addr::unchecked(USER1),
-                &Uint128::from(1000000u128),
+                &fund_balance,
             )
             .unwrap();
 
         // Update total supply
         let mut token_info = TOKEN_INFO.load(deps.as_ref().storage).unwrap();
-        token_info.total_supply = Uint128::from(1000000u128);
+        token_info.total_supply = fund_balance;
         TOKEN_INFO.save(deps.as_mut().storage, &token_info).unwrap();
 
         // Burn tokens
@@ -188,7 +193,8 @@ mod test_gratis {
 
     #[test]
     fn test_one_burn_per_block() {
-        let mut deps = mock_dependencies_with_balance(&[]);
+        let fund_balance = Uint128::from(1000000u128);
+        let mut deps = mock_dependencies_with_balance(&[coin(fund_balance.u128(), NATIVE_DENOM)]);
         init_contract(deps.as_mut()).unwrap();
 
         // Manually add balance to USER1 to bypass address validation
@@ -197,13 +203,13 @@ mod test_gratis {
             .save(
                 deps.as_mut().storage,
                 &Addr::unchecked(USER1),
-                &Uint128::from(1000000u128),
+                &fund_balance,
             )
             .unwrap();
 
         // Update total supply
         let mut token_info = TOKEN_INFO.load(deps.as_ref().storage).unwrap();
-        token_info.total_supply = Uint128::from(1000000u128);
+        token_info.total_supply = fund_balance;
         TOKEN_INFO.save(deps.as_mut().storage, &token_info).unwrap();
 
         // First burn should succeed
@@ -261,7 +267,8 @@ mod test_gratis {
 
     #[test]
     fn test_ticket_uniqueness() {
-        let mut deps = mock_dependencies_with_balance(&[]);
+        let fund_balance = Uint128::from(2000000u128);
+        let mut deps = mock_dependencies_with_balance(&[coin(fund_balance.u128(), NATIVE_DENOM)]);
         init_contract(deps.as_mut()).unwrap();
 
         // Manually add balances to USER1 and USER2 to bypass address validation
@@ -269,14 +276,14 @@ mod test_gratis {
             .save(
                 deps.as_mut().storage,
                 &Addr::unchecked(USER1),
-                &Uint128::from(1000000u128),
+                &fund_balance,
             )
             .unwrap();
         BALANCES
             .save(
                 deps.as_mut().storage,
                 &Addr::unchecked(USER2),
-                &Uint128::from(1000000u128),
+                &fund_balance,
             )
             .unwrap();
 
@@ -319,7 +326,8 @@ mod test_gratis {
 
     #[test]
     fn test_different_block_heights() {
-        let mut deps = mock_dependencies_with_balance(&[]);
+        let fund_balance = Uint128::from(1000000u128);
+        let mut deps = mock_dependencies_with_balance(&[coin(fund_balance.u128(), NATIVE_DENOM)]);
         init_contract(deps.as_mut()).unwrap();
 
         // Manually add balance to USER1 to bypass address validation
@@ -328,13 +336,13 @@ mod test_gratis {
             .save(
                 deps.as_mut().storage,
                 &Addr::unchecked(USER1),
-                &Uint128::from(1000000u128),
+                &fund_balance,
             )
             .unwrap();
 
         // Update total supply
         let mut token_info = TOKEN_INFO.load(deps.as_ref().storage).unwrap();
-        token_info.total_supply = Uint128::from(1000000u128);
+        token_info.total_supply = fund_balance;
         TOKEN_INFO.save(deps.as_mut().storage, &token_info).unwrap();
 
         // Burn at block height 12345
@@ -515,5 +523,52 @@ mod test_gratis {
         let res = query(deps.as_ref(), mock_env(), QueryMsg::Admin {}).unwrap();
         let admin_addr: String = from_json(&res).unwrap();
         assert_eq!(admin_addr, TEST_ADMIN);
+    }
+
+    #[test]
+    fn test_burn_sends_native() {
+        let fund_balance = Uint128::from(1000000u128);
+        let mut deps = mock_dependencies_with_balance(&[coin(fund_balance.u128(), NATIVE_DENOM)]);
+        init_contract(deps.as_mut()).unwrap();
+
+        // Manually add balance to USER1 to bypass address validation
+        use cw20_base::state::BALANCES;
+        BALANCES
+            .save(
+                deps.as_mut().storage,
+                &Addr::unchecked(USER1),
+                &fund_balance,
+            )
+            .unwrap();
+
+        // Update total supply
+        let mut token_info = TOKEN_INFO.load(deps.as_ref().storage).unwrap();
+        token_info.total_supply = fund_balance;
+        TOKEN_INFO.save(deps.as_mut().storage, &token_info).unwrap();
+
+        // Burn tokens
+        let burn_amount = Uint128::from(500_000u128);
+
+        let burn_msg = ExecuteMsg::Burn {
+            amount: burn_amount,
+        };
+        let info = message_info(&Addr::unchecked(USER1), &[]);
+        let res = execute(deps.as_mut(), mock_env(), info, burn_msg).unwrap();
+
+        // Check send coen message
+        assert_eq!(
+            res.messages.len(),
+            1,
+            "Expected one BankMsg::Send in response"
+        );
+        match &res.messages[0].msg {
+            CosmosMsg::Bank(BankMsg::Send { to_address, amount }) => {
+                assert_eq!(to_address, USER1);
+                assert_eq!(amount.len(), 1);
+                assert_eq!(amount[0].amount, burn_amount);
+                assert_eq!(amount[0].denom, NATIVE_DENOM);
+            }
+            _ => panic!("Expected BankMsg::Send"),
+        }
     }
 }

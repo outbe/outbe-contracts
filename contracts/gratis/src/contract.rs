@@ -3,7 +3,7 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
 use blake3;
 use cosmwasm_std::{
-    entry_point, Binary, Deps, DepsMut, Env, MessageInfo, OverflowError, OverflowOperation,
+    entry_point, Binary, Coin, Deps, DepsMut, Env, MessageInfo, OverflowError, OverflowOperation,
     Response, StdResult, Uint128,
 };
 use cw2::set_contract_version;
@@ -94,6 +94,14 @@ pub fn execute_burn(
         )));
     }
 
+    // Check if the contract has native funds
+    let contract_balance: Coin = deps
+        .querier
+        .query_balance(env.contract.address.clone(), "unit")?;
+    if contract_balance.amount < amount {
+        return Err(ContractError::InsufficientContractFunds {});
+    }
+
     BALANCES.update(
         deps.storage,
         &info.sender,
@@ -119,7 +127,17 @@ pub fn execute_burn(
 
     TICKETS.save(deps.storage, ticket.clone(), &true)?;
 
+    // Send native funds to sender
+    let send_native_msg = cosmwasm_std::BankMsg::Send {
+        to_address: info.sender.to_string(),
+        amount: vec![Coin {
+            denom: "unit".to_string(),
+            amount,
+        }],
+    };
+
     let res = Response::new()
+        .add_message(send_native_msg)
         .add_attribute("action", "burn")
         .add_attribute("from", sender_address)
         .add_attribute("amount", amount)
