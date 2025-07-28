@@ -32,7 +32,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn query_amount(env: Env) -> StdResult<TokenAllocatorData> {
+pub(crate) fn query_amount(env: Env) -> StdResult<TokenAllocatorData> {
     let initial_tokens_per_block: f64 = 2_f64.powi(16); // 65536 токенов за блок
     let blocks_per_year: u64 = 6307200;
     let emission_rate: f64 = 0.02;

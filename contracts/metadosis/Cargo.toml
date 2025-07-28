@@ -20,6 +20,7 @@ cw20 = { workspace = true }
 thiserror = { workspace = true }
 cw-ownable = { workspace = true }
 outbe-utils = { workspace = true }
+cw-utils = { workspace = true }
 
 tribute = { workspace = true}
 nod = { workspace = true}

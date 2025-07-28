@@ -187,6 +187,15 @@ fn test_metadosis() {
 
     assert_eq!(response.tributes.len(), 2);
 
+    println!("🔬 Prepare for lysis");
+    app.execute_contract(
+        config.owner_addr.clone(),
+        metadosis.address.clone(),
+        &metadosis::msg::ExecuteMsg::Prepare { run_date: None },
+        &[],
+    )
+    .unwrap();
+
     println!("🔬 Lysis 1");
     app.execute_contract(
         config.owner_addr.clone(),
@@ -367,11 +376,11 @@ fn deploy_metadosis(
     price_oracle: Addr,
     random_oracle: Addr,
 ) -> DeployedContract {
-    use metadosis::contract::{execute, instantiate};
+    use metadosis::contract::{execute, instantiate, reply};
     use metadosis::msg::InstantiateMsg;
     use metadosis::query::query;
 
-    let code = ContractWrapper::new(execute, instantiate, query);
+    let code = ContractWrapper::new(execute, instantiate, query).with_reply(reply);
     let code_id = app.store_code(Box::new(code));
 
     let instantiate_msg = InstantiateMsg {

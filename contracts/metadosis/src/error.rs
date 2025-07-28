@@ -1,4 +1,5 @@
 use cosmwasm_std::StdError;
+use cw_utils::ParseReplyError;
 use outbe_utils::date::DateError;
 use thiserror::Error;
 
@@ -12,4 +13,10 @@ pub enum ContractError {
     BadRunConfiguration {},
     #[error(transparent)]
     DateError(#[from] DateError),
+    #[error("Bad Reply ID {id}")]
+    UnrecognizedReplyId { id: u64 },
+    #[error("NoDataInReply")]
+    NoDataInReply {},
+    #[error(transparent)]
+    ParseReplyError(#[from] ParseReplyError),
 }

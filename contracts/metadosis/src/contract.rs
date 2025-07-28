@@ -7,9 +7,10 @@ use crate::state::{
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Addr, Decimal, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
+    from_json, to_json_binary, Addr, Decimal, DepsMut, Env, Event, MessageInfo, Reply, Response,
     SubMsg, Uint128, WasmMsg,
 };
+use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
 use outbe_utils::date;
 use outbe_utils::date::{is_valid, WorldwideDay};
 use price_oracle::types::DayType;
@@ -72,7 +73,7 @@ pub fn execute(
 const ALLOCATE_NATIVE_TOKENS_REPLY_ID: u64 = 1;
 
 fn execute_prepare(
-    mut deps: DepsMut,
+    deps: DepsMut,
     env: Env,
     _info: MessageInfo,
     run_date: Option<WorldwideDay>,
@@ -81,7 +82,7 @@ fn execute_prepare(
 
     let execution_date = run_date.unwrap_or(date::normalize_to_date(&env.block.time));
     is_valid(&execution_date)?;
-    println!("execution date time = {}", execution_date);
+    println!("Prepare execution date time = {}", execution_date);
 
     let config = CONFIG.load(deps.storage)?;
     let token_allocator_address = config
@@ -96,15 +97,6 @@ fn execute_prepare(
         funds: vec![],
     };
 
-    // schedule_executions(
-    //     deps.branch(),
-    //     tribute_address.clone(),
-    //     token_allocator_address,
-    //     execution_date,
-    //     config.deficit,
-    //     exchange_rate.day_type,
-    // )?;
-
     Ok(Response::new()
         .add_submessage(SubMsg::reply_on_success(
             wasm_msg,
@@ -116,8 +108,68 @@ fn execute_prepare(
         ))
 }
 
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
+    // Match on the ID of the reply to handle the correct one
+    match msg.id {
+        ALLOCATE_NATIVE_TOKENS_REPLY_ID => handle_token_allocation_reply(deps, msg),
+        _ => Err(ContractError::UnrecognizedReplyId { id: msg.id }),
+    }
+}
+
+fn handle_token_allocation_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
+    //todo verify caller is token_allocator_address
+
+    println!("handle_token_allocation_reply {:?}", msg);
+
+    // 1. Check the result of the submessage
+
+    let subcall_result = msg.result.into_result().unwrap(); // todo avoid unwrap
+
+    println!("events {:?}", subcall_result.events);
+    println!("msg_responses {:?}", subcall_result.msg_responses);
+
+    println!("data {:?}", subcall_result.data);
+
+    // 2. Get the data from the successful reply
+    let data = subcall_result
+        .msg_responses
+        .first()
+        .ok_or(ContractError::NoDataInReply {})?;
+
+    // 3. Deserialize the data into your expected struct
+    let allocation_result: MsgExecuteContractResponse =
+        parse_execute_response_data(data.value.as_slice())?;
+
+    let allocation_result: token_allocator::contract::AllocationResult =
+        from_json(allocation_result.data.unwrap().as_slice())?; // todo remove unwrap
+
+    let config = CONFIG.load(deps.storage)?;
+
+    let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
+    let price_oracle_address = config
+        .price_oracle
+        .ok_or(ContractError::NotInitialized {})?;
+
+    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
+        &price_oracle_address,
+        &price_oracle::query::QueryMsg::GetPrice {},
+    )?;
+
+    schedule_executions(
+        deps,
+        tribute_address.clone(),
+        allocation_result.allocation,
+        allocation_result.day,
+        config.deficit,
+        exchange_rate.day_type,
+    )?;
+
+    Ok(Response::new().add_attribute("action", "handled_execution_reply"))
+}
+
 fn execute_run(
-    mut deps: DepsMut,
+    deps: DepsMut,
     env: Env,
     _info: MessageInfo,
     run_date: Option<WorldwideDay>,
@@ -130,9 +182,6 @@ fn execute_run(
 
     let config = CONFIG.load(deps.storage)?;
     let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
-    let token_allocator_address = config
-        .token_allocator
-        .ok_or(ContractError::NotInitialized {})?;
     let vector_address = config.vector.ok_or(ContractError::NotInitialized {})?;
     let price_oracle_address = config
         .price_oracle
@@ -148,19 +197,7 @@ fn execute_run(
     let run_today = run_today.unwrap_or_default();
     let run_today = run_today + 1;
 
-    if run_today == 1 {
-        schedule_executions(
-            deps.branch(),
-            tribute_address.clone(),
-            token_allocator_address,
-            execution_date,
-            config.deficit,
-            exchange_rate.day_type,
-        )?;
-    }
-
     DAILY_RUNS.save(deps.storage, execution_date, &run_today)?;
-    // execute metadosis or touch
 
     execute_lysis_or_touch(
         deps,
@@ -343,17 +380,12 @@ fn do_lysis_tier(
 fn schedule_executions(
     deps: DepsMut,
     tribute_address: Addr,
-    token_allocator_address: Addr,
+    total_allocation: Uint128,
     execution_date: u64,
     deficit: Decimal,
     day_type: DayType,
 ) -> Result<(), ContractError> {
-    let (total_allocation, allocation_per_tier) =
-        calc_allocation(deps.as_ref(), token_allocator_address)?;
-    println!(
-        "total_allocation = {}, allocation_per_pool = {}, ",
-        total_allocation, allocation_per_tier
-    );
+    let allocation_per_tier = total_allocation / Uint128::new(24);
 
     let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
         &tribute_address,
@@ -557,21 +589,4 @@ fn execute_burn_all(
         .add_event(
             Event::new("metadosis::burn_all").add_attribute("sender", info.sender.to_string()),
         ))
-}
-
-pub(crate) fn calc_allocation(
-    deps: Deps,
-    token_allocator_address: Addr,
-) -> StdResult<(Uint128, Uint128)> {
-    let allocation_per_block: token_allocator::types::TokenAllocatorData =
-        deps.querier.query_wasm_smart(
-            &token_allocator_address,
-            &token_allocator::query::QueryMsg::GetData {},
-        )?;
-
-    // todo calc total_allocation based on blocks with exact values
-    let total_allocation = Uint128::from(allocation_per_block.amount) * Uint128::new(24 * 60 * 12);
-    let allocation_per_tier = total_allocation / Uint128::new(24);
-
-    Ok((total_allocation, allocation_per_tier))
 }

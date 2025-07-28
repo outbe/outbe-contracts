@@ -1,5 +1,4 @@
-use crate::contract::calc_allocation;
-use crate::state::{DailyRunInfo, CONFIG, DAILY_RUNS, DAILY_RUNS_INFO, TRIBUTES_DISTRIBUTION};
+use crate::state::{DailyRunInfo, DAILY_RUNS, DAILY_RUNS_INFO, TRIBUTES_DISTRIBUTION};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -12,8 +11,6 @@ pub enum QueryMsg {
     DailyRuns {},
     #[returns(TributesDistributionResponse)]
     TributesDistribution {},
-    #[returns(AllocationResponse)]
-    Allocation {},
 }
 
 #[cw_serde]
@@ -58,7 +55,6 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::TributesDistribution {} => {
             to_json_binary(&query_tributes_distribution(deps, env)?)
         }
-        QueryMsg::Allocation {} => to_json_binary(&query_allocation(deps, env)?),
     }
 }
 
@@ -103,24 +99,3 @@ fn query_tributes_distribution(deps: Deps, _env: Env) -> StdResult<TributesDistr
 
     Ok(TributesDistributionResponse { data: result? })
 }
-
-fn query_allocation(deps: Deps, _env: Env) -> StdResult<AllocationResponse> {
-    println!("query_allocation");
-    let config = CONFIG.load(deps.storage)?;
-    let token_allocator = config.token_allocator.unwrap();
-
-    let (total, pool) = calc_allocation(deps, token_allocator)?;
-
-    Ok(AllocationResponse {
-        total_allocation: total,
-        pool_allocation: pool,
-    })
-}
-
-// fn query_history(deps: Deps, _env: Env) -> StdResult<RaffleHistory> {
-//     let history = HISTORY
-//         .may_load(deps.storage)?
-//         .unwrap_or(RaffleHistory { data: vec![] });
-//
-//     Ok(history)
-// }
