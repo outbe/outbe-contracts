@@ -265,4 +265,124 @@ mod tests {
             .unwrap();
         assert_eq!(resp.count, 0);
     }
+
+    #[test]
+    fn test_query_by_owner() {
+        let mut app = App::default();
+        let owner = app.api().addr_make("owner");
+
+        let code = ContractWrapper::new(execute, instantiate, query);
+        let code_id = app.store_code(Box::new(code));
+
+        let init_msg = InstantiateMsg {
+            name: "nod".to_string(),
+            symbol: "NOD".to_string(),
+            collection_info_extension: NodCollectionExtension {},
+            minter: None,
+            creator: None,
+            burner: None,
+        };
+        let contract_addr = app
+            .instantiate_contract(code_id, owner.clone(), &init_msg, &[], "nod1", None)
+            .unwrap();
+
+        // initially no tokens
+        let resp: outbe_nft::msg::NumTokensResponse = app
+            .wrap()
+            .query_wasm_smart(contract_addr.clone(), &QueryMsg::NumTokens {})
+            .unwrap();
+        assert_eq!(resp.count, 0);
+
+        // Submit (mint) a new Nod NFT
+        let token_id = "token1".to_string();
+        let recipient = app.api().addr_make("recipient");
+        let entity = NodEntity {
+            nod_id: "nod123".to_string(),
+            settlement_currency: Denom::Fiat(Currency::Usd),
+            symbolic_rate: Decimal::from_str("1.23").unwrap(),
+            floor_rate: Uint128::new(10),
+            nominal_price_minor: Decimal::from_str("100").unwrap(),
+            issuance_price_minor: Decimal::from_str("200").unwrap(),
+            gratis_load_minor: Uint128::new(300),
+            floor_price_minor: Decimal::from_str("400").unwrap(),
+            state: State::Issued,
+            owner: recipient.to_string(),
+            qualified_at: None,
+        };
+        let submit_ext = SubmitExtension {
+            entity: entity.clone(),
+            created_at: Some(Timestamp::from_seconds(12345)),
+        };
+        let exec_msg = ExecuteMsg::Submit {
+            token_id: token_id.clone(),
+            owner: recipient.to_string(),
+            extension: Box::new(submit_ext.clone()),
+        };
+        app.execute_contract(owner.clone(), contract_addr.clone(), &exec_msg, &[])
+            .unwrap();
+
+        // after mint, num tokens = 1
+        let resp: outbe_nft::msg::NumTokensResponse = app
+            .wrap()
+            .query_wasm_smart(contract_addr.clone(), &QueryMsg::NumTokens {})
+            .unwrap();
+        assert_eq!(resp.count, 1);
+
+        // OwnerOf should return recipient
+        let resp: outbe_nft::msg::OwnerOfResponse = app
+            .wrap()
+            .query_wasm_smart(
+                contract_addr.clone(),
+                &QueryMsg::OwnerOf {
+                    token_id: token_id.clone(),
+                },
+            )
+            .unwrap();
+        assert_eq!(resp.owner, recipient.to_string());
+
+        // Tokens for recipient should include token_id
+        let resp: outbe_nft::msg::TokensResponse = app
+            .wrap()
+            .query_wasm_smart(
+                contract_addr.clone(),
+                &QueryMsg::Tokens {
+                    owner: recipient.to_string(),
+                    start_after: None,
+                    limit: None,
+                    query_order: None,
+                },
+            )
+            .unwrap();
+        assert_eq!(resp.tokens, vec![token_id.clone()]);
+
+        // AllTokens should include token_id
+        let resp: outbe_nft::msg::TokensResponse = app
+            .wrap()
+            .query_wasm_smart(
+                contract_addr.clone(),
+                &QueryMsg::AllTokens {
+                    start_after: None,
+                    limit: None,
+                    query_order: None,
+                },
+            )
+            .unwrap();
+        assert_eq!(resp.tokens, vec![token_id.clone()]);
+
+        // Tokens for recipient should include token_id
+        let new_recipient = app.api().addr_make("new_recipient");
+        let resp: outbe_nft::msg::TokensResponse = app
+            .wrap()
+            .query_wasm_smart(
+                contract_addr.clone(),
+                &QueryMsg::Tokens {
+                    owner: new_recipient.to_string(),
+                    start_after: None,
+                    limit: None,
+                    query_order: None,
+                },
+            )
+            .unwrap();
+        assert!(resp.tokens.is_empty());
+    }
 }

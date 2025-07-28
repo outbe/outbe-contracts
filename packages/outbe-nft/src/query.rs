@@ -96,9 +96,8 @@ pub fn query_tokens(
         .idx
         .owner
         .prefix(owner_addr)
-        .range(deps.storage, start, end, order)
+        .keys(deps.storage, start, end, order)
         .take(limit)
-        .map(|item| item.map(|(k, _)| k))
         .collect::<StdResult<Vec<_>>>()?;
 
     Ok(TokensResponse { tokens })
