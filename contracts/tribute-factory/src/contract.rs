@@ -350,6 +350,10 @@ mod tests {
         let mut deps = mock_dependencies();
         let owner = "user1".to_string();
         let worldwide_day = "2022-03-22".to_string();
+        println!(
+            "id {}",
+            generate_tribute_draft_id_hash(&owner, &worldwide_day)
+        );
 
         let tribute = TributeInputPayload {
             tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),

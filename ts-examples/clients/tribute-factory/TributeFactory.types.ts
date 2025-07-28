@@ -55,6 +55,7 @@ export interface TributeInputPayload {
   settlement_atto_amount: number;
   settlement_base_amount: number;
   settlement_currency: string;
+  tribute_draft_id: HexBinary;
   worldwide_day: string;
 }
 export type QueryMsg = {
