@@ -24,4 +24,6 @@ pub enum ContractError {
     CUEmpty {},
     #[error(transparent)]
     DateError(#[from] DateError),
+    #[error("Provided tribute_draft_id does not match expected value")]
+    InvalidDraftId {},
 }

@@ -9,6 +9,7 @@
 tmp.json
 
 node_modules
+/ts-examples/clients
 
 /docker_output
 
