@@ -126,11 +126,6 @@ fn handle_token_allocation_reply(deps: DepsMut, msg: Reply) -> Result<Response, 
 
     let subcall_result = msg.result.into_result().unwrap(); // todo avoid unwrap
 
-    println!("events {:?}", subcall_result.events);
-    println!("msg_responses {:?}", subcall_result.msg_responses);
-
-    println!("data {:?}", subcall_result.data);
-
     // 2. Get the data from the successful reply
     let data = subcall_result
         .msg_responses
@@ -141,8 +136,12 @@ fn handle_token_allocation_reply(deps: DepsMut, msg: Reply) -> Result<Response, 
     let allocation_result: MsgExecuteContractResponse =
         parse_execute_response_data(data.value.as_slice())?;
 
+    let allocation_result = allocation_result
+        .data
+        .ok_or(ContractError::NoDataInReply {})?;
+
     let allocation_result: token_allocator::contract::AllocationResult =
-        from_json(allocation_result.data.unwrap().as_slice())?; // todo remove unwrap
+        from_json(allocation_result.as_slice())?;
 
     let config = CONFIG.load(deps.storage)?;
 
