@@ -4,6 +4,8 @@ use outbe_utils::date::Iso8601Date;
 
 #[cw_serde]
 pub struct TributeInputPayload {
+    /// ID of the draft tribute
+    pub tribute_draft_id: HexBinary,
     /// Owner is a derivative address on L2 network based on blake3 hashing
     pub owner: String,
     /// ISO 8601

@@ -5,13 +5,14 @@ use crate::msg::{
 };
 use crate::state::{Config, CONFIG, OWNER, UNUSED_TOKEN_ID, USED_CU_HASHES, USED_TRIBUTE_IDS};
 use crate::types::TributeInputPayload;
+use blake3::Hasher;
 use cosmwasm_std::{
-    entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, MessageInfo, Response,
-    Storage, WasmMsg,
+    entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, HexBinary, MessageInfo,
+    Response, Storage, WasmMsg,
 };
 use cw_ownable::Action;
 use outbe_utils::amount_utils::normalize_amount;
-use outbe_utils::date::iso_to_ts;
+use outbe_utils::date::{iso_to_ts, Iso8601Date};
 use outbe_utils::denom::Denom;
 
 const CONTRACT_NAME: &str = "outbe.net:tribute-factory";
@@ -190,9 +191,14 @@ fn update_used_state(
     storage: &mut dyn Storage,
     tribute: &TributeInputPayload,
 ) -> Result<Empty, ContractError> {
-    let tribute_draft_id = generate_tribute_draft_id(tribute);
+    let tribute_draft_id = generate_tribute_draft_id_hash(&tribute.owner, &tribute.worldwide_day);
 
-    USED_TRIBUTE_IDS.update(storage, tribute_draft_id, |old| match old {
+    // Validate that provided draft ID matches tribute_draft_id
+    if tribute.tribute_draft_id != tribute_draft_id {
+        return Err(ContractError::InvalidDraftId {});
+    }
+
+    USED_TRIBUTE_IDS.update(storage, tribute_draft_id.to_string(), |old| match old {
         Some(_) => Err(ContractError::IdAlreadyExists {}),
         None => Ok(Empty::default()),
     })?;
@@ -207,9 +213,12 @@ fn update_used_state(
     Ok(Empty::default())
 }
 
-fn generate_tribute_draft_id(tribute_input: &TributeInputPayload) -> String {
-    let input = format!("{}{}", tribute_input.owner, tribute_input.worldwide_day);
-    blake3::hash(input.as_bytes()).to_hex().to_string()
+pub fn generate_tribute_draft_id_hash(owner: &String, worldwide_day: &Iso8601Date) -> HexBinary {
+    let mut hasher = Hasher::new();
+    hasher.update(owner.as_bytes());
+    hasher.update(worldwide_day.as_bytes());
+    let hash_bytes: [u8; 32] = hasher.finalize().into();
+    HexBinary::from(hash_bytes.as_ref())
 }
 
 #[cfg(test)]
@@ -297,17 +306,20 @@ mod tests {
         .unwrap();
 
         // Prepare inputs for execution
+        let owner = sender.to_string();
+        let worldwide_day = "2022-03-22".to_string();
         let cu_hash_1 = [11; 32];
         let cu_hash_2 = [22; 32];
         let tribute_input = TributeInputPayload {
+            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
             cu_hashes: vec![HexBinary::from(cu_hash_1), HexBinary::from(cu_hash_2)],
-            worldwide_day: "2022-03-22".to_string(),
+            worldwide_day: worldwide_day,
             settlement_currency: "usd".to_string(),
             settlement_base_amount: 500, // 500 USD
             settlement_atto_amount: 0,
             nominal_base_qty: 1000,
             nominal_atto_qty: 0,
-            owner: sender.to_string(),
+            owner: owner,
         };
 
         // Execute the insecure offer
@@ -336,16 +348,19 @@ mod tests {
     #[test]
     fn test_unique_tribute_draft_id() {
         let mut deps = mock_dependencies();
+        let owner = "user1".to_string();
+        let worldwide_day = "2022-03-22".to_string();
 
         let tribute = TributeInputPayload {
+            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
             cu_hashes: vec![HexBinary::from([11; 32])],
-            worldwide_day: "2022-03-22".to_string(),
+            worldwide_day: worldwide_day,
             settlement_currency: "usd".to_string(),
             settlement_base_amount: 500,
             settlement_atto_amount: 0,
             nominal_base_qty: 1000,
             nominal_atto_qty: 0,
-            owner: "user1".to_string(),
+            owner: owner,
         };
 
         // first call
@@ -359,23 +374,28 @@ mod tests {
     #[test]
     fn test_unique_cu_hash() {
         let mut deps = cosmwasm_std::testing::mock_dependencies();
+        let owner = "user1".to_string();
+        let worldwide_day = "2022-03-22".to_string();
 
         let cu_hash = HexBinary::from([42; 32]);
 
         let tribute1 = TributeInputPayload {
+            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
             cu_hashes: vec![cu_hash.clone()],
-            worldwide_day: "2022-03-22".to_string(),
+            worldwide_day: worldwide_day,
             settlement_currency: "usd".to_string(),
             settlement_base_amount: 500,
             settlement_atto_amount: 0,
             nominal_base_qty: 1000,
             nominal_atto_qty: 0,
-            owner: "user1".to_string(),
+            owner: owner,
         };
 
-        // Change worldwide_day
+        // Change worldwide_day && tribute_draft_id
         let mut tribute2 = tribute1.clone();
         tribute2.worldwide_day = "2022-03-23".to_string();
+        tribute2.tribute_draft_id =
+            generate_tribute_draft_id_hash(&tribute2.owner, &tribute2.worldwide_day);
 
         // first call
         update_used_state(deps.as_mut().storage, &tribute1).unwrap();
@@ -383,5 +403,24 @@ mod tests {
         // second call -  CUAlreadyExists
         let err = update_used_state(deps.as_mut().storage, &tribute2).unwrap_err();
         assert!(matches!(err, ContractError::CUAlreadyExists {}));
+    }
+
+    #[test]
+    fn test_invalid_tribute_draft_id() {
+        let mut deps = mock_dependencies();
+        let tribute = TributeInputPayload {
+            tribute_draft_id: HexBinary::from([42; 32]), // incorrect
+            cu_hashes: vec![HexBinary::from([1; 32])],
+            worldwide_day: "2022-03-22".to_string(),
+            settlement_currency: "usd".to_string(),
+            settlement_base_amount: 100,
+            settlement_atto_amount: 0,
+            nominal_base_qty: 1000,
+            nominal_atto_qty: 0,
+            owner: "user1".to_string(),
+        };
+
+        let err = update_used_state(deps.as_mut().storage, &tribute).unwrap_err();
+        assert!(matches!(err, ContractError::InvalidDraftId {}));
     }
 }
