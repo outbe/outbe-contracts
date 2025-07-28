@@ -1,20 +1,23 @@
+use crate::deficit::{calc_lysis_deficits, calc_total_deficit};
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{
-    Config, DailyRunInfo, RunInfo, RunType, CONFIG, CREATOR, DAILY_RUNS, DAILY_RUNS_INFO,
-    TRIBUTES_DISTRIBUTION,
+    Config, DailyRunInfo, MetadosisInfo, RunInfo, RunType, CONFIG, CREATOR, DAILY_RUNS,
+    DAILY_RUNS_INFO, METADOSIS_INFO, TRIBUTES_DISTRIBUTION,
 };
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, Decimal, DepsMut, Env, Event, MessageInfo, Reply, Response,
-    SubMsg, Uint128, WasmMsg,
+    from_json, to_json_binary, Addr, Decimal, DepsMut, Env, Event, MessageInfo, QuerierWrapper,
+    Reply, Response, SubMsg, Uint128, WasmMsg,
 };
+use cw_utils::ParseReplyError::SubMsgFailure;
 use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
 use outbe_utils::date;
 use outbe_utils::date::{is_valid, WorldwideDay};
 use price_oracle::types::DayType;
 use std::collections::HashSet;
+use std::str::FromStr;
 use tribute::query::FullTributeData;
 
 const CONTRACT_NAME: &str = "outbe.net:metadosis";
@@ -69,6 +72,15 @@ pub fn execute(
     }
 }
 
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
+    // Match on the ID of the reply to handle the correct one
+    match msg.id {
+        ALLOCATE_NATIVE_TOKENS_REPLY_ID => handle_token_allocation_reply(deps, msg),
+        _ => Err(ContractError::UnrecognizedReplyId { id: msg.id }),
+    }
+}
+
 // A unique ID for tokens allocation callback
 const ALLOCATE_NATIVE_TOKENS_REPLY_ID: u64 = 1;
 
@@ -78,7 +90,7 @@ fn execute_prepare(
     _info: MessageInfo,
     run_date: Option<WorldwideDay>,
 ) -> Result<Response, ContractError> {
-    // todo verify ownership to run raffle
+    // todo verify ownership to run metadosis
 
     let execution_date = run_date.unwrap_or(date::normalize_to_date(&env.block.time));
     is_valid(&execution_date)?;
@@ -108,23 +120,13 @@ fn execute_prepare(
         ))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-    // Match on the ID of the reply to handle the correct one
-    match msg.id {
-        ALLOCATE_NATIVE_TOKENS_REPLY_ID => handle_token_allocation_reply(deps, msg),
-        _ => Err(ContractError::UnrecognizedReplyId { id: msg.id }),
-    }
-}
-
 fn handle_token_allocation_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
     //todo verify caller is token_allocator_address
 
     println!("handle_token_allocation_reply {:?}", msg);
 
     // 1. Check the result of the submessage
-
-    let subcall_result = msg.result.into_result().unwrap(); // todo avoid unwrap
+    let subcall_result = msg.result.into_result().map_err(SubMsgFailure)?;
 
     // 2. Get the data from the successful reply
     let data = subcall_result
@@ -143,26 +145,7 @@ fn handle_token_allocation_reply(deps: DepsMut, msg: Reply) -> Result<Response, 
     let allocation_result: token_allocator::contract::AllocationResult =
         from_json(allocation_result.as_slice())?;
 
-    let config = CONFIG.load(deps.storage)?;
-
-    let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
-    let price_oracle_address = config
-        .price_oracle
-        .ok_or(ContractError::NotInitialized {})?;
-
-    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
-        &price_oracle_address,
-        &price_oracle::query::QueryMsg::GetPrice {},
-    )?;
-
-    schedule_executions(
-        deps,
-        tribute_address.clone(),
-        allocation_result.allocation,
-        allocation_result.day,
-        config.deficit,
-        exchange_rate.day_type,
-    )?;
+    prepare_executions(deps, allocation_result.allocation, allocation_result.day)?;
 
     Ok(Response::new().add_attribute("action", "handled_execution_reply"))
 }
@@ -376,15 +359,116 @@ fn do_lysis_tier(
         .add_submessages(messages))
 }
 
+/*
+Metadosis
+
+Metadosis Day begins 36 hours after the end of Worldwide Day, at UTC 00.00.00.
+Emission Limit for the corresponding Day of Worldwide Day calculated based on UTC time for the same day from 00:00:00 to 23:59.59.
+Total Fees paid to Validators and Agents are calculated for this Day.
+Total Gratis Limit is determined as: Total Gratis Limit = Emision Limit - Total Fees.
+Total Gratis Limit is equally divided into 24 portions (23 Lysis and 1 Touch).
+Total Lysis Limit is sum of 23 Lysis Limits.
+Total Promis Limit is minimal from Total Gratis limit / Symbolic Rate and Unallocated Emission Limit.
+ */
+
+// todo implement fees calculation
+const TOTAL_FEES: Uint128 = Uint128::zero();
+
+/// Schedules runs for the given day
+fn prepare_executions(
+    deps: DepsMut,
+    total_emission_limit: Uint128,
+    execution_date: WorldwideDay,
+) -> Result<(), ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+
+    let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
+    let price_oracle_address = config
+        .price_oracle
+        .ok_or(ContractError::NotInitialized {})?;
+    let vector_address = config.vector.ok_or(ContractError::NotInitialized {})?;
+
+    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
+        &price_oracle_address,
+        &price_oracle::query::QueryMsg::GetPrice {},
+    )?;
+
+    let total_lysis_limit = total_emission_limit - TOTAL_FEES;
+    let lysis_limit = total_lysis_limit / Uint128::new(24);
+
+    let gold_ignot_price = query_ignot_price(exchange_rate.price);
+
+    let metadosis_info: MetadosisInfo = match exchange_rate.day_type {
+        DayType::Green => {
+            // Total Tribute Interest is calculated as the sum of Symbolic Load recorded within each Tribute
+            let total_tribute_interest: Uint128 =
+                query_total_tribute_interest(deps.querier, &tribute_address, execution_date)?;
+            println!("Total tribute interest = {}", total_tribute_interest);
+
+            // Total Lysis Deficit is calculated as the maximum of
+            // (Total Tribute Interest - Total Lysis Limit) or 32% of Total Tribute Interest.
+            let total_deficit =
+                calc_total_deficit(total_tribute_interest, total_lysis_limit, config.deficit);
+            println!("Total deficit = {}", total_deficit);
+
+            let lysis_deficits: Vec<Uint128> = calc_lysis_deficits(total_deficit);
+            println!("Lysis deficits = {:?}", lysis_deficits);
+
+            let vector_info: vector::query::AllVectorsResponse = deps
+                .querier
+                .query_wasm_smart(&vector_address, &vector::query::QueryMsg::Vectors {})?;
+
+            let vector_rates: Vec<Uint128> = vector_info
+                .vectors
+                .iter()
+                .map(|it| it.vector_rate)
+                .rev() // NB: reverse order because lysis starts from 23
+                .collect();
+
+            println!("Vector rates = {:?}", vector_rates);
+
+            MetadosisInfo::LysisAndTouch {
+                total_emission_limit,
+                total_fees: TOTAL_FEES,
+                total_lysis_limit,
+                lysis_limit,
+                total_tribute_interest,
+                total_deficit,
+                lysis_deficits,
+                vector_rates,
+                gold_ignot_price,
+            }
+        }
+        DayType::Red => MetadosisInfo::Touch {
+            total_emission_limit,
+            total_fees: TOTAL_FEES,
+            touch_limit: lysis_limit,
+            gold_ignot_price,
+        },
+    };
+
+    METADOSIS_INFO.save(deps.storage, execution_date, &metadosis_info)?;
+
+    Ok(())
+}
+
+fn query_ignot_price(usd_coen_rate: Decimal) -> Decimal {
+    let one_ignot_price = Decimal::from_str("3312.32").unwrap();
+    // todo match decimals
+    one_ignot_price * usd_coen_rate
+}
+
+#[allow(dead_code)]
 fn schedule_executions(
     deps: DepsMut,
     tribute_address: Addr,
-    total_allocation: Uint128,
-    execution_date: u64,
+    emission_limit: Uint128,
+    execution_date: WorldwideDay,
     deficit: Decimal,
     day_type: DayType,
 ) -> Result<(), ContractError> {
-    let allocation_per_tier = total_allocation / Uint128::new(24);
+    let total_gratis_limit = emission_limit - TOTAL_FEES;
+    let gratis_limit = total_gratis_limit / Uint128::new(24);
 
     let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
         &tribute_address,
@@ -408,18 +492,18 @@ fn schedule_executions(
     if day_type == DayType::Green {
         // distribute tokens
 
-        let total_deficit = calc_total_deficit(total_allocation, total_interest, deficit);
+        let total_deficit = calc_total_deficit(emission_limit, total_interest, deficit);
 
         // let total_lysis_limit = total_interest - total_deficit;
 
         // TODO calc deficit per pool
         // let lysis_limit = total_lysis_limit / Uint128::new(23);
         let lysis_deficit = total_deficit / Uint128::new(23);
-        let lysis_capacity = allocation_per_tier + lysis_deficit;
+        let lysis_capacity = gratis_limit + lysis_deficit;
 
-        println!("total_allocation = {}", total_allocation);
+        println!("total_allocation = {}", emission_limit);
         println!("total_interest = {}", total_interest);
-        println!("allocation_per_pool = {}", allocation_per_tier);
+        println!("allocation_per_pool = {}", gratis_limit);
         println!("total_deficit = {}", total_deficit);
         println!("pool_deficit = {}", lysis_deficit);
         println!("pool_capacity = {}", lysis_capacity);
@@ -453,8 +537,8 @@ fn schedule_executions(
             run_data.push(RunInfo {
                 vector_index: pool_index,
                 run_type: RunType::Lysis,
-                total_allocation,
-                pool_allocation: allocation_per_tier,
+                total_allocation: emission_limit,
+                pool_allocation: gratis_limit,
                 total_deficit,
                 pool_deficit: lysis_deficit,
                 pool_capacity: lysis_capacity,
@@ -480,11 +564,11 @@ fn schedule_executions(
     run_data.push(RunInfo {
         vector_index: 0,
         run_type: RunType::Touch,
-        total_allocation,
-        pool_allocation: allocation_per_tier,
+        total_allocation: emission_limit,
+        pool_allocation: gratis_limit,
         total_deficit: Uint128::zero(),
         pool_deficit: Uint128::zero(),
-        pool_capacity: allocation_per_tier,
+        pool_capacity: gratis_limit,
         assigned_tributes: all_tributes_len,
         assigned_tributes_sum: total_interest,
     });
@@ -503,18 +587,14 @@ fn schedule_executions(
     Ok(())
 }
 
-fn calc_total_deficit(
-    total_allocation: Uint128,
-    total_interest: Uint128,
-    deficit_percent: Decimal,
-) -> Uint128 {
-    let mut total_deficit =
-        (deficit_percent * Decimal::from_atomics(total_allocation, 0).unwrap()).to_uint_floor();
-
-    if total_interest > total_allocation && total_interest - total_allocation > total_deficit {
-        total_deficit = total_interest - total_allocation;
-    }
-    total_deficit
+fn query_total_tribute_interest(
+    querier: QuerierWrapper,
+    addr: &Addr,
+    date: WorldwideDay,
+) -> Result<Uint128, ContractError> {
+    let response: tribute::query::TotalInterestResponse =
+        querier.query_wasm_smart(addr, &tribute::query::QueryMsg::TotalInterest { date })?;
+    Ok(response.total_symbolic_load)
 }
 
 fn execute_touch(

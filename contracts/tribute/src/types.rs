@@ -26,8 +26,6 @@ pub struct TributeData {
     pub nominal_qty_minor: Uint128,
     /// Price in Native coins with a rate on the moment of the transaction
     pub tribute_price_minor: Decimal,
-    /// Divisor to calculate symbolic_load
-    pub symbolic_divisor: Decimal,
     /// Signals an eligible interest to the network
     pub symbolic_load: Uint128,
     /// Date of Consumption
