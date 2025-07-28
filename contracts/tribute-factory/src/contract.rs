@@ -313,13 +313,13 @@ mod tests {
         let tribute_input = TributeInputPayload {
             tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
             cu_hashes: vec![HexBinary::from(cu_hash_1), HexBinary::from(cu_hash_2)],
-            worldwide_day: worldwide_day,
+            worldwide_day,
             settlement_currency: "usd".to_string(),
             settlement_base_amount: 500, // 500 USD
             settlement_atto_amount: 0,
             nominal_base_qty: 1000,
             nominal_atto_qty: 0,
-            owner: owner,
+            owner,
         };
 
         // Execute the insecure offer
@@ -358,13 +358,13 @@ mod tests {
         let tribute = TributeInputPayload {
             tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
             cu_hashes: vec![HexBinary::from([11; 32])],
-            worldwide_day: worldwide_day,
+            worldwide_day,
             settlement_currency: "usd".to_string(),
             settlement_base_amount: 500,
             settlement_atto_amount: 0,
             nominal_base_qty: 1000,
             nominal_atto_qty: 0,
-            owner: owner,
+            owner,
         };
 
         // first call
@@ -386,13 +386,13 @@ mod tests {
         let tribute1 = TributeInputPayload {
             tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
             cu_hashes: vec![cu_hash.clone()],
-            worldwide_day: worldwide_day,
+            worldwide_day,
             settlement_currency: "usd".to_string(),
             settlement_base_amount: 500,
             settlement_atto_amount: 0,
             nominal_base_qty: 1000,
             nominal_atto_qty: 0,
-            owner: owner,
+            owner,
         };
 
         // Change worldwide_day && tribute_draft_id
