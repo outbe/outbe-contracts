@@ -181,6 +181,9 @@ fn test_metadosis() {
             tribute.address.clone(),
             &QueryMsg::DailyTributes {
                 date: normalize_to_date(&app.block_info().time),
+                start_after: None,
+                limit: None,
+                query_order: None,
             },
         )
         .unwrap();

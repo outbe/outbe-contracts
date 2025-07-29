@@ -1,10 +1,22 @@
 use crate::deficit::{calc_lysis_deficits, calc_total_deficit};
 use crate::error::ContractError;
-use crate::state::{MetadosisInfo, CONFIG, METADOSIS_INFO};
+use crate::state::{LysisInfo, MetadosisInfo, TouchInfo, CONFIG, METADOSIS_INFO};
 use cosmwasm_std::{Addr, Decimal, DepsMut, QuerierWrapper, Uint128};
 use outbe_utils::date::WorldwideDay;
 use price_oracle::types::DayType;
 use std::str::FromStr;
+
+/*
+Metadosis
+
+Metadosis Day begins 36 hours after the end of Worldwide Day, at UTC 00.00.00.
+Emission Limit for the corresponding Day of Worldwide Day calculated based on UTC time for the same day from 00:00:00 to 23:59.59.
+Total Fees paid to Validators and Agents are calculated for this Day.
+Total Gratis Limit is determined as: Total Gratis Limit = Emision Limit - Total Fees.
+Total Gratis Limit is equally divided into 24 portions (23 Lysis and 1 Touch).
+Total Lysis Limit is sum of 23 Lysis Limits.
+Total Promis Limit is minimal from Total Gratis limit / Symbolic Rate and Unallocated Emission Limit.
+ */
 
 // todo implement fees calculation
 const TOTAL_FEES: Uint128 = Uint128::zero();
@@ -68,22 +80,31 @@ pub fn prepare_executions(
             println!("Vector rates = {:?}", vector_rates);
 
             MetadosisInfo::LysisAndTouch {
-                total_emission_limit,
-                total_fees: TOTAL_FEES,
-                total_lysis_limit,
-                lysis_limit,
-                total_tribute_interest,
-                total_deficit,
-                lysis_deficits,
-                vector_rates,
-                gold_ignot_price,
+                lysis_info: LysisInfo {
+                    total_emission_limit,
+                    total_fees: TOTAL_FEES,
+                    total_lysis_limit,
+                    lysis_limit,
+                    total_tribute_interest,
+                    total_deficit,
+                    lysis_deficits,
+                    vector_rates,
+                },
+                touch_info: TouchInfo {
+                    total_emission_limit,
+                    total_fees: TOTAL_FEES,
+                    touch_limit: lysis_limit,
+                    gold_ignot_price,
+                },
             }
         }
         DayType::Red => MetadosisInfo::Touch {
-            total_emission_limit,
-            total_fees: TOTAL_FEES,
-            touch_limit: lysis_limit,
-            gold_ignot_price,
+            touch_info: TouchInfo {
+                total_emission_limit,
+                total_fees: TOTAL_FEES,
+                touch_limit: lysis_limit,
+                gold_ignot_price,
+            },
         },
     };
 

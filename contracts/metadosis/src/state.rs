@@ -20,6 +20,67 @@ pub const CONFIG: Item<Config> = Item::new("config");
 
 pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 
+/// Map containing data for run metadosis for each dey. Filled during `Prepare` phase.
+pub const METADOSIS_INFO: Map<WorldwideDay, MetadosisInfo> = Map::new("metadosis_info");
+
+/// Map to track how many runs were happened for each day
+pub const DAILY_RUN_STATE: Map<WorldwideDay, DailyRunState> = Map::new("daily_runs");
+
+/// Saves history to show on UI
+pub const DAILY_RUNS_HISTORY: Map<WorldwideDay, DailyRunHistory> = Map::new("daily_runs_history");
+
+/// Saves winners to do not peek them in Touch
+pub const WINNERS: Map<String, ()> = Map::new("tribute_winners");
+
+#[cw_serde]
+pub enum MetadosisInfo {
+    LysisAndTouch {
+        lysis_info: LysisInfo,
+        touch_info: TouchInfo,
+    },
+    Touch {
+        touch_info: TouchInfo,
+    },
+}
+
+#[cw_serde]
+pub struct LysisInfo {
+    /// Total emission limit in native coins for this day
+    pub total_emission_limit: Uint128,
+    /// Total fees to be paid for validators (currently 0)
+    pub total_fees: Uint128,
+    /// Total Lysis Limit = `total_emission_limit - total_fees`
+    pub total_lysis_limit: Uint128,
+    /// Lysis limit = `total_lysis_limit / 24`
+    pub lysis_limit: Uint128,
+    /// Total Tributes interest
+    pub total_tribute_interest: Uint128,
+    /// Total Deficit
+    pub total_deficit: Uint128,
+    /// Deficits for each execution where the index in 0..23 corresponds for each daily execution
+    pub lysis_deficits: Vec<Uint128>,
+    /// Vector rates for each execution where the index in 0..23 corresponds for each daily execution
+    pub vector_rates: Vec<Uint128>,
+}
+
+#[cw_serde]
+pub struct TouchInfo {
+    /// Total emission limit in native coins for this day
+    pub total_emission_limit: Uint128,
+    /// Total fees to be paid for validators (currently 0)
+    pub total_fees: Uint128,
+    /// Touch limit = `(total_emission_limit - total_fees) / 24`
+    pub touch_limit: Uint128,
+    /// Gold ignot price in native coins
+    pub gold_ignot_price: Decimal,
+}
+
+#[cw_serde]
+pub struct DailyRunState {
+    pub number_of_runs: usize,
+    pub last_tribute_id: Option<String>,
+}
+
 #[cw_serde]
 pub enum RunType {
     Lysis,
@@ -27,64 +88,19 @@ pub enum RunType {
 }
 
 #[cw_serde]
-pub struct RunInfo {
-    pub vector_index: u16,
+pub struct RunHistoryInfo {
     pub run_type: RunType,
-
-    pub total_allocation: Uint128,
+    pub vector_rate: Option<Decimal>,
     pub pool_allocation: Uint128,
-    pub total_deficit: Uint128,
     pub pool_deficit: Uint128,
     pub pool_capacity: Uint128,
     pub assigned_tributes: usize,
     pub assigned_tributes_sum: Uint128,
+    pub winner_tributes: usize,
+    pub winner_tributes_sum: Uint128,
 }
 
 #[cw_serde]
-pub struct DailyRunInfo {
-    pub data: Vec<RunInfo>,
-    pub number_of_runs: usize,
+pub struct DailyRunHistory {
+    pub data: Vec<RunHistoryInfo>,
 }
-
-pub const DAILY_RUNS: Map<WorldwideDay, usize> = Map::new("daily_runs");
-pub const DAILY_RUNS_INFO: Map<WorldwideDay, DailyRunInfo> = Map::new("daily_runs_info");
-
-pub const TRIBUTES_DISTRIBUTION: Map<&str, String> = Map::new("tributes_distribution");
-
-#[cw_serde]
-pub enum MetadosisInfo {
-    LysisAndTouch {
-        /// Total emission limit in native coins for this day
-        total_emission_limit: Uint128,
-        /// Total fees to be paid for validators (currently 0)
-        total_fees: Uint128,
-        /// Total Lysis Limit = `total_emission_limit - total_fees`
-        total_lysis_limit: Uint128,
-        /// Lysis limit = `total_lysis_limit / 24`
-        lysis_limit: Uint128,
-        /// Total Tributes interest
-        total_tribute_interest: Uint128,
-        /// Total Deficit
-        total_deficit: Uint128,
-        /// Deficits for each execution where the index in 0..23 corresponds for each daily execution
-        lysis_deficits: Vec<Uint128>,
-        /// Vector rates for each execution where the index in 0..23 corresponds for each daily execution
-        vector_rates: Vec<Uint128>,
-
-        /// Gold ignot price in native coins
-        gold_ignot_price: Decimal,
-    },
-    Touch {
-        /// Total emission limit in native coins for this day
-        total_emission_limit: Uint128,
-        /// Total fees to be paid for validators (currently 0)
-        total_fees: Uint128,
-        /// Lysis limit = `(total_emission_limit - total_fees) / 24`
-        touch_limit: Uint128,
-        /// Gold ignot price in native coins
-        gold_ignot_price: Decimal,
-    },
-}
-
-/// Map containing data for run metadosis for each dey. Filled during `Prepare` phase.
-pub const METADOSIS_INFO: Map<WorldwideDay, MetadosisInfo> = Map::new("metadosis_info");

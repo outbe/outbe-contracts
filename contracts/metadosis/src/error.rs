@@ -9,6 +9,8 @@ pub enum ContractError {
     Std(#[from] StdError),
     #[error("Not initialized")]
     NotInitialized {},
+    #[error("Not Prepared for run")]
+    NotPrepared {},
     #[error("Bad Run Configuration")]
     BadRunConfiguration {},
     #[error("Data already prepared {day}")]

@@ -88,6 +88,8 @@ pub fn execute(
         } => execute_mint(deps, &env, &info, token_id, owner, token_uri, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
         ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
+        // todo remove only for day
+        ExecuteMsg::BurnForDay { .. } => execute_burn_all(deps, &env, &info),
 
         ExecuteMsg::UpdateMinterOwnership(action) => Ok(
             outbe_nft::execute::update_minter_ownership(deps, &env, &info, action)?,

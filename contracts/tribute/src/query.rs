@@ -3,6 +3,8 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, Empty, Env, Order, StdResult, Uint128};
+use cw_storage_plus::Bound;
+use outbe_nft::query::{DEFAULT_LIMIT, MAX_LIMIT};
 use outbe_nft::state::Cw721Config;
 use outbe_utils::date::WorldwideDay;
 
@@ -51,7 +53,12 @@ pub enum QueryMsg {
 
     /// Returns all tokens created in the given date with an optional filter by status.
     #[returns(DailyTributesResponse)]
-    DailyTributes { date: WorldwideDay },
+    DailyTributes {
+        date: WorldwideDay,
+        start_after: Option<String>,
+        limit: Option<u32>,
+        query_order: Option<Order>,
+    },
     /// Total Tribute Interest is calculated as the sum of Symbolic Load recorded within each
     /// Tribute for the given date.
     #[returns(TotalInterestResponse)]
@@ -121,9 +128,19 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             limit,
             query_order,
         )?),
-        QueryMsg::DailyTributes { date } => {
-            to_json_binary(&query_daily_tributes(deps, &env, date)?)
-        }
+        QueryMsg::DailyTributes {
+            date,
+            start_after,
+            limit,
+            query_order,
+        } => to_json_binary(&query_daily_tributes(
+            deps,
+            &env,
+            date,
+            start_after,
+            limit,
+            query_order,
+        )?),
         QueryMsg::TotalInterest { date } => {
             to_json_binary(&query_total_interest(deps, &env, date)?)
         }
@@ -133,11 +150,24 @@ fn query_daily_tributes(
     deps: Deps,
     _env: &Env,
     date: WorldwideDay,
+    start_after: Option<String>,
+    limit: Option<u32>,
+    query_order: Option<Order>,
 ) -> StdResult<DailyTributesResponse> {
+    // todo deal with limit maybe to propagate here amount?
+    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    let order = query_order.unwrap_or(Order::Ascending);
+
+    let (start, end) = match order {
+        Order::Ascending => (start_after.as_deref().map(Bound::exclusive), None),
+        Order::Descending => (None, start_after.as_deref().map(Bound::exclusive)),
+    };
+
     let tokens: StdResult<Vec<FullTributeData>> =
         Cw721Config::<TributeData, Option<Empty>>::default()
             .nft_info
-            .range(deps.storage, None, None, Order::Ascending)
+            .range(deps.storage, start, end, order)
+            .take(limit)
             .filter_map(|item| match item {
                 Ok((id, tribute)) if tribute.extension.worldwide_day == date => {
                     Some(Ok(FullTributeData {
