@@ -86,4 +86,5 @@ pub enum MetadosisInfo {
     },
 }
 
+/// Map containing data for run metadosis for each dey. Filled during `Prepare` phase.
 pub const METADOSIS_INFO: Map<WorldwideDay, MetadosisInfo> = Map::new("metadosis_info");

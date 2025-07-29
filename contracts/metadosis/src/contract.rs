@@ -380,8 +380,13 @@ fn prepare_executions(
     total_emission_limit: Uint128,
     execution_date: WorldwideDay,
 ) -> Result<(), ContractError> {
-    let config = CONFIG.load(deps.storage)?;
+    if METADOSIS_INFO.has(deps.storage, execution_date) {
+        return Err(ContractError::AlreadyPrepared {
+            day: execution_date,
+        });
+    };
 
+    let config = CONFIG.load(deps.storage)?;
     let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
     let price_oracle_address = config
         .price_oracle

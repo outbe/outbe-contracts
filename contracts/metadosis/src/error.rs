@@ -11,6 +11,8 @@ pub enum ContractError {
     NotInitialized {},
     #[error("Bad Run Configuration")]
     BadRunConfiguration {},
+    #[error("Data already prepared {day}")]
+    AlreadyPrepared { day: u64 },
     #[error(transparent)]
     DateError(#[from] DateError),
     #[error("Bad Reply ID {id}")]
