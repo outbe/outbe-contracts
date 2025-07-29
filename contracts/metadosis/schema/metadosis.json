@@ -104,6 +104,29 @@
       {
         "type": "object",
         "required": [
+          "prepare"
+        ],
+        "properties": {
+          "prepare": {
+            "type": "object",
+            "properties": {
+              "run_date": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint64",
+                "minimum": 0.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
           "execute"
         ],
         "properties": {
@@ -146,10 +169,10 @@
       {
         "type": "object",
         "required": [
-          "daily_runs"
+          "metadosis_info"
         ],
         "properties": {
-          "daily_runs": {
+          "metadosis_info": {
             "type": "object",
             "additionalProperties": false
           }
@@ -159,23 +182,10 @@
       {
         "type": "object",
         "required": [
-          "tributes_distribution"
+          "history"
         ],
         "properties": {
-          "tributes_distribution": {
-            "type": "object",
-            "additionalProperties": false
-          }
-        },
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "required": [
-          "allocation"
-        ],
-        "properties": {
-          "allocation": {
+          "history": {
             "type": "object",
             "additionalProperties": false
           }
@@ -187,33 +197,9 @@
   "migrate": null,
   "sudo": null,
   "responses": {
-    "allocation": {
+    "history": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AllocationResponse",
-      "type": "object",
-      "required": [
-        "pool_allocation",
-        "total_allocation"
-      ],
-      "properties": {
-        "pool_allocation": {
-          "$ref": "#/definitions/Uint128"
-        },
-        "total_allocation": {
-          "$ref": "#/definitions/Uint128"
-        }
-      },
-      "additionalProperties": false,
-      "definitions": {
-        "Uint128": {
-          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
-          "type": "string"
-        }
-      }
-    },
-    "daily_runs": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "DailyRunsResponse",
+      "title": "HistoryResponse",
       "type": "object",
       "required": [
         "data"
@@ -222,52 +208,42 @@
         "data": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/DailyRunsData"
+            "$ref": "#/definitions/HistoryData"
           }
         }
       },
       "additionalProperties": false,
       "definitions": {
-        "DailyRunInfo": {
+        "DailyRunHistory": {
           "type": "object",
           "required": [
-            "data",
-            "number_of_runs"
+            "data"
           ],
           "properties": {
             "data": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/RunInfo"
+                "$ref": "#/definitions/RunHistoryInfo"
               }
-            },
-            "number_of_runs": {
-              "type": "integer",
-              "format": "uint",
-              "minimum": 0.0
             }
           },
           "additionalProperties": false
         },
-        "DailyRunsData": {
+        "Decimal": {
+          "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
+          "type": "string"
+        },
+        "HistoryData": {
           "type": "object",
           "required": [
-            "info",
-            "runs_happened",
-            "timestamp"
+            "daily_run_history",
+            "date"
           ],
           "properties": {
-            "info": {
-              "$ref": "#/definitions/DailyRunInfo"
+            "daily_run_history": {
+              "$ref": "#/definitions/DailyRunHistory"
             },
-            "runs_happened": {
-              "description": "counter of the raffles in that day",
-              "type": "integer",
-              "format": "uint",
-              "minimum": 0.0
-            },
-            "timestamp": {
-              "description": "timestamp of the date when raffles were made (seconds)",
+            "date": {
               "type": "integer",
               "format": "uint64",
               "minimum": 0.0
@@ -275,7 +251,7 @@
           },
           "additionalProperties": false
         },
-        "RunInfo": {
+        "RunHistoryInfo": {
           "type": "object",
           "required": [
             "assigned_tributes",
@@ -284,9 +260,8 @@
             "pool_capacity",
             "pool_deficit",
             "run_type",
-            "total_allocation",
-            "total_deficit",
-            "vector_index"
+            "winner_tributes",
+            "winner_tributes_sum"
           ],
           "properties": {
             "assigned_tributes": {
@@ -309,16 +284,23 @@
             "run_type": {
               "$ref": "#/definitions/RunType"
             },
-            "total_allocation": {
-              "$ref": "#/definitions/Uint128"
+            "vector_rate": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Decimal"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
-            "total_deficit": {
-              "$ref": "#/definitions/Uint128"
-            },
-            "vector_index": {
+            "winner_tributes": {
               "type": "integer",
-              "format": "uint16",
+              "format": "uint",
               "minimum": 0.0
+            },
+            "winner_tributes_sum": {
+              "$ref": "#/definitions/Uint128"
             }
           },
           "additionalProperties": false
@@ -336,9 +318,9 @@
         }
       }
     },
-    "tributes_distribution": {
+    "metadosis_info": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "TributesDistributionResponse",
+      "title": "MetadosisInfoResponse",
       "type": "object",
       "required": [
         "data"
@@ -347,29 +329,233 @@
         "data": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/TributesDistributionData"
+            "$ref": "#/definitions/MetadosisInfoData"
           }
         }
       },
       "additionalProperties": false,
       "definitions": {
-        "TributesDistributionData": {
+        "DailyRunState": {
           "type": "object",
           "required": [
-            "key",
-            "tribute_id"
+            "number_of_runs"
           ],
           "properties": {
-            "key": {
-              "description": "the key is in format `{DATE_TIMESTAMP}_{RAFFLE_RUN_ID}_{TRIBUTE_INDEX}` for emulate buckets where `DATE_TIMESTAMP` is the metadosis date `RAFFLE_RUN_ID` is in range [1..24] `TRIBUTE_INDEX` starts from 0, unique withing the bucket",
-              "type": "string"
+            "last_tribute_id": {
+              "type": [
+                "string",
+                "null"
+              ]
             },
-            "tribute_id": {
-              "description": "Tribute identifier",
-              "type": "string"
+            "number_of_runs": {
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0.0
             }
           },
           "additionalProperties": false
+        },
+        "Decimal": {
+          "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
+          "type": "string"
+        },
+        "LysisInfo": {
+          "type": "object",
+          "required": [
+            "lysis_deficits",
+            "lysis_limit",
+            "total_deficit",
+            "total_emission_limit",
+            "total_fees",
+            "total_lysis_limit",
+            "total_tribute_interest",
+            "vector_rates"
+          ],
+          "properties": {
+            "lysis_deficits": {
+              "description": "Deficits for each execution where the index in 0..23 corresponds for each daily execution",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Uint128"
+              }
+            },
+            "lysis_limit": {
+              "description": "Lysis limit = `total_lysis_limit / 24`",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "total_deficit": {
+              "description": "Total Deficit",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "total_emission_limit": {
+              "description": "Total emission limit in native coins for this day",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "total_fees": {
+              "description": "Total fees to be paid for validators (currently 0)",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "total_lysis_limit": {
+              "description": "Total Lysis Limit = `total_emission_limit - total_fees`",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "total_tribute_interest": {
+              "description": "Total Tributes interest",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "vector_rates": {
+              "description": "Vector rates for each execution where the index in 0..23 corresponds for each daily execution",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Uint128"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "MetadosisInfo": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "lysis_and_touch"
+              ],
+              "properties": {
+                "lysis_and_touch": {
+                  "type": "object",
+                  "required": [
+                    "lysis_info",
+                    "touch_info"
+                  ],
+                  "properties": {
+                    "lysis_info": {
+                      "$ref": "#/definitions/LysisInfo"
+                    },
+                    "touch_info": {
+                      "$ref": "#/definitions/TouchInfo"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "touch"
+              ],
+              "properties": {
+                "touch": {
+                  "type": "object",
+                  "required": [
+                    "touch_info"
+                  ],
+                  "properties": {
+                    "touch_info": {
+                      "$ref": "#/definitions/TouchInfo"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "MetadosisInfoData": {
+          "type": "object",
+          "required": [
+            "date",
+            "info",
+            "state"
+          ],
+          "properties": {
+            "date": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "info": {
+              "$ref": "#/definitions/MetadosisInfo"
+            },
+            "state": {
+              "$ref": "#/definitions/DailyRunState"
+            }
+          },
+          "additionalProperties": false
+        },
+        "TouchInfo": {
+          "type": "object",
+          "required": [
+            "gold_ignot_price",
+            "total_emission_limit",
+            "total_fees",
+            "touch_limit"
+          ],
+          "properties": {
+            "gold_ignot_price": {
+              "description": "Gold ignot price in native coins",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Decimal"
+                }
+              ]
+            },
+            "total_emission_limit": {
+              "description": "Total emission limit in native coins for this day",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "total_fees": {
+              "description": "Total fees to be paid for validators (currently 0)",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            },
+            "touch_limit": {
+              "description": "Touch limit = `(total_emission_limit - total_fees) / 24`",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
         }
       }
     }

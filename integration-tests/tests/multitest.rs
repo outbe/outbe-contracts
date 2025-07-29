@@ -271,17 +271,6 @@ fn test_metadosis() {
         2,
         "No new nods because there were no tributes"
     );
-
-    println!("🔬 Check distribution");
-    let response: metadosis::query::TributesDistributionResponse = app
-        .wrap()
-        .query_wasm_smart(
-            metadosis.address.clone(),
-            &metadosis::query::QueryMsg::TributesDistribution {},
-        )
-        .unwrap();
-
-    assert_eq!(response.data.len(), 2,);
 }
 
 fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedContract {

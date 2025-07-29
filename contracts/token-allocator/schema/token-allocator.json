@@ -19,8 +19,31 @@
   "execute": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "ExecuteMsg",
-    "type": "string",
-    "enum": []
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "allocate_tokens"
+        ],
+        "properties": {
+          "allocate_tokens": {
+            "type": "object",
+            "required": [
+              "date"
+            ],
+            "properties": {
+              "date": {
+                "type": "integer",
+                "format": "uint64",
+                "minimum": 0.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
   },
   "query": {
     "$schema": "http://json-schema.org/draft-07/schema#",
