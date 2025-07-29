@@ -130,6 +130,9 @@ fn execute_offer_insecure(
     if tribute_input.cu_hashes.is_empty() {
         return Err(ContractError::CUEmpty {});
     }
+
+    let tribute_owner = tribute_input.owner.clone();
+
     let timestamp_date = iso_to_ts(&tribute_input.worldwide_day)?;
     // let timestamp_date = _env.block.time.seconds();
 
@@ -138,8 +141,6 @@ fn execute_offer_insecure(
 
     let tribute_id =
         UNUSED_TOKEN_ID.update(deps.storage, |old| Ok::<u64, ContractError>(old + 1))?;
-
-    let tribute_owner = info.sender;
 
     let settlement_amount = normalize_amount(
         tribute.settlement_base_amount,
