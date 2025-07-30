@@ -72,7 +72,8 @@ pub fn execute(
         ExecuteMsg::OfferInsecure {
             tribute_input,
             zk_proof,
-        } => execute_offer_insecure(deps, env, info, tribute_input, zk_proof),
+            tribute_owner_l1,
+        } => execute_offer_insecure(deps, env, info, tribute_input, zk_proof, tribute_owner_l1),
     }
 }
 
@@ -120,6 +121,7 @@ fn execute_offer_insecure(
     info: MessageInfo,
     tribute_input: TributeInputPayload,
     _zk_proof: ZkProof,
+    tribute_owner_l1: Option<Addr>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     let tribute_address = config
@@ -130,6 +132,10 @@ fn execute_offer_insecure(
     if tribute_input.cu_hashes.is_empty() {
         return Err(ContractError::CUEmpty {});
     }
+
+    //TODO change it to info.sender
+    let tribute_owner = tribute_owner_l1.unwrap_or(info.sender.clone());
+
     let timestamp_date = iso_to_ts(&tribute_input.worldwide_day)?;
     // let timestamp_date = _env.block.time.seconds();
 
@@ -138,8 +144,6 @@ fn execute_offer_insecure(
 
     let tribute_id =
         UNUSED_TOKEN_ID.update(deps.storage, |old| Ok::<u64, ContractError>(old + 1))?;
-
-    let tribute_owner = info.sender;
 
     let settlement_amount = normalize_amount(
         tribute.settlement_base_amount,
@@ -336,6 +340,7 @@ mod tests {
                     },
                     verification_key: Default::default(),
                 },
+                tribute_owner_l1: None,
             },
             &[],
         )
