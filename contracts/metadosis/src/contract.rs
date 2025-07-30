@@ -1,6 +1,6 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-// use crate::prepare;
+use crate::prepare;
 use crate::state::{
     Config, DailyRunHistory, DailyRunState, LysisInfo, MetadosisInfo, RunHistoryInfo, RunType,
     TouchInfo, CONFIG, CREATOR, DAILY_RUNS_HISTORY, DAILY_RUN_STATE, METADOSIS_INFO, WINNERS,
@@ -8,11 +8,11 @@ use crate::state::{
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Decimal, DepsMut, Env, Event, MessageInfo, Reply, Response, SubMsg, Uint128,
-    WasmMsg,
+    from_json, to_json_binary, Decimal, DepsMut, Env, Event, MessageInfo, Reply, Response, SubMsg,
+    Uint128, WasmMsg,
 };
-// use cw_utils::ParseReplyError::SubMsgFailure;
-// use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
+use cw_utils::ParseReplyError::SubMsgFailure;
+use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
 use outbe_utils::date;
 use outbe_utils::date::WorldwideDay;
 use rand::prelude::SliceRandom;
@@ -76,13 +76,12 @@ pub fn execute(
 const ALLOCATE_NATIVE_TOKENS_REPLY_ID: u64 = 1;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn reply(_deps: DepsMut, _env: Env, _msg: Reply) -> Result<Response, ContractError> {
+pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     // Match on the ID of the reply to handle the correct one
-    // match msg.id {
-    //     ALLOCATE_NATIVE_TOKENS_REPLY_ID => handle_token_allocation_reply(deps, msg),
-    //     _ => Err(ContractError::UnrecognizedReplyId { id: msg.id }),
-    // }
-    Ok(Response::default())
+    match msg.id {
+        ALLOCATE_NATIVE_TOKENS_REPLY_ID => handle_token_allocation_reply(deps, msg),
+        _ => Err(ContractError::UnrecognizedReplyId { id: msg.id }),
+    }
 }
 
 fn execute_prepare(
@@ -119,41 +118,41 @@ fn execute_prepare(
         ))
 }
 
-// fn handle_token_allocation_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
-//     //todo verify caller is token_allocator_address
-//
-//     println!("handle_token_allocation_reply {:?}", msg);
-//
-//     // 1. Check the result of the submessage
-//     let subcall_result = msg.result.into_result().map_err(SubMsgFailure)?;
-//
-//     // 2. Get the data from the successful reply
-//     let data = subcall_result
-//         .msg_responses
-//         .first()
-//         .ok_or(ContractError::NoDataInReply {})?;
-//
-//     // 3. Deserialize the data into your expected struct
-//     let allocation_result: MsgExecuteContractResponse =
-//         parse_execute_response_data(data.value.as_slice())?;
-//
-//     let allocation_result = allocation_result
-//         .data
-//         .ok_or(ContractError::NoDataInReply {})?;
-//
-//     let allocation_result: token_allocator::contract::AllocationResult =
-//         from_json(allocation_result.as_slice())?;
-//
-//     prepare::prepare_executions(deps, allocation_result.allocation, allocation_result.day)?;
-//
-//     Ok(Response::new()
-//         .add_attribute("action", "metadosis::handle_allocation_reply")
-//         .add_event(
-//             Event::new("metadosis::handle_allocation_reply")
-//                 .add_attribute("date", allocation_result.day.to_string())
-//                 .add_attribute("allocation", allocation_result.allocation.to_string()),
-//         ))
-// }
+fn handle_token_allocation_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
+    //todo verify caller is token_allocator_address
+
+    println!("handle_token_allocation_reply {:?}", msg);
+
+    // 1. Check the result of the submessage
+    let subcall_result = msg.result.into_result().map_err(SubMsgFailure)?;
+
+    // 2. Get the data from the successful reply
+    let data = subcall_result
+        .msg_responses
+        .first()
+        .ok_or(ContractError::NoDataInReply {})?;
+
+    // 3. Deserialize the data into your expected struct
+    let allocation_result: MsgExecuteContractResponse =
+        parse_execute_response_data(data.value.as_slice())?;
+
+    let allocation_result = allocation_result
+        .data
+        .ok_or(ContractError::NoDataInReply {})?;
+
+    let allocation_result: token_allocator::contract::AllocationResult =
+        from_json(allocation_result.as_slice())?;
+
+    prepare::prepare_executions(deps, allocation_result.allocation, allocation_result.day)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "metadosis::handle_allocation_reply")
+        .add_event(
+            Event::new("metadosis::handle_allocation_reply")
+                .add_attribute("date", allocation_result.day.to_string())
+                .add_attribute("allocation", allocation_result.allocation.to_string()),
+        ))
+}
 
 fn execute_run(
     deps: DepsMut,

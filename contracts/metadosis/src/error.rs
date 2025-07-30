@@ -1,5 +1,5 @@
 use cosmwasm_std::StdError;
-// use cw_utils::ParseReplyError;
+use cw_utils::ParseReplyError;
 use outbe_utils::date::DateError;
 use thiserror::Error;
 
@@ -21,6 +21,6 @@ pub enum ContractError {
     UnrecognizedReplyId { id: u64 },
     #[error("NoDataInReply")]
     NoDataInReply {},
-    // #[error(transparent)]
-    // ParseReplyError(#[from] ParseReplyError),
+    #[error(transparent)]
+    ParseReplyError(#[from] ParseReplyError),
 }
