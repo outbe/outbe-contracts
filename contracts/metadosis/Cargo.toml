@@ -16,7 +16,6 @@ cosmwasm-schema = { workspace = true }
 cw-storage-plus = { workspace = true }
 serde = { workspace = true }
 cw2 = { workspace = true }
-cw20 = { workspace = true }
 thiserror = { workspace = true }
 cw-ownable = { workspace = true }
 outbe-utils = { workspace = true }
@@ -28,9 +27,8 @@ vector = { workspace = true}
 token-allocator = { workspace = true}
 price-oracle = { workspace = true}
 random-oracle = { workspace = true}
-rand = "0.8"
-rand_chacha = "0.3"
-getrandom = { version = "0.2", features = ["js"] }  # Needed for wasm RNG support
+rand = { version = "0.8.5", default-features = false }
+rand_chacha = "0.3.1"
 
 
 [dev-dependencies]
