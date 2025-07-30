@@ -132,11 +132,8 @@ fn execute_offer_insecure(
     }
 
     //TODO change it to info.sender
-    let tribute_owner = if tribute_input.owner.len() > 2 {
-        tribute_input.owner.clone()
-    } else {
-        info.sender.to_string()
-    };    
+    let tribute_owner = tribute_input.owner.clone();
+    println!("tribute_owner {}", info.sender);
 
     let timestamp_date = iso_to_ts(&tribute_input.worldwide_day)?;
     // let timestamp_date = _env.block.time.seconds();
