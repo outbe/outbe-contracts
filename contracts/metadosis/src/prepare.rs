@@ -49,10 +49,10 @@ pub fn prepare_executions(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let total_lysis_limit =
-        (total_emission_limit - TOTAL_FEES) * Uint128::new(23) / Uint128::new(24);
-    let lysis_limit = total_lysis_limit / Uint128::new(23);
     let touch_limit = total_emission_limit / Uint128::new(24);
+
+    let mut total_lysis_limit =
+        (total_emission_limit - TOTAL_FEES) * Uint128::new(23) / Uint128::new(24);
 
     let gold_ignot_price = query_ignot_price(exchange_rate.price);
 
@@ -65,11 +65,21 @@ pub fn prepare_executions(
 
             // Total Lysis Deficit is calculated as the maximum of
             // (Total Tribute Interest - Total Lysis Limit) or 32% of Total Tribute Interest.
-            let total_deficit =
+            let total_lysis_deficit =
                 calc_total_deficit(total_tribute_interest, total_lysis_limit, config.deficit);
-            println!("Total deficit = {}", total_deficit);
+            println!("Total deficit = {}", total_lysis_deficit);
+            println!("Total Lysis Limit = {}", total_lysis_limit);
 
-            let lysis_deficits: Vec<Uint128> = calc_lysis_deficits(total_deficit);
+            // recalculate total_lysis_limit
+            if total_tribute_interest - total_lysis_deficit < total_lysis_limit {
+                total_lysis_limit = total_tribute_interest - total_lysis_deficit;
+                println!("Total Lysis Limit Recalculated = {}", total_lysis_limit);
+            }
+
+            let lysis_limit = total_lysis_limit / Uint128::new(23);
+            println!("Lysis Limit = {}", lysis_limit);
+
+            let lysis_deficits: Vec<Uint128> = calc_lysis_deficits(total_lysis_deficit);
             println!("Lysis deficits = {:?}", lysis_deficits);
 
             let vector_info: vector::query::AllVectorsResponse = deps
@@ -92,7 +102,7 @@ pub fn prepare_executions(
                     total_lysis_limit,
                     lysis_limit,
                     total_tribute_interest,
-                    total_deficit,
+                    total_deficit: total_lysis_deficit,
                     lysis_deficits,
                     vector_rates,
                 },

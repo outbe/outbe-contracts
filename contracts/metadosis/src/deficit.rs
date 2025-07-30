@@ -15,7 +15,7 @@ pub(crate) fn calc_total_deficit(
     if total_tribute_interest > total_lysis_limit
         && total_tribute_interest - total_lysis_limit > total_deficit
     {
-        total_deficit = total_lysis_limit - total_tribute_interest;
+        total_deficit = total_tribute_interest - total_lysis_limit;
     }
     total_deficit
 }
