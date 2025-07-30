@@ -49,8 +49,10 @@ pub fn prepare_executions(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let total_lysis_limit = total_emission_limit - TOTAL_FEES;
-    let lysis_limit = total_lysis_limit / Uint128::new(24);
+    let total_lysis_limit =
+        (total_emission_limit - TOTAL_FEES) * Uint128::new(23) / Uint128::new(24);
+    let lysis_limit = total_lysis_limit / Uint128::new(23);
+    let touch_limit = total_emission_limit / Uint128::new(24);
 
     let gold_ignot_price = query_ignot_price(exchange_rate.price);
 
@@ -97,7 +99,7 @@ pub fn prepare_executions(
                 touch_info: TouchInfo {
                     total_emission_limit,
                     total_fees: TOTAL_FEES,
-                    touch_limit: lysis_limit,
+                    touch_limit,
                     gold_ignot_price,
                 },
             }
@@ -106,7 +108,7 @@ pub fn prepare_executions(
             touch_info: TouchInfo {
                 total_emission_limit,
                 total_fees: TOTAL_FEES,
-                touch_limit: lysis_limit,
+                touch_limit,
                 gold_ignot_price,
             },
         },

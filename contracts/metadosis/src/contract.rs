@@ -165,19 +165,6 @@ fn execute_run(
     let execution_date = get_execution_date(run_date, env)?;
     let config = CONFIG.load(deps.storage)?;
 
-    // let config = CONFIG.load(deps.storage)?;
-    // let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
-    // let vector_address = config.vector.ok_or(ContractError::NotInitialized {})?;
-    // let price_oracle_address = config
-    //     .price_oracle
-    //     .ok_or(ContractError::NotInitialized {})?;
-    // let nod_address = config.nod.ok_or(ContractError::NotInitialized {})?;
-    //
-    // let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
-    //     &price_oracle_address,
-    //     &price_oracle::query::QueryMsg::GetPrice {},
-    // )?;
-    //
     let run_today = DAILY_RUN_STATE.may_load(deps.storage, execution_date)?;
     let mut run_today = run_today.unwrap_or(DailyRunState {
         number_of_runs: 0,
@@ -259,6 +246,23 @@ fn do_execute_lysis(
             start_after: run_today.last_tribute_id,
         },
     )?;
+
+    let all_tributes_count = tributes.tributes.len();
+    println!(
+        "All Fetched Tributes in current run {}: count = {}",
+        run_today.number_of_runs, all_tributes_count
+    );
+
+    // fast exit when no tributes
+    if all_tributes_count == 0 {
+        return Ok(Response::new()
+            .add_attribute("action", "metadosis::lysis")
+            .add_event(
+                Event::new("metadosis::lysis")
+                    .add_attribute("run", run_today.number_of_runs.to_string())
+                    .add_attribute("tributes_count", "0"),
+            ));
+    }
 
     let lysis_deficit = lysis_info
         .lysis_deficits
@@ -420,12 +424,23 @@ fn do_execute_touch(
         },
     )?;
 
-    let allocated_tributes_count = tributes.tributes.len();
     let mut allocated_tributes = tributes.tributes;
+    let allocated_tributes_count = allocated_tributes.len();
     println!(
         "Tributes in current run {}: count = {}",
         run_today.number_of_runs, allocated_tributes_count
     );
+
+    // fast exit when no tributes
+    if allocated_tributes.is_empty() {
+        return Ok(Response::new()
+            .add_attribute("action", "metadosis::lysis")
+            .add_event(
+                Event::new("metadosis::lysis")
+                    .add_attribute("run", run_today.number_of_runs.to_string())
+                    .add_attribute("tributes_count", "0"),
+            ));
+    }
 
     // update state
     DAILY_RUN_STATE.save(deps.storage, execution_date, &run_today)?;
