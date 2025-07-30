@@ -226,6 +226,16 @@
               "tribute_input": {
                 "$ref": "#/definitions/TributeInputPayload"
               },
+              "tribute_owner_l1": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Addr"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "zk_proof": {
                 "$ref": "#/definitions/ZkProof"
               }
