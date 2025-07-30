@@ -132,7 +132,7 @@ fn execute_offer_insecure(
     }
 
     //TODO change it to info.sender
-    let tribute_owner = if tribute_input.owner.trim().is_empty() {
+    let tribute_owner = if tribute_input.owner.is_empty() {
         info.sender.to_string()
     } else {
         tribute_input.owner.clone()
