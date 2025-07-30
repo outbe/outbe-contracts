@@ -88,10 +88,10 @@ fn test_metadosis() {
         price_oracle.address.clone(),
     );
 
-    println!("📦 Deploy Node");
+    println!("📦 Deploy Nod");
     let nod = deploy_nod(&mut app, config.owner_addr.clone());
 
-    println!("📦 Deploy Node");
+    println!("📦 Deploy Random Oracle");
     let random_oracle = deploy_random_oracle(&mut app, config.owner_addr.clone());
 
     println!("📦 Deploy Token Allocator");
@@ -114,7 +114,7 @@ fn test_metadosis() {
 
     println!("🧪 Perform tests");
 
-    println!("☑️ Add tribute");
+    println!("☑️ Add tributes");
     app.execute_contract(
         config.owner_addr.clone(),
         tribute.address.clone(),
@@ -190,7 +190,7 @@ fn test_metadosis() {
 
     assert_eq!(response.tributes.len(), 2);
 
-    println!("🔬 Prepare for lysis");
+    println!("🔬 Metadosis: Prepare");
     app.execute_contract(
         config.owner_addr.clone(),
         metadosis.address.clone(),
@@ -198,6 +198,18 @@ fn test_metadosis() {
         &[],
     )
     .unwrap();
+
+    let response: metadosis::query::MetadosisInfoResponse = app
+        .wrap()
+        .query_wasm_smart(
+            metadosis.address.clone(),
+            &metadosis::query::QueryMsg::MetadosisInfo {},
+        )
+        .unwrap();
+
+    assert_eq!(response.data.len(), 1);
+    let metadosis_info = response.data.first().unwrap();
+    println!("Metadosis info: {:?}", metadosis_info);
 
     println!("🔬 Lysis 1");
     app.execute_contract(

@@ -69,8 +69,6 @@ fn execute_allocate_tokens(
     };
     let allocation_data = to_json_binary(&allocation_data)?;
 
-    println!("allocation_data serialized: {:?}", allocation_data);
-
     Ok(Response::default()
         .set_data(allocation_data)
         .add_attribute("action", "token-allocator::allocate_tokens")

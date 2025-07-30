@@ -194,10 +194,7 @@ fn query_total_interest(
         .filter(
             |item| matches!(item, Ok((_id, tribute)) if tribute.extension.worldwide_day == date),
         )
-        .map(|it| {
-            println!("debug item {:?}", it);
-            it.unwrap()
-        })
+        .map(|it| it.unwrap())
         .map(|(_, tribute)| tribute.extension.symbolic_load)
         .fold(Uint128::zero(), |acc, t| acc + t);
 

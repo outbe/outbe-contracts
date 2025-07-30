@@ -16,6 +16,10 @@ Total Gratis Limit is determined as: Total Gratis Limit = Emision Limit - Total 
 Total Gratis Limit is equally divided into 24 portions (23 Lysis and 1 Touch).
 Total Lysis Limit is sum of 23 Lysis Limits.
 Total Promis Limit is minimal from Total Gratis limit / Symbolic Rate and Unallocated Emission Limit.
+
+> 3. Total Lysis Deficit is calculated as the maximum of (Total Tribute Interest - Total Lysis Limit) or 32% of Total Tribute Interest.
+> 4. Total Lysis Limit is recalculated as (Total Tribute Interest) - (Total Lysis Deficit).
+
  */
 
 // todo implement fees calculation
