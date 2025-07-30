@@ -1,19 +1,23 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::prepare;
 use crate::state::{
-    Config, DailyRunInfo, RunInfo, RunType, CONFIG, CREATOR, DAILY_RUNS, DAILY_RUNS_INFO,
-    TRIBUTES_DISTRIBUTION,
+    Config, DailyRunHistory, DailyRunState, LysisInfo, MetadosisInfo, RunHistoryInfo, RunType,
+    TouchInfo, CONFIG, CREATOR, DAILY_RUNS_HISTORY, DAILY_RUN_STATE, METADOSIS_INFO, WINNERS,
 };
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Addr, Decimal, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
-    SubMsg, Uint128, WasmMsg,
+    from_json, to_json_binary, Decimal, DepsMut, Env, Event, MessageInfo, Reply, Response, SubMsg,
+    Uint128, WasmMsg,
 };
+use cw_utils::ParseReplyError::SubMsgFailure;
+use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
 use outbe_utils::date;
-use outbe_utils::date::{is_valid, WorldwideDay};
-use price_oracle::types::DayType;
-use std::collections::HashSet;
+use outbe_utils::date::WorldwideDay;
+use rand::prelude::SliceRandom;
+use rand_chacha::rand_core::SeedableRng;
+use rand_chacha::ChaCha8Rng;
 use tribute::query::FullTributeData;
 
 const CONTRACT_NAME: &str = "outbe.net:metadosis";
@@ -62,198 +66,280 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
+        ExecuteMsg::Prepare { run_date } => execute_prepare(deps, env, info, run_date),
         ExecuteMsg::Execute { run_date } => execute_run(deps, env, info, run_date),
         ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
     }
 }
 
-fn execute_run(
-    mut deps: DepsMut,
+/// A unique ID for tokens allocation callback
+const ALLOCATE_NATIVE_TOKENS_REPLY_ID: u64 = 1;
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
+    // Match on the ID of the reply to handle the correct one
+    match msg.id {
+        ALLOCATE_NATIVE_TOKENS_REPLY_ID => handle_token_allocation_reply(deps, msg),
+        _ => Err(ContractError::UnrecognizedReplyId { id: msg.id }),
+    }
+}
+
+fn execute_prepare(
+    deps: DepsMut,
     env: Env,
     _info: MessageInfo,
     run_date: Option<WorldwideDay>,
 ) -> Result<Response, ContractError> {
-    // todo verify ownership to run raffle
+    // todo verify ownership to run metadosis
 
-    let execution_date = run_date.unwrap_or(date::normalize_to_date(&env.block.time));
-    is_valid(&execution_date)?;
-    println!("execution date time = {}", execution_date);
+    let execution_date = get_execution_date(run_date, env)?;
 
     let config = CONFIG.load(deps.storage)?;
-    let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
     let token_allocator_address = config
         .token_allocator
         .ok_or(ContractError::NotInitialized {})?;
-    let vector_address = config.vector.ok_or(ContractError::NotInitialized {})?;
+
+    let wasm_msg = WasmMsg::Execute {
+        contract_addr: token_allocator_address.to_string(),
+        msg: to_json_binary(&token_allocator::msg::ExecuteMsg::AllocateTokens {
+            date: execution_date,
+        })?,
+        funds: vec![],
+    };
+
+    Ok(Response::new()
+        .add_submessage(SubMsg::reply_on_success(
+            wasm_msg,
+            ALLOCATE_NATIVE_TOKENS_REPLY_ID,
+        ))
+        .add_attribute("action", "metadosis::prepare")
+        .add_event(
+            Event::new("metadosis::prepare").add_attribute("date", execution_date.to_string()),
+        ))
+}
+
+fn handle_token_allocation_reply(deps: DepsMut, msg: Reply) -> Result<Response, ContractError> {
+    //todo verify caller is token_allocator_address
+
+    println!("handle_token_allocation_reply {:?}", msg);
+
+    // 1. Check the result of the submessage
+    let subcall_result = msg.result.into_result().map_err(SubMsgFailure)?;
+
+    // 2. Get the data from the successful reply
+    let data = subcall_result
+        .msg_responses
+        .first()
+        .ok_or(ContractError::NoDataInReply {})?;
+
+    // 3. Deserialize the data into your expected struct
+    let allocation_result: MsgExecuteContractResponse =
+        parse_execute_response_data(data.value.as_slice())?;
+
+    let allocation_result = allocation_result
+        .data
+        .ok_or(ContractError::NoDataInReply {})?;
+
+    let allocation_result: token_allocator::contract::AllocationResult =
+        from_json(allocation_result.as_slice())?;
+
+    prepare::prepare_executions(deps, allocation_result.allocation, allocation_result.day)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "metadosis::handle_allocation_reply")
+        .add_event(
+            Event::new("metadosis::handle_allocation_reply")
+                .add_attribute("date", allocation_result.day.to_string())
+                .add_attribute("allocation", allocation_result.allocation.to_string()),
+        ))
+}
+
+fn execute_run(
+    deps: DepsMut,
+    env: Env,
+    _info: MessageInfo,
+    run_date: Option<WorldwideDay>,
+) -> Result<Response, ContractError> {
+    // todo verify ownership to run metadosis
+
+    let execution_date = get_execution_date(run_date, env)?;
+    let config = CONFIG.load(deps.storage)?;
+
+    let run_today = DAILY_RUN_STATE.may_load(deps.storage, execution_date)?;
+    let mut run_today = run_today.unwrap_or(DailyRunState {
+        number_of_runs: 0,
+        last_tribute_id: None,
+    });
+    run_today.number_of_runs += 1;
+
+    let info = METADOSIS_INFO
+        .load(deps.storage, execution_date)
+        .map_err(|_| ContractError::NotPrepared {})?;
+
+    let mut clean_tributes = false;
+    let result: Result<Response, ContractError> = match info {
+        MetadosisInfo::LysisAndTouch {
+            lysis_info,
+            touch_info,
+        } => {
+            match run_today.number_of_runs {
+                1..=23 => do_execute_lysis(deps, execution_date, lysis_info, run_today),
+                24 => {
+                    // execute touch
+                    clean_tributes = true;
+                    do_execute_touch(deps, execution_date, touch_info, run_today)
+                }
+                _ => return Err(ContractError::BadRunConfiguration {}),
+            }
+        }
+        MetadosisInfo::Touch { touch_info } => {
+            if run_today.number_of_runs > 1 {
+                return Err(ContractError::BadRunConfiguration {});
+            }
+            clean_tributes = true;
+            do_execute_touch(deps, execution_date, touch_info, run_today)
+        }
+    };
+
+    let mut submessages: Vec<SubMsg> = vec![];
+    if clean_tributes {
+        let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
+        let submsg = SubMsg::new(WasmMsg::Execute {
+            contract_addr: tribute_address.to_string(),
+            msg: to_json_binary(&tribute::msg::ExecuteMsg::BurnForDay {
+                date: execution_date,
+            })?,
+            funds: vec![],
+        });
+        submessages.push(submsg);
+    }
+
+    Ok(result?.add_submessages(submessages))
+}
+
+fn do_execute_lysis(
+    deps: DepsMut,
+    execution_date: WorldwideDay,
+    lysis_info: LysisInfo,
+    run_today: DailyRunState,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
+    let nod_address = config.nod.ok_or(ContractError::NotInitialized {})?;
+    let random_oracle_address = config
+        .random_oracle
+        .ok_or(ContractError::NotInitialized {})?;
     let price_oracle_address = config
         .price_oracle
         .ok_or(ContractError::NotInitialized {})?;
-    let nod_address = config.nod.ok_or(ContractError::NotInitialized {})?;
-
     let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
         &price_oracle_address,
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let run_today = DAILY_RUNS.may_load(deps.storage, execution_date)?;
-    let run_today = run_today.unwrap_or_default();
-    let run_today = run_today + 1;
+    let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+        &tribute_address,
+        &tribute::query::QueryMsg::DailyTributes {
+            date: execution_date,
+            query_order: None,
+            limit: None,
+            start_after: run_today.last_tribute_id,
+        },
+    )?;
 
-    if run_today == 1 {
-        schedule_executions(
-            deps.branch(),
-            tribute_address.clone(),
-            token_allocator_address,
-            execution_date,
-            config.deficit,
-            exchange_rate.day_type,
-        )?;
+    let all_tributes_count = tributes.tributes.len();
+    println!(
+        "All Fetched Tributes in current run {}: count = {}",
+        run_today.number_of_runs, all_tributes_count
+    );
+
+    // fast exit when no tributes
+    if all_tributes_count == 0 {
+        return Ok(Response::new()
+            .add_attribute("action", "metadosis::lysis")
+            .add_event(
+                Event::new("metadosis::lysis")
+                    .add_attribute("run", run_today.number_of_runs.to_string())
+                    .add_attribute("tributes_count", "0"),
+            ));
     }
 
-    DAILY_RUNS.save(deps.storage, execution_date, &run_today)?;
-    // execute metadosis or touch
+    let lysis_deficit = lysis_info
+        .lysis_deficits
+        .get(run_today.number_of_runs - 1)
+        .ok_or(ContractError::BadRunConfiguration {})?;
+    let lysis_capacity = lysis_info.lysis_limit + lysis_deficit;
 
-    execute_lysis_or_touch(
-        deps,
+    let mut allocated_tributes_sum = Uint128::zero();
+    let mut allocated_tributes: Vec<FullTributeData> = vec![];
+    for tribute in tributes.tributes {
+        if allocated_tributes_sum + tribute.data.symbolic_load > lysis_capacity {
+            break;
+        }
+        allocated_tributes_sum += tribute.data.symbolic_load;
+        allocated_tributes.push(tribute);
+    }
+
+    // update state
+    let last_tribute_id = allocated_tributes.last().map(|t| t.token_id.clone());
+    DAILY_RUN_STATE.save(
+        deps.storage,
         execution_date,
-        run_today,
-        tribute_address,
-        nod_address,
-        vector_address,
-        exchange_rate.price,
-    )
-}
+        &DailyRunState {
+            number_of_runs: run_today.number_of_runs,
+            last_tribute_id,
+        },
+    )?;
 
-#[allow(clippy::too_many_arguments)]
-fn execute_lysis_or_touch(
-    deps: DepsMut,
-    execution_date: WorldwideDay,
-    run_today: usize,
-    tribute_address: Addr,
-    nod_address: Addr,
-    vector_address: Addr,
-    exchange_rate: Decimal,
-) -> Result<Response, ContractError> {
-    let info = DAILY_RUNS_INFO.load(deps.storage, execution_date)?;
-
-    if run_today > info.number_of_runs {
-        return Err(ContractError::BadRunConfiguration {});
-    }
-
-    let run_info = info.data[run_today - 1].clone();
-
-    let response = match run_info.run_type {
-        RunType::Lysis => {
-            // use already distributed tokens
-            let mut tributes_in_first_tier: Vec<String> = vec![];
-            let mut j: usize = 0;
-            loop {
-                let key = format!("{}_{}_{}", execution_date, run_today, j);
-                let tribute_id = TRIBUTES_DISTRIBUTION.may_load(deps.storage, &key)?;
-                match tribute_id {
-                    None => {
-                        break;
-                    }
-                    Some(id) => tributes_in_first_tier.push(id),
-                }
-                j += 1;
-            }
-
-            do_lysis_tier(
-                deps,
-                tributes_in_first_tier,
-                run_today,
-                tribute_address.clone(),
-                vector_address,
-                nod_address,
-                exchange_rate,
-            )
-        }
-        RunType::Touch => {
-            // TODO add tributes query that were not selected for metadosis
-            let all_tributes: tribute::query::DailyTributesResponse =
-                deps.querier.query_wasm_smart(
-                    &tribute_address,
-                    &tribute::query::QueryMsg::DailyTributes {
-                        date: execution_date,
-                    },
-                )?;
-            let tributes_for_touch = all_tributes.tributes;
-
-            execute_touch(
-                tributes_for_touch,
-                run_info.pool_allocation,
-                run_today,
-                nod_address,
-                exchange_rate,
-            )
-        }
-    };
-
-    if run_today == info.number_of_runs {
-        Ok(response?.add_submessage(SubMsg::new(WasmMsg::Execute {
-            contract_addr: tribute_address.to_string(),
-            msg: to_json_binary(&tribute::msg::ExecuteMsg::BurnAll {})?,
-            funds: vec![],
-        })))
-    } else {
-        response
-    }
-}
-
-#[allow(clippy::too_many_arguments)]
-fn do_lysis_tier(
-    deps: DepsMut,
-    tributes_in_current_raffle: Vec<String>,
-    run_today: usize,
-    tribute_address: Addr,
-    vector_address: Addr,
-    nod_address: Addr,
-    exchange_rate: Decimal,
-) -> Result<Response, ContractError> {
-    // mint nod
-    let mut messages: Vec<SubMsg> = vec![];
-    let tributes_count = tributes_in_current_raffle.len();
-    println!("Tributes in current run {}: {}", run_today, tributes_count);
+    let allocated_tributes_count = allocated_tributes.len();
+    println!(
+        "Tributes in current run {}: count = {}, sum = {}",
+        run_today.number_of_runs, allocated_tributes_count, allocated_tributes_sum
+    );
 
     let tribute_info: tribute::query::TributeContractInfoResponse = deps
         .querier
         .query_wasm_smart(&tribute_address, &tribute::query::QueryMsg::ContractInfo {})?;
     let tribute_info = tribute_info.collection_config;
 
-    let vector_info: vector::query::AllVectorsResponse = deps
-        .querier
-        .query_wasm_smart(&vector_address, &vector::query::QueryMsg::Vectors {})?;
-    let vector = vector_info
-        .vectors
-        .iter()
-        .find(|v| usize::from(v.vector_id) == run_today)
+    // Get vector rate for this run
+    let vector_rate = lysis_info
+        .vector_rates
+        .get(run_today.number_of_runs - 1)
         .ok_or(ContractError::BadRunConfiguration {})?;
+    let vector_rate_dec = Decimal::from_atomics(*vector_rate, 3).unwrap();
 
-    // TODO shuffle here like the following
-    // let seed: randao::query::QuerySeedResponse = deps
-    //     .querier
-    //     .query_wasm_smart(&rand_address, &randao::query::QueryMsg::Seed {})?;
-    //
-    // let mut rnd = ChaCha8Rng::seed_from_u64(123);
-    // // Simulate 20 candidates (IDs 1 to 20)
-    // let mut candidates: Vec<u32> = (1..=20).collect();
-    //
-    // // Shuffle and pick 10 winners
-    // candidates.shuffle(&mut rnd);
-    // let winners = &candidates[..10];
+    // shuffle here like the following
+    let seed: random_oracle::msg::SeedResponse = deps.querier.query_wasm_smart(
+        &random_oracle_address,
+        &random_oracle::msg::QueryMsg::RandomSeed {},
+    )?;
 
-    for tribute_id in tributes_in_current_raffle {
-        let tribute: tribute::query::TributeInfoResponse = deps.querier.query_wasm_smart(
-            &tribute_address,
-            &tribute::query::QueryMsg::NftInfo {
-                token_id: tribute_id.clone(),
-            },
-        )?;
-        let nod_id = format!("{}_{}", tribute_id, run_today);
-        let floor_price = exchange_rate
-            * (Decimal::one() + Decimal::from_atomics(vector.vector_rate, 3).unwrap());
-        println!("Nod id creation = {}", nod_id);
+    let mut rnd = ChaCha8Rng::seed_from_u64(seed.seed);
+
+    // Shuffle and pick winners
+    allocated_tributes.shuffle(&mut rnd);
+
+    let mut winners: Vec<FullTributeData> = vec![];
+    let mut winners_sum = Uint128::zero();
+    for tribute in allocated_tributes {
+        // todo here we need to give full win for last tribute in this lysis
+        //  and take some allocation limit from the next lysis run (if any)
+        if winners_sum + tribute.data.symbolic_load > lysis_info.lysis_limit {
+            break;
+        }
+        WINNERS.save(deps.storage, tribute.token_id.clone(), &())?;
+        winners_sum += tribute.data.symbolic_load;
+        winners.push(tribute);
+    }
+    let winners_len = winners.len();
+
+    let mut messages: Vec<SubMsg> = vec![];
+    for tribute in winners {
+        let nod_id = format!("{}_{}", tribute.token_id, run_today.number_of_runs);
+        // todo check if we need to calc floor price at the moment of lysis or take from tribute
+        let floor_price = exchange_rate.price * (Decimal::one() + vector_rate_dec);
+
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
@@ -262,12 +348,12 @@ fn do_lysis_tier(
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
                         nod_id,
-                        settlement_currency: tribute.extension.settlement_currency.clone(),
+                        settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
-                        floor_rate: vector.vector_rate,
-                        nominal_price_minor: tribute.extension.tribute_price_minor,
-                        issuance_price_minor: exchange_rate,
-                        gratis_load_minor: tribute.extension.symbolic_load,
+                        floor_rate: *vector_rate,
+                        nominal_price_minor: tribute.data.tribute_price_minor,
+                        issuance_price_minor: exchange_rate.price,
+                        gratis_load_minor: tribute.data.symbolic_load,
                         floor_price_minor: floor_price,
                         state: nod::types::State::Issued,
                         owner: tribute.owner.to_string(),
@@ -281,213 +367,171 @@ fn do_lysis_tier(
         messages.push(SubMsg::new(nod_mint));
     }
 
+    let mut history = DAILY_RUNS_HISTORY
+        .may_load(deps.storage, execution_date)?
+        .unwrap_or(DailyRunHistory { data: vec![] });
+
+    history.data.push(RunHistoryInfo {
+        run_type: RunType::Lysis,
+        vector_rate: Some(vector_rate_dec),
+        pool_allocation: lysis_info.lysis_limit,
+        pool_deficit: *lysis_deficit,
+        pool_capacity: lysis_capacity,
+        assigned_tributes: allocated_tributes_count,
+        assigned_tributes_sum: allocated_tributes_sum,
+        winner_tributes: winners_len,
+        winner_tributes_sum: winners_sum,
+    });
+    DAILY_RUNS_HISTORY.save(deps.storage, execution_date, &history)?;
+
     Ok(Response::new()
         .add_attribute("action", "metadosis::lysis")
         .add_event(
             Event::new("metadosis::lysis")
-                .add_attribute("run", run_today.to_string())
-                .add_attribute("tributes_count", format!("{}", tributes_count)),
+                .add_attribute("run", run_today.number_of_runs.to_string())
+                .add_attribute("tributes_count", format!("{}", allocated_tributes_count)),
         )
         .add_submessages(messages))
 }
 
-fn schedule_executions(
+fn do_execute_touch(
     deps: DepsMut,
-    tribute_address: Addr,
-    token_allocator_address: Addr,
-    execution_date: u64,
-    deficit: Decimal,
-    day_type: DayType,
-) -> Result<(), ContractError> {
-    let (total_allocation, allocation_per_tier) =
-        calc_allocation(deps.as_ref(), token_allocator_address)?;
-    println!(
-        "total_allocation = {}, allocation_per_pool = {}, ",
-        total_allocation, allocation_per_tier
-    );
+    execution_date: WorldwideDay,
+    touch_info: TouchInfo,
+    run_today: DailyRunState,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    let tribute_address = config.tribute.ok_or(ContractError::NotInitialized {})?;
+    let nod_address = config.nod.ok_or(ContractError::NotInitialized {})?;
+    let random_oracle_address = config
+        .random_oracle
+        .ok_or(ContractError::NotInitialized {})?;
+    let price_oracle_address = config
+        .price_oracle
+        .ok_or(ContractError::NotInitialized {})?;
+    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
+        &price_oracle_address,
+        &price_oracle::query::QueryMsg::GetPrice {},
+    )?;
 
-    let all_tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+    let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
         &tribute_address,
         &tribute::query::QueryMsg::DailyTributes {
             date: execution_date,
+            query_order: None,
+            limit: None,
+            start_after: None,
         },
     )?;
-    let all_tributes = all_tributes.tributes;
-    let all_tributes_len = all_tributes.len();
+
+    let mut allocated_tributes = tributes.tributes;
+    let allocated_tributes_count = allocated_tributes.len();
     println!(
-        "Metadosis {} tributes distribution for date ",
-        all_tributes_len
+        "Tributes in current run {}: count = {}",
+        run_today.number_of_runs, allocated_tributes_count
     );
 
-    let mut run_data: Vec<RunInfo> = Vec::with_capacity(24);
-
-    let total_interest = all_tributes
-        .iter()
-        .fold(Uint128::zero(), |acc, t| acc + t.data.symbolic_load);
-
-    if day_type == DayType::Green {
-        // distribute tokens
-
-        let total_deficit = calc_total_deficit(total_allocation, total_interest, deficit);
-
-        // let total_lysis_limit = total_interest - total_deficit;
-
-        // TODO calc deficit per pool
-        // let lysis_limit = total_lysis_limit / Uint128::new(23);
-        let lysis_deficit = total_deficit / Uint128::new(23);
-        let lysis_capacity = allocation_per_tier + lysis_deficit;
-
-        println!("total_allocation = {}", total_allocation);
-        println!("total_interest = {}", total_interest);
-        println!("allocation_per_pool = {}", allocation_per_tier);
-        println!("total_deficit = {}", total_deficit);
-        println!("pool_deficit = {}", lysis_deficit);
-        println!("pool_capacity = {}", lysis_capacity);
-
-        let mut distributed_tributes: HashSet<String> = HashSet::new();
-
-        let mut lysis_pools: Vec<Vec<String>> = Vec::with_capacity(23);
-        let mut pool_index: u16 = 23;
-        while pool_index > 0 {
-            let mut pool_tributes: Vec<String> = vec![];
-            let mut allocated_in_pool = Uint128::zero();
-            for tribute in all_tributes.clone() {
-                if allocated_in_pool >= lysis_capacity {
-                    break;
-                }
-                if !distributed_tributes.contains(&tribute.token_id) {
-                    if allocated_in_pool + tribute.data.symbolic_load > lysis_capacity {
-                        continue;
-                    }
-                    allocated_in_pool += tribute.data.symbolic_load;
-                    pool_tributes.push(tribute.token_id.clone());
-                    distributed_tributes.insert(tribute.token_id.clone());
-                }
-            }
-            println!(
-                "Distributed in pool {:?}: {:?} tributes",
-                pool_index,
-                pool_tributes.len()
-            );
-
-            run_data.push(RunInfo {
-                vector_index: pool_index,
-                run_type: RunType::Lysis,
-                total_allocation,
-                pool_allocation: allocation_per_tier,
-                total_deficit,
-                pool_deficit: lysis_deficit,
-                pool_capacity: lysis_capacity,
-                assigned_tributes: pool_tributes.len(),
-                assigned_tributes_sum: allocated_in_pool,
-            });
-
-            lysis_pools.push(pool_tributes);
-            pool_index -= 1;
-        }
-
-        for (i, pool) in lysis_pools.iter().enumerate() {
-            for (j, tribute_id) in pool.iter().enumerate() {
-                // todo define map key for such struct
-                // NB: i starts from 1 because first run starts from 1
-                let key = format!("{}_{}_{}", execution_date, i + 1, j);
-                TRIBUTES_DISTRIBUTION.save(deps.storage, &key, tribute_id)?;
-                println!("added tribute {} in pool {}", tribute_id, key);
-            }
-        }
+    // fast exit when no tributes
+    if allocated_tributes.is_empty() {
+        return Ok(Response::new()
+            .add_attribute("action", "metadosis::lysis")
+            .add_event(
+                Event::new("metadosis::lysis")
+                    .add_attribute("run", run_today.number_of_runs.to_string())
+                    .add_attribute("tributes_count", "0"),
+            ));
     }
 
-    run_data.push(RunInfo {
-        vector_index: 0,
-        run_type: RunType::Touch,
-        total_allocation,
-        pool_allocation: allocation_per_tier,
-        total_deficit: Uint128::zero(),
-        pool_deficit: Uint128::zero(),
-        pool_capacity: allocation_per_tier,
-        assigned_tributes: all_tributes_len,
-        assigned_tributes_sum: total_interest,
-    });
+    // update state
+    DAILY_RUN_STATE.save(deps.storage, execution_date, &run_today)?;
 
-    let runs_num = run_data.len();
-    // save history of the last distribution
-    DAILY_RUNS_INFO.save(
-        deps.storage,
-        execution_date,
-        &DailyRunInfo {
-            data: run_data,
-            number_of_runs: runs_num,
-        },
+    // shuffle here like the following
+    let seed: random_oracle::msg::SeedResponse = deps.querier.query_wasm_smart(
+        &random_oracle_address,
+        &random_oracle::msg::QueryMsg::RandomSeed {},
     )?;
 
-    Ok(())
-}
+    let mut rnd = ChaCha8Rng::seed_from_u64(seed.seed);
 
-fn calc_total_deficit(
-    total_allocation: Uint128,
-    total_interest: Uint128,
-    deficit_percent: Decimal,
-) -> Uint128 {
-    let mut total_deficit =
-        (deficit_percent * Decimal::from_atomics(total_allocation, 0).unwrap()).to_uint_floor();
+    // Shuffle and pick winners
+    allocated_tributes.shuffle(&mut rnd);
 
-    if total_interest > total_allocation && total_interest - total_allocation > total_deficit {
-        total_deficit = total_interest - total_allocation;
+    let mut winners: Vec<FullTributeData> = vec![];
+    for tribute in allocated_tributes {
+        if WINNERS.has(deps.storage, tribute.token_id.clone()) {
+            continue;
+        }
+        WINNERS.save(deps.storage, tribute.token_id.clone(), &())?;
+        winners.push(tribute);
+        // todo track ignot price here
+        break;
     }
-    total_deficit
-}
-
-fn execute_touch(
-    tributes: Vec<FullTributeData>,
-    allocation: Uint128,
-    run_today: usize,
-    nod_address: Addr,
-    exchange_rate: Decimal,
-) -> Result<Response, ContractError> {
-    if tributes.is_empty() {
-        return Ok(Response::new()
-            .add_attribute("action", "metadosis::touch")
-            .add_event(Event::new("metadosis::touch").add_attribute("touch", "no-data")));
-    }
-
-    // todo implement random. Now first tribute will win.
-    // todo implement query gold price
-    let winner = tributes.last().unwrap();
+    let winners_len = winners.len();
 
     let mut messages: Vec<SubMsg> = vec![];
-    let nod_id = format!("{}_{}", winner.token_id, run_today);
-    println!("Nod id creation = {}", nod_id);
-    // todo create Gratis instead of Node
-    let nod_mint = WasmMsg::Execute {
-        contract_addr: nod_address.to_string(),
-        msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
-            token_id: nod_id.clone(),
-            owner: winner.owner.to_string(),
-            extension: Box::new(nod::msg::SubmitExtension {
-                entity: nod::msg::NodEntity {
-                    nod_id,
-                    settlement_currency: winner.data.settlement_currency.clone(),
-                    symbolic_rate: winner.data.tribute_price_minor,
-                    floor_rate: Uint128::zero(),
-                    nominal_price_minor: winner.data.tribute_price_minor,
-                    issuance_price_minor: exchange_rate,
-                    gratis_load_minor: allocation,
-                    floor_price_minor: exchange_rate,
-                    state: nod::types::State::Issued,
-                    owner: winner.owner.to_string(),
-                    qualified_at: None,
-                },
-                created_at: None,
-            }),
-        })?,
-        funds: vec![],
-    };
-    messages.push(SubMsg::new(nod_mint));
+    for tribute in winners {
+        let nod_id = format!("{}_{}", tribute.token_id, run_today.number_of_runs);
+        let nod_mint = WasmMsg::Execute {
+            contract_addr: nod_address.to_string(),
+            msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
+                token_id: nod_id.clone(),
+                owner: tribute.owner.to_string(),
+                extension: Box::new(nod::msg::SubmitExtension {
+                    entity: nod::msg::NodEntity {
+                        nod_id,
+                        settlement_currency: tribute.data.settlement_currency.clone(),
+                        symbolic_rate: tribute.data.tribute_price_minor,
+                        floor_rate: Uint128::zero(),
+                        nominal_price_minor: tribute.data.tribute_price_minor,
+                        issuance_price_minor: exchange_rate.price,
+                        gratis_load_minor: touch_info.touch_limit, // todo mb 1 ignot ?
+                        floor_price_minor: exchange_rate.price,
+                        state: nod::types::State::Issued,
+                        owner: tribute.owner.to_string(),
+                        qualified_at: None,
+                    },
+                    created_at: None,
+                }),
+            })?,
+            funds: vec![],
+        };
+        messages.push(SubMsg::new(nod_mint));
+    }
+
+    let mut history = DAILY_RUNS_HISTORY
+        .may_load(deps.storage, execution_date)?
+        .unwrap_or(DailyRunHistory { data: vec![] });
+
+    history.data.push(RunHistoryInfo {
+        run_type: RunType::Lysis,
+        vector_rate: None,
+        pool_allocation: touch_info.touch_limit,
+        pool_deficit: Uint128::zero(),
+        pool_capacity: touch_info.touch_limit,
+        assigned_tributes: allocated_tributes_count,
+        assigned_tributes_sum: touch_info.touch_limit,
+        winner_tributes: winners_len,
+        winner_tributes_sum: touch_info.touch_limit,
+    });
+    DAILY_RUNS_HISTORY.save(deps.storage, execution_date, &history)?;
 
     Ok(Response::new()
         .add_attribute("action", "metadosis::touch")
-        .add_event(Event::new("metadosis::touch").add_attribute("touch", run_today.to_string()))
+        .add_event(
+            Event::new("metadosis::touch")
+                .add_attribute("run", run_today.number_of_runs.to_string()),
+        )
         .add_submessages(messages))
+}
+
+fn get_execution_date(
+    run_date: Option<WorldwideDay>,
+    env: Env,
+) -> Result<WorldwideDay, ContractError> {
+    let execution_date = run_date.unwrap_or(date::normalize_to_date(&env.block.time));
+    date::is_valid(&execution_date)?;
+    println!("execution date = {}", execution_date);
+    Ok(execution_date)
 }
 
 fn execute_burn_all(
@@ -496,33 +540,15 @@ fn execute_burn_all(
     info: &MessageInfo,
 ) -> Result<Response, ContractError> {
     // TODO verify ownership
-    // let token = config.nft_info.load(deps.storage, &token_id)?;
-    // check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
 
-    TRIBUTES_DISTRIBUTION.clear(deps.storage);
-    DAILY_RUNS_INFO.clear(deps.storage);
-    DAILY_RUNS.clear(deps.storage);
+    METADOSIS_INFO.clear(deps.storage);
+    DAILY_RUN_STATE.clear(deps.storage);
+    DAILY_RUNS_HISTORY.clear(deps.storage);
+    WINNERS.clear(deps.storage);
 
     Ok(Response::new()
         .add_attribute("action", "metadosis::burn_all")
         .add_event(
             Event::new("metadosis::burn_all").add_attribute("sender", info.sender.to_string()),
         ))
-}
-
-pub(crate) fn calc_allocation(
-    deps: Deps,
-    token_allocator_address: Addr,
-) -> StdResult<(Uint128, Uint128)> {
-    let allocation_per_block: token_allocator::types::TokenAllocatorData =
-        deps.querier.query_wasm_smart(
-            &token_allocator_address,
-            &token_allocator::query::QueryMsg::GetData {},
-        )?;
-
-    // todo calc total_allocation based on blocks with exact values
-    let total_allocation = Uint128::from(allocation_per_block.amount) * Uint128::new(24 * 60 * 12);
-    let allocation_per_tier = total_allocation / Uint128::new(24);
-
-    Ok((total_allocation, allocation_per_tier))
 }

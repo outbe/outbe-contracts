@@ -44,6 +44,10 @@ pub enum ExecuteMsg {
     },
     /// Removes all tributes previously submitted
     BurnAll {},
+    /// Removes all tributes previously submitted
+    BurnForDay {
+        date: WorldwideDay,
+    },
 }
 
 #[cw_serde]

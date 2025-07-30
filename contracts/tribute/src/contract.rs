@@ -9,6 +9,7 @@ use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128}
 use outbe_nft::execute::assert_minter;
 use outbe_nft::msg::CollectionInfoMsg;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
+use outbe_utils::consts::DECIMAL_PLACES;
 
 const CONTRACT_NAME: &str = "outbe.net:tribute";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -87,6 +88,8 @@ pub fn execute(
         } => execute_mint(deps, &env, &info, token_id, owner, token_uri, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
         ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
+        // todo remove only for day
+        ExecuteMsg::BurnForDay { .. } => execute_burn_all(deps, &env, &info),
 
         ExecuteMsg::UpdateMinterOwnership(action) => Ok(
             outbe_nft::execute::update_minter_ownership(deps, &env, &info, action)?,
@@ -169,7 +172,7 @@ fn execute_mint(
     // )?;
     //
 
-    let (nominal_qty, load, symbolic_divisor) = calc_sybolics(
+    let (nominal_qty, symbolic_load) = calc_sybolics(
         entity.settlement_amount_minor,
         entity.tribute_price_minor,
         col_config.symbolic_rate,
@@ -181,8 +184,7 @@ fn execute_mint(
         settlement_currency: entity.settlement_currency,
         tribute_price_minor: entity.tribute_price_minor,
         nominal_qty_minor: nominal_qty,
-        symbolic_divisor,
-        symbolic_load: load,
+        symbolic_load,
         worldwide_day: entity.worldwide_day,
         created_at: env.block.time,
     };
@@ -212,24 +214,20 @@ fn execute_mint(
 }
 
 fn calc_sybolics(
-    settlement_value: Uint128,
+    settlement_amount: Uint128,
     exchange_rate: Decimal,
     symbolic_rate: Decimal,
-) -> (Uint128, Uint128, Decimal) {
-    println!("settlement_value: {}", settlement_value);
+) -> (Uint128, Uint128) {
+    let settlement_value_dec = Decimal::from_atomics(settlement_amount, DECIMAL_PLACES).unwrap();
+    let nominal_qty = settlement_value_dec / exchange_rate;
+    let symbolic_load = nominal_qty / (Decimal::one() + symbolic_rate);
+
+    println!("settlement_value: {}", settlement_amount);
     println!("exchange_rate: {}", exchange_rate);
     println!("symbolic_rate: {}", symbolic_rate);
-    let settlement_value_dec = Decimal::from_atomics(settlement_value, 18).unwrap();
-    let nominal_qty = settlement_value_dec / exchange_rate;
-
-    let symbolic_divisor = settlement_value_dec / nominal_qty * (Decimal::one() + symbolic_rate);
-    let load = settlement_value_dec * symbolic_rate / symbolic_divisor;
-
-    (
-        nominal_qty.to_uint_floor(),
-        load.to_uint_floor(),
-        symbolic_divisor,
-    )
+    println!("nominal_qty: {}", nominal_qty);
+    println!("symbolic_load: {}", symbolic_load);
+    (nominal_qty.atomics(), symbolic_load.atomics())
 }
 
 fn execute_burn(
@@ -291,12 +289,12 @@ mod tests {
 
     #[test]
     fn test_symbolics_calc() {
-        let (nominal, load, _) = calc_sybolics(
+        let (nominal, load) = calc_sybolics(
             Uint128::new(500_000000000000000000u128),
             Decimal::from_str("0.2").unwrap(),
             Decimal::from_str("0.08").unwrap(),
         );
-        assert_eq!(nominal, Uint128::new(2500u128));
-        assert_eq!(load, Uint128::new(185u128));
+        assert_eq!(nominal, Uint128::new(2500000000000000000000u128));
+        assert_eq!(load, Uint128::new(2314814814814814814814u128));
     }
 }

@@ -17,6 +17,7 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
+    Prepare { run_date: Option<WorldwideDay> },
     Execute { run_date: Option<WorldwideDay> },
     // todo remove after demo
     BurnAll {},
