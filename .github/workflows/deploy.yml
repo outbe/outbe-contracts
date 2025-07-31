@@ -79,7 +79,7 @@ jobs:
           UPDATE_PAYLOAD=$(jq -n --arg token1 coen --arg token2 usdc -f ./contracts/price-oracle/fixtures/add_token_pair.json )
           ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
           echo "set green day for pair coen/usdc"
-          UPDATE_PAYLOAD=$(jq -n --arg token1 coen --arg token2 usdc --arg date_type green -f ./contracts/price-oracle/fixtures/set_day_type.json )
+          UPDATE_PAYLOAD=$(jq -n --arg token1 coen --arg token2 usdc --arg day_type green -f ./contracts/price-oracle/fixtures/set_day_type.json )
           ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
           echo "update price for pair coen/usdc"
           UPDATE_PAYLOAD=$(jq -n --arg token1 coen --arg token2 usdc --arg price 0.012 -f ./contracts/price-oracle/fixtures/update_price.json )

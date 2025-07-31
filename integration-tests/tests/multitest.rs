@@ -116,53 +116,83 @@ fn test_metadosis() {
 
     println!("☑️ Add token pair");
 
-    let token1 = Denom::Native("coen".to_string());
-    let token2 = Denom::Native("usdc".to_string());
-
-    let msg = price_oracle::msg::ExecuteMsg::AddTokenPair {
-        token1: token1.clone(),
-        token2: token2.clone(),
-    };
+    app.execute_contract(
+        config.owner_addr.clone(),
+        price_oracle.address.clone(),
+        &price_oracle::msg::ExecuteMsg::AddTokenPair {
+            token1: Denom::Native("coen".to_string()),
+            token2: Denom::Native("usdc".to_string()),
+        },
+        &[],
+    )
+    .unwrap();
 
     app.execute_contract(
         config.owner_addr.clone(),
         price_oracle.address.clone(),
-        &msg,
+        &price_oracle::msg::ExecuteMsg::AddTokenPair {
+            token1: Denom::Native("xau".to_string()),
+            token2: Denom::Fiat(Currency::Usd),
+        },
         &[],
     )
     .unwrap();
 
     println!("☑️ Set Green day");
 
-    let msg = price_oracle::msg::ExecuteMsg::SetDayType {
-        token1: token1.clone(),
-        token2: token2.clone(),
-        day_type: price_oracle::types::DayType::Green,
-    };
+    app.execute_contract(
+        config.owner_addr.clone(),
+        price_oracle.address.clone(),
+        &price_oracle::msg::ExecuteMsg::SetDayType {
+            token1: Denom::Native("coen".to_string()),
+            token2: Denom::Native("usdc".to_string()),
+            day_type: price_oracle::types::DayType::Green,
+        },
+        &[],
+    )
+    .unwrap();
 
     app.execute_contract(
         config.owner_addr.clone(),
         price_oracle.address.clone(),
-        &msg,
+        &price_oracle::msg::ExecuteMsg::SetDayType {
+            token1: Denom::Native("xau".to_string()),
+            token2: Denom::Fiat(Currency::Usd),
+            day_type: price_oracle::types::DayType::Green,
+        },
         &[],
     )
     .unwrap();
 
     println!("☑️ Add price");
-    let msg = price_oracle::msg::ExecuteMsg::UpdatePrice {
-        token1: token1.clone(),
-        token2: token2.clone(),
-        price: Decimal::from_str("1.25").unwrap(),
-        open: None,
-        close: None,
-        high: None,
-        low: None,
-    };
+    app.execute_contract(
+        config.owner_addr.clone(),
+        price_oracle.address.clone(),
+        &price_oracle::msg::ExecuteMsg::UpdatePrice {
+            token1: Denom::Native("coen".to_string()),
+            token2: Denom::Native("usdc".to_string()),
+            price: Decimal::from_str("1.25").unwrap(),
+            open: None,
+            close: None,
+            high: None,
+            low: None,
+        },
+        &[],
+    )
+    .unwrap();
 
     app.execute_contract(
         config.owner_addr.clone(),
         price_oracle.address.clone(),
-        &msg,
+        &price_oracle::msg::ExecuteMsg::UpdatePrice {
+            token1: Denom::Native("xau".to_string()),
+            token2: Denom::Fiat(Currency::Usd),
+            price: Decimal::from_str("3305.90").unwrap(),
+            open: None,
+            close: None,
+            high: None,
+            low: None,
+        },
         &[],
     )
     .unwrap();

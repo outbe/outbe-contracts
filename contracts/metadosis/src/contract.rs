@@ -456,20 +456,36 @@ fn do_execute_touch(
     // Shuffle and pick winners
     allocated_tributes.shuffle(&mut rnd);
 
-    let mut winners: Vec<FullTributeData> = vec![];
+    let mut expected_winners_count = 1usize;
+    let mut expected_win_amount = touch_info.touch_limit;
+
+    if touch_info.gold_ignot_price.atomics() < touch_info.touch_limit {
+        expected_win_amount = touch_info.gold_ignot_price.atomics();
+        expected_winners_count =
+            (touch_info.touch_limit / touch_info.gold_ignot_price.atomics()).u128() as usize + 1;
+    };
+
+    println!("expected_winners_count {}", expected_winners_count);
+
+    let mut winners: Vec<(FullTributeData, Uint128)> = vec![];
     for tribute in allocated_tributes {
         if WINNERS.has(deps.storage, tribute.token_id.clone()) {
             continue;
         }
+        if !winners.is_empty() && winners.len() == expected_winners_count - 1 {
+            expected_win_amount = touch_info.touch_limit % touch_info.gold_ignot_price.atomics();
+        }
+
         WINNERS.save(deps.storage, tribute.token_id.clone(), &())?;
-        winners.push(tribute);
-        // todo track ignot price here
-        break;
+        winners.push((tribute, expected_win_amount));
+        if expected_winners_count == winners.len() {
+            break;
+        }
     }
     let winners_len = winners.len();
 
     let mut messages: Vec<SubMsg> = vec![];
-    for tribute in winners {
+    for (tribute, win_amount) in winners {
         let nod_id = format!("{}_{}", tribute.token_id, run_today.number_of_runs);
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
@@ -484,7 +500,7 @@ fn do_execute_touch(
                         floor_rate: Uint128::zero(),
                         nominal_price_minor: tribute.data.tribute_price_minor,
                         issuance_price_minor: exchange_rate.price,
-                        gratis_load_minor: touch_info.touch_limit, // todo mb 1 ignot ?
+                        gratis_load_minor: win_amount,
                         floor_price_minor: exchange_rate.price,
                         state: nod::types::State::Issued,
                         owner: tribute.owner.to_string(),
