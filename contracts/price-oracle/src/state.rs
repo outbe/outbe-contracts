@@ -1,23 +1,13 @@
-use crate::types::DayType;
-use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Decimal, Timestamp};
+use crate::types::{DayType, PriceData, TokenPair};
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
-use cw_storage_plus::Item;
-use outbe_utils::denom::Denom;
+use cw_storage_plus::Map;
 use std::fmt;
 
 pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
-
-#[cw_serde]
-pub struct TokenPairState {
-    pub token1: Denom,
-    pub token2: Denom,
-    pub price: Decimal,
-    pub day_type: DayType,
-    pub last_updated: Timestamp,
-}
-
-pub const TOKEN_PAIR_PRICE: Item<TokenPairState> = Item::new("token_pair");
+pub const TOKEN_PAIRS: Map<String, TokenPair> = Map::new("token_pairs");
+pub const PRICE_HISTORY: Map<String, Vec<PriceData>> = Map::new("price_history");
+pub const LATEST_PRICES: Map<String, PriceData> = Map::new("latest_prices");
+pub const PAIR_DAY_TYPES: Map<String, DayType> = Map::new("pair_day_types");
 
 impl fmt::Display for DayType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

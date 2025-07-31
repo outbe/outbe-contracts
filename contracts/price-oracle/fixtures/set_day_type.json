@@ -1,0 +1,7 @@
+{
+    "set_day_type":  {
+        "token1": { "native": $token1 },
+        "token2": { "native": $token2 }, 
+        "day_type": $day_type
+    }
+}

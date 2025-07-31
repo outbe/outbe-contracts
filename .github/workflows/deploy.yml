@@ -75,6 +75,24 @@ jobs:
           INIT_PAYLOAD=$(jq -n --arg usdc_address $WUSDC_CONTRACT_ADDRESS --from-file ./contracts/price-oracle/fixtures/init.json)
           PRICE_ORACLE_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Price Oracle" $PRICE_ORACLE_CODE_ID "$INIT_PAYLOAD")
           echo "PRICE_ORACLE_CONTRACT_ADDRESS=$PRICE_ORACLE_CONTRACT_ADDRESS" >> $GITHUB_ENV
+          echo "add pair coen/usdc"
+          UPDATE_PAYLOAD=$(jq -n --arg token1 coen --arg token2 usdc -f ./contracts/price-oracle/fixtures/add_token_pair.json )
+          ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          echo "set green day for pair coen/usdc"
+          UPDATE_PAYLOAD=$(jq -n --arg token1 coen --arg token2 usdc --arg date_type green -f ./contracts/price-oracle/fixtures/set_day_type.json )
+          ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          echo "update price for pair coen/usdc"
+          UPDATE_PAYLOAD=$(jq -n --arg token1 coen --arg token2 usdc --arg price 0.012 -f ./contracts/price-oracle/fixtures/update_price.json )
+          ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          echo "add pair xau/usd"
+          UPDATE_PAYLOAD=$(jq -n -f ./contracts/price-oracle/fixtures/add_xau_usd_pair.json )
+          ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          echo "set green day for pair xau/usd"
+          UPDATE_PAYLOAD=$(jq -n -f ./contracts/price-oracle/fixtures/set_xau_usd_day_type.json )
+          ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          echo "update price for pair xau/usd"
+          UPDATE_PAYLOAD=$(jq -n -f ./contracts/price-oracle/fixtures/update_price_xau_usd.json )
+          ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Deploy Random Oracle
         run: |

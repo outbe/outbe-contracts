@@ -1,0 +1,6 @@
+{
+  "add_token_pair": {
+    "token1": { "native": "xau" },
+    "token2": { "fiat": "usd" }
+  }
+}

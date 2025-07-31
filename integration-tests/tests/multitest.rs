@@ -114,6 +114,59 @@ fn test_metadosis() {
 
     println!("🧪 Perform tests");
 
+    println!("☑️ Add token pair");
+
+    let token1 = Denom::Native("coen".to_string());
+    let token2 = Denom::Native("usdc".to_string());
+
+    let msg = price_oracle::msg::ExecuteMsg::AddTokenPair {
+        token1: token1.clone(),
+        token2: token2.clone(),
+    };
+
+    app.execute_contract(
+        config.owner_addr.clone(),
+        price_oracle.address.clone(),
+        &msg,
+        &[],
+    )
+    .unwrap();
+
+    println!("☑️ Set Green day");
+
+    let msg = price_oracle::msg::ExecuteMsg::SetDayType {
+        token1: token1.clone(),
+        token2: token2.clone(),
+        day_type: price_oracle::types::DayType::Green,
+    };
+
+    app.execute_contract(
+        config.owner_addr.clone(),
+        price_oracle.address.clone(),
+        &msg,
+        &[],
+    )
+    .unwrap();
+
+    println!("☑️ Add price");
+    let msg = price_oracle::msg::ExecuteMsg::UpdatePrice {
+        token1: token1.clone(),
+        token2: token2.clone(),
+        price: Decimal::from_str("1.25").unwrap(),
+        open: None,
+        close: None,
+        high: None,
+        low: None,
+    };
+
+    app.execute_contract(
+        config.owner_addr.clone(),
+        price_oracle.address.clone(),
+        &msg,
+        &[],
+    )
+    .unwrap();
+
     println!("☑️ Add tributes");
     app.execute_contract(
         config.owner_addr.clone(),
@@ -419,25 +472,19 @@ fn deploy_price_oracle(app: &mut App, owner: Addr) -> DeployedContract {
     let code = ContractWrapper::new(execute, instantiate, query);
     let code_id = app.store_code(Box::new(code));
 
-    let instantiate_msg = InstantiateMsg {
-        creator: None,
-        initial_price: price_oracle::types::TokenPairPrice {
-            token1: Denom::Native("one".to_string()),
-            token2: Denom::Native("two".to_string()),
-            day_type: price_oracle::types::DayType::Green,
-            price: Decimal::from_str("1.25").unwrap(),
-        },
-    };
+    let instantiate_msg = InstantiateMsg { creator: None };
+
     let address = app
         .instantiate_contract(
             code_id,
-            owner,
+            owner.clone(),
             &instantiate_msg,
             &[],
             "price-oracle".to_string(),
             None,
         )
         .unwrap();
+
     DeployedContract { address, code_id }
 }
 

@@ -1,0 +1,7 @@
+{
+  "update_price": {
+    "token1": { "native": "xau" },
+    "token2": { "fiat": "usd" },
+    "price": "3305.90"
+  }
+}

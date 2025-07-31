@@ -1,0 +1,7 @@
+{
+    "set_day_type":  {
+        "token1": { "native": "xau" },
+        "token2": { "fiat": "usd" },
+        "day_type": "green"
+    }
+}
