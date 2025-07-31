@@ -71,9 +71,9 @@ fn query_price(storage: &dyn Storage) -> StdResult<TokenPairPrice> {
     let day_type = query_day_type(storage, token1.clone(), token2.clone()).unwrap();
 
     Ok(TokenPairPrice {
-        token1: token1,
-        token2: token2,
-        day_type: day_type,
+        token1,
+        token2,
+        day_type,
         price: price_data.price,
     })
 }

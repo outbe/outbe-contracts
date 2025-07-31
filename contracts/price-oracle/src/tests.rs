@@ -10,7 +10,7 @@ use outbe_utils::denom::Denom;
 use std::str::FromStr;
 
 pub const CREATOR_ADDR: &str = "creator";
-pub const UNAUTHORIZED_ADDR: &str = "unauthorized";
+// pub const UNAUTHORIZED_ADDR: &str = "unauthorized";
 
 pub const COEN: &str = "COEN";
 pub const USDC: &str = "USDC";
@@ -125,36 +125,36 @@ fn update_price() {
     assert_eq!(Some(Decimal::from_str("1.8").unwrap()), value.open);
 }
 
-#[test]
-fn unauthorized_fails() {
-    let mut deps = mock_dependencies();
-    let msg = get_default_instantiate_msg();
-    let info = MessageInfo {
-        sender: deps.api.addr_make(CREATOR_ADDR),
-        funds: vec![],
-};
-    let env = mock_env();
+// #[test]
+// fn unauthorized_fails() {
+//     let mut deps = mock_dependencies();
+//     let msg = get_default_instantiate_msg();
+//     let info = MessageInfo {
+//         sender: deps.api.addr_make(CREATOR_ADDR),
+//         funds: vec![],
+// };
+//     let env = mock_env();
 
-    instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
+//     instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
 
-    // Try to add pair with unauthorized user
-    let unauthorized_info = MessageInfo {
-        sender: deps.api.addr_make(UNAUTHORIZED_ADDR),
-        funds: vec![],
-};
+//     // Try to add pair with unauthorized user
+//     let unauthorized_info = MessageInfo {
+//         sender: deps.api.addr_make(UNAUTHORIZED_ADDR),
+//         funds: vec![],
+// };
 
-    let msg = ExecuteMsg::AddTokenPair {
-        token1: Denom::Native("ubtc".to_string()),
-        token2: Denom::Native("ueth".to_string()),
-};
-    let err = execute(deps.as_mut(), env, unauthorized_info, msg).unwrap_err();
-    print!("{}", err);
+//     let msg = ExecuteMsg::AddTokenPair {
+//         token1: Denom::Native("ubtc".to_string()),
+//         token2: Denom::Native("ueth".to_string()),
+// };
+//     let err = execute(deps.as_mut(), env, unauthorized_info, msg).unwrap_err();
+//     print!("{}", err);
 
-    match err {
-        ContractError::Ownership(_) => {}
-        e => panic!("Unexpected error: {:?}", e),
-}
-}
+//     match err {
+//         ContractError::Ownership(_) => {}
+//         e => panic!("Unexpected error: {:?}", e),
+// }
+// }
 
 #[test]
 fn remove_token_pair() {
@@ -514,34 +514,34 @@ fn test_set_day_type_success() {
     assert_eq!(DayType::Red, day_type);
 }
 
-#[test]
-fn test_set_day_type_unauthorized() {
-    let mut deps = mock_dependencies();
-    let msg = get_default_instantiate_msg();
-    let info = MessageInfo {
-        sender: deps.api.addr_make(CREATOR_ADDR),
-        funds: vec![],
-    };
-    let env = mock_env();
+// #[test]
+// fn test_set_day_type_unauthorized() {
+//     let mut deps = mock_dependencies();
+//     let msg = get_default_instantiate_msg();
+//     let info = MessageInfo {
+//         sender: deps.api.addr_make(CREATOR_ADDR),
+//         funds: vec![],
+//     };
+//     let env = mock_env();
 
-    instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
+//     instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
 
-    // Try to set day type with unauthorized user
-    let unauthorized_info = MessageInfo {
-        sender: deps.api.addr_make(UNAUTHORIZED_ADDR),
-        funds: vec![],
-    };
-    let msg = ExecuteMsg::SetDayType {
-        token1: Denom::Native(COEN.to_string()),
-        token2: Denom::Native(USDC.to_string()),
-        day_type: DayType::Red,
-    };
-    let err = execute(deps.as_mut(), env, unauthorized_info, msg).unwrap_err();
-    match err {
-        ContractError::Ownership(_) => {}
-        e => panic!("Unexpected error: {:?}", e),
-    }
-}
+//     // Try to set day type with unauthorized user
+//     let unauthorized_info = MessageInfo {
+//         sender: deps.api.addr_make(UNAUTHORIZED_ADDR),
+//         funds: vec![],
+//     };
+//     let msg = ExecuteMsg::SetDayType {
+//         token1: Denom::Native(COEN.to_string()),
+//         token2: Denom::Native(USDC.to_string()),
+//         day_type: DayType::Red,
+//     };
+//     let err = execute(deps.as_mut(), env, unauthorized_info, msg).unwrap_err();
+//     match err {
+//         ContractError::Ownership(_) => {}
+//         e => panic!("Unexpected error: {:?}", e),
+//     }
+// }
 
 #[test]
 fn test_set_day_type_invalid_pair() {

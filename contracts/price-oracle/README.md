@@ -37,7 +37,7 @@ Enhanced price update with OHLC data support:
 
 ```json
 {
-  "update_price_v2": {
+  "update_price": {
     "token1": { "native": "coen" },
     "token2": { "native": "wUSDC" },
     "price": "10.5",
@@ -197,8 +197,7 @@ Query the current day type for a specific token pair:
 The contract emits the following events:
 
 - `price-oracle::instantiate` - Contract initialization
-- `price-oracle::price_updated` - Legacy price update
-- `price-oracle::price_updated_v2` - V2 price update with OHLC data
+- `price-oracle::price_updated` - price update with OHLC data
 - `price-oracle::pair_added` - New trading pair registered
 - `price-oracle::pair_removed` - Trading pair removed
 - `price-oracle::day_type_set` - Day type updated for a pair
