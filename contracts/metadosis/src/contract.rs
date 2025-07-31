@@ -374,9 +374,9 @@ fn do_execute_lysis(
     history.data.push(RunHistoryInfo {
         run_type: RunType::Lysis,
         vector_rate: Some(vector_rate_dec),
-        pool_allocation: lysis_info.lysis_limit,
-        pool_deficit: *lysis_deficit,
-        pool_capacity: lysis_capacity,
+        limit: lysis_info.lysis_limit,
+        deficit: *lysis_deficit,
+        capacity: lysis_capacity,
         assigned_tributes: allocated_tributes_count,
         assigned_tributes_sum: allocated_tributes_sum,
         winner_tributes: winners_len,
@@ -503,11 +503,11 @@ fn do_execute_touch(
         .unwrap_or(DailyRunHistory { data: vec![] });
 
     history.data.push(RunHistoryInfo {
-        run_type: RunType::Lysis,
+        run_type: RunType::Touch,
         vector_rate: None,
-        pool_allocation: touch_info.touch_limit,
-        pool_deficit: Uint128::zero(),
-        pool_capacity: touch_info.touch_limit,
+        limit: touch_info.touch_limit,
+        deficit: Uint128::zero(),
+        capacity: touch_info.touch_limit,
         assigned_tributes: allocated_tributes_count,
         assigned_tributes_sum: touch_info.touch_limit,
         winner_tributes: winners_len,

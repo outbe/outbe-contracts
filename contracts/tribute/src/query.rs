@@ -274,7 +274,7 @@ mod tests {
             name: "tribute".to_string(),
             symbol: "t".to_string(),
             collection_info_extension: TributeCollectionExtension {
-                symbolic_rate: Decimal::from_str("0").unwrap(),
+                symbolic_rate: Decimal::from_str("0.08").unwrap(),
                 native_token: Denom::Native("native".to_string()),
                 price_oracle: Addr::unchecked("price_oracle"),
             },
@@ -348,7 +348,7 @@ mod tests {
 
         assert_eq!(
             response.total_symbolic_load,
-            Uint128::new(150) * Uint128::new(1_000_000_000_000_000_000u128)
+            Uint128::new(11111111111111111110u128)
         );
 
         // Query total interest for different date should return zero
