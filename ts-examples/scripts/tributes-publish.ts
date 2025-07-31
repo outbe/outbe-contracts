@@ -104,7 +104,8 @@ function randomTribute(owner: string, day: string, avgPrice: number): any {
     return {
         offer_insecure: {
             tribute_input,
-            zk_proof
+            zk_proof,
+            tribute_owner_l1:owner
         }
     }
 }
