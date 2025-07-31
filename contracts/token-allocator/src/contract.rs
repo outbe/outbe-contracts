@@ -36,13 +36,13 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    _deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::AllocateTokens { date } => execute_allocate_tokens(_deps, _env, _info, date),
+        ExecuteMsg::AllocateTokens { date } => execute_allocate_tokens(deps, env, info, date),
     }
 }
 

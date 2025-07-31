@@ -49,10 +49,9 @@ pub fn prepare_executions(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let touch_limit = total_emission_limit / Uint128::new(24);
-
-    let mut total_lysis_limit =
-        (total_emission_limit - TOTAL_FEES) * Uint128::new(23) / Uint128::new(24);
+    let total_gratis_limit = total_emission_limit - TOTAL_FEES;
+    let touch_limit = total_gratis_limit / Uint128::new(24);
+    let mut total_lysis_limit = total_gratis_limit * Uint128::new(23) / Uint128::new(24);
 
     let gold_ignot_price = query_ignot_price(exchange_rate.price);
 
@@ -97,7 +96,7 @@ pub fn prepare_executions(
 
             MetadosisInfo::LysisAndTouch {
                 lysis_info: LysisInfo {
-                    total_emission_limit,
+                    total_gratis_limit,
                     total_fees: TOTAL_FEES,
                     total_lysis_limit,
                     lysis_limit,
@@ -107,7 +106,7 @@ pub fn prepare_executions(
                     vector_rates,
                 },
                 touch_info: TouchInfo {
-                    total_emission_limit,
+                    total_gratis_limit,
                     total_fees: TOTAL_FEES,
                     touch_limit,
                     gold_ignot_price,
@@ -116,7 +115,7 @@ pub fn prepare_executions(
         }
         DayType::Red => MetadosisInfo::Touch {
             touch_info: TouchInfo {
-                total_emission_limit,
+                total_gratis_limit,
                 total_fees: TOTAL_FEES,
                 touch_limit,
                 gold_ignot_price,

@@ -46,7 +46,7 @@ pub enum MetadosisInfo {
 #[cw_serde]
 pub struct LysisInfo {
     /// Total emission limit in native coins for this day
-    pub total_emission_limit: Uint128,
+    pub total_gratis_limit: Uint128,
     /// Total fees to be paid for validators (currently 0)
     pub total_fees: Uint128,
     /// Total Lysis Limit = `total_emission_limit - total_fees`
@@ -66,7 +66,7 @@ pub struct LysisInfo {
 #[cw_serde]
 pub struct TouchInfo {
     /// Total emission limit in native coins for this day
-    pub total_emission_limit: Uint128,
+    pub total_gratis_limit: Uint128,
     /// Total fees to be paid for validators (currently 0)
     pub total_fees: Uint128,
     /// Touch limit = `(total_emission_limit - total_fees) / 24`

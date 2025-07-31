@@ -220,7 +220,7 @@ fn calc_sybolics(
 ) -> (Uint128, Uint128) {
     let settlement_value_dec = Decimal::from_atomics(settlement_amount, DECIMAL_PLACES).unwrap();
     let nominal_qty = settlement_value_dec / exchange_rate;
-    let symbolic_load = nominal_qty / (Decimal::one() + symbolic_rate);
+    let symbolic_load = nominal_qty * symbolic_rate / (Decimal::one() + symbolic_rate);
 
     println!("settlement_value: {}", settlement_amount);
     println!("exchange_rate: {}", exchange_rate);
@@ -295,6 +295,6 @@ mod tests {
             Decimal::from_str("0.08").unwrap(),
         );
         assert_eq!(nominal, Uint128::new(2500000000000000000000u128));
-        assert_eq!(load, Uint128::new(2314814814814814814814u128));
+        assert_eq!(load, Uint128::new(185185185185185185185u128));
     }
 }

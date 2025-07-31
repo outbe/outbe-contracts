@@ -365,8 +365,8 @@
             "lysis_deficits",
             "lysis_limit",
             "total_deficit",
-            "total_emission_limit",
             "total_fees",
+            "total_gratis_limit",
             "total_lysis_limit",
             "total_tribute_interest",
             "vector_rates"
@@ -395,16 +395,16 @@
                 }
               ]
             },
-            "total_emission_limit": {
-              "description": "Total emission limit in native coins for this day",
+            "total_fees": {
+              "description": "Total fees to be paid for validators (currently 0)",
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
                 }
               ]
             },
-            "total_fees": {
-              "description": "Total fees to be paid for validators (currently 0)",
+            "total_gratis_limit": {
+              "description": "Total emission limit in native coins for this day",
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
@@ -513,8 +513,8 @@
           "type": "object",
           "required": [
             "gold_ignot_price",
-            "total_emission_limit",
             "total_fees",
+            "total_gratis_limit",
             "touch_limit"
           ],
           "properties": {
@@ -526,16 +526,16 @@
                 }
               ]
             },
-            "total_emission_limit": {
-              "description": "Total emission limit in native coins for this day",
+            "total_fees": {
+              "description": "Total fees to be paid for validators (currently 0)",
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
                 }
               ]
             },
-            "total_fees": {
-              "description": "Total fees to be paid for validators (currently 0)",
+            "total_gratis_limit": {
+              "description": "Total emission limit in native coins for this day",
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
