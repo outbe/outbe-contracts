@@ -256,35 +256,62 @@
           "required": [
             "assigned_tributes",
             "assigned_tributes_sum",
-            "pool_allocation",
-            "pool_capacity",
-            "pool_deficit",
+            "capacity",
+            "deficit",
+            "limit",
             "run_type",
             "winner_tributes",
             "winner_tributes_sum"
           ],
           "properties": {
             "assigned_tributes": {
+              "description": "Count of tributes was assigned for this run",
               "type": "integer",
               "format": "uint",
               "minimum": 0.0
             },
             "assigned_tributes_sum": {
-              "$ref": "#/definitions/Uint128"
+              "description": "Sum of tributes were assigned for this run or touch_limit for Touch",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
             },
-            "pool_allocation": {
-              "$ref": "#/definitions/Uint128"
+            "capacity": {
+              "description": "Lysis capacity or = limit for Touch",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
             },
-            "pool_capacity": {
-              "$ref": "#/definitions/Uint128"
+            "deficit": {
+              "description": "Lysis deficit or 0 for Touch",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
             },
-            "pool_deficit": {
-              "$ref": "#/definitions/Uint128"
+            "limit": {
+              "description": "Lysis or Touch limit",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
             },
             "run_type": {
-              "$ref": "#/definitions/RunType"
+              "description": "Identifies what kind of run it was",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/RunType"
+                }
+              ]
             },
             "vector_rate": {
+              "description": "Vector rate or None for Touch",
               "anyOf": [
                 {
                   "$ref": "#/definitions/Decimal"
@@ -295,12 +322,18 @@
               ]
             },
             "winner_tributes": {
+              "description": "Count of winners in this run",
               "type": "integer",
               "format": "uint",
               "minimum": 0.0
             },
             "winner_tributes_sum": {
-              "$ref": "#/definitions/Uint128"
+              "description": "Winners sum in this run or touch_limit for Touch",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Uint128"
+                }
+              ]
             }
           },
           "additionalProperties": false

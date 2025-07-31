@@ -89,14 +89,23 @@ pub enum RunType {
 
 #[cw_serde]
 pub struct RunHistoryInfo {
+    /// Identifies what kind of run it was
     pub run_type: RunType,
+    /// Vector rate or None for Touch
     pub vector_rate: Option<Decimal>,
-    pub pool_allocation: Uint128,
-    pub pool_deficit: Uint128,
-    pub pool_capacity: Uint128,
+    /// Lysis or Touch limit
+    pub limit: Uint128,
+    /// Lysis deficit or 0 for Touch
+    pub deficit: Uint128,
+    /// Lysis capacity or = limit for Touch
+    pub capacity: Uint128,
+    /// Count of tributes was assigned for this run
     pub assigned_tributes: usize,
+    /// Sum of tributes were assigned for this run or touch_limit for Touch
     pub assigned_tributes_sum: Uint128,
+    /// Count of winners in this run
     pub winner_tributes: usize,
+    /// Winners sum in this run or touch_limit for Touch
     pub winner_tributes_sum: Uint128,
 }
 
