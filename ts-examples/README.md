@@ -10,10 +10,6 @@ npm install
 npm run codegen:generate 
 ```
 
-
-
-
-
 ## How to run:
 
 ```shell

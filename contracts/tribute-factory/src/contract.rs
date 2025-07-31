@@ -74,7 +74,18 @@ pub fn execute(
             zk_proof,
             tribute_owner_l1,
         } => execute_offer_insecure(deps, env, info, tribute_input, zk_proof, tribute_owner_l1),
+        ExecuteMsg::BurnAll {} => execute_burn_all(deps, env, info),
     }
+}
+
+fn execute_burn_all(
+    deps: DepsMut,
+    _env: Env,
+    _info: MessageInfo,
+) -> Result<Response, ContractError> {
+    USED_CU_HASHES.clear(deps.storage);
+    USED_TRIBUTE_IDS.clear(deps.storage);
+    Ok(Response::new())
 }
 
 fn execute_update_config(
