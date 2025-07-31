@@ -1,0 +1,6 @@
+{
+  "add_token_pair": {
+    "token1": { "native": $token1 },
+    "token2": { "native": $token2 }
+  }
+}

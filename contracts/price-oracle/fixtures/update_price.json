@@ -1,0 +1,7 @@
+{
+  "update_price": {
+    "token1": { "native": $token1 },
+    "token2": { "native": $token2 }, 
+    "price": $price
+  }
+}
