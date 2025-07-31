@@ -6,10 +6,11 @@ import {TributeClient, TributeQueryClient} from "../clients/tribute/Tribute.clie
 import {MetadosisClient, MetadosisQueryClient} from "../clients/metadosis/Metadosis.client";
 
 import {NumTokensResponse} from "../clients/tribute/Tribute.types";
-import {AllocationResponse} from "../clients/metadosis/Metadosis.types";
 import {TX_FEE} from "../config";
 import {generateTributeDraftId, getRandomInt, readWalletsFromFile} from "../lib/utils";
 import {TributeInputPayload, ZkProof} from "../clients/tribute-factory/TributeFactory.types";
+import {TokenAllocatorQueryClient} from "../clients/token-allocator/TokenAllocator.client";
+import {TokenAllocatorData} from "../clients/token-allocator/TokenAllocator.types";
 
 
 const walletsFile = "wallets.json";
@@ -42,14 +43,14 @@ async function main() {
     // console.log("Current timestamp: ", current_timestamp)
     // console.log("Current date: ", current_date)
 
-    let metadosisContractAddress = await getContractAddresses('METADOSIS_CONTRACT_ADDRESS');
-    let metadosisClient = new MetadosisQueryClient(walletClient, metadosisContractAddress)
+    let allocatorContractAddress = await getContractAddresses('TOKEN_ALLOCATOR_CONTRACT_ADDRESS');
+    let allocatorClient = new TokenAllocatorQueryClient(walletClient, allocatorContractAddress)
 
-    let allocationResp: AllocationResponse = await metadosisClient.allocation()
-    let total_alloc = Number(allocationResp.total_allocation)
+    let allocationResp: TokenAllocatorData = await allocatorClient.dailyAllocation()
+    console.log(allocationResp)
+    let total_alloc = Number(allocationResp.amount)
     let avg_price = Math.floor(total_alloc / wallets.length * 27)
-    console.log("Total Allocation: ", BigInt(allocationResp.total_allocation))
-    console.log("Pool Allocation: ", BigInt(allocationResp.pool_allocation))
+    console.log("Daily Allocation: ", BigInt(total_alloc))
     console.log("avg_price: ", avg_price)
 
 
