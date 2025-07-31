@@ -11,6 +11,8 @@ use cw_ownable::Ownership;
 pub enum QueryMsg {
     #[returns(TokenAllocatorData)]
     GetData {},
+    #[returns(TokenAllocatorData)]
+    DailyAllocation {},
     #[returns(cw_ownable::Ownership<String>)]
     GetCreatorOwnership {},
     #[returns(TokenAllocatorData)]
@@ -24,6 +26,7 @@ pub enum QueryMsg {
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetData {} => to_json_binary(&query_amount(env)?),
+        QueryMsg::DailyAllocation {} => to_json_binary(&query_daily_allocation(env)?),
         QueryMsg::GetCreatorOwnership {} => to_json_binary(&query_creator_ownership(deps.storage)?),
         QueryMsg::GetRangeData {
             from_block,
@@ -51,6 +54,15 @@ pub(crate) fn query_amount(env: Env) -> StdResult<TokenAllocatorData> {
 
     Ok(TokenAllocatorData {
         amount: Uint64::new(reward as u64),
+    })
+}
+
+// TODO implement real allocation
+pub(crate) fn query_daily_allocation(env: Env) -> StdResult<TokenAllocatorData> {
+    let block_allocation = query_amount(env)?;
+    let daily_total_allocation = block_allocation.amount * Uint64::new(24 * 60 * 12);
+    Ok(TokenAllocatorData {
+        amount: daily_total_allocation,
     })
 }
 

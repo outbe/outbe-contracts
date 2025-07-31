@@ -58,14 +58,11 @@ fn execute_allocate_tokens(
     _info: MessageInfo,
     date: WorldwideDay,
 ) -> Result<Response, ContractError> {
-    // TODO implement real allocation
-    let block_allocation = crate::query::query_amount(env)?;
-    let daily_total_allocation =
-        Uint128::from(block_allocation.amount) * Uint128::new(24 * 60 * 12);
+    let daily_total_allocation = crate::query::query_daily_allocation(env)?;
 
     let allocation_data = AllocationResult {
         day: date,
-        allocation: daily_total_allocation,
+        allocation: Uint128::from(daily_total_allocation.amount),
     };
     let allocation_data = to_json_binary(&allocation_data)?;
 
