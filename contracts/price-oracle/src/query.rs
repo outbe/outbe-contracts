@@ -67,7 +67,7 @@ fn query_price(storage: &dyn Storage) -> StdResult<TokenPairPrice> {
     let token1 = Denom::Native("coen".to_string());
     let token2 = Denom::Native("usdc".to_string());
 
-    let price_data = query_latest_price(storage,token1.clone(),token2.clone()).unwrap();
+    let price_data = query_latest_price(storage, token1.clone(), token2.clone()).unwrap();
     let day_type = query_day_type(storage, token1.clone(), token2.clone()).unwrap();
 
     Ok(TokenPairPrice {

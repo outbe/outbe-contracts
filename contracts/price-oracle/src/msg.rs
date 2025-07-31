@@ -1,16 +1,15 @@
-use crate::types::{DayType};
+use crate::types::DayType;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Decimal;
 use outbe_utils::denom::Denom;
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub creator: Option<String>
+    pub creator: Option<String>,
 }
 
 #[cw_serde]
 pub enum ExecuteMsg {
-
     // New methods
     AddTokenPair {
         token1: Denom,

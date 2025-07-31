@@ -1,9 +1,7 @@
 use crate::error::ContractError;
 use crate::helpers::get_pair_id;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
-use crate::state::{
-    CREATOR, LATEST_PRICES, PAIR_DAY_TYPES, PRICE_HISTORY, TOKEN_PAIRS,
-};
+use crate::state::{CREATOR, LATEST_PRICES, PAIR_DAY_TYPES, PRICE_HISTORY, TOKEN_PAIRS};
 use crate::types::{DayType, PriceData, TokenPair, UpdatePriceParams};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -44,7 +42,6 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-
         ExecuteMsg::AddTokenPair { token1, token2 } => {
             execute_add_token_pair(deps, env, info, token1, token2)
         }

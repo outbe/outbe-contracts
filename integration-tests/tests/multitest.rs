@@ -116,8 +116,8 @@ fn test_metadosis() {
 
     println!("☑️ Add token pair");
 
-    let token1 =  Denom::Native("coen".to_string());
-    let token2 =  Denom::Native("usdc".to_string());
+    let token1 = Denom::Native("coen".to_string());
+    let token2 = Denom::Native("usdc".to_string());
 
     let msg = price_oracle::msg::ExecuteMsg::AddTokenPair {
         token1: token1.clone(),
@@ -137,7 +137,7 @@ fn test_metadosis() {
     let msg = price_oracle::msg::ExecuteMsg::SetDayType {
         token1: token1.clone(),
         token2: token2.clone(),
-        day_type: price_oracle::types::DayType::Green
+        day_type: price_oracle::types::DayType::Green,
     };
 
     app.execute_contract(
@@ -148,7 +148,6 @@ fn test_metadosis() {
     )
     .unwrap();
 
-
     println!("☑️ Add price");
     let msg = price_oracle::msg::ExecuteMsg::UpdatePrice {
         token1: token1.clone(),
@@ -157,7 +156,7 @@ fn test_metadosis() {
         open: None,
         close: None,
         high: None,
-        low:None
+        low: None,
     };
 
     app.execute_contract(
@@ -473,9 +472,7 @@ fn deploy_price_oracle(app: &mut App, owner: Addr) -> DeployedContract {
     let code = ContractWrapper::new(execute, instantiate, query);
     let code_id = app.store_code(Box::new(code));
 
-    let instantiate_msg = InstantiateMsg {
-        creator: None,
-    };
+    let instantiate_msg = InstantiateMsg { creator: None };
 
     let address = app
         .instantiate_contract(

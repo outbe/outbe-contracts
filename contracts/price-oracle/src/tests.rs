@@ -16,12 +16,18 @@ pub const COEN: &str = "COEN";
 pub const USDC: &str = "USDC";
 
 fn get_default_instantiate_msg() -> InstantiateMsg {
-    InstantiateMsg {
-        creator: None
-    }
+    InstantiateMsg { creator: None }
 }
 
-fn add_default_token_pair(deps: &mut cosmwasm_std::OwnedDeps<cosmwasm_std::MemoryStorage, cosmwasm_std::testing::MockApi, cosmwasm_std::testing::MockQuerier>, env: &Env, info: &MessageInfo) {
+fn add_default_token_pair(
+    deps: &mut cosmwasm_std::OwnedDeps<
+        cosmwasm_std::MemoryStorage,
+        cosmwasm_std::testing::MockApi,
+        cosmwasm_std::testing::MockQuerier,
+    >,
+    env: &Env,
+    info: &MessageInfo,
+) {
     let msg = ExecuteMsg::AddTokenPair {
         token1: Denom::Native(COEN.to_string()),
         token2: Denom::Native(USDC.to_string()),
@@ -36,7 +42,7 @@ fn add_token_pair() {
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
         funds: vec![],
-};
+    };
     let env = mock_env();
 
     instantiate(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
@@ -45,7 +51,7 @@ fn add_token_pair() {
     let msg = ExecuteMsg::AddTokenPair {
         token1: Denom::Native("ubtc".to_string()),
         token2: Denom::Native("ueth".to_string()),
-};
+    };
     let res = execute(deps.as_mut(), env, info, msg).unwrap();
     assert_eq!(1, res.events.len());
 
@@ -62,7 +68,7 @@ fn add_duplicate_pair_fails() {
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
         funds: vec![],
-};
+    };
     let env = mock_env();
 
     instantiate(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
@@ -74,12 +80,12 @@ fn add_duplicate_pair_fails() {
     let msg = ExecuteMsg::AddTokenPair {
         token1: Denom::Native(COEN.to_string()),
         token2: Denom::Native(USDC.to_string()),
-};
+    };
     let err = execute(deps.as_mut(), env, info, msg).unwrap_err();
     match err {
         ContractError::PairAlreadyExists { .. } => {}
         e => panic!("Unexpected error: {:?}", e),
-}
+    }
 }
 
 #[test]
@@ -89,7 +95,7 @@ fn update_price() {
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
         funds: vec![],
-};
+    };
     let env = mock_env();
 
     instantiate(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
@@ -106,7 +112,7 @@ fn update_price() {
         high: Some(Decimal::from_str("2.1").unwrap()),
         low: Some(Decimal::from_str("1.7").unwrap()),
         close: Some(Decimal::from_str("2.0").unwrap()),
-};
+    };
     let res = execute(deps.as_mut(), env, info, msg).unwrap();
     assert_eq!(1, res.events.len());
 
@@ -117,7 +123,7 @@ fn update_price() {
         QueryMsg::GetLatestPrice {
             token1: Denom::Native(COEN.to_string()),
             token2: Denom::Native(USDC.to_string()),
-    },
+        },
     )
     .unwrap();
     let value: PriceData = from_json(&res).unwrap();
@@ -163,7 +169,7 @@ fn remove_token_pair() {
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
         funds: vec![],
-};
+    };
     let env = mock_env();
 
     instantiate(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
@@ -172,14 +178,14 @@ fn remove_token_pair() {
     let msg = ExecuteMsg::AddTokenPair {
         token1: Denom::Native("ubtc".to_string()),
         token2: Denom::Native("ueth".to_string()),
-};
+    };
     execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
 
     // Remove the pair
     let msg = ExecuteMsg::RemoveTokenPair {
         token1: Denom::Native("ubtc".to_string()),
         token2: Denom::Native("ueth".to_string()),
-};
+    };
     let res = execute(deps.as_mut(), env, info, msg).unwrap();
     assert_eq!(1, res.events.len());
 
@@ -196,7 +202,7 @@ fn query_price_history_with_valid_range() {
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
         funds: vec![],
-};
+    };
     let mut env = mock_env();
 
     instantiate(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
@@ -214,7 +220,7 @@ fn query_price_history_with_valid_range() {
         high: None,
         low: None,
         close: None,
-};
+    };
     execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
 
     env.block.time = Timestamp::from_seconds(2000);
@@ -226,11 +232,11 @@ fn query_price_history_with_valid_range() {
         high: None,
         low: None,
         close: None,
-};
+    };
     execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
 
     env.block.time = Timestamp::from_seconds(3000);
-    let msg = ExecuteMsg::UpdatePrice{
+    let msg = ExecuteMsg::UpdatePrice {
         token1: Denom::Native(COEN.to_string()),
         token2: Denom::Native(USDC.to_string()),
         price: Decimal::from_str("1.7").unwrap(),
@@ -238,7 +244,7 @@ fn query_price_history_with_valid_range() {
         high: None,
         low: None,
         close: None,
-};
+    };
     execute(deps.as_mut(), env, info, msg).unwrap();
 
     // Query price history for the full range
@@ -250,7 +256,7 @@ fn query_price_history_with_valid_range() {
             token2: Denom::Native(USDC.to_string()),
             start_time: Timestamp::from_seconds(1000),
             end_time: Timestamp::from_seconds(3000),
-    },
+        },
     )
     .unwrap();
     let history: Vec<PriceData> = from_json(&res).unwrap();
@@ -267,7 +273,7 @@ fn query_price_history_with_invalid_time_range() {
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
         funds: vec![],
-};
+    };
     let env = mock_env();
 
     instantiate(deps.as_mut(), env, info, msg).unwrap();
@@ -281,7 +287,7 @@ fn query_price_history_with_invalid_time_range() {
             token2: Denom::Native(USDC.to_string()),
             start_time: Timestamp::from_seconds(2000),
             end_time: Timestamp::from_seconds(1000),
-    },
+        },
     )
     .unwrap_err();
     assert!(err.to_string().contains("Invalid time range"));
@@ -294,7 +300,7 @@ fn query_price_history_with_invalid_token_pair() {
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
         funds: vec![],
-};
+    };
     let env = mock_env();
 
     instantiate(deps.as_mut(), env, info, msg).unwrap();
@@ -308,7 +314,7 @@ fn query_price_history_with_invalid_token_pair() {
             token2: Denom::Native(COEN.to_string()),
             start_time: Timestamp::from_seconds(1000),
             end_time: Timestamp::from_seconds(2000),
-    },
+        },
     )
     .unwrap_err();
     assert!(err.to_string().contains("Invalid token pair"));
@@ -321,7 +327,7 @@ fn query_price_history_with_empty_history() {
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
         funds: vec![],
-};
+    };
     let env = mock_env();
 
     instantiate(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
@@ -330,7 +336,7 @@ fn query_price_history_with_empty_history() {
     let msg = ExecuteMsg::AddTokenPair {
         token1: Denom::Native("BTC".to_string()),
         token2: Denom::Native("ETH".to_string()),
-};
+    };
     execute(deps.as_mut(), env, info, msg).unwrap();
 
     // Query price history for new pair (should be empty)
@@ -342,7 +348,7 @@ fn query_price_history_with_empty_history() {
             token2: Denom::Native("ETH".to_string()),
             start_time: Timestamp::from_seconds(0),
             end_time: Timestamp::from_seconds(5000),
-    },
+        },
     )
     .unwrap();
     let history: Vec<PriceData> = from_json(&res).unwrap();
@@ -356,7 +362,7 @@ fn query_price_history_with_partial_range() {
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
         funds: vec![],
-};
+    };
     let mut env = mock_env();
 
     instantiate(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
@@ -374,7 +380,7 @@ fn query_price_history_with_partial_range() {
         high: Some(Decimal::from_str("1.6").unwrap()),
         low: Some(Decimal::from_str("1.3").unwrap()),
         close: Some(Decimal::from_str("1.5").unwrap()),
-};
+    };
     execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
 
     env.block.time = Timestamp::from_seconds(2000);
@@ -386,7 +392,7 @@ fn query_price_history_with_partial_range() {
         high: Some(Decimal::from_str("1.7").unwrap()),
         low: Some(Decimal::from_str("1.4").unwrap()),
         close: Some(Decimal::from_str("1.6").unwrap()),
-};
+    };
     execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
 
     env.block.time = Timestamp::from_seconds(3000);
@@ -398,7 +404,7 @@ fn query_price_history_with_partial_range() {
         high: Some(Decimal::from_str("1.8").unwrap()),
         low: Some(Decimal::from_str("1.5").unwrap()),
         close: Some(Decimal::from_str("1.7").unwrap()),
-};
+    };
     execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
 
     env.block.time = Timestamp::from_seconds(4000);
@@ -410,7 +416,7 @@ fn query_price_history_with_partial_range() {
         high: None,
         low: None,
         close: None,
-};
+    };
     execute(deps.as_mut(), env, info, msg).unwrap();
 
     // Query price history for partial range (middle two entries)
@@ -422,7 +428,7 @@ fn query_price_history_with_partial_range() {
             token2: Denom::Native(USDC.to_string()),
             start_time: Timestamp::from_seconds(1500),
             end_time: Timestamp::from_seconds(3500),
-    },
+        },
     )
     .unwrap();
     let history: Vec<PriceData> = from_json(&res).unwrap();
