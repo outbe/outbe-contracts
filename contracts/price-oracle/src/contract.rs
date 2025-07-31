@@ -1,11 +1,15 @@
 use crate::error::ContractError;
+use crate::helpers::get_pair_id;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
-use crate::state::{TokenPairState, CREATOR, TOKEN_PAIR_PRICE};
-use crate::types::TokenPairPrice;
+use crate::state::{
+    CREATOR, LATEST_PRICES, PAIR_DAY_TYPES, PRICE_HISTORY, TOKEN_PAIRS,
+};
+use crate::types::{DayType, PriceData, TokenPair, UpdatePriceParams};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
 use cw2::set_contract_version;
+use outbe_utils::denom::Denom;
 
 const CONTRACT_NAME: &str = "outbe:price-oracle";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -13,7 +17,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
@@ -26,15 +30,6 @@ pub fn instantiate(
     };
 
     CREATOR.initialize_owner(deps.storage, deps.api, Some(creator))?;
-
-    let token_pair = TokenPairState {
-        token1: msg.initial_price.token1,
-        token2: msg.initial_price.token2,
-        price: msg.initial_price.price,
-        day_type: msg.initial_price.day_type,
-        last_updated: env.block.time,
-    };
-    TOKEN_PAIR_PRICE.save(deps.storage, &token_pair)?;
 
     Ok(Response::default()
         .add_attribute("action", "price-oracle::instantiate")
@@ -49,40 +44,201 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::UpdatePrice { token_pair_price } => {
-            execute_update_price(deps, env, info, token_pair_price)
+
+        ExecuteMsg::AddTokenPair { token1, token2 } => {
+            execute_add_token_pair(deps, env, info, token1, token2)
         }
+        ExecuteMsg::RemoveTokenPair { token1, token2 } => {
+            execute_remove_token_pair(deps, env, info, token1, token2)
+        }
+        ExecuteMsg::UpdatePrice {
+            token1,
+            token2,
+            price,
+            open,
+            high,
+            low,
+            close,
+        } => {
+            let params = UpdatePriceParams {
+                token1,
+                token2,
+                price,
+                open,
+                high,
+                low,
+                close,
+            };
+            execute_update_price(deps, env, info, params)
+        }
+        ExecuteMsg::SetDayType {
+            token1,
+            token2,
+            day_type,
+        } => execute_set_day_type(deps, env, info, token1, token2, day_type),
     }
+}
+
+fn execute_add_token_pair(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    token1: Denom,
+    token2: Denom,
+) -> Result<Response, ContractError> {
+    // Check authorization
+    CREATOR.assert_owner(deps.storage, &info.sender)?;
+
+    // Validate tokens are different
+    if token1 == token2 {
+        return Err(ContractError::InvalidTokenPair {});
+    }
+
+    let pair_id = get_pair_id(&token1, &token2);
+
+    // Check if pair already exists
+    if TOKEN_PAIRS.has(deps.storage, pair_id.clone()) {
+        return Err(ContractError::PairAlreadyExists { pair_id });
+    }
+
+    // Save token pair
+    TOKEN_PAIRS.save(
+        deps.storage,
+        pair_id.clone(),
+        &TokenPair {
+            token1: token1.clone(),
+            token2: token2.clone(),
+        },
+    )?;
+
+    Ok(Response::new()
+        .add_attribute("action", "price-oracle::add_token_pair")
+        .add_event(
+            Event::new("price-oracle::pair_added")
+                .add_attribute("pair_id", pair_id)
+                .add_attribute("token1", token1.to_string())
+                .add_attribute("token2", token2.to_string()),
+        ))
+}
+
+fn execute_remove_token_pair(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    token1: Denom,
+    token2: Denom,
+) -> Result<Response, ContractError> {
+    // Check authorization
+    CREATOR.assert_owner(deps.storage, &info.sender)?;
+
+    // Validate tokens are different
+    if token1 == token2 {
+        return Err(ContractError::InvalidTokenPair {});
+    }
+
+    let pair_id = get_pair_id(&token1, &token2);
+
+    // Check if pair exists
+    if !TOKEN_PAIRS.has(deps.storage, pair_id.clone()) {
+        return Err(ContractError::PairNotFound { pair_id });
+    }
+
+    // Remove token pair and associated data
+    TOKEN_PAIRS.remove(deps.storage, pair_id.clone());
+    LATEST_PRICES.remove(deps.storage, pair_id.clone());
+    PRICE_HISTORY.remove(deps.storage, pair_id.clone());
+    PAIR_DAY_TYPES.remove(deps.storage, pair_id.clone());
+
+    Ok(Response::new()
+        .add_attribute("action", "price-oracle::remove_token_pair")
+        .add_event(Event::new("price-oracle::pair_removed").add_attribute("pair_id", pair_id)))
 }
 
 fn execute_update_price(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    token_pair_price: TokenPairPrice,
+    params: UpdatePriceParams,
 ) -> Result<Response, ContractError> {
-    let token1_str = token_pair_price.token1.to_string();
-    let token2_str = token_pair_price.token2.to_string();
+    // Check authorization
+    CREATOR.assert_owner(deps.storage, &info.sender)?;
 
-    let token_pair = TokenPairState {
-        token1: token_pair_price.token1,
-        token2: token_pair_price.token2,
-        price: token_pair_price.price,
-        day_type: token_pair_price.day_type.clone(),
-        last_updated: env.block.time,
+    // Validate tokens are different
+    if params.token1 == params.token2 {
+        return Err(ContractError::InvalidTokenPair {});
+    }
+
+    let pair_id = get_pair_id(&params.token1, &params.token2);
+
+    // Check if pair exists
+    if !TOKEN_PAIRS.has(deps.storage, pair_id.clone()) {
+        return Err(ContractError::PairNotFound { pair_id });
+    }
+
+    let price_data = PriceData {
+        price: params.price,
+        timestamp: env.block.time,
+        open: params.open,
+        high: params.high,
+        low: params.low,
+        close: params.close,
     };
 
-    TOKEN_PAIR_PRICE.save(deps.storage, &token_pair)?;
+    // Update latest price
+    LATEST_PRICES.save(deps.storage, pair_id.clone(), &price_data)?;
+
+    // Update price history
+    let mut history = PRICE_HISTORY
+        .may_load(deps.storage, pair_id.clone())?
+        .unwrap_or_default();
+    history.push(price_data);
+    PRICE_HISTORY.save(deps.storage, pair_id.clone(), &history)?;
 
     Ok(Response::new()
-        .add_attribute("action", "price-oracle::execute_update_price")
+        .add_attribute("action", "price-oracle::update_price_v2")
         .add_event(
-            Event::new("price-oracle::price_updated")
-                .add_attribute("token1", token1_str)
-                .add_attribute("token2", token2_str)
-                .add_attribute("price", token_pair_price.price.to_string())
-                .add_attribute("day_type", token_pair_price.day_type.to_string())
+            Event::new("price-oracle::price_updated_v2")
+                .add_attribute("pair_id", pair_id)
+                .add_attribute("price", params.price.to_string())
                 .add_attribute("timestamp", env.block.time.seconds().to_string())
+                .add_attribute("updated_by", info.sender),
+        ))
+}
+
+fn execute_set_day_type(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    token1: Denom,
+    token2: Denom,
+    day_type: DayType,
+) -> Result<Response, ContractError> {
+    // Check authorization
+    CREATOR.assert_owner(deps.storage, &info.sender)?;
+
+    // Validate tokens are different
+    if token1 == token2 {
+        return Err(ContractError::InvalidTokenPair {});
+    }
+
+    let pair_id = get_pair_id(&token1, &token2);
+
+    // Check if pair exists
+    if !TOKEN_PAIRS.has(deps.storage, pair_id.clone()) {
+        return Err(ContractError::PairNotFound { pair_id });
+    }
+
+    // Save day type
+    PAIR_DAY_TYPES.save(deps.storage, pair_id.clone(), &day_type)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "price-oracle::set_day_type")
+        .add_event(
+            Event::new("price-oracle::day_type_set")
+                .add_attribute("pair_id", pair_id)
+                .add_attribute("token1", token1.to_string())
+                .add_attribute("token2", token2.to_string())
+                .add_attribute("day_type", day_type.to_string())
                 .add_attribute("updated_by", info.sender),
         ))
 }
