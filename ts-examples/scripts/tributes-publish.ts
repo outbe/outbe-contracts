@@ -1,20 +1,13 @@
-import {promises as fs} from "fs";
-import {WalletKeyInfo} from "./generate-wallets";
 import {ExecuteInstruction} from "@cosmjs/cosmwasm-stargate/build/signingcosmwasmclient";
 import {getContractAddresses, initClient} from "../lib/clientService";
-import {TributeClient, TributeQueryClient} from "../clients/tribute/Tribute.client";
-import {MetadosisClient, MetadosisQueryClient} from "../clients/metadosis/Metadosis.client";
+import {TributeQueryClient} from "../clients/tribute/Tribute.client";
 
 import {NumTokensResponse} from "../clients/tribute/Tribute.types";
-import {TX_FEE} from "../config";
+import {RUN_DATE, TX_FEE} from "../config";
 import {generateTributeDraftId, getRandomInt, readWalletsFromFile} from "../lib/utils";
 import {TributeInputPayload, ZkProof} from "../clients/tribute-factory/TributeFactory.types";
 import {TokenAllocatorQueryClient} from "../clients/token-allocator/TokenAllocator.client";
 import {TokenAllocatorData} from "../clients/token-allocator/TokenAllocator.types";
-
-
-const walletsFile = "wallets.json";
-
 
 async function main() {
     const wallets = await readWalletsFromFile();
@@ -37,17 +30,10 @@ async function main() {
 
     console.log("Trying to mint Tributes tx...")
 
-
-    // let current_timestamp = getCurrentUnixTimestamp();
-    // let current_date = normalize_to_date(current_timestamp);
-    // console.log("Current timestamp: ", current_timestamp)
-    // console.log("Current date: ", current_date)
-
     let allocatorContractAddress = await getContractAddresses('TOKEN_ALLOCATOR_CONTRACT_ADDRESS');
     let allocatorClient = new TokenAllocatorQueryClient(walletClient, allocatorContractAddress)
 
     let allocationResp: TokenAllocatorData = await allocatorClient.dailyAllocation()
-    console.log(allocationResp)
     let total_alloc = Number(allocationResp.amount)
     let avg_price = Math.floor(total_alloc / wallets.length * 27)
     console.log("Daily Allocation: ", BigInt(total_alloc))
@@ -58,7 +44,7 @@ async function main() {
 
     let instructions: ExecuteInstruction[] = [];
     for (let i = 0; i < wallets.length; i++) {
-        let tribute = randomTribute(wallets[i].outbe_address, "2025-07-15", avg_price)
+        let tribute = randomTribute(wallets[i].outbe_address, RUN_DATE, avg_price)
         instructions.push({
                 contractAddress: tbFactoryContractAddress,
                 msg: tribute,
@@ -77,6 +63,7 @@ function randomTribute(owner: string, day: string, avgPrice: number): any {
     let uuid_id = require('crypto').randomUUID().toString()
     let cu_hashes = require('crypto').createHash('sha256').update(uuid_id).digest('hex');
     let settlement_amount = getRandomInt(avgPrice - 100, avgPrice + 100);
+    let nominal_amount = Math.floor(settlement_amount * 0.012);
     let tribute_draft_id = generateTributeDraftId(owner, day);
     console.log("Tribute draft id: ", tribute_draft_id)
 
@@ -96,7 +83,7 @@ function randomTribute(owner: string, day: string, avgPrice: number): any {
         settlement_currency: "usd",
         settlement_base_amount: settlement_amount,
         settlement_atto_amount: 0,
-        nominal_base_qty: settlement_amount * 2,
+        nominal_base_qty: nominal_amount,
         nominal_atto_qty: 0,
         cu_hashes: [cu_hashes]
     }

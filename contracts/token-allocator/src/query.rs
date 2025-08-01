@@ -3,7 +3,7 @@ use crate::types::TokenAllocatorData;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult, Storage, Uint64};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult, Storage, Uint128, Uint64};
 use cw_ownable::Ownership;
 
 #[cw_serde]
@@ -11,6 +11,7 @@ use cw_ownable::Ownership;
 pub enum QueryMsg {
     #[returns(TokenAllocatorData)]
     GetData {},
+    /// Returns daily total allocation in units
     #[returns(TokenAllocatorData)]
     DailyAllocation {},
     #[returns(cw_ownable::Ownership<String>)]
@@ -53,14 +54,15 @@ pub(crate) fn query_amount(env: Env) -> StdResult<TokenAllocatorData> {
     );
 
     Ok(TokenAllocatorData {
-        amount: Uint64::new(reward as u64),
+        amount: Uint128::from(reward as u64),
     })
 }
 
 // TODO implement real allocation
 pub(crate) fn query_daily_allocation(env: Env) -> StdResult<TokenAllocatorData> {
     let block_allocation = query_amount(env)?;
-    let daily_total_allocation = block_allocation.amount * Uint64::new(24 * 60 * 12);
+    // let daily_total_allocation = block_allocation.amount * Uint128::new(24 * 60 * 12);
+    let daily_total_allocation = block_allocation.amount * Uint128::new(24);
     Ok(TokenAllocatorData {
         amount: daily_total_allocation,
     })
@@ -87,7 +89,7 @@ fn query_range_amount(from_block: Uint64, to_block: Uint64) -> StdResult<TokenAl
     }
 
     Ok(TokenAllocatorData {
-        amount: Uint64::new(total),
+        amount: Uint128::from(total),
     })
 }
 
@@ -146,7 +148,7 @@ mod tests {
             .query_wasm_smart(contract_addr.clone(), &QueryMsg::GetData {})
             .unwrap();
 
-        assert_eq!(response.amount.u64(), 65487u64);
+        assert_eq!(response.amount.u128(), 65487u128);
 
         app.update_block(|block| {
             block.height += 1000;
@@ -157,7 +159,7 @@ mod tests {
             .wrap()
             .query_wasm_smart(contract_addr.clone(), &QueryMsg::GetData {})
             .unwrap();
-        assert_eq!(response.amount.u64(), 65483u64);
+        assert_eq!(response.amount.u128(), 65483u128);
 
         app.update_block(|block| {
             block.height += 50000000;
@@ -168,7 +170,7 @@ mod tests {
             .wrap()
             .query_wasm_smart(contract_addr.clone(), &QueryMsg::GetData {})
             .unwrap();
-        assert_eq!(response.amount.u64(), 3260u64);
+        assert_eq!(response.amount.u128(), 3260u128);
     }
 
     #[test]
@@ -206,7 +208,7 @@ mod tests {
         // assert_eq!(range_single.amount, single.amount);
 
         // Multi-block range (blocks 1 through 3) equals the sum of individual blocks
-        let mut expected: u64 = 0;
+        let mut expected: u128 = 0;
         for block in 1u64..=3 {
             let res: TokenAllocatorData = app
                 .wrap()
@@ -218,7 +220,7 @@ mod tests {
                     },
                 )
                 .unwrap();
-            expected = expected.saturating_add(res.amount.u64());
+            expected = expected.saturating_add(res.amount.u128());
         }
         let range_multi: TokenAllocatorData = app
             .wrap()
@@ -231,6 +233,6 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(range_multi.amount.u64(), expected);
+        assert_eq!(range_multi.amount.u128(), expected);
     }
 }

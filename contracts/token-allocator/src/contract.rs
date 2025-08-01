@@ -62,7 +62,7 @@ fn execute_allocate_tokens(
 
     let allocation_data = AllocationResult {
         day: date,
-        allocation: Uint128::from(daily_total_allocation.amount),
+        allocation: daily_total_allocation.amount,
     };
     let allocation_data = to_json_binary(&allocation_data)?;
 

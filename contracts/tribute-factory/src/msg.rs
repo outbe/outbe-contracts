@@ -58,6 +58,7 @@ pub enum ExecuteMsg {
         zk_proof: ZkProof,
         tribute_owner_l1: Option<Addr>,
     },
+    BurnAll {},
 }
 
 #[cw_serde]
