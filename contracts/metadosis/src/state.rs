@@ -92,7 +92,7 @@ pub struct RunHistoryInfo {
     /// Identifies what kind of run it was
     pub run_type: RunType,
     /// Vector rate or None for Touch
-    pub vector_rate: Option<Decimal>,
+    pub vector_rate: Option<Uint128>,
     /// Lysis or Touch limit
     pub limit: Uint128,
     /// Lysis deficit or 0 for Touch
