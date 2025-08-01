@@ -2,6 +2,7 @@ use crate::deficit::{calc_lysis_deficits, calc_total_deficit};
 use crate::error::ContractError;
 use crate::state::{LysisInfo, MetadosisInfo, TouchInfo, CONFIG, METADOSIS_INFO};
 use cosmwasm_std::{Addr, DepsMut, QuerierWrapper, Uint128};
+use outbe_utils::consts::DECIMALS;
 use outbe_utils::date::WorldwideDay;
 use outbe_utils::denom::{Currency, Denom};
 use price_oracle::types::DayType;
@@ -49,7 +50,7 @@ pub fn prepare_executions(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let total_gratis_limit = total_emission_limit - TOTAL_FEES;
+    let total_gratis_limit = (total_emission_limit - TOTAL_FEES) * DECIMALS; // NB convert to units
     let touch_limit = total_gratis_limit / Uint128::new(24);
     let mut total_lysis_limit = total_gratis_limit * Uint128::new(23) / Uint128::new(24);
 

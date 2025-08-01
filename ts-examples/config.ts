@@ -8,9 +8,9 @@ export const TX_FEE = {
   gas: "50000000",
 }
 
-export const NUMBER_OF_WALLETS = 5;
+export const NUMBER_OF_WALLETS = 200;
 
-export const NUMBER_OF_METADOSIS_RUNS=22
+export const NUMBER_OF_METADOSIS_RUNS=1
 
 // SPECIFY HERE DATE FOR RUN FOR METADOSIS
 export const RUN_DATE = "2025-07-27";

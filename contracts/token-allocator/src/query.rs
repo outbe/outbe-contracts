@@ -5,7 +5,6 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult, Storage, Uint128, Uint64};
 use cw_ownable::Ownership;
-use outbe_utils::consts::DECIMALS;
 
 #[cw_serde]
 #[derive(QueryResponses)]
@@ -62,10 +61,10 @@ pub(crate) fn query_amount(env: Env) -> StdResult<TokenAllocatorData> {
 // TODO implement real allocation
 pub(crate) fn query_daily_allocation(env: Env) -> StdResult<TokenAllocatorData> {
     let block_allocation = query_amount(env)?;
-    let daily_total_allocation = block_allocation.amount * Uint128::new(24 * 60 * 12);
-    let allocation_in_units = daily_total_allocation * DECIMALS;
+    // let daily_total_allocation = block_allocation.amount * Uint128::new(24 * 60 * 12);
+    let daily_total_allocation = block_allocation.amount * Uint128::new(24);
     Ok(TokenAllocatorData {
-        amount: allocation_in_units,
+        amount: daily_total_allocation,
     })
 }
 
