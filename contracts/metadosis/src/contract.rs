@@ -307,7 +307,7 @@ fn do_execute_lysis(
         .vector_rates
         .get(run_today.number_of_runs - 1)
         .ok_or(ContractError::BadRunConfiguration {})?;
-    let vector_rate_dec = Decimal::from_atomics(*vector_rate, 3).unwrap();
+    let vector_rate_dec = Decimal::percent(vector_rate.u128() as u64);
 
     // shuffle here like the following
     let seed: random_oracle::msg::SeedResponse = deps.querier.query_wasm_smart(
@@ -373,7 +373,7 @@ fn do_execute_lysis(
 
     history.data.push(RunHistoryInfo {
         run_type: RunType::Lysis,
-        vector_rate: Some(vector_rate_dec),
+        vector_rate: Some(*vector_rate),
         limit: lysis_info.lysis_limit,
         deficit: *lysis_deficit,
         capacity: lysis_capacity,
