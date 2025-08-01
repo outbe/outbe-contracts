@@ -476,7 +476,7 @@ fn do_execute_touch(
     allocated_tributes.shuffle(&mut rnd);
 
     let (winners_count, win_amount) =
-        calc_tribute_amount(touch_info.touch_limit, touch_info.gold_ignot_price);
+        calc_touch_win_amount(touch_info.touch_limit, touch_info.gold_ignot_price);
 
     let mut winners: Vec<FullTributeData> = vec![];
     for tribute in allocated_tributes {
@@ -546,7 +546,7 @@ fn do_execute_touch(
         .add_submessages(messages))
 }
 
-fn calc_tribute_amount(touch_limit: Uint128, ignot_price: Decimal) -> (usize, Uint128) {
+fn calc_touch_win_amount(touch_limit: Uint128, ignot_price: Decimal) -> (usize, Uint128) {
     let mut expected_winners_count = 1usize;
     let mut expected_win_amount = touch_limit;
 
@@ -600,7 +600,7 @@ mod tests {
         let touch_limit = Uint128::new(30) * DECIMALS;
         let ignot_price = Decimal::from_str("45.3").unwrap();
 
-        let (winners, amount) = calc_tribute_amount(touch_limit, ignot_price);
+        let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
         assert_eq!(winners, 1);
         assert_eq!(amount, touch_limit);
     }
@@ -610,7 +610,7 @@ mod tests {
         let touch_limit = Uint128::new(100) * DECIMALS;
         let ignot_price = Decimal::from_str("45.3").unwrap();
 
-        let (winners, amount) = calc_tribute_amount(touch_limit, ignot_price);
+        let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
         assert_eq!(winners, 2);
         assert_eq!(amount, touch_limit / Uint128::new(2));
     }
@@ -619,7 +619,7 @@ mod tests {
         let touch_limit = Uint128::new(100) * DECIMALS;
         let ignot_price = Decimal::from_str("50").unwrap();
 
-        let (winners, amount) = calc_tribute_amount(touch_limit, ignot_price);
+        let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
         assert_eq!(winners, 2);
         assert_eq!(amount, touch_limit / Uint128::new(2));
     }
