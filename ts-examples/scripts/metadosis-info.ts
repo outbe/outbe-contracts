@@ -1,6 +1,6 @@
 import {getContractAddresses, initClient} from "../lib/clientService";
 import {MetadosisQueryClient} from "../clients/metadosis/Metadosis.client";
-import {DailyRunsResponse} from "../clients/metadosis/Metadosis.types";
+import {MetadosisInfoResponse} from "../clients/metadosis/Metadosis.types";
 import {NodQueryClient} from "../clients/nod/Nod.client";
 import {NumTokensResponse} from "../clients/nod/Nod.types";
 
@@ -12,9 +12,9 @@ async function main() {
 
   const metadosisContractAddress = await getContractAddresses('METADOSIS_CONTRACT_ADDRESS')
   const metadosisClient = new MetadosisQueryClient(walletClient, metadosisContractAddress)
-  let runInfo: DailyRunsResponse = await metadosisClient.dailyRuns()
-  console.log("runInfo: ")
-  console.log(JSON.stringify(runInfo, null, 2))
+  let info: MetadosisInfoResponse = await metadosisClient.metadosisInfo()
+  console.log("info: ")
+  console.log(JSON.stringify(info, null, 2))
 
 
   const nodContractAddress = await getContractAddresses('NOD_CONTRACT_ADDRESS')
