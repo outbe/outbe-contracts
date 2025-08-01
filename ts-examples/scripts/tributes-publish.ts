@@ -1,21 +1,13 @@
-import {promises as fs} from "fs";
-import {WalletKeyInfo} from "./generate-wallets";
 import {ExecuteInstruction} from "@cosmjs/cosmwasm-stargate/build/signingcosmwasmclient";
 import {getContractAddresses, initClient} from "../lib/clientService";
-import {TributeClient, TributeQueryClient} from "../clients/tribute/Tribute.client";
-import {MetadosisClient, MetadosisQueryClient} from "../clients/metadosis/Metadosis.client";
+import {TributeQueryClient} from "../clients/tribute/Tribute.client";
 
 import {NumTokensResponse} from "../clients/tribute/Tribute.types";
-import {TX_FEE} from "../config";
+import {RUN_DATE, TX_FEE} from "../config";
 import {generateTributeDraftId, getRandomInt, readWalletsFromFile} from "../lib/utils";
 import {TributeInputPayload, ZkProof} from "../clients/tribute-factory/TributeFactory.types";
 import {TokenAllocatorQueryClient} from "../clients/token-allocator/TokenAllocator.client";
 import {TokenAllocatorData} from "../clients/token-allocator/TokenAllocator.types";
-import {RUN_DATE} from "./commons";
-
-
-const walletsFile = "wallets.json";
-
 
 async function main() {
     const wallets = await readWalletsFromFile();

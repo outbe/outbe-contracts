@@ -1,9 +1,7 @@
-import {NUMBER_OF_METADOSIS_RUNS, TX_FEE} from "../config";
+import {RUN_DATE_TS, TX_FEE} from "../config";
 import {getContractAddresses, initClient} from "../lib/clientService";
-import {getCurrentUnixTimestamp, normalize_to_date} from "../lib/utils";
 import {MetadosisClient} from "../clients/metadosis/Metadosis.client";
-import {HistoryResponse, MetadosisInfo, MetadosisInfoResponse} from "../clients/metadosis/Metadosis.types";
-import {RUN_DATE_TS} from "./commons";
+import {MetadosisInfoResponse} from "../clients/metadosis/Metadosis.types";
 
 
 async function main() {
@@ -13,7 +11,6 @@ async function main() {
     console.log("Balance: ", balance)
     let height = await walletClient.getHeight()
     console.log("Current Height: ", height)
-
 
     const metadosisContractAddress = await getContractAddresses('METADOSIS_CONTRACT_ADDRESS')
     const metadosisClient = new MetadosisClient(walletClient, account.address, metadosisContractAddress)
