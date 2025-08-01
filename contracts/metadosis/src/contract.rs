@@ -433,10 +433,29 @@ fn do_execute_touch(
 
     // fast exit when no tributes
     if allocated_tributes.is_empty() {
+        let mut history = DAILY_RUNS_HISTORY
+            .may_load(deps.storage, execution_date)?
+            .unwrap_or(DailyRunHistory { data: vec![] });
+
+        history.data.push(RunHistoryInfo {
+            run_type: RunType::Touch,
+            vector_rate: None,
+            limit: touch_info.touch_limit,
+            deficit: Uint128::zero(),
+            capacity: touch_info.touch_limit,
+            assigned_tributes: allocated_tributes_count,
+            assigned_tributes_sum: touch_info.touch_limit,
+            winner_tributes: 0,
+            winner_tributes_sum: Uint128::zero(),
+        });
+        DAILY_RUNS_HISTORY.save(deps.storage, execution_date, &history)?;
+
+        DAILY_RUN_STATE.save(deps.storage, execution_date, &run_today)?;
+
         return Ok(Response::new()
-            .add_attribute("action", "metadosis::lysis")
+            .add_attribute("action", "metadosis::touch")
             .add_event(
-                Event::new("metadosis::lysis")
+                Event::new("metadosis::touch")
                     .add_attribute("run", run_today.number_of_runs.to_string())
                     .add_attribute("tributes_count", "0"),
             ));
@@ -456,16 +475,8 @@ fn do_execute_touch(
     // Shuffle and pick winners
     allocated_tributes.shuffle(&mut rnd);
 
-    let mut expected_winners_count = 1usize;
-    let mut expected_win_amount = touch_info.touch_limit;
-
-    if touch_info.gold_ignot_price.atomics() < touch_info.touch_limit {
-        let winners_count = touch_info.touch_limit / touch_info.gold_ignot_price.atomics();
-        expected_winners_count = winners_count.u128() as usize;
-        expected_win_amount = touch_info.touch_limit / winners_count;
-    };
-
-    println!("expected_winners_count {}", expected_winners_count);
+    let (winners_count, win_amount) =
+        calc_tribute_amount(touch_info.touch_limit, touch_info.gold_ignot_price);
 
     let mut winners: Vec<FullTributeData> = vec![];
     for tribute in allocated_tributes {
@@ -475,12 +486,10 @@ fn do_execute_touch(
 
         WINNERS.save(deps.storage, tribute.token_id.clone(), &())?;
         winners.push(tribute);
-        if expected_winners_count == winners.len() {
+        if winners_count == winners.len() {
             break;
         }
     }
-    let winners_len = winners.len();
-
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
         let nod_id = format!("{}_{}", tribute.token_id, run_today.number_of_runs);
@@ -497,7 +506,7 @@ fn do_execute_touch(
                         floor_rate: Uint128::zero(),
                         nominal_price_minor: tribute.data.tribute_price_minor,
                         issuance_price_minor: exchange_rate.price,
-                        gratis_load_minor: expected_win_amount,
+                        gratis_load_minor: win_amount,
                         floor_price_minor: exchange_rate.price,
                         state: nod::types::State::Issued,
                         owner: tribute.owner.to_string(),
@@ -523,8 +532,8 @@ fn do_execute_touch(
         capacity: touch_info.touch_limit,
         assigned_tributes: allocated_tributes_count,
         assigned_tributes_sum: touch_info.touch_limit,
-        winner_tributes: winners_len,
-        winner_tributes_sum: Uint128::from(winners_len as u32) * expected_win_amount,
+        winner_tributes: winners_count,
+        winner_tributes_sum: touch_info.touch_limit,
     });
     DAILY_RUNS_HISTORY.save(deps.storage, execution_date, &history)?;
 
@@ -535,6 +544,20 @@ fn do_execute_touch(
                 .add_attribute("run", run_today.number_of_runs.to_string()),
         )
         .add_submessages(messages))
+}
+
+fn calc_tribute_amount(touch_limit: Uint128, ignot_price: Decimal) -> (usize, Uint128) {
+    let mut expected_winners_count = 1usize;
+    let mut expected_win_amount = touch_limit;
+
+    let ignot_price_ato = ignot_price.atomics();
+    if ignot_price_ato < touch_limit {
+        let winners_count = touch_limit / ignot_price_ato;
+        expected_winners_count = winners_count.u128() as usize;
+        expected_win_amount = touch_limit / winners_count;
+    };
+
+    (expected_winners_count, expected_win_amount)
 }
 
 fn get_execution_date(
@@ -564,4 +587,40 @@ fn execute_burn_all(
         .add_event(
             Event::new("metadosis::burn_all").add_attribute("sender", info.sender.to_string()),
         ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use outbe_utils::consts::DECIMALS;
+    use std::str::FromStr;
+
+    #[test]
+    fn ignot_price_higher_than_touch_limit() {
+        let touch_limit = Uint128::new(30) * DECIMALS;
+        let ignot_price = Decimal::from_str("45.3").unwrap();
+
+        let (winners, amount) = calc_tribute_amount(touch_limit, ignot_price);
+        assert_eq!(winners, 1);
+        assert_eq!(amount, touch_limit);
+    }
+
+    #[test]
+    fn ignot_price_lower_than_touch_limit() {
+        let touch_limit = Uint128::new(100) * DECIMALS;
+        let ignot_price = Decimal::from_str("45.3").unwrap();
+
+        let (winners, amount) = calc_tribute_amount(touch_limit, ignot_price);
+        assert_eq!(winners, 2);
+        assert_eq!(amount, touch_limit / Uint128::new(2));
+    }
+    #[test]
+    fn ignot_price_equal_to_touch_limit() {
+        let touch_limit = Uint128::new(100) * DECIMALS;
+        let ignot_price = Decimal::from_str("50").unwrap();
+
+        let (winners, amount) = calc_tribute_amount(touch_limit, ignot_price);
+        assert_eq!(winners, 2);
+        assert_eq!(amount, touch_limit / Uint128::new(2));
+    }
 }

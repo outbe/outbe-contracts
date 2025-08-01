@@ -59,7 +59,9 @@ async function main() {
 function randomTribute(owner: string, day: string, avgPrice: number): any {
     let uuid_id = require('crypto').randomUUID().toString()
     let cu_hashes = require('crypto').createHash('sha256').update(uuid_id).digest('hex');
-    let nominal_amount = getRandomInt(1, avgPrice * 2);
+    // let nominal_amount = getRandomInt(1, avgPrice * 2);
+    // NB: price not average
+    let nominal_amount = getRandomInt(90, 400);
     let settlement_amount = Math.floor(nominal_amount * 0.012);
     let tribute_draft_id = generateTributeDraftId(owner, day);
     console.log("Tribute draft id:", tribute_draft_id,
