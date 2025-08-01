@@ -52,20 +52,20 @@ async function main() {
         )
     }
     let tx = await walletClient.executeMultiple(account.address, instructions, TX_FEE)
-
     console.log("created Tributes, tx ", tx.transactionHash)
 
-    let r: NumTokensResponse = await tributeClient.numTokens();
-    console.log("Number of Tribute tokens: ", r)
+    console.log("Number of Tribute tokens: ", await tributeClient.numTokens())
 }
+
+const PRICE_DELTA = 100000
 
 function randomTribute(owner: string, day: string, avgPrice: number): any {
     let uuid_id = require('crypto').randomUUID().toString()
     let cu_hashes = require('crypto').createHash('sha256').update(uuid_id).digest('hex');
-    let settlement_amount = getRandomInt(avgPrice - 100, avgPrice + 100);
+    let settlement_amount = getRandomInt(avgPrice - PRICE_DELTA, avgPrice + PRICE_DELTA);
     let nominal_amount = Math.floor(settlement_amount * 0.012);
     let tribute_draft_id = generateTributeDraftId(owner, day);
-    console.log("Tribute draft id: ", tribute_draft_id)
+    console.log("Tribute draft id:", tribute_draft_id, "settlement_amount:", settlement_amount)
 
     let zk_proof: ZkProof = {
         proof: "",
