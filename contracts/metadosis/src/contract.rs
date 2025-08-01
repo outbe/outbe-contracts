@@ -524,7 +524,7 @@ fn do_execute_touch(
         assigned_tributes: allocated_tributes_count,
         assigned_tributes_sum: touch_info.touch_limit,
         winner_tributes: winners_len,
-        winner_tributes_sum: touch_info.touch_limit,
+        winner_tributes_sum: Uint128::from(winners_len as u32) * expected_win_amount,
     });
     DAILY_RUNS_HISTORY.save(deps.storage, execution_date, &history)?;
 
