@@ -35,10 +35,9 @@ async function main() {
 
     let allocationResp: TokenAllocatorData = await allocatorClient.dailyAllocation()
     let total_alloc = Number(allocationResp.amount)
-    let avg_price = Math.floor(total_alloc / wallets.length * 27)
+    let avg_price = Math.floor(total_alloc / wallets.length / 0.08)
     console.log("Daily Allocation: ", BigInt(total_alloc))
     console.log("avg_price: ", avg_price)
-
 
     let tbFactoryContractAddress = await getContractAddresses('TRIBUTE_FACTORY_CONTRACT_ADDRESS');
 
@@ -57,15 +56,14 @@ async function main() {
     console.log("Number of Tribute tokens: ", await tributeClient.numTokens())
 }
 
-const PRICE_DELTA = 100000
-
 function randomTribute(owner: string, day: string, avgPrice: number): any {
     let uuid_id = require('crypto').randomUUID().toString()
     let cu_hashes = require('crypto').createHash('sha256').update(uuid_id).digest('hex');
-    let settlement_amount = getRandomInt(avgPrice - PRICE_DELTA, avgPrice + PRICE_DELTA);
-    let nominal_amount = Math.floor(settlement_amount * 0.012);
+    let nominal_amount = getRandomInt(1, avgPrice * 2);
+    let settlement_amount = Math.floor(nominal_amount * 0.012);
     let tribute_draft_id = generateTributeDraftId(owner, day);
-    console.log("Tribute draft id:", tribute_draft_id, "settlement_amount:", settlement_amount)
+    console.log("Tribute draft id:", tribute_draft_id,
+        "settlement_amount:", settlement_amount, "nominal_amount:", nominal_amount)
 
     let zk_proof: ZkProof = {
         proof: "",
