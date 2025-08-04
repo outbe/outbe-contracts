@@ -340,6 +340,7 @@ fn do_execute_lysis(
         // todo check if we need to calc floor price at the moment of lysis or take from tribute
         let floor_price = exchange_rate.price * (Decimal::one() + vector_rate_dec);
 
+        let mod_issuance_price = exchange_rate.price.max(tribute.data.tribute_price_minor);
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
@@ -352,7 +353,7 @@ fn do_execute_lysis(
                         symbolic_rate: tribute_info.symbolic_rate,
                         floor_rate: *vector_rate,
                         nominal_price_minor: tribute.data.tribute_price_minor,
-                        issuance_price_minor: exchange_rate.price,
+                        issuance_price_minor: mod_issuance_price,
                         gratis_load_minor: tribute.data.symbolic_load,
                         floor_price_minor: floor_price,
                         state: nod::types::State::Issued,
@@ -493,6 +494,7 @@ fn do_execute_touch(
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
         let nod_id = format!("{}_{}", tribute.token_id, run_today.number_of_runs);
+        let mod_issuance_price = exchange_rate.price.max(tribute.data.tribute_price_minor);
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
@@ -505,7 +507,7 @@ fn do_execute_touch(
                         symbolic_rate: tribute.data.tribute_price_minor,
                         floor_rate: Uint128::zero(),
                         nominal_price_minor: tribute.data.tribute_price_minor,
-                        issuance_price_minor: exchange_rate.price,
+                        issuance_price_minor: mod_issuance_price,
                         gratis_load_minor: win_amount,
                         floor_price_minor: exchange_rate.price,
                         state: nod::types::State::Issued,
