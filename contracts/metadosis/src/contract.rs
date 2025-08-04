@@ -8,8 +8,8 @@ use crate::state::{
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_json, to_json_binary, Decimal, DepsMut, Env, Event, MessageInfo, Reply, Response, SubMsg,
-    Uint128, WasmMsg,
+    from_json, to_json_binary, Decimal, DepsMut, Env, Event, MessageInfo, Reply, Response,
+    StdResult, Storage, SubMsg, Uint128, WasmMsg,
 };
 use cw_utils::ParseReplyError::SubMsgFailure;
 use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
@@ -367,22 +367,21 @@ fn do_execute_lysis(
         messages.push(SubMsg::new(nod_mint));
     }
 
-    let mut history = DAILY_RUNS_HISTORY
-        .may_load(deps.storage, execution_date)?
-        .unwrap_or(DailyRunHistory { data: vec![] });
-
-    history.data.push(RunHistoryInfo {
-        run_type: RunType::Lysis,
-        vector_rate: Some(*vector_rate),
-        limit: lysis_info.lysis_limit,
-        deficit: *lysis_deficit,
-        capacity: lysis_capacity,
-        assigned_tributes: allocated_tributes_count,
-        assigned_tributes_sum: allocated_tributes_sum,
-        winner_tributes: winners_len,
-        winner_tributes_sum: winners_sum,
-    });
-    DAILY_RUNS_HISTORY.save(deps.storage, execution_date, &history)?;
+    save_run_history(
+        deps.storage,
+        execution_date,
+        RunHistoryInfo {
+            run_type: RunType::Lysis,
+            vector_rate: Some(*vector_rate),
+            limit: lysis_info.lysis_limit,
+            deficit: *lysis_deficit,
+            capacity: lysis_capacity,
+            assigned_tributes: allocated_tributes_count,
+            assigned_tributes_sum: allocated_tributes_sum,
+            winner_tributes: winners_len,
+            winner_tributes_sum: winners_sum,
+        },
+    )?;
 
     Ok(Response::new()
         .add_attribute("action", "metadosis::lysis")
@@ -440,23 +439,21 @@ fn do_execute_touch(
 
     // fast exit when no tributes
     if allocated_tributes.is_empty() {
-        let mut history = DAILY_RUNS_HISTORY
-            .may_load(deps.storage, execution_date)?
-            .unwrap_or(DailyRunHistory { data: vec![] });
-
-        history.data.push(RunHistoryInfo {
-            run_type: RunType::Touch,
-            vector_rate: None,
-            limit: touch_info.touch_limit,
-            deficit: Uint128::zero(),
-            capacity: touch_info.touch_limit,
-            assigned_tributes: allocated_tributes_count,
-            assigned_tributes_sum: touch_info.touch_limit,
-            winner_tributes: 0,
-            winner_tributes_sum: Uint128::zero(),
-        });
-        DAILY_RUNS_HISTORY.save(deps.storage, execution_date, &history)?;
-
+        save_run_history(
+            deps.storage,
+            execution_date,
+            RunHistoryInfo {
+                run_type: RunType::Touch,
+                vector_rate: None,
+                limit: touch_info.touch_limit,
+                deficit: Uint128::zero(),
+                capacity: touch_info.touch_limit,
+                assigned_tributes: allocated_tributes_count,
+                assigned_tributes_sum: touch_info.touch_limit,
+                winner_tributes: 0,
+                winner_tributes_sum: Uint128::zero(),
+            },
+        )?;
         DAILY_RUN_STATE.save(deps.storage, execution_date, &run_today)?;
 
         return Ok(Response::new()
@@ -523,22 +520,21 @@ fn do_execute_touch(
         messages.push(SubMsg::new(nod_mint));
     }
 
-    let mut history = DAILY_RUNS_HISTORY
-        .may_load(deps.storage, execution_date)?
-        .unwrap_or(DailyRunHistory { data: vec![] });
-
-    history.data.push(RunHistoryInfo {
-        run_type: RunType::Touch,
-        vector_rate: None,
-        limit: touch_info.touch_limit,
-        deficit: Uint128::zero(),
-        capacity: touch_info.touch_limit,
-        assigned_tributes: allocated_tributes_count,
-        assigned_tributes_sum: touch_info.touch_limit,
-        winner_tributes: winners_count,
-        winner_tributes_sum: touch_info.touch_limit,
-    });
-    DAILY_RUNS_HISTORY.save(deps.storage, execution_date, &history)?;
+    save_run_history(
+        deps.storage,
+        execution_date,
+        RunHistoryInfo {
+            run_type: RunType::Touch,
+            vector_rate: None,
+            limit: touch_info.touch_limit,
+            deficit: Uint128::zero(),
+            capacity: touch_info.touch_limit,
+            assigned_tributes: allocated_tributes_count,
+            assigned_tributes_sum: touch_info.touch_limit,
+            winner_tributes: winners_count,
+            winner_tributes_sum: touch_info.touch_limit,
+        },
+    )?;
 
     Ok(Response::new()
         .add_attribute("action", "metadosis::touch")
@@ -547,6 +543,20 @@ fn do_execute_touch(
                 .add_attribute("run", run_today.number_of_runs.to_string()),
         )
         .add_submessages(messages))
+}
+
+fn save_run_history(
+    store: &mut dyn Storage,
+    execution_date: WorldwideDay,
+    run_history: RunHistoryInfo,
+) -> StdResult<()> {
+    let mut history = DAILY_RUNS_HISTORY
+        .may_load(store, execution_date)?
+        .unwrap_or(DailyRunHistory { data: vec![] });
+
+    history.data.push(run_history);
+    DAILY_RUNS_HISTORY.save(store, execution_date, &history)?;
+    Ok(())
 }
 
 fn calc_touch_win_amount(touch_limit: Uint128, ignot_price: Decimal) -> (usize, Uint128) {
