@@ -367,7 +367,8 @@
         "DailyRunState": {
           "type": "object",
           "required": [
-            "number_of_runs"
+            "number_of_runs",
+            "undistributed_limit"
           ],
           "properties": {
             "last_tribute_id": {
@@ -380,6 +381,9 @@
               "type": "integer",
               "format": "uint",
               "minimum": 0.0
+            },
+            "undistributed_limit": {
+              "$ref": "#/definitions/Uint128"
             }
           },
           "additionalProperties": false

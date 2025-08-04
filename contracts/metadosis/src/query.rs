@@ -5,7 +5,7 @@ use crate::state::{
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, Binary, Deps, Env, Order, StdResult};
+use cosmwasm_std::{to_json_binary, Binary, Deps, Env, Order, StdResult, Uint128};
 use outbe_utils::date::WorldwideDay;
 
 #[cw_serde]
@@ -58,6 +58,7 @@ fn query_metadosis_info(deps: Deps, _env: Env) -> StdResult<MetadosisInfoRespons
                     .unwrap_or(DailyRunState {
                         last_tribute_id: None,
                         number_of_runs: 0,
+                        undistributed_limit: Uint128::zero(),
                     });
 
                 Some(Ok(MetadosisInfoData {

@@ -169,6 +169,7 @@ fn execute_run(
     let mut run_today = run_today.unwrap_or(DailyRunState {
         number_of_runs: 0,
         last_tribute_id: None,
+        undistributed_limit: Uint128::zero(),
     });
     run_today.number_of_runs += 1;
 
@@ -268,7 +269,9 @@ fn do_execute_lysis(
         .lysis_deficits
         .get(run_today.number_of_runs - 1)
         .ok_or(ContractError::BadRunConfiguration {})?;
-    let lysis_capacity = lysis_info.lysis_limit + lysis_deficit;
+
+    let lysis_limit = lysis_info.lysis_limit + run_today.undistributed_limit;
+    let lysis_capacity = lysis_limit + lysis_deficit;
 
     let mut allocated_tributes_sum = Uint128::zero();
     let mut allocated_tributes: Vec<FullTributeData> = vec![];
@@ -282,14 +285,6 @@ fn do_execute_lysis(
 
     // update state
     let last_tribute_id = allocated_tributes.last().map(|t| t.token_id.clone());
-    DAILY_RUN_STATE.save(
-        deps.storage,
-        execution_date,
-        &DailyRunState {
-            number_of_runs: run_today.number_of_runs,
-            last_tribute_id,
-        },
-    )?;
 
     let allocated_tributes_count = allocated_tributes.len();
     println!(
@@ -325,7 +320,7 @@ fn do_execute_lysis(
     for tribute in allocated_tributes {
         // todo here we need to give full win for last tribute in this lysis
         //  and take some allocation limit from the next lysis run (if any)
-        if winners_sum + tribute.data.symbolic_load > lysis_info.lysis_limit {
+        if winners_sum + tribute.data.symbolic_load > lysis_limit {
             break;
         }
         WINNERS.save(deps.storage, tribute.token_id.clone(), &())?;
@@ -368,13 +363,25 @@ fn do_execute_lysis(
         messages.push(SubMsg::new(nod_mint));
     }
 
+    let undistributed_limit = lysis_limit.max(winners_sum) - winners_sum;
+
+    DAILY_RUN_STATE.save(
+        deps.storage,
+        execution_date,
+        &DailyRunState {
+            number_of_runs: run_today.number_of_runs,
+            last_tribute_id,
+            undistributed_limit,
+        },
+    )?;
+
     save_run_history(
         deps.storage,
         execution_date,
         RunHistoryInfo {
             run_type: RunType::Lysis,
             vector_rate: Some(*vector_rate),
-            limit: lysis_info.lysis_limit,
+            limit: lysis_limit,
             deficit: *lysis_deficit,
             capacity: lysis_capacity,
             assigned_tributes: allocated_tributes_count,
