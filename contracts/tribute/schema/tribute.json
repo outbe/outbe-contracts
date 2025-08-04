@@ -525,15 +525,23 @@
       "TributeMintData": {
         "type": "object",
         "required": [
+          "nominal_price_minor",
           "nominal_qty_minor",
           "owner",
           "settlement_amount_minor",
           "settlement_currency",
           "tribute_id",
-          "tribute_price_minor",
           "worldwide_day"
         ],
         "properties": {
+          "nominal_price_minor": {
+            "description": "Price in Native coins with a rate on the moment of the transaction",
+            "allOf": [
+              {
+                "$ref": "#/definitions/Decimal"
+              }
+            ]
+          },
           "nominal_qty_minor": {
             "description": "Value of the Tribute in Native Coins",
             "allOf": [
@@ -563,14 +571,6 @@
           },
           "tribute_id": {
             "type": "string"
-          },
-          "tribute_price_minor": {
-            "description": "Price in Native coins with a rate on the moment of the transaction",
-            "allOf": [
-              {
-                "$ref": "#/definitions/Decimal"
-              }
-            ]
           },
           "worldwide_day": {
             "description": "Date of the Tribute creation",
@@ -1135,11 +1135,11 @@
           "type": "object",
           "required": [
             "created_at",
+            "nominal_price_minor",
             "nominal_qty_minor",
             "settlement_amount_minor",
             "settlement_currency",
             "symbolic_load",
-            "tribute_price_minor",
             "worldwide_day"
           ],
           "properties": {
@@ -1148,6 +1148,14 @@
               "allOf": [
                 {
                   "$ref": "#/definitions/Timestamp"
+                }
+              ]
+            },
+            "nominal_price_minor": {
+              "description": "Price in Native coins with a rate on the moment of the transaction",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Decimal"
                 }
               ]
             },
@@ -1180,14 +1188,6 @@
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
-                }
-              ]
-            },
-            "tribute_price_minor": {
-              "description": "Price in Native coins with a rate on the moment of the transaction",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Decimal"
                 }
               ]
             },
@@ -1497,11 +1497,11 @@
           "type": "object",
           "required": [
             "created_at",
+            "nominal_price_minor",
             "nominal_qty_minor",
             "settlement_amount_minor",
             "settlement_currency",
             "symbolic_load",
-            "tribute_price_minor",
             "worldwide_day"
           ],
           "properties": {
@@ -1510,6 +1510,14 @@
               "allOf": [
                 {
                   "$ref": "#/definitions/Timestamp"
+                }
+              ]
+            },
+            "nominal_price_minor": {
+              "description": "Price in Native coins with a rate on the moment of the transaction",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Decimal"
                 }
               ]
             },
@@ -1542,14 +1550,6 @@
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
-                }
-              ]
-            },
-            "tribute_price_minor": {
-              "description": "Price in Native coins with a rate on the moment of the transaction",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Decimal"
                 }
               ]
             },

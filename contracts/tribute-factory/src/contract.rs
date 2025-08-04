@@ -183,7 +183,7 @@ fn execute_offer_insecure(
                     settlement_amount_minor: settlement_amount,
                     settlement_currency: Denom::Native(tribute.settlement_currency), // TODO use native
                     nominal_qty_minor: settlement_qty,
-                    tribute_price_minor: tribute_price,
+                    nominal_price_minor: tribute_price,
                 },
             }),
         })?,
