@@ -157,7 +157,7 @@ fn execute_mint(
 
     if entity.settlement_amount_minor == Uint128::zero()
         || entity.nominal_qty_minor == Uint128::zero()
-        || entity.tribute_price_minor == Decimal::zero()
+        || entity.nominal_price_minor == Decimal::zero()
     {
         return Err(ContractError::WrongInput {});
     }
@@ -174,7 +174,7 @@ fn execute_mint(
 
     let (nominal_qty, symbolic_load) = calc_sybolics(
         entity.settlement_amount_minor,
-        entity.tribute_price_minor,
+        entity.nominal_price_minor,
         col_config.symbolic_rate,
     );
 
@@ -182,7 +182,7 @@ fn execute_mint(
     let data = TributeData {
         settlement_amount_minor: entity.settlement_amount_minor,
         settlement_currency: entity.settlement_currency,
-        tribute_price_minor: entity.tribute_price_minor,
+        nominal_price_minor: entity.nominal_price_minor,
         nominal_qty_minor: nominal_qty,
         symbolic_load,
         worldwide_day: entity.worldwide_day,

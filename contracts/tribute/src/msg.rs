@@ -68,7 +68,7 @@ pub struct TributeMintData {
     /// Value of the Tribute in Native Coins
     pub nominal_qty_minor: Uint128,
     /// Price in Native coins with a rate on the moment of the transaction
-    pub tribute_price_minor: Decimal,
+    pub nominal_price_minor: Decimal,
 }
 
 #[cw_serde]
