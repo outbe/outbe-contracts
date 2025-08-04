@@ -97,7 +97,7 @@ function randomTribute(owner: string, day: string, coenUsdsRate: number): any {
     }
 }
 
-async function queryActualRate(walletClient: CosmWasmClient): Promise<number> {
+export async function queryActualRate(walletClient: CosmWasmClient): Promise<number> {
     let address = await getContractAddresses('PRICE_ORACLE_CONTRACT_ADDRESS')
     let client = new PriceOracleQueryClient(walletClient, address)
     let response = await client.getLatestPrice({
@@ -105,7 +105,7 @@ async function queryActualRate(walletClient: CosmWasmClient): Promise<number> {
             native: "coen"
         },
         token2: {
-            fiat: "usd"
+            native: "usdc"
         },
     })
 
