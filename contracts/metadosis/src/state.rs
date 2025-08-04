@@ -79,6 +79,7 @@ pub struct TouchInfo {
 pub struct DailyRunState {
     pub number_of_runs: usize,
     pub last_tribute_id: Option<String>,
+    pub undistributed_limit: Uint128,
 }
 
 #[cw_serde]
