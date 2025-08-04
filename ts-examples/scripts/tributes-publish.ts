@@ -8,6 +8,8 @@ import {generateTributeDraftId, getRandomInt, readWalletsFromFile} from "../lib/
 import {TributeInputPayload, ZkProof} from "../clients/tribute-factory/TributeFactory.types";
 import {TokenAllocatorQueryClient} from "../clients/token-allocator/TokenAllocator.client";
 import {TokenAllocatorData} from "../clients/token-allocator/TokenAllocator.types";
+import {CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
+import {PriceOracleQueryClient} from "../clients/price-oracle/PriceOracle.client";
 
 async function main() {
     const wallets = await readWalletsFromFile();
@@ -35,15 +37,15 @@ async function main() {
 
     let allocationResp: TokenAllocatorData = await allocatorClient.dailyAllocation()
     let total_alloc = Number(allocationResp.amount)
-    let avg_price = Math.floor(total_alloc / wallets.length / 0.08)
     console.log("Daily Allocation: ", BigInt(total_alloc))
-    console.log("avg_price: ", avg_price)
 
     let tbFactoryContractAddress = await getContractAddresses('TRIBUTE_FACTORY_CONTRACT_ADDRESS');
 
+    let coenUsdsRate = await queryActualRate(walletClient)
+
     let instructions: ExecuteInstruction[] = [];
     for (let i = 0; i < wallets.length; i++) {
-        let tribute = randomTribute(wallets[i].outbe_address, RUN_DATE, avg_price)
+        let tribute = randomTribute(wallets[i].outbe_address, RUN_DATE, coenUsdsRate)
         instructions.push({
                 contractAddress: tbFactoryContractAddress,
                 msg: tribute,
@@ -56,11 +58,11 @@ async function main() {
     console.log("Number of Tribute tokens: ", await tributeClient.numTokens())
 }
 
-function randomTribute(owner: string, day: string, avgPrice: number): any {
+function randomTribute(owner: string, day: string, coenUsdsRate: number): any {
     let uuid_id = require('crypto').randomUUID().toString()
     let cu_hashes = require('crypto').createHash('sha256').update(uuid_id).digest('hex');
     let settlement_amount = getRandomInt(90, 400);
-    let nominal_amount = Math.floor(settlement_amount / 0.012);
+    let nominal_amount = Math.floor(settlement_amount / coenUsdsRate);
     let tribute_draft_id = generateTributeDraftId(owner, day);
     console.log("Tribute draft id:", tribute_draft_id,
         "settlement_amount:", settlement_amount, "nominal_amount:", nominal_amount)
@@ -93,6 +95,21 @@ function randomTribute(owner: string, day: string, avgPrice: number): any {
             tribute_owner_l1: owner
         }
     }
+}
+
+async function queryActualRate(walletClient: CosmWasmClient): Promise<number> {
+    let address = await getContractAddresses('PRICE_ORACLE_CONTRACT_ADDRESS')
+    let client = new PriceOracleQueryClient(walletClient, address)
+    let response = await client.getLatestPrice({
+        token1: {
+            native: "coen"
+        },
+        token2: {
+            fiat: "usd"
+        },
+    })
+
+    return parseFloat(response.price)
 }
 
 main();
