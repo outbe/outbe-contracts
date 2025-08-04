@@ -332,11 +332,12 @@ fn do_execute_lysis(
     }
     let winners_len = winners.len();
 
-    let mut nod_id = UNUSED_NOD_ID.load(deps.storage)?;
+    let mut token_id_int = UNUSED_NOD_ID.load(deps.storage)?;
 
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
-        nod_id += 1;
+        token_id_int += 1;
+        let token_id = format_id(token_id_int);
         // todo check if we need to calc floor price at the moment of lysis or take from tribute
         let floor_price = exchange_rate.price * (Decimal::one() + vector_rate_dec);
 
@@ -344,11 +345,11 @@ fn do_execute_lysis(
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
-                token_id: nod_id.to_string(),
+                token_id: token_id.clone(),
                 owner: tribute.owner.to_string(),
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
-                        nod_id: format_id(nod_id),
+                        nod_id: token_id,
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
                         floor_rate: *vector_rate,
@@ -368,7 +369,7 @@ fn do_execute_lysis(
         messages.push(SubMsg::new(nod_mint));
     }
 
-    UNUSED_NOD_ID.save(deps.storage, &nod_id)?;
+    UNUSED_NOD_ID.save(deps.storage, &token_id_int)?;
 
     let undistributed_limit = lysis_limit.max(winners_sum) - winners_sum;
 
@@ -507,20 +508,21 @@ fn do_execute_touch(
     }
     let actual_winners_len = winners.len();
 
-    let mut nod_id = UNUSED_NOD_ID.load(deps.storage)?;
+    let mut token_id_int = UNUSED_NOD_ID.load(deps.storage)?;
 
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
-        nod_id += 1;
+        token_id_int += 1;
+        let token_id = format_id(token_id_int);
         let mod_issuance_price = exchange_rate.price.max(tribute.data.nominal_price_minor);
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
-                token_id: nod_id.to_string(),
+                token_id: token_id.clone(),
                 owner: tribute.owner.to_string(),
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
-                        nod_id: format_id(nod_id),
+                        nod_id: token_id,
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: tribute.data.nominal_price_minor,
                         floor_rate: Uint128::zero(),
@@ -540,7 +542,7 @@ fn do_execute_touch(
         messages.push(SubMsg::new(nod_mint));
     }
 
-    UNUSED_NOD_ID.save(deps.storage, &nod_id)?;
+    UNUSED_NOD_ID.save(deps.storage, &token_id_int)?;
 
     save_run_history(
         deps.storage,
