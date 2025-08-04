@@ -63,8 +63,8 @@ pub fn prepare_executions(
     )?;
 
     // NB: the bank gold ignot (400 troy ounces) price in coen
-    let gold_ignot_price =
-        (gold_price.price * Decimal::new(Uint128::new(400))) / exchange_rate.price;
+    let gold_ignot_price = gold_price.price / exchange_rate.price;
+    let gold_ignot_price = gold_ignot_price * Decimal::from_atomics(400u128, 0).unwrap();
 
     let metadosis_info: MetadosisInfo = match exchange_rate.day_type {
         DayType::Green => {

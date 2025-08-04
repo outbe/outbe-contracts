@@ -480,17 +480,19 @@ fn do_execute_touch(
     // Shuffle and pick winners
     allocated_tributes.shuffle(&mut rnd);
 
-    let (winners_count, win_amount) =
+    let (expected_winners_count, win_amount) =
         calc_touch_win_amount(touch_info.touch_limit, touch_info.gold_ignot_price);
 
     let mut winners: Vec<FullTributeData> = vec![];
     for tribute in allocated_tributes {
         WINNERS.save(deps.storage, tribute.token_id.clone(), &())?;
         winners.push(tribute);
-        if winners_count == winners.len() {
+        if expected_winners_count == winners.len() {
             break;
         }
     }
+    let actual_winners_len = winners.len();
+
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
         let nod_id = format!("{}_{}", tribute.token_id, run_today.number_of_runs);
@@ -533,7 +535,7 @@ fn do_execute_touch(
             capacity: touch_info.touch_limit,
             assigned_tributes: allocated_tributes_count,
             assigned_tributes_sum: touch_info.touch_limit,
-            winner_tributes: winners_count,
+            winner_tributes: actual_winners_len,
             winner_tributes_sum: touch_info.touch_limit,
         },
     )?;
