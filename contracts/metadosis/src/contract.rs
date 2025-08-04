@@ -348,7 +348,7 @@ fn do_execute_lysis(
                 owner: tribute.owner.to_string(),
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
-                        nod_id: nod_id.to_string(),
+                        nod_id: format_id(nod_id),
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
                         floor_rate: *vector_rate,
@@ -520,7 +520,7 @@ fn do_execute_touch(
                 owner: tribute.owner.to_string(),
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
-                        nod_id: nod_id.to_string(),
+                        nod_id: format_id(nod_id),
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: tribute.data.nominal_price_minor,
                         floor_rate: Uint128::zero(),
@@ -565,6 +565,14 @@ fn do_execute_touch(
                 .add_attribute("run", run_today.number_of_runs.to_string()),
         )
         .add_submessages(messages))
+}
+
+const ID_PADDING: usize = 10;
+
+fn format_id(id_num: u64) -> String {
+    // Define a constant for the padding width. A 10-digit number is large enough for a u64.
+    let object_id = format!("{:0>width$}", id_num, width = ID_PADDING);
+    object_id
 }
 
 fn save_run_history(
@@ -649,6 +657,7 @@ mod tests {
         assert_eq!(winners, 2);
         assert_eq!(amount, touch_limit / Uint128::new(2));
     }
+
     #[test]
     fn ignot_price_equal_to_touch_limit() {
         let touch_limit = Uint128::new(100) * DECIMALS;
@@ -657,5 +666,20 @@ mod tests {
         let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
         assert_eq!(winners, 2);
         assert_eq!(amount, touch_limit / Uint128::new(2));
+    }
+
+    #[test]
+    fn test_format_id() {
+        assert_eq!(format_id(1), "0000000001");
+        assert_eq!(format_id(12), "0000000012");
+        assert_eq!(format_id(123), "0000000123");
+        assert_eq!(format_id(1234), "0000001234");
+        assert_eq!(format_id(12345), "0000012345");
+        assert_eq!(format_id(123456), "0000123456");
+        assert_eq!(format_id(1234567), "0001234567");
+        assert_eq!(format_id(12345678), "0012345678");
+        assert_eq!(format_id(123456789), "0123456789");
+        assert_eq!(format_id(1234567890), "1234567890");
+        assert_eq!(format_id(12345678901), "12345678901");
     }
 }
