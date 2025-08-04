@@ -424,7 +424,14 @@ fn do_execute_touch(
         },
     )?;
 
-    let mut allocated_tributes = tributes.tributes;
+    let mut allocated_tributes: Vec<FullTributeData> = vec![];
+    for tribute in tributes.tributes {
+        if WINNERS.has(deps.storage, tribute.token_id.clone()) {
+            continue;
+        }
+        allocated_tributes.push(tribute);
+    }
+
     let allocated_tributes_count = allocated_tributes.len();
     println!(
         "Tributes in current run {}: count = {}",
@@ -480,10 +487,6 @@ fn do_execute_touch(
 
     let mut winners: Vec<FullTributeData> = vec![];
     for tribute in allocated_tributes {
-        if WINNERS.has(deps.storage, tribute.token_id.clone()) {
-            continue;
-        }
-
         WINNERS.save(deps.storage, tribute.token_id.clone(), &())?;
         winners.push(tribute);
         if winners_count == winners.len() {

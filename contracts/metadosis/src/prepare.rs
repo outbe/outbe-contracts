@@ -1,7 +1,7 @@
 use crate::deficit::{calc_lysis_deficits, calc_total_deficit};
 use crate::error::ContractError;
 use crate::state::{LysisInfo, MetadosisInfo, TouchInfo, CONFIG, METADOSIS_INFO};
-use cosmwasm_std::{Addr, DepsMut, QuerierWrapper, Uint128};
+use cosmwasm_std::{Addr, Decimal, DepsMut, QuerierWrapper, Uint128};
 use outbe_utils::consts::DECIMALS;
 use outbe_utils::date::WorldwideDay;
 use outbe_utils::denom::{Currency, Denom};
@@ -54,14 +54,17 @@ pub fn prepare_executions(
     let touch_limit = total_gratis_limit / Uint128::new(24);
     let mut total_lysis_limit = total_gratis_limit * Uint128::new(23) / Uint128::new(24);
 
-    let gold_ignot_price: price_oracle::types::PriceData = deps.querier.query_wasm_smart(
+    let gold_price: price_oracle::types::PriceData = deps.querier.query_wasm_smart(
         &price_oracle_address,
         &price_oracle::query::QueryMsg::GetLatestPrice {
             token1: Denom::Native("xau".to_string()),
             token2: Denom::Fiat(Currency::Usd),
         },
     )?;
-    let gold_ignot_price = gold_ignot_price.price / exchange_rate.price;
+
+    // NB: the bank gold ignot (400 troy ounces) price in coen
+    let gold_ignot_price =
+        (gold_price.price * Decimal::new(Uint128::new(400))) / exchange_rate.price;
 
     let metadosis_info: MetadosisInfo = match exchange_rate.day_type {
         DayType::Green => {

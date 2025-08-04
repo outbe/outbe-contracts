@@ -4,7 +4,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, Empty, Env, Order, StdResult, Uint128};
 use cw_storage_plus::Bound;
-use outbe_nft::query::{DEFAULT_LIMIT, MAX_LIMIT};
+use outbe_nft::query::MAX_LIMIT;
 use outbe_nft::state::Cw721Config;
 use outbe_utils::date::WorldwideDay;
 
@@ -155,7 +155,7 @@ fn query_daily_tributes(
     query_order: Option<Order>,
 ) -> StdResult<DailyTributesResponse> {
     // todo deal with limit maybe to propagate here amount?
-    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    let limit = limit.unwrap_or(MAX_LIMIT) as usize;
     let order = query_order.unwrap_or(Order::Ascending);
 
     let (start, end) = match order {
