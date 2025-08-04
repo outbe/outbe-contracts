@@ -570,7 +570,6 @@ fn do_execute_touch(
 const ID_PADDING: usize = 10;
 
 fn format_id(id_num: u64) -> String {
-    // Define a constant for the padding width. A 10-digit number is large enough for a u64.
     let object_id = format!("{:0>width$}", id_num, width = ID_PADDING);
     object_id
 }
