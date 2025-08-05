@@ -195,12 +195,11 @@ fn execute_mint(
         extension: data,
     };
 
-    config
-        .nft_info
-        .update(deps.storage, &token_id, |old| match old {
-            Some(_) => Err(ContractError::AlreadyExists {}),
-            None => Ok(token),
-        })?;
+    // NB: instead of update
+    if config.nft_info.has(deps.storage, &token_id) {
+        return Err(ContractError::AlreadyExists {});
+    }
+    config.nft_info.save(deps.storage, &token_id, &token)?;
 
     config.increment_tokens(deps.storage)?;
 
