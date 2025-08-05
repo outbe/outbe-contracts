@@ -510,6 +510,11 @@ fn do_execute_touch(
 
     let mut token_id_int = UNUSED_NOD_ID.load(deps.storage)?;
 
+    let tribute_info: tribute::query::TributeContractInfoResponse = deps
+        .querier
+        .query_wasm_smart(&tribute_address, &tribute::query::QueryMsg::ContractInfo {})?;
+    let tribute_info = tribute_info.collection_config;
+
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
         token_id_int += 1;
@@ -524,7 +529,7 @@ fn do_execute_touch(
                     entity: nod::msg::NodEntity {
                         nod_id: token_id,
                         settlement_currency: tribute.data.settlement_currency.clone(),
-                        symbolic_rate: tribute.data.nominal_price_minor,
+                        symbolic_rate: tribute_info.symbolic_rate,
                         floor_rate: Uint128::zero(),
                         nominal_price_minor: tribute.data.nominal_price_minor,
                         issuance_price_minor: mod_issuance_price,
