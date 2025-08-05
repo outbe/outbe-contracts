@@ -5,7 +5,7 @@ use crate::msg::{
 use crate::types::{TributeConfig, TributeData, TributeNft};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128};
+use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Order, Response, Uint128};
 use outbe_nft::execute::assert_minter;
 use outbe_nft::msg::CollectionInfoMsg;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
@@ -264,6 +264,17 @@ fn execute_burn_all(
 
     config.nft_info.clear(deps.storage);
     config.token_count.save(deps.storage, &0u64)?;
+
+    let cnt = config
+        .nft_info
+        .idx
+        .owner
+        .range_raw(deps.storage, None, None, Order::Ascending)
+        .count();
+
+    if cnt > 0 {
+        return Err(ContractError::CleanNotWork { count: cnt });
+    }
 
     Ok(Response::new()
         .add_attribute("action", "tribute::burn_all")
