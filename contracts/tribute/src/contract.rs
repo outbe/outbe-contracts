@@ -195,11 +195,12 @@ fn execute_mint(
         extension: data,
     };
 
-    // NB: instead of update
-    if config.nft_info.has(deps.storage, &token_id) {
-        return Err(ContractError::AlreadyExists {});
-    }
-    config.nft_info.save(deps.storage, &token_id, &token)?;
+    config
+        .nft_info
+        .update(deps.storage, &token_id, |old| match old {
+            Some(_) => Err(ContractError::AlreadyExists {}),
+            None => Ok(token),
+        })?;
 
     config.increment_tokens(deps.storage)?;
 
@@ -289,6 +290,7 @@ mod tests {
     use outbe_nft::state::Cw721Config;
     use outbe_utils::denom::{Currency, Denom};
     use std::str::FromStr;
+
     #[test]
     fn test_symbolics_calc() {
         let (nominal, load) = calc_sybolics(

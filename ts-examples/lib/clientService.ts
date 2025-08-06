@@ -11,50 +11,50 @@ let account: AccountData;
 
 
 export async function initClient(): Promise<{ walletClient: SigningCosmWasmClient, account: AccountData }> {
-  if (walletClient && account) return {walletClient, account};
-  let private_key = Buffer.from(
-    process.env.PRT_KEY!,
-    "hex"
-  );
+    if (walletClient && account) return {walletClient, account};
+    let private_key = Buffer.from(
+        process.env.PRT_KEY!,
+        "hex"
+    );
 
-  const wallet = await DirectSecp256k1Wallet.fromKey(
-    private_key,
-    "outbe"
-  );
-  walletClient = await SigningCosmWasmClient.connectWithSigner(
-    RPC_ENDPOINT,
-    wallet
-  );
-  [account] = await wallet.getAccounts();
-  console.log("Using runner address ", account.address);
+    const wallet = await DirectSecp256k1Wallet.fromKey(
+        private_key,
+        "outbe"
+    );
+    walletClient = await SigningCosmWasmClient.connectWithSigner(
+        RPC_ENDPOINT,
+        wallet
+    );
+    [account] = await wallet.getAccounts();
+    console.log("Using runner address ", account.address);
 
-  return {walletClient, account}
+    return {walletClient, account}
 }
 
 export async function getContractAddresses(name?: string) {
-  const {walletClient} = await initClient();
+    const {walletClient} = await initClient();
 
-  const contractResp = await walletClient.queryContractSmart(CONTRACT_REGISTRY_ADDRESS!, {
-      get_deployment: {commit_id: "7b9757499c5a705f9dd7209e603e4cfa14b01d12"},
+    const contractResp = await walletClient.queryContractSmart(CONTRACT_REGISTRY_ADDRESS!, {
+        get_deployment: {commit_id: null}, // null means latest
     })
-    .catch((error: any) => {
-      console.error(error);
-      return undefined;
-    });
+        .catch((error: any) => {
+            console.error(error);
+            return undefined;
+        });
 
 
-  if (!contractResp) return undefined;
+    if (!contractResp) return undefined;
 
-  const allAddresses = contractResp.deployment.contracts.reduce((acc: Record<string, string>, contract: any) => {
-    acc[contract.name] = contract.address;
-    return acc;
-  }, {});
+    const allAddresses = contractResp.deployment.contracts.reduce((acc: Record<string, string>, contract: any) => {
+        acc[contract.name] = contract.address;
+        return acc;
+    }, {});
 
-  if (name) {
-    return allAddresses[name];
-  }
+    if (name) {
+        return allAddresses[name];
+    }
 
-  return allAddresses;
+    return allAddresses;
 }
 
 
