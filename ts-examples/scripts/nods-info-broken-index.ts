@@ -10,7 +10,7 @@ async function main() {
     let height = await walletClient.getHeight()
     console.log("Current Height:", height)
 
-    const nodeAddress = await getContractAddresses('NOD_CONTRACT_ADDRESS');
+    const nodeAddress = await getContractAddresses('TRIBUTE_CONTRACT_ADDRESS');
     console.log("Node address: ", nodeAddress)
     const nodClient = new NodQueryClient(walletClient, nodeAddress)
     let tokensResp = await nodClient.numTokens();

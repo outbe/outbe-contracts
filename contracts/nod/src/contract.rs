@@ -143,8 +143,7 @@ fn execute_burn_all(
     // let token = config.nft_info.load(deps.storage, &token_id)?;
     // check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
 
-    config.nft_info.clear(deps.storage);
-    config.token_count.save(deps.storage, &0u64)?;
+    config.clean_tokens(deps.storage)?;
 
     Ok(Response::new()
         .add_attribute("action", "nod::burn_all")

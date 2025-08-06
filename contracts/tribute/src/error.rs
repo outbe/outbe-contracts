@@ -18,7 +18,4 @@ pub enum ContractError {
     HashAlreadyExists {},
     #[error("Submission failed: tribute already exists on the network")]
     AlreadyExists {},
-
-    #[error("CleanNotWork: {count}")]
-    CleanNotWork { count: usize },
 }

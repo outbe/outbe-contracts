@@ -34,9 +34,8 @@ export async function initClient(): Promise<{ walletClient: SigningCosmWasmClien
 export async function getContractAddresses(name?: string) {
   const {walletClient} = await initClient();
 
-  const contractResp = await walletClient
-    .queryContractSmart(CONTRACT_REGISTRY_ADDRESS!, {
-      get_deployment: {is_latest: true},
+  const contractResp = await walletClient.queryContractSmart(CONTRACT_REGISTRY_ADDRESS!, {
+      get_deployment: {commit_id: "7b9757499c5a705f9dd7209e603e4cfa14b01d12"},
     })
     .catch((error: any) => {
       console.error(error);
