@@ -153,7 +153,6 @@ fn execute_offer_insecure(
         return Err(ContractError::CUEmpty {});
     }
 
-    //TODO change it to info.sender
     let tribute_owner = {
         #[cfg(feature = "demo")]
         {

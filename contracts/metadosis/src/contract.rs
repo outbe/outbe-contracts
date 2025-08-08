@@ -626,8 +626,6 @@ fn execute_burn_all(
     _env: &Env,
     info: &MessageInfo,
 ) -> Result<Response, ContractError> {
-    // TODO verify ownership
-
     METADOSIS_INFO.clear(deps.storage);
     DAILY_RUN_STATE.clear(deps.storage);
     DAILY_RUNS_HISTORY.clear(deps.storage);
