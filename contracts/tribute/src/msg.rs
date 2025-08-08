@@ -42,6 +42,7 @@ pub enum ExecuteMsg {
     Burn {
         token_id: String,
     },
+    #[cfg(feature = "demo")]
     /// Removes all tributes previously submitted
     BurnAll {},
     /// Removes all tributes previously submitted

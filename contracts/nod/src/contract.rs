@@ -63,6 +63,7 @@ pub fn execute(
             extension,
         } => execute_submit(deps, &env, &info, token_id, owner, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
+        #[cfg(feature = "demo")]
         ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
     }
 }
@@ -133,6 +134,7 @@ fn execute_burn(
         .add_attribute("token_id", token_id))
 }
 
+#[cfg(feature = "demo")]
 fn execute_burn_all(
     deps: DepsMut,
     _env: &Env,
