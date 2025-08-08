@@ -87,6 +87,7 @@ pub fn execute(
             extension,
         } => execute_mint(deps, &env, &info, token_id, owner, token_uri, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
+        #[cfg(feature = "demo")]
         ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
         // todo remove only for day
         ExecuteMsg::BurnForDay { .. } => execute_burn_all(deps, &env, &info),
@@ -252,6 +253,8 @@ fn execute_burn(
                 .add_attribute("token_id", token_id),
         ))
 }
+
+#[cfg(feature = "demo")]
 fn execute_burn_all(
     deps: DepsMut,
     _env: &Env,
