@@ -71,6 +71,7 @@ pub fn execute(
     match msg {
         ExecuteMsg::Prepare { run_date } => execute_prepare(deps, env, info, run_date),
         ExecuteMsg::Execute { run_date } => execute_run(deps, env, info, run_date),
+        #[cfg(feature = "demo")]
         ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
     }
 }
@@ -619,6 +620,7 @@ fn get_execution_date(
     Ok(execution_date)
 }
 
+#[cfg(feature = "demo")]
 fn execute_burn_all(
     deps: DepsMut,
     _env: &Env,
