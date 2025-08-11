@@ -32,8 +32,6 @@ pub const DAILY_RUNS_HISTORY: Map<WorldwideDay, DailyRunHistory> = Map::new("dai
 /// Saves winners to do not peek them in Touch
 pub const WINNERS: Map<String, ()> = Map::new("tribute_winners");
 
-pub const UNUSED_NOD_ID: Item<u64> = Item::new("unused_nod_id");
-
 #[cw_serde]
 pub enum MetadosisInfo {
     LysisAndTouch {
