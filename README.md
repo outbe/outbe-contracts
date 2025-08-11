@@ -21,6 +21,24 @@ Main contracts:
 
 Please check requirements at the official [CosmWasm book](https://book.cosmwasm.com/setting-up-env.html).
 
+## Development Setup
+
+After cloning this repository, install dependencies and set up the development environment:
+
+```shell
+make install
+```
+
+This will:
+- Install Rust dependencies (`cargo build`)
+- Set up git hooks for code quality
+
+The pre-commit hooks automatically run:
+- `cargo fmt` (code formatting)  
+- `cargo clippy` (linting with warnings as errors)
+
+The hooks use Rust toolchain version 1.83.0 for consistency.
+
 ## How to build
 
 To build the Wasm binary containing smart contracts, run:
