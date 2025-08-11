@@ -3,9 +3,8 @@ use crate::msg::{
     ExecuteMsg, InstantiateMsg, TeeSetup, TributeMintData, TributeMintExtension, TributeMsg,
     ZkProof,
 };
-use crate::state::{Config, CONFIG, OWNER, UNUSED_TOKEN_ID, USED_CU_HASHES, USED_TRIBUTE_IDS};
+use crate::state::{Config, CONFIG, OWNER, USED_CU_HASHES, USED_TRIBUTE_IDS};
 use crate::types::TributeInputPayload;
-use blake3::Hasher;
 use cosmwasm_std::{
     entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, HexBinary, MessageInfo,
     Response, Storage, WasmMsg,
@@ -14,6 +13,7 @@ use cw_ownable::Action;
 use outbe_utils::amount_utils::normalize_amount;
 use outbe_utils::date::{iso_to_ts, Iso8601Date};
 use outbe_utils::denom::Denom;
+use outbe_utils::hash_utils;
 
 const CONTRACT_NAME: &str = "outbe.net:tribute-factory";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -34,8 +34,6 @@ pub fn instantiate(
             tee_config: None, // todo impl, in scope of tee
         },
     )?;
-
-    UNUSED_TOKEN_ID.save(deps.storage, &0)?;
 
     // ---- set owner ----
     let owner = msg.owner.unwrap_or(info.sender);
@@ -150,11 +148,14 @@ fn execute_offer_insecure(
     let timestamp_date = iso_to_ts(&tribute_input.worldwide_day)?;
     // let timestamp_date = _env.block.time.seconds();
 
-    let tribute = tee_obfuscate(tribute_input)?;
+    let tribute = tee_obfuscate(tribute_input.clone())?;
     update_used_state(deps.storage, &tribute)?;
 
-    let tribute_id =
-        UNUSED_TOKEN_ID.update(deps.storage, |old| Ok::<u64, ContractError>(old + 1))?;
+    let tribute_id = generate_tribute_id(
+        &tribute.tribute_draft_id,
+        &tribute_owner,
+        &tribute_input.worldwide_day,
+    );
 
     let settlement_amount = normalize_amount(
         tribute.settlement_base_amount,
@@ -229,11 +230,25 @@ fn update_used_state(
 }
 
 pub fn generate_tribute_draft_id_hash(owner: &String, worldwide_day: &Iso8601Date) -> HexBinary {
-    let mut hasher = Hasher::new();
-    hasher.update(owner.as_bytes());
-    hasher.update(worldwide_day.as_bytes());
-    let hash_bytes: [u8; 32] = hasher.finalize().into();
-    HexBinary::from(hash_bytes.as_ref())
+    hash_utils::generate_hash_id(
+        "tribute_draft_id",
+        vec![owner.as_bytes(), worldwide_day.as_bytes()],
+    )
+}
+
+fn generate_tribute_id(
+    token_id: &HexBinary,
+    owner: &Addr,
+    worldwide_day: &Iso8601Date,
+) -> HexBinary {
+    hash_utils::generate_hash_id(
+        "tribute-factory:tribute_id",
+        vec![
+            token_id.as_slice(),
+            owner.as_bytes(),
+            worldwide_day.as_bytes(),
+        ],
+    )
 }
 
 #[cfg(test)]

@@ -3,19 +3,18 @@ use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::prepare;
 use crate::state::{
     Config, DailyRunHistory, DailyRunState, LysisInfo, MetadosisInfo, RunHistoryInfo, RunType,
-    TouchInfo, CONFIG, CREATOR, DAILY_RUNS_HISTORY, DAILY_RUN_STATE, METADOSIS_INFO, UNUSED_NOD_ID,
-    WINNERS,
+    TouchInfo, CONFIG, CREATOR, DAILY_RUNS_HISTORY, DAILY_RUN_STATE, METADOSIS_INFO, WINNERS,
 };
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    from_json, to_json_binary, Decimal, DepsMut, Env, Event, MessageInfo, Reply, Response,
-    StdResult, Storage, SubMsg, Uint128, WasmMsg,
+    from_json, to_json_binary, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Reply,
+    Response, StdResult, Storage, SubMsg, Uint128, WasmMsg,
 };
 use cw_utils::ParseReplyError::SubMsgFailure;
 use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
-use outbe_utils::date;
 use outbe_utils::date::WorldwideDay;
+use outbe_utils::{date, hash_utils};
 use rand::prelude::SliceRandom;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -53,8 +52,6 @@ pub fn instantiate(
             deficit: msg.deficit,
         },
     )?;
-
-    UNUSED_NOD_ID.save(deps.storage, &0)?;
 
     Ok(Response::default()
         .add_attribute("action", "metadosis::instantiate")
@@ -332,12 +329,10 @@ fn do_execute_lysis(
     }
     let winners_len = winners.len();
 
-    let mut token_id_int = UNUSED_NOD_ID.load(deps.storage)?;
-
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
-        token_id_int += 1;
-        let token_id = format_id(token_id_int);
+        let token_id = generate_nod_id(&tribute.token_id, &tribute.owner);
+
         // todo check if we need to calc floor price at the moment of lysis or take from tribute
         let floor_price = exchange_rate.price * (Decimal::one() + vector_rate_dec);
 
@@ -345,11 +340,11 @@ fn do_execute_lysis(
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
-                token_id: token_id.clone(),
+                token_id: token_id.to_hex(),
                 owner: tribute.owner.to_string(),
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
-                        nod_id: token_id,
+                        nod_id: token_id.to_hex(),
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
                         floor_rate: *vector_rate,
@@ -368,8 +363,6 @@ fn do_execute_lysis(
         };
         messages.push(SubMsg::new(nod_mint));
     }
-
-    UNUSED_NOD_ID.save(deps.storage, &token_id_int)?;
 
     let undistributed_limit = lysis_limit.max(winners_sum) - winners_sum;
 
@@ -508,8 +501,6 @@ fn do_execute_touch(
     }
     let actual_winners_len = winners.len();
 
-    let mut token_id_int = UNUSED_NOD_ID.load(deps.storage)?;
-
     let tribute_info: tribute::query::TributeContractInfoResponse = deps
         .querier
         .query_wasm_smart(&tribute_address, &tribute::query::QueryMsg::ContractInfo {})?;
@@ -517,17 +508,17 @@ fn do_execute_touch(
 
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
-        token_id_int += 1;
-        let token_id = format_id(token_id_int);
+        let token_id = generate_nod_id(&tribute.token_id, &tribute.owner);
+
         let mod_issuance_price = exchange_rate.price.max(tribute.data.nominal_price_minor);
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
-                token_id: token_id.clone(),
+                token_id: token_id.to_hex(),
                 owner: tribute.owner.to_string(),
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
-                        nod_id: token_id,
+                        nod_id: token_id.to_hex(),
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
                         floor_rate: Uint128::zero(),
@@ -546,8 +537,6 @@ fn do_execute_touch(
         };
         messages.push(SubMsg::new(nod_mint));
     }
-
-    UNUSED_NOD_ID.save(deps.storage, &token_id_int)?;
 
     save_run_history(
         deps.storage,
@@ -574,13 +563,6 @@ fn do_execute_touch(
         .add_submessages(messages))
 }
 
-const ID_PADDING: usize = 10;
-
-fn format_id(id_num: u64) -> String {
-    let object_id = format!("{:0>width$}", id_num, width = ID_PADDING);
-    object_id
-}
-
 fn save_run_history(
     store: &mut dyn Storage,
     execution_date: WorldwideDay,
@@ -593,6 +575,13 @@ fn save_run_history(
     history.data.push(run_history);
     DAILY_RUNS_HISTORY.save(store, execution_date, &history)?;
     Ok(())
+}
+
+fn generate_nod_id(token_id: &String, owner: &String) -> HexBinary {
+    hash_utils::generate_hash_id(
+        "metadosis:nod_id",
+        vec![token_id.as_bytes(), owner.as_bytes()],
+    )
 }
 
 fn calc_touch_win_amount(touch_limit: Uint128, ignot_price: Decimal) -> (usize, Uint128) {
@@ -675,17 +664,51 @@ mod tests {
     }
 
     #[test]
-    fn test_format_id() {
-        assert_eq!(format_id(1), "0000000001");
-        assert_eq!(format_id(12), "0000000012");
-        assert_eq!(format_id(123), "0000000123");
-        assert_eq!(format_id(1234), "0000001234");
-        assert_eq!(format_id(12345), "0000012345");
-        assert_eq!(format_id(123456), "0000123456");
-        assert_eq!(format_id(1234567), "0001234567");
-        assert_eq!(format_id(12345678), "0012345678");
-        assert_eq!(format_id(123456789), "0123456789");
-        assert_eq!(format_id(1234567890), "1234567890");
-        assert_eq!(format_id(12345678901), "12345678901");
+    fn test_generate_nod_id_basic() {
+        let token_id = "token123".to_string();
+        let owner = "owner456".to_string();
+        let nod_id = generate_nod_id(&token_id, &owner);
+
+        // Check that output is a valid hex string
+        assert!(nod_id.to_hex().chars().all(|c| c.is_ascii_hexdigit()));
+        // Check length is 64 (32 bytes as hex)
+        assert_eq!(nod_id.len(), 32);
+    }
+
+    #[test]
+    fn test_generate_nod_id_deterministic() {
+        let token_id = "token123".to_string();
+        let owner = "owner456".to_string();
+
+        let nod_id1 = generate_nod_id(&token_id, &owner);
+        let nod_id2 = generate_nod_id(&token_id, &owner);
+
+        // Same inputs should produce same output
+        assert_eq!(nod_id1, nod_id2);
+    }
+
+    #[test]
+    fn test_generate_nod_id_unique() {
+        let token_id1 = "token123".to_string();
+        let token_id2 = "token124".to_string();
+        let owner = "owner456".to_string();
+
+        let nod_id1 = generate_nod_id(&token_id1, &owner);
+        let nod_id2 = generate_nod_id(&token_id2, &owner);
+
+        // Different inputs should produce different outputs
+        assert_ne!(nod_id1, nod_id2);
+    }
+
+    #[test]
+    fn test_generate_nod_id_empty_inputs() {
+        let empty_token = "".to_string();
+        let empty_owner = "".to_string();
+
+        let nod_id = generate_nod_id(&empty_token, &empty_owner);
+
+        // Should still produce valid hex string of correct length
+        assert!(nod_id.to_hex().chars().all(|c| c.is_ascii_hexdigit()));
+        assert_eq!(nod_id.len(), 32);
     }
 }
