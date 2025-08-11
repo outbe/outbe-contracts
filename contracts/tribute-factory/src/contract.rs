@@ -152,8 +152,8 @@ fn execute_offer_insecure(
     update_used_state(deps.storage, &tribute)?;
 
     let tribute_id = generate_tribute_id(
-        &tribute.tribute_draft_id.to_hex(),
-        &tribute_owner.to_string(),
+        &tribute.tribute_draft_id,
+        &tribute_owner,
         &tribute_input.worldwide_day,
     );
 
@@ -238,13 +238,13 @@ pub fn generate_tribute_draft_id_hash(owner: &String, worldwide_day: &Iso8601Dat
 }
 
 fn generate_tribute_id(
-    token_id: &String,
-    owner: &String,
+    token_id: &HexBinary,
+    owner: &Addr,
     worldwide_day: &Iso8601Date,
 ) -> HexBinary {
     let mut hasher = Hasher::new();
     hasher.update("tribute-factory:tribute_id:".as_bytes());
-    hasher.update(token_id.as_bytes());
+    hasher.update(token_id.as_slice());
     hasher.update(&b':'.to_ne_bytes());
     hasher.update(owner.as_bytes());
     hasher.update(&b':'.to_ne_bytes());
