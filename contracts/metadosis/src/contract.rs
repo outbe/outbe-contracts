@@ -332,7 +332,7 @@ fn do_execute_lysis(
 
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
-        let token_id = generate_nod_id(tribute.token_id.clone(), tribute.owner.clone());
+        let token_id = generate_nod_id(&tribute.token_id, &tribute.owner);
 
         // todo check if we need to calc floor price at the moment of lysis or take from tribute
         let floor_price = exchange_rate.price * (Decimal::one() + vector_rate_dec);
@@ -509,7 +509,7 @@ fn do_execute_touch(
 
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
-        let token_id = generate_nod_id(tribute.token_id.clone(), tribute.owner.clone());
+        let token_id = generate_nod_id(&tribute.token_id, &tribute.owner);
 
         let mod_issuance_price = exchange_rate.price.max(tribute.data.nominal_price_minor);
         let nod_mint = WasmMsg::Execute {
@@ -578,7 +578,7 @@ fn save_run_history(
     Ok(())
 }
 
-fn generate_nod_id(token_id: String, owner: String) -> HexBinary {
+fn generate_nod_id(token_id: &String, owner: &String) -> HexBinary {
     let mut hasher = Hasher::new();
     hasher.update("metadosis:nod_id:".as_bytes());
     hasher.update(token_id.as_bytes());
@@ -671,7 +671,7 @@ mod tests {
     fn test_generate_nod_id_basic() {
         let token_id = "token123".to_string();
         let owner = "owner456".to_string();
-        let nod_id = generate_nod_id(token_id.clone(), owner.clone());
+        let nod_id = generate_nod_id(&token_id, &owner);
 
         // Check that output is a valid hex string
         assert!(nod_id.to_hex().chars().all(|c| c.is_ascii_hexdigit()));
@@ -684,8 +684,8 @@ mod tests {
         let token_id = "token123".to_string();
         let owner = "owner456".to_string();
 
-        let nod_id1 = generate_nod_id(token_id.clone(), owner.clone());
-        let nod_id2 = generate_nod_id(token_id, owner);
+        let nod_id1 = generate_nod_id(&token_id, &owner);
+        let nod_id2 = generate_nod_id(&token_id, &owner);
 
         // Same inputs should produce same output
         assert_eq!(nod_id1, nod_id2);
@@ -697,8 +697,8 @@ mod tests {
         let token_id2 = "token124".to_string();
         let owner = "owner456".to_string();
 
-        let nod_id1 = generate_nod_id(token_id1, owner.clone());
-        let nod_id2 = generate_nod_id(token_id2, owner);
+        let nod_id1 = generate_nod_id(&token_id1, &owner);
+        let nod_id2 = generate_nod_id(&token_id2, &owner);
 
         // Different inputs should produce different outputs
         assert_ne!(nod_id1, nod_id2);
@@ -709,7 +709,7 @@ mod tests {
         let empty_token = "".to_string();
         let empty_owner = "".to_string();
 
-        let nod_id = generate_nod_id(empty_token, empty_owner);
+        let nod_id = generate_nod_id(&empty_token, &empty_owner);
 
         // Should still produce valid hex string of correct length
         assert!(nod_id.to_hex().chars().all(|c| c.is_ascii_hexdigit()));

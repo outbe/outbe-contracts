@@ -3,7 +3,7 @@ use crate::msg::{
     ExecuteMsg, InstantiateMsg, TeeSetup, TributeMintData, TributeMintExtension, TributeMsg,
     ZkProof,
 };
-use crate::state::{Config, CONFIG, OWNER, UNUSED_TOKEN_ID, USED_CU_HASHES, USED_TRIBUTE_IDS};
+use crate::state::{Config, CONFIG, OWNER, USED_CU_HASHES, USED_TRIBUTE_IDS};
 use crate::types::TributeInputPayload;
 use blake3::Hasher;
 use cosmwasm_std::{
@@ -34,8 +34,6 @@ pub fn instantiate(
             tee_config: None, // todo impl, in scope of tee
         },
     )?;
-
-    UNUSED_TOKEN_ID.save(deps.storage, &0)?;
 
     // ---- set owner ----
     let owner = msg.owner.unwrap_or(info.sender);
@@ -150,11 +148,14 @@ fn execute_offer_insecure(
     let timestamp_date = iso_to_ts(&tribute_input.worldwide_day)?;
     // let timestamp_date = _env.block.time.seconds();
 
-    let tribute = tee_obfuscate(tribute_input)?;
+    let tribute = tee_obfuscate(tribute_input.clone())?;
     update_used_state(deps.storage, &tribute)?;
 
-    let tribute_id =
-        UNUSED_TOKEN_ID.update(deps.storage, |old| Ok::<u64, ContractError>(old + 1))?;
+    let tribute_id = generate_tribute_id(
+        &tribute.tribute_draft_id.to_hex(),
+        &tribute_owner.to_string(),
+        &tribute_input.worldwide_day,
+    );
 
     let settlement_amount = normalize_amount(
         tribute.settlement_base_amount,
@@ -231,6 +232,22 @@ fn update_used_state(
 pub fn generate_tribute_draft_id_hash(owner: &String, worldwide_day: &Iso8601Date) -> HexBinary {
     let mut hasher = Hasher::new();
     hasher.update(owner.as_bytes());
+    hasher.update(worldwide_day.as_bytes());
+    let hash_bytes: [u8; 32] = hasher.finalize().into();
+    HexBinary::from(hash_bytes.as_ref())
+}
+
+fn generate_tribute_id(
+    token_id: &String,
+    owner: &String,
+    worldwide_day: &Iso8601Date,
+) -> HexBinary {
+    let mut hasher = Hasher::new();
+    hasher.update("tribute-factory:tribute_id:".as_bytes());
+    hasher.update(token_id.as_bytes());
+    hasher.update(&b':'.to_ne_bytes());
+    hasher.update(owner.as_bytes());
+    hasher.update(&b':'.to_ne_bytes());
     hasher.update(worldwide_day.as_bytes());
     let hash_bytes: [u8; 32] = hasher.finalize().into();
     HexBinary::from(hash_bytes.as_ref())
