@@ -504,7 +504,10 @@ fn deploy_price_oracle(app: &mut App, owner: Addr) -> DeployedContract {
     let code = ContractWrapper::new(execute, instantiate, query);
     let code_id = app.store_code(Box::new(code));
 
-    let instantiate_msg = InstantiateMsg { creator: None, vwap_window_seconds: Some(300) };
+    let instantiate_msg = InstantiateMsg {
+        creator: None,
+        vwap_window_seconds: Some(300),
+    };
 
     let address = app
         .instantiate_contract(
