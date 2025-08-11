@@ -5,7 +5,6 @@ use crate::state::{
     Config, DailyRunHistory, DailyRunState, LysisInfo, MetadosisInfo, RunHistoryInfo, RunType,
     TouchInfo, CONFIG, CREATOR, DAILY_RUNS_HISTORY, DAILY_RUN_STATE, METADOSIS_INFO, WINNERS,
 };
-use blake3::Hasher;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
@@ -14,8 +13,8 @@ use cosmwasm_std::{
 };
 use cw_utils::ParseReplyError::SubMsgFailure;
 use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
-use outbe_utils::date;
 use outbe_utils::date::WorldwideDay;
+use outbe_utils::{date, hash_utils};
 use rand::prelude::SliceRandom;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -579,13 +578,10 @@ fn save_run_history(
 }
 
 fn generate_nod_id(token_id: &String, owner: &String) -> HexBinary {
-    let mut hasher = Hasher::new();
-    hasher.update("metadosis:nod_id:".as_bytes());
-    hasher.update(token_id.as_bytes());
-    hasher.update(&b':'.to_ne_bytes());
-    hasher.update(owner.as_bytes());
-    let hash_bytes: [u8; 32] = hasher.finalize().into();
-    HexBinary::from(hash_bytes.as_ref())
+    hash_utils::generate_hash_id(
+        "metadosis:nod_id",
+        vec![token_id.as_bytes(), owner.as_bytes()],
+    )
 }
 
 fn calc_touch_win_amount(touch_limit: Uint128, ignot_price: Decimal) -> (usize, Uint128) {

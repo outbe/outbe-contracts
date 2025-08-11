@@ -5,7 +5,6 @@ use crate::msg::{
 };
 use crate::state::{Config, CONFIG, OWNER, USED_CU_HASHES, USED_TRIBUTE_IDS};
 use crate::types::TributeInputPayload;
-use blake3::Hasher;
 use cosmwasm_std::{
     entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, HexBinary, MessageInfo,
     Response, Storage, WasmMsg,
@@ -14,6 +13,7 @@ use cw_ownable::Action;
 use outbe_utils::amount_utils::normalize_amount;
 use outbe_utils::date::{iso_to_ts, Iso8601Date};
 use outbe_utils::denom::Denom;
+use outbe_utils::hash_utils;
 
 const CONTRACT_NAME: &str = "outbe.net:tribute-factory";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -230,11 +230,10 @@ fn update_used_state(
 }
 
 pub fn generate_tribute_draft_id_hash(owner: &String, worldwide_day: &Iso8601Date) -> HexBinary {
-    let mut hasher = Hasher::new();
-    hasher.update(owner.as_bytes());
-    hasher.update(worldwide_day.as_bytes());
-    let hash_bytes: [u8; 32] = hasher.finalize().into();
-    HexBinary::from(hash_bytes.as_ref())
+    hash_utils::generate_hash_id(
+        "tribute_draft_id",
+        vec![owner.as_bytes(), worldwide_day.as_bytes()],
+    )
 }
 
 fn generate_tribute_id(
@@ -242,15 +241,14 @@ fn generate_tribute_id(
     owner: &Addr,
     worldwide_day: &Iso8601Date,
 ) -> HexBinary {
-    let mut hasher = Hasher::new();
-    hasher.update("tribute-factory:tribute_id:".as_bytes());
-    hasher.update(token_id.as_slice());
-    hasher.update(&b':'.to_ne_bytes());
-    hasher.update(owner.as_bytes());
-    hasher.update(&b':'.to_ne_bytes());
-    hasher.update(worldwide_day.as_bytes());
-    let hash_bytes: [u8; 32] = hasher.finalize().into();
-    HexBinary::from(hash_bytes.as_ref())
+    hash_utils::generate_hash_id(
+        "tribute-factory:tribute_id",
+        vec![
+            token_id.as_slice(),
+            owner.as_bytes(),
+            worldwide_day.as_bytes(),
+        ],
+    )
 }
 
 #[cfg(test)]

@@ -878,7 +878,6 @@ checksum = "32a282da65faaf38286cf3be983213fcf1d2e2a58700e808f83f4ea9a4804bc0"
 name = "metadosis"
 version = "0.1.0"
 dependencies = [
- "blake3",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-multi-test",
@@ -969,6 +968,7 @@ dependencies = [
 name = "outbe-utils"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "chrono",
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -1489,7 +1489,6 @@ dependencies = [
 name = "tribute-factory"
 version = "0.1.0"
 dependencies = [
- "blake3",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-multi-test",

@@ -34,8 +34,10 @@ export async function readWalletsFromFile(): Promise<WalletKeyInfo[]> {
 export function generateTributeDraftId(owner: string, worldwideDay: string): string {
     const hasher = blake3.create();
 
-    // Обновляем hash с данными
+    hasher.update(new TextEncoder().encode("tribute_draft_id"));
+    hasher.update(new TextEncoder().encode(":"));
     hasher.update(new TextEncoder().encode(owner));
+    hasher.update(new TextEncoder().encode(":"));
     hasher.update(new TextEncoder().encode(worldwideDay));
 
     const hashBytes = hasher.digest();

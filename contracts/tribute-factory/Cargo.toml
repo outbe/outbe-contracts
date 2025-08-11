@@ -19,7 +19,6 @@ cw2 = { workspace = true }
 thiserror = { workspace = true }
 cw-ownable = { workspace = true }
 outbe-utils = { workspace = true }
-blake3 = { workspace = true }
 tribute = { version = "*", path = "../tribute", features = ["library"] }
 
 [dev-dependencies]

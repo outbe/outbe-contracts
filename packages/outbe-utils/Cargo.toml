@@ -9,3 +9,4 @@ cosmwasm-std = { workspace = true }
 thiserror = { workspace = true }
 cosmwasm-schema = { workspace = true }
 chrono = { version = "0.4.41", default-features = false }
+blake3 = { workspace = true }
