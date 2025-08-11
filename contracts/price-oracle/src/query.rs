@@ -1,8 +1,11 @@
 use crate::error::ContractError;
-use crate::helpers::get_pair_id;
+use crate::helpers::{calculate_vwap, get_pair_id};
 
-use crate::state::{CREATOR, LATEST_PRICES, PAIR_DAY_TYPES, PRICE_HISTORY, TOKEN_PAIRS};
-use crate::types::{DayType, PriceData, TokenPair, TokenPairPrice};
+use crate::state::{
+    CREATOR, LATEST_PRICES, LATEST_VWAP, PAIR_DAY_TYPES, PRICE_HISTORY, TOKEN_PAIRS, VWAP_CONFIG,
+    VWAP_HISTORY,
+};
+use crate::types::{DayType, PriceData, TokenPair, TokenPairPrice, VwapConfig, VwapData};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -35,10 +38,21 @@ pub enum QueryMsg {
     GetAllPairs {},
     #[returns(DayType)]
     GetDayType { token1: Denom, token2: Denom },
+    #[returns(VwapData)]
+    GetVwap { token1: Denom, token2: Denom },
+    #[returns(VwapConfig)]
+    GetVwapConfig {},
+    #[returns(Vec<VwapData>)]
+    GetVwapHistory {
+        token1: Denom,
+        token2: Denom,
+        start_time: Timestamp,
+        end_time: Timestamp,
+    },
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetPrice {} => to_json_binary(&query_price(deps.storage)?),
         QueryMsg::GetCreatorOwnership {} => to_json_binary(&query_creator_ownership(deps.storage)?),
@@ -58,6 +72,20 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetAllPairs {} => to_json_binary(&query_all_pairs(deps.storage)?),
         QueryMsg::GetDayType { token1, token2 } => to_json_binary(
             &query_day_type(deps.storage, token1, token2)
+                .map_err(|e| StdError::generic_err(e.to_string()))?,
+        ),
+        QueryMsg::GetVwap { token1, token2 } => to_json_binary(
+            &query_vwap(deps, env, token1, token2)
+                .map_err(|e| StdError::generic_err(e.to_string()))?,
+        ),
+        QueryMsg::GetVwapConfig {} => to_json_binary(&query_vwap_config(deps.storage)?),
+        QueryMsg::GetVwapHistory {
+            token1,
+            token2,
+            start_time,
+            end_time,
+        } => to_json_binary(
+            &query_vwap_history(deps.storage, token1, token2, start_time, end_time)
                 .map_err(|e| StdError::generic_err(e.to_string()))?,
         ),
     }
@@ -157,4 +185,67 @@ fn query_day_type(
         .may_load(storage, pair_id.clone())
         .map_err(ContractError::Std)?
         .ok_or_else(|| ContractError::DayTypeNotFound { pair_id })
+}
+
+fn query_vwap(
+    deps: Deps,
+    env: Env,
+    token1: Denom,
+    token2: Denom,
+) -> Result<VwapData, ContractError> {
+    // Validate tokens are different
+    if token1 == token2 {
+        return Err(ContractError::InvalidTokenPair {});
+    }
+
+    let pair_id = get_pair_id(&token1, &token2);
+
+    // Try to get cached VWAP first
+    if let Some(vwap) = LATEST_VWAP.may_load(deps.storage, pair_id.clone())? {
+        return Ok(vwap);
+    }
+
+    // If no cached VWAP, calculate it
+    let history = PRICE_HISTORY
+        .may_load(deps.storage, pair_id.clone())?
+        .unwrap_or_default();
+
+    let vwap_config = VWAP_CONFIG.load(deps.storage)?;
+
+    calculate_vwap(&history, env.block.time, vwap_config.window_seconds)
+        .ok_or(ContractError::VwapNotAvailable { pair_id })
+}
+
+fn query_vwap_config(storage: &dyn Storage) -> StdResult<VwapConfig> {
+    VWAP_CONFIG.load(storage)
+}
+
+fn query_vwap_history(
+    storage: &dyn Storage,
+    token1: Denom,
+    token2: Denom,
+    start_time: Timestamp,
+    end_time: Timestamp,
+) -> Result<Vec<VwapData>, ContractError> {
+    // Validate tokens are different
+    if token1 == token2 {
+        return Err(ContractError::InvalidTokenPair {});
+    }
+
+    let pair_id = get_pair_id(&token1, &token2);
+
+    // Validate time range
+    if start_time >= end_time {
+        return Err(ContractError::InvalidTimeRange {});
+    }
+
+    let history = VWAP_HISTORY.may_load(storage, pair_id)?.unwrap_or_default();
+
+    // Filter by time range
+    let filtered_history: Vec<VwapData> = history
+        .into_iter()
+        .filter(|vwap_data| vwap_data.timestamp >= start_time && vwap_data.timestamp <= end_time)
+        .collect();
+
+    Ok(filtered_history)
 }

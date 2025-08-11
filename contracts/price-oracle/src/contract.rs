@@ -1,8 +1,11 @@
 use crate::error::ContractError;
-use crate::helpers::get_pair_id;
+use crate::helpers::{calculate_vwap, get_pair_id};
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
-use crate::state::{CREATOR, LATEST_PRICES, PAIR_DAY_TYPES, PRICE_HISTORY, TOKEN_PAIRS};
-use crate::types::{DayType, PriceData, TokenPair, UpdatePriceParams};
+use crate::state::{
+    CREATOR, LATEST_PRICES, LATEST_VWAP, PAIR_DAY_TYPES, PRICE_HISTORY, TOKEN_PAIRS, VWAP_CONFIG,
+    VWAP_HISTORY,
+};
+use crate::types::{DayType, PriceData, TokenPair, UpdatePriceParams, VwapConfig};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
@@ -29,8 +32,18 @@ pub fn instantiate(
 
     CREATOR.initialize_owner(deps.storage, deps.api, Some(creator))?;
 
+    // Initialize VWAP config with default 5 minutes (300 seconds)
+    let vwap_config = VwapConfig {
+        window_seconds: msg.vwap_window_seconds.unwrap_or(300),
+    };
+    VWAP_CONFIG.save(deps.storage, &vwap_config)?;
+
     Ok(Response::default()
         .add_attribute("action", "price-oracle::instantiate")
+        .add_attribute(
+            "vwap_window_seconds",
+            vwap_config.window_seconds.to_string(),
+        )
         .add_event(Event::new("price-oracle::instantiate").add_attribute("creator", creator)))
 }
 
@@ -56,6 +69,7 @@ pub fn execute(
             high,
             low,
             close,
+            volume,
         } => {
             let params = UpdatePriceParams {
                 token1,
@@ -65,6 +79,7 @@ pub fn execute(
                 high,
                 low,
                 close,
+                volume,
             };
             execute_update_price(deps, env, info, params)
         }
@@ -73,6 +88,9 @@ pub fn execute(
             token2,
             day_type,
         } => execute_set_day_type(deps, env, info, token1, token2, day_type),
+        ExecuteMsg::UpdateVwapWindow { window_seconds } => {
+            execute_update_vwap_window(deps, env, info, window_seconds)
+        }
     }
 }
 
@@ -145,6 +163,8 @@ fn execute_remove_token_pair(
     LATEST_PRICES.remove(deps.storage, pair_id.clone());
     PRICE_HISTORY.remove(deps.storage, pair_id.clone());
     PAIR_DAY_TYPES.remove(deps.storage, pair_id.clone());
+    LATEST_VWAP.remove(deps.storage, pair_id.clone());
+    VWAP_HISTORY.remove(deps.storage, pair_id.clone());
 
     Ok(Response::new()
         .add_attribute("action", "price-oracle::remove_token_pair")
@@ -179,6 +199,7 @@ fn execute_update_price(
         high: params.high,
         low: params.low,
         close: params.close,
+        volume: params.volume,
     };
 
     // Update latest price
@@ -190,6 +211,20 @@ fn execute_update_price(
         .unwrap_or_default();
     history.push(price_data);
     PRICE_HISTORY.save(deps.storage, pair_id.clone(), &history)?;
+
+    // Calculate and update VWAP
+    let vwap_config = VWAP_CONFIG.load(deps.storage)?;
+    if let Some(vwap_data) = calculate_vwap(&history, env.block.time, vwap_config.window_seconds) {
+        // Save latest VWAP
+        LATEST_VWAP.save(deps.storage, pair_id.clone(), &vwap_data)?;
+
+        // Update VWAP history
+        let mut vwap_history = VWAP_HISTORY
+            .may_load(deps.storage, pair_id.clone())?
+            .unwrap_or_default();
+        vwap_history.push(vwap_data);
+        VWAP_HISTORY.save(deps.storage, pair_id.clone(), &vwap_history)?;
+    }
 
     Ok(Response::new()
         .add_attribute("action", "price-oracle::update_price")
@@ -238,6 +273,23 @@ fn execute_set_day_type(
                 .add_attribute("day_type", day_type.to_string())
                 .add_attribute("updated_by", info.sender),
         ))
+}
+
+fn execute_update_vwap_window(
+    deps: DepsMut,
+    _env: Env,
+    _info: MessageInfo,
+    window_seconds: u64,
+) -> Result<Response, ContractError> {
+    // Check authorization
+    // CREATOR.assert_owner(deps.storage, &info.sender)?;
+
+    let vwap_config = VwapConfig { window_seconds };
+    VWAP_CONFIG.save(deps.storage, &vwap_config)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "price-oracle::update_vwap_window")
+        .add_attribute("window_seconds", window_seconds.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

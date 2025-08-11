@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Decimal, Timestamp};
+use cosmwasm_std::{Decimal, Timestamp, Uint128};
 use outbe_utils::denom::Denom;
 
 // Keep legacy types for compatibility
@@ -26,6 +26,7 @@ pub struct PriceData {
     pub high: Option<Decimal>,
     pub low: Option<Decimal>,
     pub close: Option<Decimal>,
+    pub volume: Option<Uint128>,
 }
 
 #[cw_serde]
@@ -43,4 +44,18 @@ pub struct UpdatePriceParams {
     pub high: Option<Decimal>,
     pub low: Option<Decimal>,
     pub close: Option<Decimal>,
+    pub volume: Option<Uint128>,
+}
+
+#[cw_serde]
+pub struct VwapData {
+    pub vwap: Decimal,
+    pub total_volume: Uint128,
+    pub window_seconds: u64,
+    pub timestamp: Timestamp,
+}
+
+#[cw_serde]
+pub struct VwapConfig {
+    pub window_seconds: u64,
 }
