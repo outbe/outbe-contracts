@@ -23,10 +23,8 @@ pub enum ExecuteMsg {
         extension: Box<SubmitExtension>,
     },
     /// Burn an existing Nod NFT
-    Burn {
-        token_id: String,
-    },
-    // todo remove after demo
+    Burn { token_id: String },
+    #[cfg(feature = "demo")]
     BurnAll {},
 }
 
