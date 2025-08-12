@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# Pre-commit hook to run cargo fmt and cargo clippy on all Rust files
+#
+
+# Run cargo fmt to format all Rust code
+echo "Running cargo fmt..."
+cargo fmt --all
+
+# Check if cargo fmt made any changes
+if ! git diff-index --quiet HEAD --; then
+    git add .
+fi
+
+echo "All Rust code is properly formatted."
+
+# Run cargo clippy to check for linting issues
+echo "Running cargo clippy..."
+if ! cargo +1.83.0 clippy --all-targets -- -D warnings; then
+    echo "cargo clippy found issues. Please fix them before committing."
+    exit 1
+fi
+
+echo "All clippy checks passed."
+exit 0
+

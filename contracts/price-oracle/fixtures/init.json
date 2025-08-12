@@ -1,3 +1,4 @@
 {
-  "creator": null
+  "creator": null,
+  "vwap_window_seconds": 300
 }

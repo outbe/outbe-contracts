@@ -33,4 +33,7 @@ pub enum ContractError {
 
     #[error("Day type not found for pair: {pair_id}")]
     DayTypeNotFound { pair_id: String },
+
+    #[error("VWAP not available for pair: {pair_id}")]
+    VwapNotAvailable { pair_id: String },
 }

@@ -1,3 +1,10 @@
+install:
+	@echo "Installing dependencies and setting up development environment..."
+	@echo "Installing Rust dependencies..."
+	@cargo build
+	@echo "Setting up git hooks..."
+	@./scripts/install-hooks.sh
+
 clippy:
 	cargo clippy --all-targets -- -D warnings
 
