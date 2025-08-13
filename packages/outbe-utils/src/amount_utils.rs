@@ -9,7 +9,7 @@ pub enum AmountError {
     WrongAtto {},
 }
 
-pub fn normalize_amount(base: u64, atto: u64) -> Result<Uint128, AmountError> {
+pub fn normalize_amount(base: u64, atto: u128) -> Result<Uint128, AmountError> {
     let atto128 = Uint128::from(atto);
     if atto128 >= FRACTIONAL {
         return Err(AmountError::WrongAtto {});
@@ -71,7 +71,7 @@ mod tests {
         assert!(matches!(result, Err(AmountError::WrongAtto {})));
 
         // Test with max u64 value for atto, which is greater than PRECISE
-        let result = normalize_amount(1, u64::MAX);
+        let result = normalize_amount(1, u128::MAX);
         assert!(matches!(result, Err(AmountError::WrongAtto {})));
     }
 }
