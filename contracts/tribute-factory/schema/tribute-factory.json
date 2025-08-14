@@ -317,7 +317,7 @@
           "nominal_atto_qty": {
             "description": "Amount expressed in fractional units, `0 >= nominal_atto_qty < 1e18`",
             "type": "integer",
-            "format": "uint64",
+            "format": "uint128",
             "minimum": 0.0
           },
           "nominal_base_qty": {
@@ -333,7 +333,7 @@
           "settlement_atto_amount": {
             "description": "Amount expressed in fractional units, `0 >= settlement_atto_amount < 1e18`",
             "type": "integer",
-            "format": "uint64",
+            "format": "uint128",
             "minimum": 0.0
           },
           "settlement_base_amount": {
