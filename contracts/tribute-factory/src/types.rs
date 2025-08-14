@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::HexBinary;
+use cosmwasm_std::{HexBinary, Uint128, Uint64};
 use outbe_utils::date::Iso8601Date;
 
 #[cw_serde]
@@ -13,12 +13,12 @@ pub struct TributeInputPayload {
     /// ISO 4217
     pub settlement_currency: String,
     /// Amount expressed in natural units, `settlement_base_amount >= 0`
-    pub settlement_base_amount: u64,
+    pub settlement_base_amount: Uint64,
     /// Amount expressed in fractional units, `0 >= settlement_atto_amount < 1e18`
-    pub settlement_atto_amount: u128,
+    pub settlement_atto_amount: Uint128,
     /// Quantity expressed in natural units, `nominal_base_qty >= 0`
-    pub nominal_base_qty: u64,
+    pub nominal_base_qty: Uint64,
     /// Amount expressed in fractional units, `0 >= nominal_atto_qty < 1e18`
-    pub nominal_atto_qty: u128,
+    pub nominal_atto_qty: Uint128,
     pub cu_hashes: Vec<HexBinary>,
 }
