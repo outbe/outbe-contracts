@@ -212,6 +212,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e31ea183f6ee62ac8b8a8cf7feddd766317adfb13ff469de57ce033efd6a790"
 
 [[package]]
+name = "bs58"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf88ba1141d185c399bee5288d850d63b8369520c1eafc32a0430b5b6c287bf4"
+dependencies = [
+ "tinyvec",
+]
+
+[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -969,9 +978,11 @@ name = "outbe-utils"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "bs58",
  "chrono",
  "cosmwasm-schema",
  "cosmwasm-std",
+ "serde_json",
  "thiserror 1.0.69",
 ]
 
@@ -1429,6 +1440,21 @@ dependencies = [
  "quote",
  "syn 2.0.104",
 ]
+
+[[package]]
+name = "tinyvec"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09b3661f17e86524eccd4371ab0429194e0d7c008abb45f7a7495b1719463c71"
+dependencies = [
+ "tinyvec_macros",
+]
+
+[[package]]
+name = "tinyvec_macros"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "token-allocator"
