@@ -273,7 +273,7 @@ mod tests {
     use super::*;
     use crate::msg::ZkProofPublicData;
     use cosmwasm_std::testing::mock_dependencies;
-    use cosmwasm_std::HexBinary;
+    use cosmwasm_std::{HexBinary, Uint128, Uint64};
     use cw_multi_test::{App, Contract, ContractWrapper, Executor};
     use std::str::FromStr;
 
@@ -362,10 +362,10 @@ mod tests {
             cu_hashes: vec![HexBinary::from(cu_hash_1), HexBinary::from(cu_hash_2)],
             worldwide_day,
             settlement_currency: "usd".to_string(),
-            settlement_base_amount: 500, // 500 USD
-            settlement_atto_amount: 0,
-            nominal_base_qty: 1000,
-            nominal_atto_qty: 0,
+            settlement_base_amount: Uint64::new(500), // 500 USD
+            settlement_atto_amount: Uint128::zero(),
+            nominal_base_qty: Uint64::new(1000),
+            nominal_atto_qty: Uint128::zero(),
             owner,
         };
 
@@ -409,10 +409,10 @@ mod tests {
             cu_hashes: vec![HexBinary::from([11; 32])],
             worldwide_day,
             settlement_currency: "usd".to_string(),
-            settlement_base_amount: 500,
-            settlement_atto_amount: 0,
-            nominal_base_qty: 1000,
-            nominal_atto_qty: 0,
+            settlement_base_amount: Uint64::new(500),
+            settlement_atto_amount: Uint128::zero(),
+            nominal_base_qty: Uint64::new(1000),
+            nominal_atto_qty: Uint128::zero(),
             owner,
         };
 
@@ -437,10 +437,10 @@ mod tests {
             cu_hashes: vec![cu_hash.clone()],
             worldwide_day,
             settlement_currency: "usd".to_string(),
-            settlement_base_amount: 500,
-            settlement_atto_amount: 0,
-            nominal_base_qty: 1000,
-            nominal_atto_qty: 0,
+            settlement_base_amount: Uint64::new(500),
+            settlement_atto_amount: Uint128::zero(),
+            nominal_base_qty: Uint64::new(1000),
+            nominal_atto_qty: Uint128::zero(),
             owner,
         };
 
@@ -466,10 +466,10 @@ mod tests {
             cu_hashes: vec![HexBinary::from([1; 32])],
             worldwide_day: "2022-03-22".to_string(),
             settlement_currency: "usd".to_string(),
-            settlement_base_amount: 100,
-            settlement_atto_amount: 0,
-            nominal_base_qty: 1000,
-            nominal_atto_qty: 0,
+            settlement_base_amount: Uint64::new(100),
+            settlement_atto_amount: Uint128::zero(),
+            nominal_base_qty: Uint64::new(1000),
+            nominal_atto_qty: Uint128::zero(),
             owner: "user1".to_string(),
         };
 
