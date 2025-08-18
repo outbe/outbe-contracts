@@ -13,7 +13,7 @@ use cw_ownable::Action;
 use outbe_utils::amount_utils::normalize_amount;
 use outbe_utils::date::{iso_to_ts, Iso8601Date};
 use outbe_utils::denom::Denom;
-use outbe_utils::hash_utils;
+use outbe_utils::{hash_utils, Base58Binary};
 
 const CONTRACT_NAME: &str = "outbe.net:tribute-factory";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -231,14 +231,14 @@ fn update_used_state(
         return Err(ContractError::InvalidDraftId {});
     }
 
-    USED_TRIBUTE_IDS.update(storage, tribute_draft_id.to_string(), |old| match old {
+    USED_TRIBUTE_IDS.update(storage, tribute_draft_id.to_base58(), |old| match old {
         Some(_) => Err(ContractError::IdAlreadyExists {}),
         None => Ok(Empty::default()),
     })?;
 
     for cu_hash in tribute.cu_hashes.clone() {
-        let cu_hash_hex = cu_hash.to_hex();
-        USED_CU_HASHES.update(storage, cu_hash_hex, |old| match old {
+        let cu_hash_str = cu_hash.to_base58();
+        USED_CU_HASHES.update(storage, cu_hash_str, |old| match old {
             Some(_) => Err(ContractError::CUAlreadyExists {}),
             None => Ok(Empty::default()),
         })?;
@@ -246,15 +246,19 @@ fn update_used_state(
     Ok(Empty::default())
 }
 
-pub fn generate_tribute_draft_id_hash(owner: &String, worldwide_day: &Iso8601Date) -> HexBinary {
-    hash_utils::generate_hash_id(
+pub fn generate_tribute_draft_id_hash(
+    owner: &Base58Binary,
+    worldwide_day: &Iso8601Date,
+) -> Base58Binary {
+    let hex_bin = hash_utils::generate_hash_id(
         "tribute_draft_id",
-        vec![owner.as_bytes(), worldwide_day.as_bytes()],
-    )
+        vec![owner.as_slice(), worldwide_day.as_bytes()],
+    );
+    Base58Binary::from(hex_bin.as_slice())
 }
 
 fn generate_tribute_id(
-    token_id: &HexBinary,
+    token_id: &Base58Binary,
     owner: &Addr,
     worldwide_day: &Iso8601Date,
 ) -> HexBinary {
@@ -273,7 +277,7 @@ mod tests {
     use super::*;
     use crate::msg::ZkProofPublicData;
     use cosmwasm_std::testing::mock_dependencies;
-    use cosmwasm_std::{HexBinary, Uint128, Uint64};
+    use cosmwasm_std::{Uint128, Uint64};
     use cw_multi_test::{App, Contract, ContractWrapper, Executor};
     use std::str::FromStr;
 
@@ -353,13 +357,13 @@ mod tests {
         .unwrap();
 
         // Prepare inputs for execution
-        let owner = sender.to_string();
+        let owner = Base58Binary::from(sender.as_bytes());
         let worldwide_day = "2022-03-22".to_string();
         let cu_hash_1 = [11; 32];
         let cu_hash_2 = [22; 32];
         let tribute_input = TributeInputPayload {
             tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
-            cu_hashes: vec![HexBinary::from(cu_hash_1), HexBinary::from(cu_hash_2)],
+            cu_hashes: vec![Base58Binary::from(cu_hash_1), Base58Binary::from(cu_hash_2)],
             worldwide_day,
             settlement_currency: "usd".to_string(),
             settlement_base_amount: Uint64::new(500), // 500 USD
@@ -397,16 +401,16 @@ mod tests {
     #[test]
     fn test_unique_tribute_draft_id() {
         let mut deps = mock_dependencies();
-        let owner = "user1".to_string();
+        let owner = Base58Binary::from("user1".as_bytes());
         let worldwide_day = "2022-03-22".to_string();
         println!(
-            "id {}",
+            "id {:?}",
             generate_tribute_draft_id_hash(&owner, &worldwide_day)
         );
 
         let tribute = TributeInputPayload {
             tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
-            cu_hashes: vec![HexBinary::from([11; 32])],
+            cu_hashes: vec![Base58Binary::from([11; 32])],
             worldwide_day,
             settlement_currency: "usd".to_string(),
             settlement_base_amount: Uint64::new(500),
@@ -419,7 +423,7 @@ mod tests {
         // first call
         update_used_state(deps.as_mut().storage, &tribute).unwrap();
 
-        // second call -  IdAlreadyExists
+        // second call - IdAlreadyExists
         let err = update_used_state(deps.as_mut().storage, &tribute).unwrap_err();
         assert!(matches!(err, ContractError::IdAlreadyExists {}));
     }
@@ -427,10 +431,10 @@ mod tests {
     #[test]
     fn test_unique_cu_hash() {
         let mut deps = cosmwasm_std::testing::mock_dependencies();
-        let owner = "user1".to_string();
+        let owner = Base58Binary::from("user1".as_bytes());
         let worldwide_day = "2022-03-22".to_string();
 
-        let cu_hash = HexBinary::from([42; 32]);
+        let cu_hash = Base58Binary::from([42; 32]);
 
         let tribute1 = TributeInputPayload {
             tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
@@ -462,15 +466,15 @@ mod tests {
     fn test_invalid_tribute_draft_id() {
         let mut deps = mock_dependencies();
         let tribute = TributeInputPayload {
-            tribute_draft_id: HexBinary::from([42; 32]), // incorrect
-            cu_hashes: vec![HexBinary::from([1; 32])],
+            tribute_draft_id: Base58Binary::from([42; 32]), // incorrect
+            cu_hashes: vec![Base58Binary::from([1; 32])],
             worldwide_day: "2022-03-22".to_string(),
             settlement_currency: "usd".to_string(),
             settlement_base_amount: Uint64::new(100),
             settlement_atto_amount: Uint128::zero(),
             nominal_base_qty: Uint64::new(1000),
             nominal_atto_qty: Uint128::zero(),
-            owner: "user1".to_string(),
+            owner: Base58Binary::from("user1".as_bytes()),
         };
 
         let err = update_used_state(deps.as_mut().storage, &tribute).unwrap_err();
