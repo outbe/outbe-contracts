@@ -13,7 +13,7 @@ use cw_ownable::Action;
 use outbe_utils::amount_utils::normalize_amount;
 use outbe_utils::date::{iso_to_ts, Iso8601Date};
 use outbe_utils::denom::Denom;
-use outbe_utils::{hash_utils, Base58Binary};
+use outbe_utils::{gen_compound_hash, Base58Binary};
 
 const CONTRACT_NAME: &str = "outbe.net:tribute-factory";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -250,8 +250,8 @@ pub fn generate_tribute_draft_id_hash(
     owner: &Base58Binary,
     worldwide_day: &Iso8601Date,
 ) -> Base58Binary {
-    let hex_bin = hash_utils::generate_hash_id(
-        "tribute_draft_id",
+    let hex_bin = gen_compound_hash(
+        Some("tribute_draft_id"),
         vec![owner.as_slice(), worldwide_day.as_bytes()],
     );
     Base58Binary::from(hex_bin.as_slice())
@@ -262,8 +262,8 @@ fn generate_tribute_id(
     owner: &Addr,
     worldwide_day: &Iso8601Date,
 ) -> HexBinary {
-    hash_utils::generate_hash_id(
-        "tribute-factory:tribute_id",
+    gen_compound_hash(
+        Some("tribute-factory:tribute_id"),
         vec![
             token_id.as_slice(),
             owner.as_bytes(),

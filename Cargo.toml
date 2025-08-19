@@ -18,8 +18,6 @@ cosmwasm-schema = { version = "2.0.0" }
 cosmwasm-std = { version = "2.0.0" }
 
 sha2 = { version = "0.10.9" }
-blake3 = { version = "1.5" }
-hex = { version = "0.4.3" }
 bs58 = { version = "0.5.1" }
 
 cw-multi-test = { version = "2.0.0" }
