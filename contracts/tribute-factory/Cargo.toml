@@ -22,6 +22,9 @@ thiserror = { workspace = true }
 cw-ownable = { workspace = true }
 outbe-utils = { workspace = true }
 tribute = { version = "*", path = "../tribute", features = ["library"] }
+pse-poseidon = { git = "https://github.com/axiom-crypto/pse-poseidon.git" }
+# NB: explicitly define this dependency to make it work on wasm32-unknown-unknown target.
+getrandom = { version = "0.2.16", features = ["js"] }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
