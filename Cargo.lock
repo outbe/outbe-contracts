@@ -148,18 +148,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arrayref"
-version = "0.3.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76a2e8124351fda1ef8aaaa3bbd7ebbcb486bbcd4225aca0aa0d84bb2db8fecb"
-
-[[package]]
-name = "arrayvec"
-version = "0.7.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
-
-[[package]]
 name = "autocfg"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -182,19 +170,6 @@ name = "bech32"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d965446196e3b7decd44aa7ee49e31d630118f90ef12f97900f262eb915c951d"
-
-[[package]]
-name = "blake3"
-version = "1.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3888aaa89e4b2a40fca9848e400f6a658a5a3978de7be858e209cafa8be9a4a0"
-dependencies = [
- "arrayref",
- "arrayvec",
- "cc",
- "cfg-if",
- "constant_time_eq",
-]
 
 [[package]]
 name = "block-buffer"
@@ -261,12 +236,6 @@ name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
-
-[[package]]
-name = "constant_time_eq"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
 
 [[package]]
 name = "contract-registry"
@@ -753,7 +722,6 @@ dependencies = [
 name = "gratis"
 version = "0.1.0"
 dependencies = [
- "blake3",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-ownable",
@@ -977,12 +945,12 @@ dependencies = [
 name = "outbe-utils"
 version = "0.1.0"
 dependencies = [
- "blake3",
  "bs58",
  "chrono",
  "cosmwasm-schema",
  "cosmwasm-std",
  "serde_json",
+ "sha2",
  "thiserror 1.0.69",
 ]
 
@@ -1048,7 +1016,6 @@ dependencies = [
 name = "promis"
 version = "0.1.0"
 dependencies = [
- "blake3",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-ownable",
