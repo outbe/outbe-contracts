@@ -18,6 +18,14 @@ jobs:
           cache-on-failure: true
           cache-all-crates: true
 
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly-2025-08-20
+          target: wasm32-unknown-unknown
+          override: true
+
       - name: Make Optimized build
         run: |
           optimize.sh .
