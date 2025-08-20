@@ -18,7 +18,7 @@ pub enum ExecuteMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(cw20::Balance)]
+    #[returns(cw20::BalanceResponse)]
     Balance { address: String },
     #[returns(cw20::TokenInfoResponse)]
     TokenInfo {},
