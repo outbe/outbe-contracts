@@ -4,7 +4,8 @@ pub mod coin;
 pub mod consts;
 pub mod date;
 pub mod denom;
-pub mod hash_utils;
+mod hash_utils;
 pub mod store_utils;
 
 pub use base58_binary::Base58Binary;
+pub use hash_utils::gen_compound_hash;

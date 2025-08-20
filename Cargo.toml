@@ -7,7 +7,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.78"
+rust-version = "1.83.0"
 license = "TODO"
 repository = "https://github.com/outbe/outbe-contracts"
 homepage = "TODO"
@@ -18,8 +18,6 @@ cosmwasm-schema = { version = "2.0.0" }
 cosmwasm-std = { version = "2.0.0" }
 
 sha2 = { version = "0.10.9" }
-blake3 = { version = "1.5" }
-hex = { version = "0.4.3" }
 bs58 = { version = "0.5.1" }
 
 cw-multi-test = { version = "2.0.0" }
