@@ -25,6 +25,8 @@ tribute = { version = "*", path = "../tribute", features = ["library"] }
 pse-poseidon = { git = "https://github.com/axiom-crypto/pse-poseidon.git" }
 # NB: explicitly define this dependency to make it work on wasm32-unknown-unknown target.
 getrandom = { version = "0.2.16", features = ["js"] }
+halo2-axiom = { version = "0.5.1", features = ["circuit-params"], default-features = false}
+halo2-base = { git = "https://github.com/bullet-tooth/halo2-lib.git", rev = "077455f", features = ["halo2-axiom"], default-features = false}
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

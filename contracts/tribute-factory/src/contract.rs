@@ -10,10 +10,13 @@ use cosmwasm_std::{
     Response, Storage, WasmMsg,
 };
 use cw_ownable::Action;
+use halo2_axiom::halo2curves::bn256::Fr;
+use halo2_base::utils::ScalarField;
 use outbe_utils::amount_utils::normalize_amount;
-use outbe_utils::date::{iso_to_ts, Iso8601Date};
+use outbe_utils::date::{iso_to_days, iso_to_ts, Iso8601Date};
 use outbe_utils::denom::Denom;
 use outbe_utils::{gen_compound_hash, Base58Binary};
+use pse_poseidon::Poseidon as PsePoseidon;
 
 const CONTRACT_NAME: &str = "outbe.net:tribute-factory";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -224,7 +227,7 @@ fn update_used_state(
     storage: &mut dyn Storage,
     tribute: &TributeInputPayload,
 ) -> Result<Empty, ContractError> {
-    let tribute_draft_id = generate_tribute_draft_id_hash(&tribute.owner, &tribute.worldwide_day);
+    let tribute_draft_id = generate_tribute_draft_id_hash(&tribute.owner, &tribute.worldwide_day)?;
 
     // Validate that provided draft ID matches tribute_draft_id
     if tribute.tribute_draft_id != tribute_draft_id {
@@ -249,12 +252,15 @@ fn update_used_state(
 pub fn generate_tribute_draft_id_hash(
     owner: &Base58Binary,
     worldwide_day: &Iso8601Date,
-) -> Base58Binary {
-    let hex_bin = gen_compound_hash(
-        Some("tribute_draft_id"),
-        vec![owner.as_slice(), worldwide_day.as_bytes()],
-    );
-    Base58Binary::from(hex_bin.as_slice())
+) -> Result<Base58Binary, ContractError> {
+    let owner_fr = Fr::from_bytes_le(owner.as_slice());
+    let num_days = iso_to_days(worldwide_day)?;
+
+    let mut poseidon: PsePoseidon<Fr, 3, 2> = PsePoseidon::new(8, 57);
+    poseidon.update(&[owner_fr, Fr::from(num_days)]);
+    let tribute_draft_id_fr = poseidon.squeeze();
+
+    Ok(Base58Binary::from(tribute_draft_id_fr.to_bytes()))
 }
 
 fn generate_tribute_id(
@@ -362,7 +368,7 @@ mod tests {
         let cu_hash_1 = [11; 32];
         let cu_hash_2 = [22; 32];
         let tribute_input = TributeInputPayload {
-            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
+            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap(),
             cu_hashes: vec![Base58Binary::from(cu_hash_1), Base58Binary::from(cu_hash_2)],
             worldwide_day,
             settlement_currency: "usd".to_string(),
@@ -409,7 +415,7 @@ mod tests {
         );
 
         let tribute = TributeInputPayload {
-            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
+            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap(),
             cu_hashes: vec![Base58Binary::from([11; 32])],
             worldwide_day,
             settlement_currency: "usd".to_string(),
@@ -437,7 +443,7 @@ mod tests {
         let cu_hash = Base58Binary::from([42; 32]);
 
         let tribute1 = TributeInputPayload {
-            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day),
+            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap(),
             cu_hashes: vec![cu_hash.clone()],
             worldwide_day,
             settlement_currency: "usd".to_string(),
@@ -452,7 +458,7 @@ mod tests {
         let mut tribute2 = tribute1.clone();
         tribute2.worldwide_day = "2022-03-23".to_string();
         tribute2.tribute_draft_id =
-            generate_tribute_draft_id_hash(&tribute2.owner, &tribute2.worldwide_day);
+            generate_tribute_draft_id_hash(&tribute2.owner, &tribute2.worldwide_day).unwrap();
 
         // first call
         update_used_state(deps.as_mut().storage, &tribute1).unwrap();
