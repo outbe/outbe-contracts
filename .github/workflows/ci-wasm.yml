@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: ghcr.io/outbe/outbe-wasm-builder:0.2.1-nightly
+      image: ghcr.io/outbe/outbe-wasm-builder:0.2.2-nightly
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
