@@ -16,7 +16,7 @@ echo "All Rust code is properly formatted."
 
 # Run cargo clippy to check for linting issues
 echo "Running cargo clippy..."
-if ! cargo +1.86.0 clippy --all-targets -- -D warnings; then
+if ! cargo clippy --all-targets -- -D warnings; then
     echo "cargo clippy found issues. Please fix them before committing."
     exit 1
 fi
