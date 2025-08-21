@@ -32,6 +32,9 @@ jobs:
           cache-on-failure: true
           cache-all-crates: true
 
+      - run: rustc --version
+      - run: rustup target add wasm32-unknown-unknown
+
       - name: Configure wallet
         env:
           WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY }}

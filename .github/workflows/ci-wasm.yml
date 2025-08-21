@@ -18,6 +18,8 @@ jobs:
           cache-on-failure: true
           cache-all-crates: true
 
+      - run: rustc --version
+      - run: rustup target add wasm32-unknown-unknown
       - name: Make Optimized build
         run: |
           optimize.sh .
