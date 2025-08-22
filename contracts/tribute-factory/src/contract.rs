@@ -356,7 +356,7 @@ mod tests {
 
         // Prepare inputs for execution
         let owner = Base58Binary::from(sender.as_bytes());
-        let worldwide_day = "2022-03-22".to_string();
+        let worldwide_day = "2025-03-22".to_string();
         let cu_hash_1 = [11; 32];
         let cu_hash_2 = [22; 32];
         let tribute_input = TributeInputPayload {
@@ -400,7 +400,7 @@ mod tests {
     fn test_unique_tribute_draft_id() {
         let mut deps = mock_dependencies();
         let owner = Base58Binary::from("user1".as_bytes());
-        let worldwide_day = "2022-03-22".to_string();
+        let worldwide_day = "2025-03-22".to_string();
         println!(
             "id {:?}",
             generate_tribute_draft_id_hash(&owner, &worldwide_day)
@@ -425,12 +425,22 @@ mod tests {
         let err = update_used_state(deps.as_mut().storage, &tribute).unwrap_err();
         assert!(matches!(err, ContractError::IdAlreadyExists {}));
     }
+    #[test]
+    fn test_tribute_draft_id() {
+        let owner =
+            Base58Binary::from_base58("5HpHagT65TDzv1PH4D1wkmPxqHL5vTMzMmPMDqqAqxnwfnXF").unwrap();
+        let worldwide_day = "2025-01-01".to_string();
+        let result1 = generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap();
+        let result2 = generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap();
+
+        assert_eq!(result1, result2);
+    }
 
     #[test]
     fn test_unique_cu_hash() {
         let mut deps = cosmwasm_std::testing::mock_dependencies();
         let owner = Base58Binary::from("user1".as_bytes());
-        let worldwide_day = "2022-03-22".to_string();
+        let worldwide_day = "2025-05-22".to_string();
 
         let cu_hash = Base58Binary::from([42; 32]);
 
@@ -448,7 +458,7 @@ mod tests {
 
         // Change worldwide_day && tribute_draft_id
         let mut tribute2 = tribute1.clone();
-        tribute2.worldwide_day = "2022-03-23".to_string();
+        tribute2.worldwide_day = "2025-03-23".to_string();
         tribute2.tribute_draft_id =
             generate_tribute_draft_id_hash(&tribute2.owner, &tribute2.worldwide_day).unwrap();
 
@@ -466,7 +476,7 @@ mod tests {
         let tribute = TributeInputPayload {
             tribute_draft_id: Base58Binary::from([42; 32]), // incorrect
             cu_hashes: vec![Base58Binary::from([1; 32])],
-            worldwide_day: "2022-03-22".to_string(),
+            worldwide_day: "2025-03-22".to_string(),
             settlement_currency: "usd".to_string(),
             settlement_base_amount: Uint64::new(100),
             settlement_atto_amount: Uint128::zero(),

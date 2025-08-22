@@ -4,12 +4,13 @@ import {TributeQueryClient} from "../clients/tribute/Tribute.client";
 
 import {NumTokensResponse} from "../clients/tribute/Tribute.types";
 import {RUN_DATE, TX_FEE} from "../config";
-import {generateTributeDraftId, getRandomInt, readWalletsFromFile} from "../lib/utils";
+import {generateTributeDraftId, getRandomInt, readWalletsFromFile, isoToDays} from "../lib/utils";
 import {TributeInputPayload, ZkProof} from "../clients/tribute-factory/TributeFactory.types";
 import {TokenAllocatorQueryClient} from "../clients/token-allocator/TokenAllocator.client";
 import {TokenAllocatorData} from "../clients/token-allocator/TokenAllocator.types";
 import {CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {PriceOracleQueryClient} from "../clients/price-oracle/PriceOracle.client";
+import bs58 from "bs58";
 
 async function main() {
     const wallets = await readWalletsFromFile();
@@ -60,10 +61,11 @@ async function main() {
 
 function randomTribute(owner: string, day: string, coenUsdsRate: number): any {
     let uuid_id = require('crypto').randomUUID().toString()
-    let cu_hashes = require('crypto').createHash('sha256').update(uuid_id).digest('hex');
+    let cu_hashes = bs58.encode(new TextEncoder().encode(uuid_id));
     let settlement_amount = getRandomInt(90, 400);
     let nominal_amount = Math.floor(settlement_amount / coenUsdsRate);
-    let tribute_draft_id = generateTributeDraftId(owner, day);
+    let owner_bs58 = bs58.encode(new TextEncoder().encode(owner));
+    let tribute_draft_id = generateTributeDraftId(owner_bs58, day);
     console.log("Tribute draft id:", tribute_draft_id,
         "settlement_amount:", settlement_amount, "nominal_amount:", nominal_amount)
 
@@ -78,7 +80,7 @@ function randomTribute(owner: string, day: string, coenUsdsRate: number): any {
 
     let tribute_input: TributeInputPayload = {
         tribute_draft_id: tribute_draft_id,
-        owner: owner,
+        owner: owner_bs58,
         worldwide_day: day,
         settlement_currency: "usd",
         settlement_base_amount: settlement_amount,
