@@ -117,7 +117,7 @@ fn update_price() {
         close: Some(Decimal::from_str("2.0").unwrap()),
         volume: None,
     };
-    let res = execute(deps.as_mut(), env, info, msg).unwrap();
+    let res = execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
     assert_eq!(1, res.events.len());
 
     // Check updated price
@@ -133,6 +133,34 @@ fn update_price() {
     let value: PriceData = from_json(&res).unwrap();
     assert_eq!(Decimal::from_str("2.0").unwrap(), value.price);
     assert_eq!(Some(Decimal::from_str("1.8").unwrap()), value.open);
+
+    // Update price with new API #2
+    let msg = ExecuteMsg::UpdatePrice {
+        token1: Denom::Native(COEN.to_string()),
+        token2: Denom::Native(USDC.to_string()),
+        price: Decimal::from_str("3.0").unwrap(),
+        open: None,
+        high: None,
+        low: None,
+        close: None,
+        volume: None,
+    };
+    let res = execute(deps.as_mut(), env, info, msg).unwrap();
+    assert_eq!(1, res.events.len());
+
+    // Check updated price
+    let res = query(
+        deps.as_ref(),
+        mock_env(),
+        QueryMsg::GetLatestPrice {
+            token1: Denom::Native(COEN.to_string()),
+            token2: Denom::Native(USDC.to_string()),
+        },
+    )
+    .unwrap();
+    let value: PriceData = from_json(&res).unwrap();
+    assert_eq!(Decimal::from_str("3.0").unwrap(), value.price);
+    assert_eq!(None, value.open);
 }
 
 // #[test]

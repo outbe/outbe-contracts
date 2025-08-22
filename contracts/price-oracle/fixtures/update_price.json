@@ -2,6 +2,11 @@
   "update_price": {
     "token1": { "native": $token1 },
     "token2": { "native": $token2 }, 
-    "price": $price
+    "price": $price,
+    "open": null,
+    "high": null,
+    "low": null,
+    "close": null,
+    "volume": null
   }
 }
