@@ -7,9 +7,25 @@ jobs:
   wasm:
     name: Optimized Wasm
     runs-on: ubuntu-latest
-
     container:
       image: ghcr.io/outbe/outbe-wasm-builder:0.2.0
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          cache-all-crates: true
+
+      - name: Make Optimized build
+        run: |
+          optimize.sh .
+
+  wasm-sei:
+    name: Optimized Wasm Sei
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.0
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
