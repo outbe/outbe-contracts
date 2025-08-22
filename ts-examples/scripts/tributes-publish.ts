@@ -83,10 +83,10 @@ function randomTribute(owner: string, day: string, coenUsdsRate: number): any {
         owner: owner_bs58,
         worldwide_day: day,
         settlement_currency: "usd",
-        settlement_base_amount: settlement_amount,
-        settlement_atto_amount: 0,
-        nominal_base_qty: nominal_amount,
-        nominal_atto_qty: 0,
+        settlement_base_amount: settlement_amount.toString(),
+        settlement_atto_amount: "0",
+        nominal_base_qty: nominal_amount.toString(),
+        nominal_atto_qty: "0",
         cu_hashes: [cu_hashes]
     }
 
