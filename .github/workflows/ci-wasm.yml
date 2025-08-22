@@ -7,7 +7,6 @@ jobs:
   wasm:
     name: Optimized Wasm
     runs-on: ubuntu-latest
-
     container:
       image: ghcr.io/outbe/outbe-wasm-builder:0.2.0
     steps:
@@ -25,7 +24,6 @@ jobs:
   wasm-sei:
     name: Optimized Wasm Sei
     runs-on: ubuntu-latest
-
     container:
       image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.0
     steps:
