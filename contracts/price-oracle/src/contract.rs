@@ -1,5 +1,5 @@
 use crate::error::ContractError;
-use crate::helpers::{calculate_vwap, get_pair_id};
+use crate::helpers::get_pair_id;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::{
     CREATOR, LATEST_PRICES, LATEST_VWAP, PAIR_DAY_TYPES, PRICE_HISTORY, TOKEN_PAIRS, VWAP_CONFIG,

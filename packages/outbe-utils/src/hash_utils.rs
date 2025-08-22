@@ -14,6 +14,15 @@ pub fn gen_compound_hash(prefix: Option<&str>, fields: Vec<&[u8]>) -> HexBinary 
     HexBinary::from(hash_bytes.as_ref())
 }
 
+pub fn gen_hash(fields: Vec<&[u8]>) -> HexBinary {
+    let mut hasher = Sha256::new();
+    for field in fields.into_iter() {
+        hasher.update(field);
+    }
+    let hash_bytes: [u8; 32] = hasher.finalize().into();
+    HexBinary::from(hash_bytes.as_ref())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

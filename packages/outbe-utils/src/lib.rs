@@ -8,4 +8,4 @@ mod hash_utils;
 pub mod store_utils;
 
 pub use base58_binary::Base58Binary;
-pub use hash_utils::gen_compound_hash;
+pub use hash_utils::{gen_compound_hash, gen_hash};
