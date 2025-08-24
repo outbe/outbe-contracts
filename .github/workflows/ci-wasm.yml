@@ -8,7 +8,7 @@ jobs:
     name: Optimized Wasm
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/outbe/outbe-wasm-builder:0.2.0
+      image: ghcr.io/outbe/outbe-wasm-builder:0.2.2-nightly
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,6 +17,8 @@ jobs:
           cache-on-failure: true
           cache-all-crates: true
 
+      - run: rustc --version
+      - run: rustup target add wasm32-unknown-unknown
       - name: Make Optimized build
         run: |
           optimize.sh .

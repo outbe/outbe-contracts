@@ -37,7 +37,7 @@ The pre-commit hooks automatically run:
 - `cargo fmt` (code formatting)  
 - `cargo clippy` (linting with warnings as errors)
 
-The hooks use Rust toolchain version 1.86.0 for consistency.
+The hooks use Rust toolchain the same version for consistency.
 
 ## How to build
 
