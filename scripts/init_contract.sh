@@ -16,9 +16,14 @@ TX_HASH=$($binary tx wasm instantiate \
 
 sleep 7
 
+json_filter=".events[] | select(.type == \"instantiate\" and .attributes[].key == \"code_id\" and .attributes[].value == \"$code_id\")  | .attributes[] | select(.key == \"_contract_address\") | .value"
+# it is is located in the logs for SEI
+if [ "$binary" != "outbe-noded" ]; then
+  json_filter=".logs[] | $json_filter"
+fi
+
 # Query a created contract
 # NB: we also need to filter by code_id because it may create several contracts under the hood
-CONTRACT_ADDRESS=$($binary query tx --type=hash $TX_HASH --node $RPC --output json \
-  | jq -r ".events[] | select(.type == \"instantiate\" and .attributes[].key == \"code_id\" and .attributes[].value == \"$code_id\")  | .attributes[] | select(.key == \"_contract_address\") | .value")
+CONTRACT_ADDRESS=$($binary query tx --type=hash $TX_HASH --node $RPC --output json | jq -r "$json_filter")
 
 echo $CONTRACT_ADDRESS
