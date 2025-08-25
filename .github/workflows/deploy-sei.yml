@@ -1,4 +1,4 @@
-name: Deploy
+name: Deploy SEI
 
 on:
   workflow_dispatch:
