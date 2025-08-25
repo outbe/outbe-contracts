@@ -62,7 +62,10 @@ pub fn execute_add_agent(
     let mut config = CONFIG.load(deps.storage)?;
 
     let now = env.block.time;
+    let id = config.last_token_id.to_string();
+
     let agent = Agent {
+        id: id.clone(),
         agent_type: input.agent_type,
         wallet: wallet.clone().to_string(),
         name: input.name,
@@ -77,10 +80,10 @@ pub fn execute_add_agent(
         submitted_at: now,
         updated_at: now,
     };
-    let id = config.last_token_id.to_string();
     AGENTS.save(deps.storage, id.clone(), &agent)?;
 
     config.last_token_id += Uint128::one();
+    CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new()
         .add_attribute("action", "agent::add")

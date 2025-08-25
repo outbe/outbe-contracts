@@ -14,7 +14,7 @@ const USER4: &str = "user4";
 
 fn create_test_agent_input() -> AgentInput {
     AgentInput {
-        agent_type: AgentType::NRA,
+        agent_type: AgentType::Nra,
         name: "Test Agent".to_string(),
         email: "test@example.com".to_string(),
         jurisdictions: vec!["US".to_string(), "EU".to_string()],
@@ -57,7 +57,7 @@ fn test_create_agent_success() {
 
     // Check agent is saved correctly
     let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
-    assert_eq!(agent.agent_type, AgentType::NRA);
+    assert_eq!(agent.agent_type, AgentType::Nra);
     assert_eq!(agent.wallet, USER1);
     assert_eq!(agent.name, "Test Agent");
     assert_eq!(agent.email, "test@example.com");

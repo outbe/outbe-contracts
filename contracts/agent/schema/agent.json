@@ -181,11 +181,11 @@
       "AgentType": {
         "type": "string",
         "enum": [
-          "n_r_a",
-          "c_r_a",
-          "r_f_a",
-          "i_b_a",
-          "c_c_a"
+          "nra",
+          "cra",
+          "rfa",
+          "iba",
+          "cca"
         ]
       },
       "Uint128": {
@@ -359,6 +359,7 @@
             "avg_cu",
             "docs_uri",
             "email",
+            "id",
             "jurisdictions",
             "name",
             "status",
@@ -393,6 +394,9 @@
                 "string",
                 "null"
               ]
+            },
+            "id": {
+              "type": "string"
             },
             "jurisdictions": {
               "type": "array",
@@ -438,11 +442,11 @@
         "AgentType": {
           "type": "string",
           "enum": [
-            "n_r_a",
-            "c_r_a",
-            "r_f_a",
-            "i_b_a",
-            "c_c_a"
+            "nra",
+            "cra",
+            "rfa",
+            "iba",
+            "cca"
           ]
         },
         "Timestamp": {
@@ -487,6 +491,7 @@
             "avg_cu",
             "docs_uri",
             "email",
+            "id",
             "jurisdictions",
             "name",
             "status",
@@ -521,6 +526,9 @@
                 "string",
                 "null"
               ]
+            },
+            "id": {
+              "type": "string"
             },
             "jurisdictions": {
               "type": "array",
@@ -566,11 +574,11 @@
         "AgentType": {
           "type": "string",
           "enum": [
-            "n_r_a",
-            "c_r_a",
-            "r_f_a",
-            "i_b_a",
-            "c_c_a"
+            "nra",
+            "cra",
+            "rfa",
+            "iba",
+            "cca"
           ]
         },
         "Timestamp": {
@@ -615,6 +623,7 @@
             "avg_cu",
             "docs_uri",
             "email",
+            "id",
             "jurisdictions",
             "name",
             "status",
@@ -649,6 +658,9 @@
                 "string",
                 "null"
               ]
+            },
+            "id": {
+              "type": "string"
             },
             "jurisdictions": {
               "type": "array",
@@ -694,11 +706,11 @@
         "AgentType": {
           "type": "string",
           "enum": [
-            "n_r_a",
-            "c_r_a",
-            "r_f_a",
-            "i_b_a",
-            "c_c_a"
+            "nra",
+            "cra",
+            "rfa",
+            "iba",
+            "cca"
           ]
         },
         "Timestamp": {

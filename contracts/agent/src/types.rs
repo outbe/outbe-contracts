@@ -11,6 +11,7 @@ pub struct Config {
 
 #[cw_serde]
 pub struct Agent {
+    pub id: String,
     pub agent_type: AgentType,
     pub wallet: String,
     pub name: String,
@@ -42,11 +43,11 @@ pub struct AgentInput {
 
 #[cw_serde]
 pub enum AgentType {
-    NRA,
-    CRA,
-    RFA,
-    IBA,
-    CCA,
+    Nra,
+    Cra,
+    Rfa,
+    Iba,
+    Cca,
 }
 
 #[cw_serde]
