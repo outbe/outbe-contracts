@@ -1,5 +1,4 @@
-
-name: Deploy Registry Sei
+name: Deploy Registry SEI
 
 on:
   workflow_dispatch:
