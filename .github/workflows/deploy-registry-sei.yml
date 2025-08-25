@@ -1,3 +1,4 @@
+
 name: Deploy Registry Sei
 
 on:
@@ -36,6 +37,14 @@ jobs:
       - name: Make Optimized build
         run: |
           optimize.sh .
+
+      - name: Upload WASM artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-artifacts
+          path: artifacts/*.wasm
+          retention-days: 1
 
       - name: Deploy Contract Registry
         run: |
