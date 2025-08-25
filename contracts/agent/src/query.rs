@@ -111,14 +111,14 @@ fn query_by_address(
 }
 
 pub fn query_votes_by_agent(deps: Deps, id: String) -> StdResult<AgentVotesResponse> {
-    let votes:Vec<Vote>  = AGENT_VOTES
+    let votes: Vec<Vote> = AGENT_VOTES
         .prefix(id.as_str())
         .range(deps.storage, None, None, Order::Ascending)
         .map(|res| {
             let (_voter_addr, v) = res?;
             Ok(v)
         })
-        .collect::<StdResult<Vec<Vote>>>()?; 
+        .collect::<StdResult<Vec<Vote>>>()?;
 
     Ok(AgentVotesResponse { votes })
 }

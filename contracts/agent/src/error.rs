@@ -20,10 +20,10 @@ pub enum ContractError {
 
     #[error("only active NRA can vote")]
     OnlyActiveNra {},
-    
+
     #[error("applicant cannot vote on own record")]
     SelfVote {},
-    
+
     #[error("already voted")]
     AlreadyVoted {},
 

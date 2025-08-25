@@ -2,10 +2,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{AGENTS, AGENT_VOTES, CONFIG};
 use crate::types::{Agent, AgentInput, AgentStatus, Config, Vote};
-use cosmwasm_std::{
-    entry_point, Deps, DepsMut, Env, Event, MessageInfo, Order, QueryResponse, Response, StdResult,
-    Storage, Uint128,
-};
+use cosmwasm_std::{entry_point, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128};
 use cw2::set_contract_version;
 
 const CONTRACT_NAME: &str = "outbe.net:agent";
@@ -14,7 +11,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 #[entry_point]
 pub fn instantiate(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
@@ -126,7 +123,7 @@ pub fn execute_update_agent(
         .add_attribute("wallet", founded_agent.wallet.to_string()))
 }
 
-fn exec_vote_agent(
+pub fn exec_vote_agent(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -177,11 +174,11 @@ fn exec_vote_agent(
         AGENTS.save(deps.storage, id.clone(), &agent)?;
     }
 
-    return Ok(Response::new()
+    Ok(Response::new()
         .add_attribute("action", "agent::vote_agent")
         .add_attribute("agent_id", id)
         .add_attribute("status", format!("{:?}", agent.status))
-        .add_attribute("approved", approve.to_string()));
+        .add_attribute("approved", approve.to_string()))
 }
 
 pub fn count_votes(deps: Deps, id: &str) -> StdResult<(usize, usize)> {

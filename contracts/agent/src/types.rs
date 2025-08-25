@@ -1,6 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Decimal, Timestamp, Uint128};
-use cw_storage_plus::Item;
+use cosmwasm_std::{Addr, Timestamp, Uint128};
 
 #[cw_serde]
 pub struct Config {
@@ -22,7 +21,7 @@ pub struct Agent {
     pub docs_uri: Vec<String>,
     pub discord: Option<String>,
     pub status: AgentStatus,
-    pub avg_cu: u64,
+    pub avg_cu: Uint128,
     pub submitted_at: Timestamp,
     pub updated_at: Timestamp,
 }
@@ -38,7 +37,7 @@ pub struct AgentInput {
     pub docs_uri: Vec<String>,
     pub discord: Option<String>,
     pub status: AgentStatus,
-    pub avg_cu: u64,
+    pub avg_cu: Uint128,
 }
 
 #[cw_serde]
