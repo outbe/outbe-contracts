@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.0
+      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,8 +28,8 @@ jobs:
         env:
           WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY }}
         run: |
-          outbe-noded keys import-hex ci $WALLET_PRIVATE_KEY --keyring-backend test
-          OWNER_ADDRESS=$(outbe-noded keys show ci --keyring-backend test --output json | jq -r '.address')
+          echo "$WALLET_MNEMONIC_SEI_DEVNET" | outbe-chaind keys add ci --keyring-backend test --recover
+          OWNER_ADDRESS=$(outbe-chaind keys show ci --keyring-backend test --output json | jq -r '.address')
           echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
 
       - name: Make Optimized build

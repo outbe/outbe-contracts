@@ -25,7 +25,7 @@ jobs:
     name: Optimized Wasm Sei
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.0
+      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
