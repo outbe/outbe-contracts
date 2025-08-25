@@ -37,14 +37,6 @@ jobs:
         run: |
           optimize.sh .
 
-      - name: Upload WASM artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: wasm-artifacts
-          path: artifacts/*.wasm
-          retention-days: 1
-
       - name: Deploy Contract Registry
         run: |
           CONTRACT_REGISTRY_CODE_ID=$(./scripts/store_code.sh artifacts/contract_registry.wasm)

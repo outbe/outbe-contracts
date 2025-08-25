@@ -15,7 +15,7 @@ env:
   RPC: https://rpc.dev.outbe.net
   BINARY: outbe-chaind
 
-  CONTRACT_REGISTRY_CONTRACT_ADDRESS: "outbe1pu6e36nugjxv3w2tcvxgld39y5kx3zz6l74dwxyyytx9cz5xwg5s4sknnl"
+  CONTRACT_REGISTRY_CONTRACT_ADDRESS: "outbe17r3faruez552kdxy0lsjydmj0nu22mxax33azx326039hfe7pnhqk692ra"
   FAUCET_ADDRESS: "outbe13a6zjh96w9z9y2defkktdc6vn4r5h3s7xk6jkv"
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: ghcr.io/outbe/outbe-wasm-builder:0.2.0
+      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
