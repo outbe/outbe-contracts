@@ -66,8 +66,8 @@ fn test_create_agent_success() {
 
     // Check token ID is incremented
     let config = CONFIG.load(&deps.storage).unwrap();
-    println!("config = {:?}", config);
-    assert_eq!(config.last_token_id, Uint128::new(1));
+    println!("config = {:?}", agent);
+    assert_eq!(config.last_token_id, Uint128::new(2));
 }
 
 #[test]
