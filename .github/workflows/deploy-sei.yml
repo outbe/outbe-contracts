@@ -10,9 +10,9 @@ on:
 
 env:
   # Chain configuration
-  CHAIN_ID: outbe-devnet-1
+  CHAIN_ID: outbe-devnet
   FEE_DENOM: unit
-  RPC: https://rpc.dev.outbe.net
+  RPC: https://rpc.d.outbe.net
   BINARY: outbe-chaind
 
   CONTRACT_REGISTRY_CONTRACT_ADDRESS: "outbe17r3faruez552kdxy0lsjydmj0nu22mxax33azx326039hfe7pnhqk692ra"
