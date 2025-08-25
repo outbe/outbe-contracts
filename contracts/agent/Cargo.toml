@@ -1,5 +1,5 @@
 [package]
-name = "nod"
+name = "argent"
 version = { workspace = true }
 edition = { workspace = true }
 
@@ -17,10 +17,7 @@ cosmwasm-schema = { workspace = true }
 cw-storage-plus = { workspace = true }
 serde = { workspace = true }
 cw2 = { workspace = true }
-outbe-nft = { workspace = true }
 thiserror = { workspace = true }
-cw-ownable = { workspace = true }
-outbe-utils = { workspace = true }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
