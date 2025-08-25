@@ -28,7 +28,7 @@ jobs:
         env:
           WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY }}
         run: |
-          outbe-chaind keys add ci --keyring-backend test --recover <<< "$WALLET_MNEMONIC_SEI_DEVNET"
+          printf '%s\n' "$WALLET_MNEMONIC_SEI_DEVNET" | outbe-chaind keys add ci --keyring-backend test --recover
           OWNER_ADDRESS=$(outbe-chaind keys show ci --keyring-backend test --output json | jq -r '.address')
           echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
 
