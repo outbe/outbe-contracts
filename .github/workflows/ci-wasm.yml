@@ -22,7 +22,7 @@ jobs:
           optimize.sh .
 
   wasm-sei:
-    name: Optimized Wasm Sei
+    name: Optimized Wasm SEI
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
