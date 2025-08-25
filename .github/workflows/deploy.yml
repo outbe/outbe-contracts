@@ -140,6 +140,13 @@ jobs:
           NOD_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Nod" $NOD_CODE_ID "$INIT_PAYLOAD")
           echo "NOD_CONTRACT_ADDRESS=$NOD_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
+      - name: Deploy Agent
+        run: |
+          AGENT_CODE_ID=$(./scripts/store_code.sh artifacts/agent.wasm)
+          INIT_PAYLOAD=$(jq -n --from-file ./contracts/agent/fixtures/init.json)
+          AGENT_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent" $AGENT_CODE_ID "$INIT_PAYLOAD")
+          echo "AGENT_CONTRACT_ADDRESS=$AGENT_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
       - name: Deploy Metadosis
         run: |
           METADOSIS_CODE_ID=$(./scripts/store_code.sh artifacts/metadosis.wasm)
