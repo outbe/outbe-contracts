@@ -34,7 +34,7 @@ pub fn instantiate(
 }
 
 #[entry_point]
-pub fn query(
+pub fn execute(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
