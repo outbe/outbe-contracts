@@ -26,4 +26,12 @@ pub enum ContractError {
     DateError(#[from] DateError),
     #[error("Provided tribute_draft_id does not match expected value")]
     InvalidDraftId {},
+    #[error("Invalid encryption key")]
+    InvalidKey {},
+    #[error("Invalid nonce")]
+    InvalidNonce {},
+    #[error("Decryption failed")]
+    DecryptionFailed {},
+    #[error("Invalid payload format")]
+    InvalidPayload {},
 }

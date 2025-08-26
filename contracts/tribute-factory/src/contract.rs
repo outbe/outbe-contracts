@@ -3,7 +3,7 @@ use crate::msg::{
     ExecuteMsg, InstantiateMsg, TeeSetup, TributeMintData, TributeMintExtension, TributeMsg,
     ZkProof,
 };
-use crate::state::{Config, CONFIG, OWNER, USED_CU_HASHES, USED_TRIBUTE_IDS};
+use crate::state::{Config, TeeConfig, CONFIG, OWNER, USED_CU_HASHES, USED_TRIBUTE_IDS};
 use crate::types::TributeInputPayload;
 use cosmwasm_std::{
     entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, HexBinary, MessageInfo,
@@ -14,6 +14,11 @@ use outbe_utils::amount_utils::normalize_amount;
 use outbe_utils::date::{iso_to_days, iso_to_ts, Iso8601Date};
 use outbe_utils::denom::Denom;
 use outbe_utils::{gen_compound_hash, gen_hash, Base58Binary};
+use curve25519_dalek::{MontgomeryPoint, Scalar};
+use chacha20poly1305::{
+    aead::{Aead, KeyInit},
+    ChaCha20Poly1305, Nonce,
+};
 
 const CONTRACT_NAME: &str = "outbe.net:tribute-factory";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -64,9 +69,13 @@ pub fn execute(
             new_tribute_address,
             new_tee_config,
         ),
-        ExecuteMsg::Offer { .. } => {
-            unimplemented!()
-        }
+        ExecuteMsg::Offer {
+            cipher_text,
+            nonce,
+            ephemeral_pubkey,
+            zk_proof,
+        } => execute_offer(deps, env, info, cipher_text, nonce, ephemeral_pubkey, zk_proof),
+        #[cfg(feature = "demo")]
         ExecuteMsg::OfferInsecure {
             tribute_input,
             zk_proof,
@@ -95,6 +104,85 @@ fn execute_burn_all(
     Ok(Response::new())
 }
 
+fn execute_offer(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    cipher_text: Base58Binary,
+    nonce: Base58Binary,
+    ephemeral_pubkey: Base58Binary,
+    zk_proof: ZkProof,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    let tee_config = config
+        .tee_config
+        .ok_or(ContractError::NotInitialized {})?;
+
+    // Decrypt the tribute input using ECDHE
+    let tribute_input = decrypt_tribute_input(
+        &cipher_text,
+        &nonce,
+        &ephemeral_pubkey,
+        &tee_config,
+    )?;
+
+    // Process the decrypted tribute input (same logic as OfferInsecure)
+    execute_offer_logic(deps, env, info, tribute_input, zk_proof, #[cfg(feature = "demo")] None)
+}
+
+fn decrypt_tribute_input(
+    cipher_text: &Base58Binary,
+    nonce: &Base58Binary,
+    ephemeral_pubkey: &Base58Binary,
+    tee_config: &TeeConfig,
+) -> Result<TributeInputPayload, ContractError> {
+    // Convert Base58 to bytes
+    let cipher_bytes = cipher_text.as_slice();
+    let nonce_bytes = nonce.as_slice();
+    let ephemeral_pubkey_bytes = ephemeral_pubkey.as_slice();
+    let private_key_bytes = tee_config.private_key.as_slice();
+
+    // Validate key sizes
+    if private_key_bytes.len() != 32 {
+        return Err(ContractError::InvalidKey {});
+    }
+    if ephemeral_pubkey_bytes.len() != 32 {
+        return Err(ContractError::InvalidKey {});
+    }
+    if nonce_bytes.len() != 12 {
+        return Err(ContractError::InvalidNonce {});
+    }
+
+    // Create X25519 keys
+    let private_key_array: [u8; 32] = private_key_bytes.try_into()
+        .map_err(|_| ContractError::InvalidKey {})?;
+    let ephemeral_pubkey_array: [u8; 32] = ephemeral_pubkey_bytes.try_into()
+        .map_err(|_| ContractError::InvalidKey {})?;
+    let nonce_array: [u8; 12] = nonce_bytes.try_into()
+        .map_err(|_| ContractError::InvalidNonce {})?;
+
+    let private_key = Scalar::from_bytes_mod_order(private_key_array);
+    let ephemeral_public_key = MontgomeryPoint(ephemeral_pubkey_array);
+
+    // Perform ECDH to get shared secret
+    let shared_secret = ephemeral_public_key * private_key;
+
+    // Use shared secret as ChaCha20Poly1305 key
+    let cipher = ChaCha20Poly1305::new((&shared_secret.to_bytes()).into());
+    let nonce = Nonce::from_slice(&nonce_array);
+
+    // Decrypt the data
+    let decrypted_bytes = cipher
+        .decrypt(nonce, cipher_bytes)
+        .map_err(|_| ContractError::DecryptionFailed {})?;
+
+    // Deserialize the decrypted data
+    let tribute_input: TributeInputPayload = cosmwasm_std::from_json(&decrypted_bytes)
+        .map_err(|_| ContractError::InvalidPayload {})?;
+
+    Ok(tribute_input)
+}
+
 fn execute_update_config(
     deps: DepsMut,
     env: Env,
@@ -110,8 +198,12 @@ fn execute_update_config(
         if let Some(new_tribute_address) = new_tribute_address {
             config.tribute_address = Some(new_tribute_address)
         }
-        if let Some(_new_tee_config) = new_tee_config {
-            config.tee_config = None // todo impl tee
+        if let Some(new_tee_config) = new_tee_config {
+            config.tee_config = Some(TeeConfig {
+                private_key: new_tee_config.private_key,
+                public_key: new_tee_config.public_key,
+                salt: new_tee_config.salt,
+            })
         }
         CONFIG.save(deps.storage, &config)?;
     }
@@ -133,7 +225,26 @@ fn execute_update_config(
         .add_event(Event::new("tribute-factory::update_config")))
 }
 
+#[cfg(feature = "demo")]
 fn execute_offer_insecure(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    tribute_input: TributeInputPayload,
+    zk_proof: ZkProof,
+    tribute_owner_l1: Option<Addr>,
+) -> Result<Response, ContractError> {
+    execute_offer_logic(
+        deps,
+        env,
+        info,
+        tribute_input,
+        zk_proof,
+        tribute_owner_l1,
+    )
+}
+
+fn execute_offer_logic(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
@@ -210,8 +321,8 @@ fn execute_offer_insecure(
 
     Ok(Response::new()
         .add_message(msg)
-        .add_attribute("action", "tribute-factory::offer_insecure")
-        .add_event(Event::new("tribute-factory::offer_insecure")))
+        .add_attribute("action", "tribute-factory::offer")
+        .add_event(Event::new("tribute-factory::offer")))
 }
 
 fn tee_obfuscate(tribute_input: TributeInputPayload) -> Result<TributeInputPayload, ContractError> {
@@ -381,6 +492,7 @@ mod tests {
         };
 
         // Execute the insecure offer
+        #[cfg(feature = "demo")]
         app.execute_contract(
             sender.clone(),
             factory_addr.clone(),
@@ -394,7 +506,6 @@ mod tests {
                     },
                     verification_key: Default::default(),
                 },
-                #[cfg(feature = "demo")]
                 tribute_owner_l1: None,
             },
             &[],
@@ -497,5 +608,140 @@ mod tests {
 
         let err = update_used_state(deps.as_mut().storage, &tribute).unwrap_err();
         assert!(matches!(err, ContractError::InvalidDraftId {}));
+    }
+
+    fn generate_keypair() -> ([u8; 32], [u8; 32]) {
+        use rand::rngs::OsRng;
+        use rand::RngCore;
+        
+        let mut private_key_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut private_key_bytes);
+        let private_key_scalar = Scalar::from_bytes_mod_order(private_key_bytes);
+        
+        let public_key_point = curve25519_dalek::constants::X25519_BASEPOINT * private_key_scalar;
+        let public_key_bytes = public_key_point.to_bytes();
+        
+        (private_key_bytes, public_key_bytes)
+    }
+
+    fn encrypt_tribute_input(
+        tribute_input: &TributeInputPayload,
+        contract_public_key: &[u8; 32],
+    ) -> Result<(Base58Binary, Base58Binary, Base58Binary), ContractError> {
+        use rand::rngs::OsRng;
+        use rand::RngCore;
+        
+        // Generate ephemeral keypair for a client
+        let mut ephemeral_private_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut ephemeral_private_bytes);
+        let ephemeral_private_scalar = Scalar::from_bytes_mod_order(ephemeral_private_bytes);
+        let ephemeral_public_point = curve25519_dalek::constants::X25519_BASEPOINT * ephemeral_private_scalar;
+        let ephemeral_public_bytes = ephemeral_public_point.to_bytes();
+
+        // Perform ECDH
+        let contract_public_point = MontgomeryPoint(*contract_public_key);
+        let shared_secret = contract_public_point * ephemeral_private_scalar;
+
+        // Serialize tribute input
+        let plaintext = cosmwasm_std::to_json_binary(tribute_input)
+            .map_err(|_| ContractError::InvalidPayload {})?
+            .to_vec();
+
+        // Generate random nonce
+        let mut nonce_bytes = [0u8; 12];
+        OsRng.fill_bytes(&mut nonce_bytes);
+
+        // Encrypt
+        let cipher = ChaCha20Poly1305::new((&shared_secret.to_bytes()).into());
+        let nonce = Nonce::from_slice(&nonce_bytes);
+        let ciphertext = cipher.encrypt(nonce, plaintext.as_ref())
+            .map_err(|_| ContractError::DecryptionFailed {})?;
+
+        Ok((
+            Base58Binary::from(ciphertext),
+            Base58Binary::from(nonce_bytes),
+            Base58Binary::from(ephemeral_public_bytes),
+        ))
+    }
+
+    #[test]
+    fn test_decrypt_tribute_input() {
+        // Generate contract keypair
+        let (private_key, public_key) = generate_keypair();
+
+        // Create test tribute input
+        let tribute_input = TributeInputPayload {
+            tribute_draft_id: Base58Binary::from([42u8; 32]),
+            cu_hashes: vec![Base58Binary::from([1u8; 32]), Base58Binary::from([2u8; 32])],
+            worldwide_day: "2025-08-26".to_string(),
+            settlement_currency: "usd".to_string(),
+            settlement_base_amount: Uint64::new(1000),
+            settlement_atto_amount: Uint128::zero(),
+            nominal_base_qty: Uint64::new(500),
+            nominal_atto_qty: Uint128::zero(),
+            owner: Base58Binary::from("test_owner".as_bytes()),
+        };
+
+        // Encrypt tribute input (client side)
+        let (cipher_text, nonce, ephemeral_pubkey) = 
+            encrypt_tribute_input(&tribute_input, &public_key).unwrap();
+
+        // Test decryption by calling the contract function directly
+        let tee_config = TeeConfig {
+            private_key: Base58Binary::from(private_key),
+            public_key: Base58Binary::from(public_key),
+            salt: Base58Binary::from([1u8; 32]),
+        };
+
+        let decrypted_input = decrypt_tribute_input(
+            &cipher_text,
+            &nonce,
+            &ephemeral_pubkey,
+            &tee_config,
+        ).unwrap();
+
+        // Verify decryption worked correctly
+        assert_eq!(decrypted_input.tribute_draft_id, tribute_input.tribute_draft_id);
+        assert_eq!(decrypted_input.cu_hashes, tribute_input.cu_hashes);
+        assert_eq!(decrypted_input.worldwide_day, tribute_input.worldwide_day);
+        assert_eq!(decrypted_input.settlement_currency, tribute_input.settlement_currency);
+        assert_eq!(decrypted_input.settlement_base_amount, tribute_input.settlement_base_amount);
+        assert_eq!(decrypted_input.owner, tribute_input.owner);
+    }
+
+    #[test]
+    fn test_decrypt_tribute_input_invalid_key_size() {
+        let tee_config = TeeConfig {
+            private_key: Base58Binary::from([1u8; 16]), // Invalid size
+            public_key: Base58Binary::from([1u8; 32]),
+            salt: Base58Binary::from([1u8; 32]),
+        };
+
+        let result = decrypt_tribute_input(
+            &Base58Binary::from([1u8; 32]),
+            &Base58Binary::from([1u8; 12]),
+            &Base58Binary::from([1u8; 32]),
+            &tee_config,
+        );
+
+        assert!(matches!(result, Err(ContractError::InvalidKey {})));
+    }
+
+    #[test]
+    fn test_decrypt_tribute_input_invalid_nonce_size() {
+        let tee_config = TeeConfig {
+            private_key: Base58Binary::from([1u8; 32]),
+            public_key: Base58Binary::from([1u8; 32]),
+            salt: Base58Binary::from([1u8; 32]),
+        };
+
+        let result = decrypt_tribute_input(
+            &Base58Binary::from([1u8; 32]),
+            &Base58Binary::from([1u8; 8]), // Invalid size
+            &Base58Binary::from([1u8; 32]),
+            &tee_config,
+        );
+
+        assert!(matches!(result, Err(ContractError::InvalidNonce {})));
     }
 }

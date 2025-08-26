@@ -1,6 +1,7 @@
 use crate::state::CONFIG;
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{entry_point, to_json_binary, Addr, Binary, Deps, Env, HexBinary, StdResult};
+use cosmwasm_std::{entry_point, to_json_binary, Addr, Binary, Deps, Env, StdResult};
+use outbe_utils::Base58Binary;
 
 #[cw_serde]
 #[derive(QueryResponses)]
@@ -20,7 +21,7 @@ pub struct ConfigResponse {
 
 #[cw_serde]
 pub struct PubkeyResponse {
-    pub public_key: HexBinary,
+    pub public_key: Base58Binary,
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
