@@ -6,7 +6,7 @@ pub struct Config {
     pub owner: Addr,
     pub threshold: u8,
     pub paused: bool,
-    pub last_token_id: u32 ,
+    pub last_token_id: u32,
 }
 
 #[cw_serde]
