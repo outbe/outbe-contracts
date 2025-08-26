@@ -23,5 +23,7 @@ cw-ownable = { workspace = true }
 outbe-utils = { workspace = true }
 tribute = { version = "*", path = "../tribute", features = ["library"] }
 
+halo2-base = { git = "https://github.com/bullet-tooth/halo2-lib.git", rev = "aded5e59e005bcbac0862fcfc77ab3f5c2513a4b", features = ["halo2-axiom"], default-features = false}
+
 [dev-dependencies]
 cw-multi-test = { workspace = true }
