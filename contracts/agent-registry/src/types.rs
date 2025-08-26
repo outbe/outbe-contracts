@@ -6,14 +6,14 @@ pub struct Config {
     pub owner: Addr,
     pub threshold: u8,
     pub paused: bool,
-    pub last_token_id: Uint128,
+    pub last_token_id: u32 ,
 }
 
 #[cw_serde]
 pub struct Agent {
-    pub id: String,
+    pub id: u32,
     pub agent_type: AgentType,
-    pub wallet: String,
+    pub wallet: Addr,
     pub name: String,
     pub email: String,
     pub jurisdictions: Vec<String>, // multi-select: ["eu","us",...]

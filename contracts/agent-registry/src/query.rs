@@ -100,7 +100,7 @@ fn query_by_address(
     let agents = AGENTS
         .range(deps.storage, start, end, order)
         .filter_map(|item| match item {
-            Ok((_id, agent)) if agent.wallet == addr.to_string() => Some(Ok(agent)),
+            Ok((_id, agent)) if agent.wallet == addr => Some(Ok(agent)),
             Ok(_) => None,
             Err(e) => Some(Err(e)),
         })

@@ -3,7 +3,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum ContractError {
-    #[error("{0}")]
+    #[error(transparent)]
     Std(#[from] StdError),
 
     #[error("contract is paused")]
@@ -12,10 +12,10 @@ pub enum ContractError {
     #[error("unauthorized")]
     Unauthorized,
 
-    #[error("only the wallet owner can create agent")]
+    #[error("only the wallet owner can create agent-registry")]
     OwnerError {},
 
-    #[error("agent not found")]
+    #[error("agent-registry not found")]
     AgentNotFound {},
 
     #[error("only active NRA can vote")]

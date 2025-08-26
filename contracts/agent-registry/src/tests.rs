@@ -55,10 +55,10 @@ fn test_create_agent_success() {
     let info = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info, agent_input.clone()).unwrap();
 
-    // Check agent is saved correctly
+    // Check agent-registry is saved correctly
     let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
     assert_eq!(agent.agent_type, AgentType::Nra);
-    assert_eq!(agent.wallet, USER1);
+    assert_eq!(agent.wallet.to_string(), USER1);
     assert_eq!(agent.name, "Test Agent");
     assert_eq!(agent.email, "test@example.com");
     assert_eq!(agent.jurisdictions, vec!["US", "EU"]);
@@ -67,7 +67,7 @@ fn test_create_agent_success() {
     // Check token ID is incremented
     let config = CONFIG.load(&deps.storage).unwrap();
     println!("config = {:?}", agent);
-    assert_eq!(config.last_token_id, Uint128::new(2));
+    assert_eq!(config.last_token_id, 2u32);
 }
 
 #[test]
@@ -75,12 +75,12 @@ fn test_update_agent_success() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent first
+    // Create agent-registry first
     let agent_input = create_test_agent_input();
     let info = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info.clone(), agent_input).unwrap();
 
-    // Update agent
+    // Update agent-registry
     let mut updated_input = create_test_agent_input();
     updated_input.name = "Updated Agent".to_string();
     updated_input.status = AgentStatus::OnHold;
@@ -94,11 +94,11 @@ fn test_update_agent_success() {
     )
     .unwrap();
 
-    // Check agent is updated
+    // Check agent-registry is updated
     let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
     assert_eq!(agent.name, "Updated Agent");
     assert_eq!(agent.status, AgentStatus::OnHold);
-    assert_eq!(agent.wallet, USER1); // Should remain the same
+    assert_eq!(agent.wallet.to_string(), USER1); // Should remain the same
 }
 
 #[test]
@@ -106,7 +106,7 @@ fn test_vote_agent() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent
+    // Create agent-registry
     let agent_input = create_test_agent_input();
     let info1 = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
@@ -119,7 +119,7 @@ fn test_vote_agent() {
         info2,
         "1".to_string(),
         true,
-        Some("Good agent".to_string()),
+        Some("Good agent-registry".to_string()),
     )
     .unwrap();
 
@@ -129,7 +129,7 @@ fn test_vote_agent() {
         .unwrap();
     assert_eq!(vote.address, USER2);
     assert!(vote.approve);
-    assert_eq!(vote.reason, Some("Good agent".to_string()));
+    assert_eq!(vote.reason, Some("Good agent-registry".to_string()));
 }
 
 #[test]
@@ -137,12 +137,12 @@ fn test_vote_agent_self_vote() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent
+    // Create agent-registry
     let agent_input = create_test_agent_input();
     let info1 = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info1.clone(), agent_input).unwrap();
 
-    // Try to vote for own agent
+    // Try to vote for own agent-registry
     let err = exec_vote_agent(
         deps.as_mut(),
         mock_env(),
@@ -161,7 +161,7 @@ fn test_vote_agent_already_voted() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent
+    // Create agent-registry
     let agent_input = create_test_agent_input();
     let info1 = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
@@ -198,12 +198,12 @@ fn test_agent_approval() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent
+    // Create agent-registry
     let agent_input = create_test_agent_input();
     let info1 = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
 
-    // Vote 1 - should not approve yet (threshold is 3)
+    // Vote 1 - should not approve yet (a threshold is 3)
     let info2 = message_info(&Addr::unchecked(USER2), &[]);
     exec_vote_agent(
         deps.as_mut(),
@@ -254,12 +254,12 @@ fn test_agent_rejection() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent
+    // Create agent-registry
     let agent_input = create_test_agent_input();
     let info1 = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
 
-    // Single reject vote should reject the agent
+    // Single reject vote should reject the agent-registry
     let info2 = message_info(&Addr::unchecked(USER2), &[]);
     exec_vote_agent(
         deps.as_mut(),

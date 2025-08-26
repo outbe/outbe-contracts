@@ -3,7 +3,7 @@
 version = 3
 
 [[package]]
-name = "agent"
+name = "agent-registry"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
