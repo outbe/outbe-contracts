@@ -1,6 +1,10 @@
 {
   "tribute_address": null,
   "owner": null,
-  "tee_config": null,
+  "tee_config": {
+    "private_key": "Bq1U9hNZWuawyK4bF9fepe41xhAJRP3wYf6rvY9U1YUN",
+    "public_key": "Azd4rGs6VYNy61Tib3r2W7AKEQgaoT294Xrg8umSTQCD",
+    "salt": "4vJ9JU1bJJE96FWSJKvHsmmFADCg4gpZQff4P3bkLKi"
+  },
   "zk_config": null
 }
