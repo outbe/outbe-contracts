@@ -224,21 +224,30 @@ fn update_used_state(
     storage: &mut dyn Storage,
     tribute: &TributeInputPayload,
 ) -> Result<Empty, ContractError> {
-    let tribute_draft_id = generate_tribute_draft_id_hash(&tribute.owner, &tribute.worldwide_day)?;
-
-    // Validate that provided draft ID matches tribute_draft_id
-    if tribute.tribute_draft_id != tribute_draft_id {
-        return Err(ContractError::InvalidDraftId {});
+    // NB: temporary disable validation for demo
+    #[cfg(not(feature = "demo"))]
+    {
+        let tribute_draft_id = crate::contract::generate_tribute_draft_id_hash(
+            &tribute.owner,
+            &tribute.worldwide_day,
+        )?;
+        // Validate that provided draft ID matches tribute_draft_id
+        if tribute.tribute_draft_id != tribute_draft_id {
+            return Err(ContractError::InvalidDraftId {});
+        }
     }
 
-    USED_TRIBUTE_IDS.update(storage, tribute_draft_id.to_base58(), |old| match old {
-        Some(_) => Err(ContractError::IdAlreadyExists {}),
-        None => Ok(Empty::default()),
-    })?;
+    USED_TRIBUTE_IDS.update(
+        storage,
+        tribute.tribute_draft_id.to_base58(),
+        |old| match old {
+            Some(_) => Err(ContractError::IdAlreadyExists {}),
+            None => Ok(Empty::default()),
+        },
+    )?;
 
     for cu_hash in tribute.cu_hashes.clone() {
-        let cu_hash_str = cu_hash.to_base58();
-        USED_CU_HASHES.update(storage, cu_hash_str, |old| match old {
+        USED_CU_HASHES.update(storage, cu_hash.to_base58(), |old| match old {
             Some(_) => Err(ContractError::CUAlreadyExists {}),
             None => Ok(Empty::default()),
         })?;
