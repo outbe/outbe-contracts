@@ -101,21 +101,7 @@ fn test_decrypt_tribute_input() {
     .unwrap();
 
     // Verify decryption worked correctly
-    assert_eq!(
-        decrypted_input.tribute_draft_id,
-        tribute_input.tribute_draft_id
-    );
-    assert_eq!(decrypted_input.cu_hashes, tribute_input.cu_hashes);
-    assert_eq!(decrypted_input.worldwide_day, tribute_input.worldwide_day);
-    assert_eq!(
-        decrypted_input.settlement_currency,
-        tribute_input.settlement_currency
-    );
-    assert_eq!(
-        decrypted_input.settlement_base_amount,
-        tribute_input.settlement_base_amount
-    );
-    assert_eq!(decrypted_input.owner, tribute_input.owner);
+    assert_eq!(decrypted_input, tribute_input);
 }
 
 #[test]
