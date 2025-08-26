@@ -5,20 +5,20 @@ use crate::msg::{
 };
 use crate::state::{Config, TeeConfig, CONFIG, OWNER, USED_CU_HASHES, USED_TRIBUTE_IDS};
 use crate::types::TributeInputPayload;
+use chacha20poly1305::{
+    aead::{Aead, KeyInit},
+    ChaCha20Poly1305, Nonce,
+};
 use cosmwasm_std::{
     entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, HexBinary, MessageInfo,
     Response, Storage, WasmMsg,
 };
+use curve25519_dalek::{MontgomeryPoint, Scalar};
 use cw_ownable::Action;
 use outbe_utils::amount_utils::normalize_amount;
 use outbe_utils::date::{iso_to_days, iso_to_ts, Iso8601Date};
 use outbe_utils::denom::Denom;
 use outbe_utils::{gen_compound_hash, gen_hash, Base58Binary};
-use curve25519_dalek::{MontgomeryPoint, Scalar};
-use chacha20poly1305::{
-    aead::{Aead, KeyInit},
-    ChaCha20Poly1305, Nonce,
-};
 
 const CONTRACT_NAME: &str = "outbe.net:tribute-factory";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -74,7 +74,15 @@ pub fn execute(
             nonce,
             ephemeral_pubkey,
             zk_proof,
-        } => execute_offer(deps, env, info, cipher_text, nonce, ephemeral_pubkey, zk_proof),
+        } => execute_offer(
+            deps,
+            env,
+            info,
+            cipher_text,
+            nonce,
+            ephemeral_pubkey,
+            zk_proof,
+        ),
         #[cfg(feature = "demo")]
         ExecuteMsg::OfferInsecure {
             tribute_input,
@@ -114,20 +122,22 @@ fn execute_offer(
     zk_proof: ZkProof,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
-    let tee_config = config
-        .tee_config
-        .ok_or(ContractError::NotInitialized {})?;
+    let tee_config = config.tee_config.ok_or(ContractError::NotInitialized {})?;
 
     // Decrypt the tribute input using ECDHE
-    let tribute_input = decrypt_tribute_input(
-        &cipher_text,
-        &nonce,
-        &ephemeral_pubkey,
-        &tee_config,
-    )?;
+    let tribute_input =
+        decrypt_tribute_input(&cipher_text, &nonce, &ephemeral_pubkey, &tee_config)?;
 
     // Process the decrypted tribute input (same logic as OfferInsecure)
-    execute_offer_logic(deps, env, info, tribute_input, zk_proof, #[cfg(feature = "demo")] None)
+    execute_offer_logic(
+        deps,
+        env,
+        info,
+        tribute_input,
+        zk_proof,
+        #[cfg(feature = "demo")]
+        None,
+    )
 }
 
 pub(crate) fn decrypt_tribute_input(
@@ -154,11 +164,14 @@ pub(crate) fn decrypt_tribute_input(
     }
 
     // Create X25519 keys
-    let private_key_array: [u8; 32] = private_key_bytes.try_into()
+    let private_key_array: [u8; 32] = private_key_bytes
+        .try_into()
         .map_err(|_| ContractError::InvalidKey {})?;
-    let ephemeral_pubkey_array: [u8; 32] = ephemeral_pubkey_bytes.try_into()
+    let ephemeral_pubkey_array: [u8; 32] = ephemeral_pubkey_bytes
+        .try_into()
         .map_err(|_| ContractError::InvalidKey {})?;
-    let nonce_array: [u8; 12] = nonce_bytes.try_into()
+    let nonce_array: [u8; 12] = nonce_bytes
+        .try_into()
         .map_err(|_| ContractError::InvalidNonce {})?;
 
     let private_key = Scalar::from_bytes_mod_order(private_key_array);
@@ -177,8 +190,8 @@ pub(crate) fn decrypt_tribute_input(
         .map_err(|_| ContractError::DecryptionFailed {})?;
 
     // Deserialize the decrypted data
-    let tribute_input: TributeInputPayload = cosmwasm_std::from_json(&decrypted_bytes)
-        .map_err(|_| ContractError::InvalidPayload {})?;
+    let tribute_input: TributeInputPayload =
+        cosmwasm_std::from_json(&decrypted_bytes).map_err(|_| ContractError::InvalidPayload {})?;
 
     Ok(tribute_input)
 }
@@ -234,14 +247,7 @@ fn execute_offer_insecure(
     zk_proof: ZkProof,
     tribute_owner_l1: Option<Addr>,
 ) -> Result<Response, ContractError> {
-    execute_offer_logic(
-        deps,
-        env,
-        info,
-        tribute_input,
-        zk_proof,
-        tribute_owner_l1,
-    )
+    execute_offer_logic(deps, env, info, tribute_input, zk_proof, tribute_owner_l1)
 }
 
 fn execute_offer_logic(
@@ -609,5 +615,4 @@ mod tests {
         let err = update_used_state(deps.as_mut().storage, &tribute).unwrap_err();
         assert!(matches!(err, ContractError::InvalidDraftId {}));
     }
-
 }
