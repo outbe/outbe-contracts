@@ -1,5 +1,6 @@
-use crate::types::{AccountInput, AgentInput};
+use crate::types::{AccountInput, AccountStatus, AgentInput};
 use cosmwasm_schema::cw_serde;
+use cosmwasm_std::Addr;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -24,5 +25,10 @@ pub enum ExecuteMsg {
 
     UpdateAccount {
         account: AccountInput,
+    },
+    ChangeAccountStatus {
+        address: Addr,
+        status: AccountStatus,
+        reason: Option<String>,
     },
 }

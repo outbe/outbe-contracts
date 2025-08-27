@@ -91,6 +91,7 @@ pub struct AgentVotesResponse {
 #[cw_serde]
 pub struct Account {
     pub agent_type: AgentType,
+    pub wallet: Addr,
     pub name: String,
     pub email: String,
     pub jurisdictions: Vec<String>, // multi-select: ["eu","us",...]
@@ -98,7 +99,7 @@ pub struct Account {
     pub metadata_json: Option<String>,
     pub docs_uri: Vec<String>,
     pub discord: Option<String>,
-    pub status: AgentStatus,
+    pub status: AccountStatus,
     pub avg_cu: Uint128,
     pub submitted_at: Timestamp,
     pub updated_at: Timestamp,

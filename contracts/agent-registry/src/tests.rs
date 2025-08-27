@@ -1,10 +1,11 @@
 use crate::contract::{
-    exec_vote_agent, execute_add_agent, execute_update_account, execute_update_agent, instantiate,
+    exec_vote_agent, execute_add_agent, execute_change_account_status, execute_update_account,
+    execute_update_agent, instantiate,
 };
 use crate::error::ContractError;
 use crate::msg::InstantiateMsg;
 use crate::state::{ACCOUNTS, AGENTS, AGENT_VOTES, CONFIG};
-use crate::types::{AccountInput, AgentInput, AgentStatus, AgentType};
+use crate::types::{AccountInput, AccountStatus, AgentInput, AgentStatus, AgentType};
 use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
 use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
 
@@ -344,7 +345,7 @@ fn test_account_created_on_agent_approval() {
         .unwrap();
     assert_eq!(account.name, "Test Agent");
     assert_eq!(account.email, "test@example.com");
-    assert_eq!(account.status, AgentStatus::Approved);
+    assert_eq!(account.status, AccountStatus::Approved);
     assert_eq!(account.agent_type, AgentType::Nra);
 }
 
@@ -402,7 +403,72 @@ fn test_update_account_success() {
     assert_eq!(account.email, "updated@example.com");
     assert_eq!(account.jurisdictions, vec!["US", "CA"]);
     assert_eq!(account.avg_cu, Uint128::new(2000));
-    assert_eq!(account.status, AgentStatus::Approved); // Status should remain unchanged
+    assert_eq!(account.status, AccountStatus::Approved); // Status should remain unchanged
+}
+
+#[test]
+fn test_change_account_status_success() {
+    let mut deps = mock_dependencies();
+    instantiate_contract(deps.as_mut()).unwrap();
+
+    // Create and approve agent first (to create account)
+    let agent_input = create_test_agent_input();
+    let info1 = message_info(&Addr::unchecked(USER1), &[]);
+    execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
+
+    // Approve agent (create account)
+    let info2 = message_info(&Addr::unchecked(USER2), &[]);
+    exec_vote_agent(
+        deps.as_mut(),
+        mock_env(),
+        info2,
+        "1".to_string(),
+        true,
+        None,
+    )
+    .unwrap();
+    let info3 = message_info(&Addr::unchecked(USER3), &[]);
+    exec_vote_agent(
+        deps.as_mut(),
+        mock_env(),
+        info3,
+        "1".to_string(),
+        true,
+        None,
+    )
+    .unwrap();
+    let info4 = message_info(&Addr::unchecked(USER4), &[]);
+    exec_vote_agent(
+        deps.as_mut(),
+        mock_env(),
+        info4,
+        "1".to_string(),
+        true,
+        None,
+    )
+    .unwrap();
+
+    // Check initial status
+    let account_before = ACCOUNTS
+        .load(&deps.storage, Addr::unchecked(USER1))
+        .unwrap();
+    assert_eq!(account_before.status, AccountStatus::Approved);
+
+    // Change account status to Blacklisted
+    execute_change_account_status(
+        deps.as_mut(),
+        mock_env(),
+        Addr::unchecked(USER1),
+        AccountStatus::Blacklisted,
+        Some("Violation of terms".to_string()),
+    )
+    .unwrap();
+
+    // Check account status is updated
+    let account_after = ACCOUNTS
+        .load(&deps.storage, Addr::unchecked(USER1))
+        .unwrap();
+    assert_eq!(account_after.status, AccountStatus::Blacklisted);
 }
 
 #[test]

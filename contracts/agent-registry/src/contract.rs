@@ -1,8 +1,10 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{ACCOUNTS, AGENTS, AGENT_VOTES, CONFIG};
-use crate::types::{Account, AccountInput, Agent, AgentInput, AgentStatus, Config, Vote};
-use cosmwasm_std::{entry_point, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use crate::types::{
+    Account, AccountInput, AccountStatus, Agent, AgentInput, AgentStatus, Config, Vote,
+};
+use cosmwasm_std::{entry_point, Addr, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
 const CONTRACT_NAME: &str = "outbe.net:agent-registry";
@@ -49,6 +51,11 @@ pub fn execute(
             reason,
         } => exec_vote_agent(deps, env, info, id, approve, reason),
         ExecuteMsg::UpdateAccount { account } => execute_update_account(deps, env, info, account),
+        ExecuteMsg::ChangeAccountStatus {
+            address,
+            status,
+            reason,
+        } => execute_change_account_status(deps, env, address, status, reason),
     }
 }
 
@@ -218,6 +225,7 @@ fn create_account_from_agent(deps: DepsMut, env: Env, agent: &Agent) -> Result<(
     // Create account from approved agent, using agent's wallet as key
     let account = Account {
         agent_type: agent.agent_type.clone(),
+        wallet: agent.wallet.clone(),
         name: agent.name.clone(),
         email: agent.email.clone(),
         jurisdictions: agent.jurisdictions.clone(),
@@ -225,7 +233,7 @@ fn create_account_from_agent(deps: DepsMut, env: Env, agent: &Agent) -> Result<(
         metadata_json: agent.metadata_json.clone(),
         docs_uri: agent.docs_uri.clone(),
         discord: agent.discord.clone(),
-        status: AgentStatus::Approved,
+        status: AccountStatus::Approved,
         avg_cu: agent.avg_cu,
         submitted_at: env.block.time,
         updated_at: env.block.time,
@@ -265,4 +273,36 @@ pub fn execute_update_account(
         .add_attribute("action", "agent-registry::update_account")
         .add_attribute("account_address", info.sender.to_string())
         .add_attribute("updated_at", existing_account.updated_at.to_string()))
+}
+
+pub fn execute_change_account_status(
+    deps: DepsMut,
+    env: Env,
+    address: Addr,
+    status: AccountStatus,
+    reason: Option<String>,
+) -> Result<Response, ContractError> {
+    // Check if account exists
+    let mut account = ACCOUNTS
+        .may_load(deps.storage, address.clone())?
+        .ok_or(ContractError::AccountNotFound {})?;
+
+    let old_status = account.status.clone();
+    account.status = status.clone();
+    account.updated_at = env.block.time;
+
+    ACCOUNTS.save(deps.storage, address.clone(), &account)?;
+
+    let mut response = Response::new()
+        .add_attribute("action", "agent-registry::change_account_status")
+        .add_attribute("account_address", address.to_string())
+        .add_attribute("old_status", format!("{:?}", old_status))
+        .add_attribute("new_status", format!("{:?}", status))
+        .add_attribute("updated_at", account.updated_at.to_string());
+
+    if let Some(reason_text) = reason {
+        response = response.add_attribute("reason", reason_text);
+    }
+
+    Ok(response)
 }

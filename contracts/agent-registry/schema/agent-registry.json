@@ -125,6 +125,37 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "change_account_status"
+        ],
+        "properties": {
+          "change_account_status": {
+            "type": "object",
+            "required": [
+              "address",
+              "status"
+            ],
+            "properties": {
+              "address": {
+                "$ref": "#/definitions/Addr"
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "$ref": "#/definitions/AccountStatus"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ],
     "definitions": {
@@ -179,6 +210,18 @@
           }
         },
         "additionalProperties": false
+      },
+      "AccountStatus": {
+        "type": "string",
+        "enum": [
+          "approved",
+          "blacklisted",
+          "on_hold"
+        ]
+      },
+      "Addr": {
+        "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+        "type": "string"
       },
       "AgentInput": {
         "type": "object",
@@ -398,10 +441,10 @@
       {
         "type": "object",
         "required": [
-          "get_account_address"
+          "get_account_by_address"
         ],
         "properties": {
-          "get_account_address": {
+          "get_account_by_address": {
             "type": "object",
             "required": [
               "address"
@@ -473,7 +516,7 @@
   "migrate": null,
   "sudo": null,
   "responses": {
-    "get_account_address": {
+    "get_account_by_address": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AccountResponse",
       "type": "object",
@@ -498,7 +541,8 @@
             "name",
             "status",
             "submitted_at",
-            "updated_at"
+            "updated_at",
+            "wallet"
           ],
           "properties": {
             "agent_type": {
@@ -544,25 +588,31 @@
               "type": "string"
             },
             "status": {
-              "$ref": "#/definitions/AgentStatus"
+              "$ref": "#/definitions/AccountStatus"
             },
             "submitted_at": {
               "$ref": "#/definitions/Timestamp"
             },
             "updated_at": {
               "$ref": "#/definitions/Timestamp"
+            },
+            "wallet": {
+              "$ref": "#/definitions/Addr"
             }
           },
           "additionalProperties": false
         },
-        "AgentStatus": {
+        "AccountStatus": {
           "type": "string",
           "enum": [
-            "pending",
             "approved",
-            "rejected",
-            "recalled"
+            "blacklisted",
+            "on_hold"
           ]
+        },
+        "Addr": {
+          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+          "type": "string"
         },
         "AgentType": {
           "type": "string",
@@ -889,7 +939,8 @@
             "name",
             "status",
             "submitted_at",
-            "updated_at"
+            "updated_at",
+            "wallet"
           ],
           "properties": {
             "agent_type": {
@@ -935,25 +986,31 @@
               "type": "string"
             },
             "status": {
-              "$ref": "#/definitions/AgentStatus"
+              "$ref": "#/definitions/AccountStatus"
             },
             "submitted_at": {
               "$ref": "#/definitions/Timestamp"
             },
             "updated_at": {
               "$ref": "#/definitions/Timestamp"
+            },
+            "wallet": {
+              "$ref": "#/definitions/Addr"
             }
           },
           "additionalProperties": false
         },
-        "AgentStatus": {
+        "AccountStatus": {
           "type": "string",
           "enum": [
-            "pending",
             "approved",
-            "rejected",
-            "recalled"
+            "blacklisted",
+            "on_hold"
           ]
+        },
+        "Addr": {
+          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+          "type": "string"
         },
         "AgentType": {
           "type": "string",
