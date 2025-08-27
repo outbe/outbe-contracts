@@ -35,7 +35,7 @@ pub enum QueryMsg {
 
     #[returns(ListAllAccountsResponse)]
     ListAllAccounts {
-        start_after: Option<String>,
+        start_after: Option<Addr>,
         limit: Option<u32>,
         query_order: Option<Order>,
     },
@@ -153,24 +153,16 @@ fn query_account_by_address(deps: Deps, address: Addr) -> StdResult<AccountRespo
 
 fn query_all_accounts(
     deps: Deps,
-    start_after: Option<String>,
+    start_after: Option<Addr>,
     limit: Option<u32>,
     query_order: Option<Order>,
 ) -> StdResult<ListAllAccountsResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let order = query_order.unwrap_or(Order::Ascending);
 
-    // Convert string to Addr if start_after is provided
-    let start_bound = if let Some(addr_str) = start_after {
-        let addr = deps.api.addr_validate(&addr_str)?;
-        Some(Bound::exclusive(addr))
-    } else {
-        None
-    };
-
     let (start, end) = match order {
-        Order::Ascending => (start_bound, None),
-        Order::Descending => (None, start_bound),
+        Order::Ascending => (start_after.map(Bound::exclusive), None),
+        Order::Descending => (None, start_after.map(Bound::exclusive)),
     };
 
     let accounts = ACCOUNTS
@@ -181,3 +173,5 @@ fn query_all_accounts(
 
     Ok(ListAllAccountsResponse { accounts })
 }
+
+
