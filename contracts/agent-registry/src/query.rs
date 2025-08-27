@@ -1,7 +1,10 @@
-use crate::state::{AGENTS, AGENT_VOTES};
-use crate::types::{Agent, AgentResponse, AgentVotesResponse, ListAllResponse, Vote};
+use crate::state::{ACCOUNTS, AGENTS, AGENT_VOTES};
+use crate::types::{
+    Account, AccountResponse, Agent, AgentResponse, AgentVotesResponse, ListAllAccountsResponse,
+    ListAllResponse, Vote,
+};
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{entry_point, to_json_binary, Binary, Deps, Env, Order, StdResult};
+use cosmwasm_std::{entry_point, to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
 use cw_storage_plus::Bound;
 
 pub const DEFAULT_LIMIT: u32 = 10;
@@ -26,6 +29,16 @@ pub enum QueryMsg {
     },
     #[returns(AgentVotesResponse)]
     QueryVotesByAgent { id: String },
+
+    #[returns(AccountResponse)]
+    GetAccountAddress { address: Addr },
+
+    #[returns(ListAllAccountsResponse)]
+    ListAllAccounts {
+        start_after: Option<String>,
+        limit: Option<u32>,
+        query_order: Option<Order>,
+    },
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -50,6 +63,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             query_order,
         )?),
         QueryMsg::QueryVotesByAgent { id } => to_json_binary(&query_votes_by_agent(deps, id)?),
+
+        QueryMsg::GetAccountAddress { address } => {
+            to_json_binary(&query_account_by_address(deps, address)?)
+        }
+        QueryMsg::ListAllAccounts {
+            start_after,
+            limit,
+            query_order,
+        } => to_json_binary(&query_all_accounts(deps, start_after, limit, query_order)?),
     }
 }
 
@@ -121,4 +143,41 @@ pub fn query_votes_by_agent(deps: Deps, id: String) -> StdResult<AgentVotesRespo
         .collect::<StdResult<Vec<Vote>>>()?;
 
     Ok(AgentVotesResponse { votes })
+}
+
+fn query_account_by_address(deps: Deps, address: Addr) -> StdResult<AccountResponse> {
+    let account = ACCOUNTS.load(deps.storage, address)?;
+
+    Ok(AccountResponse { account })
+}
+
+fn query_all_accounts(
+    deps: Deps,
+    start_after: Option<String>,
+    limit: Option<u32>,
+    query_order: Option<Order>,
+) -> StdResult<ListAllAccountsResponse> {
+    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    let order = query_order.unwrap_or(Order::Ascending);
+
+    // Convert string to Addr if start_after is provided
+    let start_bound = if let Some(addr_str) = start_after {
+        let addr = deps.api.addr_validate(&addr_str)?;
+        Some(Bound::exclusive(addr))
+    } else {
+        None
+    };
+
+    let (start, end) = match order {
+        Order::Ascending => (start_bound, None),
+        Order::Descending => (None, start_bound),
+    };
+
+    let accounts = ACCOUNTS
+        .range(deps.storage, start, end, order)
+        .take(limit)
+        .map(|item| item.map(|(_addr, account)| account))
+        .collect::<StdResult<Vec<Account>>>()?;
+
+    Ok(ListAllAccountsResponse { accounts })
 }

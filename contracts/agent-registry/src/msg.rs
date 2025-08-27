@@ -1,4 +1,4 @@
-use crate::types::AgentInput;
+use crate::types::{AccountInput, AgentInput};
 use cosmwasm_schema::cw_serde;
 
 #[cw_serde]
@@ -20,5 +20,9 @@ pub enum ExecuteMsg {
         id: String,
         approve: bool,
         reason: Option<String>,
+    },
+
+    UpdateAccount {
+        account: AccountInput,
     },
 }

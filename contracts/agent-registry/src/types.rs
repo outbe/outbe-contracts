@@ -55,9 +55,14 @@ pub enum AgentStatus {
     Pending,
     Approved,
     Rejected,
-    Removed,
-    OnHold,
+    Recalled,
+}
+
+#[cw_serde]
+pub enum AccountStatus {
+    Approved,
     Blacklisted,
+    OnHold,
 }
 
 #[cw_serde]
@@ -81,4 +86,42 @@ pub struct Vote {
 #[cw_serde]
 pub struct AgentVotesResponse {
     pub votes: Vec<Vote>,
+}
+
+#[cw_serde]
+pub struct Account {
+    pub agent_type: AgentType,
+    pub name: String,
+    pub email: String,
+    pub jurisdictions: Vec<String>, // multi-select: ["eu","us",...]
+    pub endpoint: Option<String>,
+    pub metadata_json: Option<String>,
+    pub docs_uri: Vec<String>,
+    pub discord: Option<String>,
+    pub status: AgentStatus,
+    pub avg_cu: Uint128,
+    pub submitted_at: Timestamp,
+    pub updated_at: Timestamp,
+}
+
+#[cw_serde]
+pub struct AccountInput {
+    pub name: String,
+    pub email: String,
+    pub jurisdictions: Vec<String>,
+    pub endpoint: Option<String>,
+    pub metadata_json: Option<String>,
+    pub docs_uri: Vec<String>,
+    pub discord: Option<String>,
+    pub avg_cu: Uint128,
+}
+
+#[cw_serde]
+pub struct AccountResponse {
+    pub account: Account,
+}
+
+#[cw_serde]
+pub struct ListAllAccountsResponse {
+    pub accounts: Vec<Account>,
 }

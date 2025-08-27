@@ -1,8 +1,10 @@
-use crate::contract::{exec_vote_agent, execute_add_agent, execute_update_agent, instantiate};
+use crate::contract::{
+    exec_vote_agent, execute_add_agent, execute_update_account, execute_update_agent, instantiate,
+};
 use crate::error::ContractError;
 use crate::msg::InstantiateMsg;
-use crate::state::{AGENTS, AGENT_VOTES, CONFIG};
-use crate::types::{AgentInput, AgentStatus, AgentType};
+use crate::state::{ACCOUNTS, AGENTS, AGENT_VOTES, CONFIG};
+use crate::types::{AccountInput, AgentInput, AgentStatus, AgentType};
 use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
 use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
 
@@ -24,6 +26,19 @@ fn create_test_agent_input() -> AgentInput {
         discord: Some("testuser#1234".to_string()),
         status: AgentStatus::Pending,
         avg_cu: Uint128::new(1000),
+    }
+}
+
+fn create_test_account_input() -> AccountInput {
+    AccountInput {
+        name: "Updated Account Name".to_string(),
+        email: "updated@example.com".to_string(),
+        jurisdictions: vec!["US".to_string(), "CA".to_string()],
+        endpoint: Some("https://updated-api.example.com".to_string()),
+        metadata_json: Some(r#"{"updated": "metadata"}"#.to_string()),
+        docs_uri: vec!["https://updated-docs.example.com".to_string()],
+        discord: Some("updateduser#5678".to_string()),
+        avg_cu: Uint128::new(2000),
     }
 }
 
@@ -83,7 +98,7 @@ fn test_update_agent_success() {
     // Update agent-registry
     let mut updated_input = create_test_agent_input();
     updated_input.name = "Updated Agent".to_string();
-    updated_input.status = AgentStatus::OnHold;
+    updated_input.status = AgentStatus::Recalled;
 
     execute_update_agent(
         deps.as_mut(),
@@ -97,7 +112,7 @@ fn test_update_agent_success() {
     // Check agent-registry is updated
     let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
     assert_eq!(agent.name, "Updated Agent");
-    assert_eq!(agent.status, AgentStatus::OnHold);
+    assert_eq!(agent.status, AgentStatus::Recalled);
     assert_eq!(agent.wallet.to_string(), USER1); // Should remain the same
 }
 
@@ -273,4 +288,132 @@ fn test_agent_rejection() {
 
     let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
     assert_eq!(agent.status, AgentStatus::Rejected);
+}
+
+#[test]
+fn test_account_created_on_agent_approval() {
+    let mut deps = mock_dependencies();
+    instantiate_contract(deps.as_mut()).unwrap();
+
+    // Create agent
+    let agent_input = create_test_agent_input();
+    let info1 = message_info(&Addr::unchecked(USER1), &[]);
+    execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
+
+    // Vote 3 times to approve agent (threshold is 3)
+    let info2 = message_info(&Addr::unchecked(USER2), &[]);
+    exec_vote_agent(
+        deps.as_mut(),
+        mock_env(),
+        info2,
+        "1".to_string(),
+        true,
+        None,
+    )
+    .unwrap();
+
+    let info3 = message_info(&Addr::unchecked(USER3), &[]);
+    exec_vote_agent(
+        deps.as_mut(),
+        mock_env(),
+        info3,
+        "1".to_string(),
+        true,
+        None,
+    )
+    .unwrap();
+
+    let info4 = message_info(&Addr::unchecked(USER4), &[]);
+    exec_vote_agent(
+        deps.as_mut(),
+        mock_env(),
+        info4,
+        "1".to_string(),
+        true,
+        None,
+    )
+    .unwrap();
+
+    // Check that agent is approved
+    let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
+    assert_eq!(agent.status, AgentStatus::Approved);
+
+    // Check that account was created automatically
+    let account = ACCOUNTS
+        .load(&deps.storage, Addr::unchecked(USER1))
+        .unwrap();
+    assert_eq!(account.name, "Test Agent");
+    assert_eq!(account.email, "test@example.com");
+    assert_eq!(account.status, AgentStatus::Approved);
+    assert_eq!(account.agent_type, AgentType::Nra);
+}
+
+#[test]
+fn test_update_account_success() {
+    let mut deps = mock_dependencies();
+    instantiate_contract(deps.as_mut()).unwrap();
+
+    // Create and approve agent first (to create account)
+    let agent_input = create_test_agent_input();
+    let info1 = message_info(&Addr::unchecked(USER1), &[]);
+    execute_add_agent(deps.as_mut(), mock_env(), info1.clone(), agent_input).unwrap();
+
+    // Approve agent (create account)
+    let info2 = message_info(&Addr::unchecked(USER2), &[]);
+    exec_vote_agent(
+        deps.as_mut(),
+        mock_env(),
+        info2,
+        "1".to_string(),
+        true,
+        None,
+    )
+    .unwrap();
+    let info3 = message_info(&Addr::unchecked(USER3), &[]);
+    exec_vote_agent(
+        deps.as_mut(),
+        mock_env(),
+        info3,
+        "1".to_string(),
+        true,
+        None,
+    )
+    .unwrap();
+    let info4 = message_info(&Addr::unchecked(USER4), &[]);
+    exec_vote_agent(
+        deps.as_mut(),
+        mock_env(),
+        info4,
+        "1".to_string(),
+        true,
+        None,
+    )
+    .unwrap();
+
+    // Update account
+    let account_input = create_test_account_input();
+    execute_update_account(deps.as_mut(), mock_env(), info1, account_input).unwrap();
+
+    // Check account is updated
+    let account = ACCOUNTS
+        .load(&deps.storage, Addr::unchecked(USER1))
+        .unwrap();
+    assert_eq!(account.name, "Updated Account Name");
+    assert_eq!(account.email, "updated@example.com");
+    assert_eq!(account.jurisdictions, vec!["US", "CA"]);
+    assert_eq!(account.avg_cu, Uint128::new(2000));
+    assert_eq!(account.status, AgentStatus::Approved); // Status should remain unchanged
+}
+
+#[test]
+fn test_update_account_not_found() {
+    let mut deps = mock_dependencies();
+    instantiate_contract(deps.as_mut()).unwrap();
+
+    // Try to update account that doesn't exist
+    let account_input = create_test_account_input();
+    let info1 = message_info(&Addr::unchecked(USER1), &[]);
+
+    let err = execute_update_account(deps.as_mut(), mock_env(), info1, account_input).unwrap_err();
+    assert!(matches!(err, ContractError::AccountNotFound {}));
 }

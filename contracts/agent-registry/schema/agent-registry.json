@@ -104,9 +104,82 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "update_account"
+        ],
+        "properties": {
+          "update_account": {
+            "type": "object",
+            "required": [
+              "account"
+            ],
+            "properties": {
+              "account": {
+                "$ref": "#/definitions/AccountInput"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ],
     "definitions": {
+      "AccountInput": {
+        "type": "object",
+        "required": [
+          "avg_cu",
+          "docs_uri",
+          "email",
+          "jurisdictions",
+          "name"
+        ],
+        "properties": {
+          "avg_cu": {
+            "$ref": "#/definitions/Uint128"
+          },
+          "discord": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "docs_uri": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "email": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "jurisdictions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata_json": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "AgentInput": {
         "type": "object",
         "required": [
@@ -173,9 +246,7 @@
           "pending",
           "approved",
           "rejected",
-          "removed",
-          "on_hold",
-          "blacklisted"
+          "recalled"
         ]
       },
       "AgentType": {
@@ -323,9 +394,73 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "get_account_address"
+        ],
+        "properties": {
+          "get_account_address": {
+            "type": "object",
+            "required": [
+              "address"
+            ],
+            "properties": {
+              "address": {
+                "$ref": "#/definitions/Addr"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "list_all_accounts"
+        ],
+        "properties": {
+          "list_all_accounts": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint32",
+                "minimum": 0.0
+              },
+              "query_order": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Order"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "start_after": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ],
     "definitions": {
+      "Addr": {
+        "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+        "type": "string"
+      },
       "Order": {
         "type": "string",
         "enum": [
@@ -338,6 +473,125 @@
   "migrate": null,
   "sudo": null,
   "responses": {
+    "get_account_address": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AccountResponse",
+      "type": "object",
+      "required": [
+        "account"
+      ],
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/Account"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Account": {
+          "type": "object",
+          "required": [
+            "agent_type",
+            "avg_cu",
+            "docs_uri",
+            "email",
+            "jurisdictions",
+            "name",
+            "status",
+            "submitted_at",
+            "updated_at"
+          ],
+          "properties": {
+            "agent_type": {
+              "$ref": "#/definitions/AgentType"
+            },
+            "avg_cu": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "discord": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "docs_uri": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "email": {
+              "type": "string"
+            },
+            "endpoint": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "jurisdictions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "metadata_json": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/definitions/AgentStatus"
+            },
+            "submitted_at": {
+              "$ref": "#/definitions/Timestamp"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Timestamp"
+            }
+          },
+          "additionalProperties": false
+        },
+        "AgentStatus": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved",
+            "rejected",
+            "recalled"
+          ]
+        },
+        "AgentType": {
+          "type": "string",
+          "enum": [
+            "nra",
+            "cra",
+            "rfa",
+            "iba",
+            "cca"
+          ]
+        },
+        "Timestamp": {
+          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Uint64"
+            }
+          ]
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        },
+        "Uint64": {
+          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
     "get_by_id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AgentResponse",
@@ -440,9 +694,7 @@
             "pending",
             "approved",
             "rejected",
-            "removed",
-            "on_hold",
-            "blacklisted"
+            "recalled"
           ]
         },
         "AgentType": {
@@ -578,9 +830,129 @@
             "pending",
             "approved",
             "rejected",
-            "removed",
-            "on_hold",
-            "blacklisted"
+            "recalled"
+          ]
+        },
+        "AgentType": {
+          "type": "string",
+          "enum": [
+            "nra",
+            "cra",
+            "rfa",
+            "iba",
+            "cca"
+          ]
+        },
+        "Timestamp": {
+          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Uint64"
+            }
+          ]
+        },
+        "Uint128": {
+          "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+          "type": "string"
+        },
+        "Uint64": {
+          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "list_all_accounts": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ListAllAccountsResponse",
+      "type": "object",
+      "required": [
+        "accounts"
+      ],
+      "properties": {
+        "accounts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Account"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Account": {
+          "type": "object",
+          "required": [
+            "agent_type",
+            "avg_cu",
+            "docs_uri",
+            "email",
+            "jurisdictions",
+            "name",
+            "status",
+            "submitted_at",
+            "updated_at"
+          ],
+          "properties": {
+            "agent_type": {
+              "$ref": "#/definitions/AgentType"
+            },
+            "avg_cu": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "discord": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "docs_uri": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "email": {
+              "type": "string"
+            },
+            "endpoint": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "jurisdictions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "metadata_json": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/definitions/AgentStatus"
+            },
+            "submitted_at": {
+              "$ref": "#/definitions/Timestamp"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Timestamp"
+            }
+          },
+          "additionalProperties": false
+        },
+        "AgentStatus": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved",
+            "rejected",
+            "recalled"
           ]
         },
         "AgentType": {
@@ -716,9 +1088,7 @@
             "pending",
             "approved",
             "rejected",
-            "removed",
-            "on_hold",
-            "blacklisted"
+            "recalled"
           ]
         },
         "AgentType": {

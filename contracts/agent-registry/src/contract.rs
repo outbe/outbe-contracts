@@ -1,7 +1,7 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{AGENTS, AGENT_VOTES, CONFIG};
-use crate::types::{Agent, AgentInput, AgentStatus, Config, Vote};
+use crate::state::{ACCOUNTS, AGENTS, AGENT_VOTES, CONFIG};
+use crate::types::{Account, AccountInput, Agent, AgentInput, AgentStatus, Config, Vote};
 use cosmwasm_std::{entry_point, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
@@ -48,6 +48,7 @@ pub fn execute(
             approve,
             reason,
         } => exec_vote_agent(deps, env, info, id, approve, reason),
+        ExecuteMsg::UpdateAccount { account } => execute_update_account(deps, env, info, account),
     }
 }
 
@@ -171,16 +172,26 @@ pub fn exec_vote_agent(
         None
     };
 
-    if new_status.is_some() {
-        agent.status = new_status.unwrap();
+    let mut response = Response::new()
+        .add_attribute("action", "agent-registry::vote_agent")
+        .add_attribute("agent_id", id.clone())
+        .add_attribute("approved", approve.to_string());
+
+    if let Some(status) = new_status {
+        agent.status = status.clone();
         agent.updated_at = env.block.time;
         AGENTS.save(deps.storage, id.clone(), &agent)?;
+
+        // Generate account if approved
+        if matches!(status, AgentStatus::Approved) {
+            create_account_from_agent(deps, env, &agent)?;
+            response = response
+                .add_attribute("account_created", "true")
+                .add_attribute("account_address", agent.wallet.to_string());
+        }
     }
 
-    Ok(Response::new()
-        .add_attribute("action", "agent-registry::vote_agent")
-        .add_attribute("agent_id", id)
-        .add_attribute("approved", approve.to_string()))
+    Ok(response)
 }
 
 pub fn count_votes(deps: Deps, id: &str) -> StdResult<(usize, usize)> {
@@ -201,4 +212,57 @@ pub fn count_votes(deps: Deps, id: &str) -> StdResult<(usize, usize)> {
         }
     }
     Ok((approvals, rejects))
+}
+
+fn create_account_from_agent(deps: DepsMut, env: Env, agent: &Agent) -> Result<(), ContractError> {
+    // Create account from approved agent, using agent's wallet as key
+    let account = Account {
+        agent_type: agent.agent_type.clone(),
+        name: agent.name.clone(),
+        email: agent.email.clone(),
+        jurisdictions: agent.jurisdictions.clone(),
+        endpoint: agent.endpoint.clone(),
+        metadata_json: agent.metadata_json.clone(),
+        docs_uri: agent.docs_uri.clone(),
+        discord: agent.discord.clone(),
+        status: AgentStatus::Approved,
+        avg_cu: agent.avg_cu,
+        submitted_at: env.block.time,
+        updated_at: env.block.time,
+    };
+
+    ACCOUNTS.save(deps.storage, agent.wallet.clone(), &account)?;
+
+    Ok(())
+}
+
+pub fn execute_update_account(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    account_input: AccountInput,
+) -> Result<Response, ContractError> {
+    // Check if account exists for this address
+    let mut existing_account = ACCOUNTS
+        .may_load(deps.storage, info.sender.clone())?
+        .ok_or(ContractError::AccountNotFound {})?;
+
+    // Update account fields
+    existing_account.name = account_input.name.trim().to_string();
+    existing_account.email = account_input.email.trim().to_string();
+    existing_account.jurisdictions = account_input.jurisdictions;
+    existing_account.endpoint = account_input.endpoint;
+    existing_account.metadata_json = account_input.metadata_json;
+    existing_account.docs_uri = account_input.docs_uri;
+    existing_account.discord = account_input.discord;
+    existing_account.avg_cu = account_input.avg_cu;
+    existing_account.updated_at = env.block.time;
+
+    // Save updated account
+    ACCOUNTS.save(deps.storage, info.sender.clone(), &existing_account)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "agent-registry::update_account")
+        .add_attribute("account_address", info.sender.to_string())
+        .add_attribute("updated_at", existing_account.updated_at.to_string()))
 }
