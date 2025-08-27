@@ -487,9 +487,13 @@
                 ]
               },
               "start_after": {
-                "type": [
-                  "string",
-                  "null"
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Addr"
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               }
             },

@@ -173,5 +173,3 @@ fn query_all_accounts(
 
     Ok(ListAllAccountsResponse { accounts })
 }
-
-
