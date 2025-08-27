@@ -111,6 +111,7 @@ fn execute_burn_all(
     Ok(Response::new())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn execute_offer(
     deps: DepsMut,
     env: Env,
