@@ -1,6 +1,5 @@
 import {x25519} from '@noble/curves/ed25519';
 import {chacha20poly1305} from '@noble/ciphers/chacha';
-import {gcm} from '@noble/ciphers/aes';
 import {hkdf} from '@noble/hashes/hkdf';
 import {sha256} from '@noble/hashes/sha2';
 import {randomBytes} from 'crypto';

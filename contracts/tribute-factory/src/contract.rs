@@ -34,6 +34,11 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
+    // Validate TEE config if provided
+    if let Some(ref tee_setup) = msg.tee_config {
+        validate_tee_config(tee_setup)?;
+    }
+
     CONFIG.save(
         deps.storage,
         &Config {
@@ -203,6 +208,46 @@ pub(crate) fn decrypt_tribute_input(
         cosmwasm_std::from_json(&decrypted_bytes).map_err(|_| ContractError::InvalidPayload {})?;
 
     Ok(tribute_input)
+}
+
+fn validate_tee_config(tee_setup: &TeeSetup) -> Result<(), ContractError> {
+    // Validate private key length (32 bytes for X25519)
+    if tee_setup.private_key.as_slice().len() != 32 {
+        return Err(ContractError::InvalidKey {});
+    }
+
+    // Validate public key length (32 bytes for X25519)
+    if tee_setup.public_key.as_slice().len() != 32 {
+        return Err(ContractError::InvalidKey {});
+    }
+
+    // Validate salt length (32 bytes recommended)
+    if tee_setup.salt.as_slice().len() != 32 {
+        return Err(ContractError::InvalidSalt {});
+    }
+
+    // Verify that public key matches private key
+    let private_key_bytes = tee_setup.private_key.as_slice();
+    let public_key_bytes = tee_setup.public_key.as_slice();
+
+    let private_key_array: [u8; 32] = private_key_bytes
+        .try_into()
+        .map_err(|_| ContractError::InvalidKey {})?;
+    let expected_public_key_array: [u8; 32] = public_key_bytes
+        .try_into()
+        .map_err(|_| ContractError::InvalidKey {})?;
+
+    // Generate public key from private key
+    let private_key_scalar = Scalar::from_bytes_mod_order(private_key_array);
+    let derived_public_key_point = curve25519_dalek::constants::X25519_BASEPOINT * private_key_scalar;
+    let derived_public_key_bytes = derived_public_key_point.to_bytes();
+
+    // Compare derived public key with provided public key
+    if derived_public_key_bytes != expected_public_key_array {
+        return Err(ContractError::InvalidKeyPair {});
+    }
+
+    Ok(())
 }
 
 fn execute_update_config(
@@ -409,10 +454,24 @@ fn generate_tribute_id(
 mod tests {
     use super::*;
     use crate::msg::ZkProofPublicData;
-    use cosmwasm_std::testing::mock_dependencies;
+    use cosmwasm_std::testing::{mock_dependencies, mock_env};
     use cosmwasm_std::{Uint128, Uint64};
     use cw_multi_test::{App, Contract, ContractWrapper, Executor};
     use std::str::FromStr;
+
+    fn generate_keypair() -> ([u8; 32], [u8; 32]) {
+        use rand::rngs::OsRng;
+        use rand::RngCore;
+
+        let mut private_key_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut private_key_bytes);
+        let private_key_scalar = Scalar::from_bytes_mod_order(private_key_bytes);
+
+        let public_key_point = curve25519_dalek::constants::X25519_BASEPOINT * private_key_scalar;
+        let public_key_bytes = public_key_point.to_bytes();
+
+        (private_key_bytes, public_key_bytes)
+    }
 
     fn tribute_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
@@ -714,5 +773,170 @@ mod tests {
             tribute_input.settlement_base_amount
         );
         assert_eq!(decrypted_input.owner, tribute_input.owner);
+    }
+
+    #[test]
+    fn test_instantiate_with_valid_tee_config() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let owner_addr = deps.api.addr_make("owner");
+        let info = MessageInfo {
+            sender: owner_addr.clone(),
+            funds: vec![],
+        };
+
+        // Generate valid keypair
+        let (private_key, public_key) = generate_keypair();
+        let salt = [1u8; 32];
+
+        let tee_setup = TeeSetup {
+            private_key: Base58Binary::from(private_key),
+            public_key: Base58Binary::from(public_key),
+            salt: Base58Binary::from(salt),
+        };
+
+        let instantiate_msg = InstantiateMsg {
+            owner: Some(info.sender.clone()),
+            tribute_address: None,
+            tee_config: Some(tee_setup),
+            zk_config: None,
+        };
+
+        let result = instantiate(deps.as_mut(), env, info, instantiate_msg);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_instantiate_with_invalid_private_key_length() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let owner_addr = deps.api.addr_make("owner");
+        let info = MessageInfo {
+            sender: owner_addr.clone(),
+            funds: vec![],
+        };
+
+        let tee_setup = TeeSetup {
+            private_key: Base58Binary::from([1u8; 16]), // Invalid length
+            public_key: Base58Binary::from([1u8; 32]),
+            salt: Base58Binary::from([1u8; 32]),
+        };
+
+        let instantiate_msg = InstantiateMsg {
+            owner: Some(info.sender.clone()),
+            tribute_address: None,
+            tee_config: Some(tee_setup),
+            zk_config: None,
+        };
+
+        let result = instantiate(deps.as_mut(), env, info, instantiate_msg);
+        assert!(matches!(result, Err(ContractError::InvalidKey {})));
+    }
+
+    #[test]
+    fn test_instantiate_with_invalid_public_key_length() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let owner_addr = deps.api.addr_make("owner");
+        let info = MessageInfo {
+            sender: owner_addr.clone(),
+            funds: vec![],
+        };
+
+        let tee_setup = TeeSetup {
+            private_key: Base58Binary::from([1u8; 32]),
+            public_key: Base58Binary::from([1u8; 16]), // Invalid length
+            salt: Base58Binary::from([1u8; 32]),
+        };
+
+        let instantiate_msg = InstantiateMsg {
+            owner: Some(info.sender.clone()),
+            tribute_address: None,
+            tee_config: Some(tee_setup),
+            zk_config: None,
+        };
+
+        let result = instantiate(deps.as_mut(), env, info, instantiate_msg);
+        assert!(matches!(result, Err(ContractError::InvalidKey {})));
+    }
+
+    #[test]
+    fn test_instantiate_with_invalid_salt_length() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let owner_addr = deps.api.addr_make("owner");
+        let info = MessageInfo {
+            sender: owner_addr.clone(),
+            funds: vec![],
+        };
+
+        let (private_key, public_key) = generate_keypair();
+
+        let tee_setup = TeeSetup {
+            private_key: Base58Binary::from(private_key),
+            public_key: Base58Binary::from(public_key),
+            salt: Base58Binary::from([1u8; 16]), // Invalid length
+        };
+
+        let instantiate_msg = InstantiateMsg {
+            owner: Some(info.sender.clone()),
+            tribute_address: None,
+            tee_config: Some(tee_setup),
+            zk_config: None,
+        };
+
+        let result = instantiate(deps.as_mut(), env, info, instantiate_msg);
+        assert!(matches!(result, Err(ContractError::InvalidSalt {})));
+    }
+
+    #[test]
+    fn test_instantiate_with_mismatched_keypair() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let owner_addr = deps.api.addr_make("owner");
+        let info = MessageInfo {
+            sender: owner_addr.clone(),
+            funds: vec![],
+        };
+
+        let (private_key, _) = generate_keypair();
+        let (_, wrong_public_key) = generate_keypair(); // Different keypair
+
+        let tee_setup = TeeSetup {
+            private_key: Base58Binary::from(private_key),
+            public_key: Base58Binary::from(wrong_public_key), // Mismatched
+            salt: Base58Binary::from([1u8; 32]),
+        };
+
+        let instantiate_msg = InstantiateMsg {
+            owner: Some(info.sender.clone()),
+            tribute_address: None,
+            tee_config: Some(tee_setup),
+            zk_config: None,
+        };
+
+        let result = instantiate(deps.as_mut(), env, info, instantiate_msg);
+        assert!(matches!(result, Err(ContractError::InvalidKeyPair {})));
+    }
+
+    #[test]
+    fn test_instantiate_without_tee_config() {
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let owner_addr = deps.api.addr_make("owner");
+        let info = MessageInfo {
+            sender: owner_addr.clone(),
+            funds: vec![],
+        };
+
+        let instantiate_msg = InstantiateMsg {
+            owner: Some(info.sender.clone()),
+            tribute_address: None,
+            tee_config: None, // No TEE config should be fine
+            zk_config: None,
+        };
+
+        let result = instantiate(deps.as_mut(), env, info, instantiate_msg);
+        assert!(result.is_ok());
     }
 }

@@ -34,4 +34,10 @@ pub enum ContractError {
     DecryptionFailed {},
     #[error("Invalid payload format")]
     InvalidPayload {},
+    #[error("Invalid TEE configuration")]
+    InvalidTeeConfig {},
+    #[error("Public key does not match private key")]
+    InvalidKeyPair {},
+    #[error("Invalid salt length")]
+    InvalidSalt {},
 }
