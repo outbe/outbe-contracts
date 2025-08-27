@@ -52,9 +52,9 @@ pub enum QueryMsg {
     },
 
     /// Returns all tokens created in the given date with an optional filter by status.
-    #[returns(DailyTributesResponse)]
+    #[returns(FullTributesResponse)]
     DailyTributes {
-        date: WorldwideDay,
+        date: Option<WorldwideDay>,
         start_after: Option<String>,
         limit: Option<u32>,
         query_order: Option<Order>,
@@ -77,7 +77,7 @@ pub struct TotalInterestResponse {
 }
 
 #[cw_serde]
-pub struct DailyTributesResponse {
+pub struct FullTributesResponse {
     pub tributes: Vec<FullTributeData>,
 }
 
@@ -149,11 +149,11 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 fn query_daily_tributes(
     deps: Deps,
     _env: &Env,
-    date: WorldwideDay,
+    date: Option<WorldwideDay>,
     start_after: Option<String>,
     limit: Option<u32>,
     query_order: Option<Order>,
-) -> StdResult<DailyTributesResponse> {
+) -> StdResult<FullTributesResponse> {
     // todo deal with limit maybe to propagate here amount?
     let limit = limit.unwrap_or(MAX_LIMIT) as usize;
     let order = query_order.unwrap_or(Order::Ascending);
@@ -169,7 +169,9 @@ fn query_daily_tributes(
             .range(deps.storage, start, end, order)
             .take(limit)
             .filter_map(|item| match item {
-                Ok((id, tribute)) if tribute.extension.worldwide_day == date => {
+                Ok((id, tribute))
+                    if date.is_none() || tribute.extension.worldwide_day == date.unwrap() =>
+                {
                     Some(Ok(FullTributeData {
                         token_id: id,
                         owner: tribute.owner.to_string(),
@@ -180,7 +182,7 @@ fn query_daily_tributes(
             })
             .collect();
 
-    Ok(DailyTributesResponse { tributes: tokens? })
+    Ok(FullTributesResponse { tributes: tokens? })
 }
 
 fn query_total_interest(

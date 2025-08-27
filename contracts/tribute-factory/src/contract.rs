@@ -595,7 +595,7 @@ mod tests {
         // first call
         update_used_state(deps.as_mut().storage, &tribute1).unwrap();
 
-        // second call -  CUAlreadyExists
+        // second call - CUAlreadyExists
         let err = update_used_state(deps.as_mut().storage, &tribute2).unwrap_err();
         assert!(matches!(err, ContractError::CUAlreadyExists {}));
     }
