@@ -25,6 +25,10 @@ tribute = { version = "*", path = "../tribute", features = ["library"] }
 # ECDHE encryption dependencies
 curve25519-dalek = "4.1.1"
 chacha20poly1305 = "0.10.1"
+# HKDF and AES encryption dependencies
+hkdf = "0.12.4"
+aes-gcm = "0.10.3"
+sha2 = { workspace = true }
 # NB: this is needed to override transitive dependency to allow wasm builds
 getrandom = { version = "0.2.16", features = ["custom"] }
 

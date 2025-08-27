@@ -15,10 +15,12 @@ use cosmwasm_std::{
 };
 use curve25519_dalek::{MontgomeryPoint, Scalar};
 use cw_ownable::Action;
+use hkdf::Hkdf;
 use outbe_utils::amount_utils::normalize_amount;
 use outbe_utils::date::{iso_to_days, iso_to_ts, Iso8601Date};
 use outbe_utils::denom::Denom;
 use outbe_utils::{gen_compound_hash, gen_hash, Base58Binary};
+use sha2::Sha256;
 
 const CONTRACT_NAME: &str = "outbe.net:tribute-factory";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -181,8 +183,14 @@ pub(crate) fn decrypt_tribute_input(
     // Perform ECDH to get shared secret
     let shared_secret = ephemeral_public_key * private_key;
 
-    // Use shared secret as ChaCha20Poly1305 key
-    let cipher = ChaCha20Poly1305::new((&shared_secret.to_bytes()).into());
+    // Use HKDF to derive an encryption key from shared secret and salt
+    let hk = Hkdf::<Sha256>::new(Some(tee_config.salt.as_slice()), &shared_secret.to_bytes());
+    let mut encryption_key = [0u8; 32];
+    hk.expand(b"tribute-factory-encryption", &mut encryption_key)
+        .map_err(|_| ContractError::DecryptionFailed {})?;
+
+    // Use derived key for ChaCha20Poly1305
+    let cipher = ChaCha20Poly1305::new((&encryption_key).into());
     let nonce = Nonce::from_slice(&nonce_array);
 
     // Decrypt the data
@@ -615,5 +623,96 @@ mod tests {
 
         let err = update_used_state(deps.as_mut().storage, &tribute).unwrap_err();
         assert!(matches!(err, ContractError::InvalidDraftId {}));
+    }
+
+    #[test]
+    fn test_decrypt_tribute_input_with_hkdf() {
+        use rand::rngs::OsRng;
+        use rand::RngCore;
+
+        // Generate contract keypair
+        let mut private_key_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut private_key_bytes);
+        let private_key_scalar = Scalar::from_bytes_mod_order(private_key_bytes);
+        let public_key_point = curve25519_dalek::constants::X25519_BASEPOINT * private_key_scalar;
+        let public_key_bytes = public_key_point.to_bytes();
+
+        // Generate salt
+        let mut salt_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut salt_bytes);
+
+        // Create test tribute input
+        let tribute_input = TributeInputPayload {
+            tribute_draft_id: Base58Binary::from([42u8; 32]),
+            cu_hashes: vec![Base58Binary::from([1u8; 32]), Base58Binary::from([2u8; 32])],
+            worldwide_day: "2025-08-27".to_string(),
+            settlement_currency: "usd".to_string(),
+            settlement_base_amount: Uint64::new(1000),
+            settlement_atto_amount: Uint128::zero(),
+            nominal_base_qty: Uint64::new(500),
+            nominal_atto_qty: Uint128::zero(),
+            owner: Base58Binary::from("test_owner".as_bytes()),
+        };
+
+        // Encrypt tribute input (client side simulation)
+        let mut ephemeral_private_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut ephemeral_private_bytes);
+        let ephemeral_private_scalar = Scalar::from_bytes_mod_order(ephemeral_private_bytes);
+        let ephemeral_public_point =
+            curve25519_dalek::constants::X25519_BASEPOINT * ephemeral_private_scalar;
+        let ephemeral_public_bytes = ephemeral_public_point.to_bytes();
+
+        // Perform ECDH
+        let contract_public_point = MontgomeryPoint(public_key_bytes);
+        let shared_secret = contract_public_point * ephemeral_private_scalar;
+
+        // Use HKDF to derive encryption key
+        let hk = Hkdf::<Sha256>::new(Some(&salt_bytes), &shared_secret.to_bytes());
+        let mut encryption_key = [0u8; 32];
+        hk.expand(b"tribute-factory-encryption", &mut encryption_key)
+            .unwrap();
+
+        // Serialize and encrypt
+        let plaintext = cosmwasm_std::to_json_binary(&tribute_input)
+            .unwrap()
+            .to_vec();
+        let mut nonce_bytes = [0u8; 12];
+        OsRng.fill_bytes(&mut nonce_bytes);
+
+        let cipher = ChaCha20Poly1305::new((&encryption_key).into());
+        let nonce = Nonce::from_slice(&nonce_bytes);
+        let ciphertext = cipher.encrypt(nonce, plaintext.as_ref()).unwrap();
+
+        // Test decryption
+        let tee_config = TeeConfig {
+            private_key: Base58Binary::from(private_key_bytes),
+            public_key: Base58Binary::from(public_key_bytes),
+            salt: Base58Binary::from(salt_bytes),
+        };
+
+        let decrypted_input = decrypt_tribute_input(
+            &Base58Binary::from(ciphertext),
+            &Base58Binary::from(nonce_bytes),
+            &Base58Binary::from(ephemeral_public_bytes),
+            &tee_config,
+        )
+        .unwrap();
+
+        // Verify decryption worked correctly
+        assert_eq!(
+            decrypted_input.tribute_draft_id,
+            tribute_input.tribute_draft_id
+        );
+        assert_eq!(decrypted_input.cu_hashes, tribute_input.cu_hashes);
+        assert_eq!(decrypted_input.worldwide_day, tribute_input.worldwide_day);
+        assert_eq!(
+            decrypted_input.settlement_currency,
+            tribute_input.settlement_currency
+        );
+        assert_eq!(
+            decrypted_input.settlement_base_amount,
+            tribute_input.settlement_base_amount
+        );
+        assert_eq!(decrypted_input.owner, tribute_input.owner);
     }
 }

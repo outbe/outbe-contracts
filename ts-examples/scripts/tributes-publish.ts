@@ -5,7 +5,7 @@ import {TributeQueryClient} from "../clients/tribute/Tribute.client";
 import {NumTokensResponse} from "../clients/tribute/Tribute.types";
 import {RUN_DATE, TX_FEE} from "../config";
 import {generateTributeDraftId, getRandomInt, readWalletsFromFile, isoToDays} from "../lib/utils";
-import {TributeInputPayload, ZkProof} from "../clients/tribute-factory/TributeFactory.types";
+import {EncryptionInfoResponse, TributeInputPayload, ZkProof} from "../clients/tribute-factory/TributeFactory.types";
 import {TokenAllocatorQueryClient} from "../clients/token-allocator/TokenAllocator.client";
 import {TokenAllocatorData} from "../clients/token-allocator/TokenAllocator.types";
 import {CosmWasmClient, JsonObject} from "@cosmjs/cosmwasm-stargate";
@@ -46,13 +46,13 @@ async function main() {
 
     let coenUsdcRate = await queryActualRate(walletClient)
 
-    let contractPublicKey = await queryContractPubkey(walletClient, tbFactoryContractAddress)
+    let encryptionInfo = await queryEncryptionInfo(walletClient, tbFactoryContractAddress)
 
     let instructions: ExecuteInstruction[] = [];
     for (let i = 0; i <1; i++) {
         let tribute = randomTribute(wallets[i].outbe_address, RUN_DATE, coenUsdcRate)
 
-        let msg = offerTribute(tribute, contractPublicKey)
+        let msg = offerTribute(tribute, encryptionInfo)
         // let msg = offerInsecureTribute(tribute)
 
         instructions.push({
@@ -67,9 +67,8 @@ async function main() {
     console.log("Number of Tribute tokens: ", await tributeClient.numTokens())
 }
 
-function offerTribute(tribute: TributeInputPayload, contractPublicKey: string): JsonObject {
-    console.log("offerTribute ", tribute,)
-    const encryptedData = encryptTributeInput(tribute, contractPublicKey);
+function offerTribute(tribute: TributeInputPayload, encryption: EncryptionInfoResponse): JsonObject {
+    const encryptedData = encryptTributeInput(tribute, encryption.public_key, encryption.salt);
     return {
         offer: {
             cipher_text: encryptedData.cipher_text,
@@ -145,11 +144,9 @@ export async function queryActualRate(walletClient: CosmWasmClient): Promise<num
 }
 
 
-export async function queryContractPubkey(walletClient: CosmWasmClient, address: string): Promise<string> {
+export async function queryEncryptionInfo(walletClient: CosmWasmClient, address: string): Promise<EncryptionInfoResponse> {
     let client = new TributeFactoryQueryClient(walletClient, address)
-    let response = await client.pubkey()
-
-    return response.public_key
+    return  await client.encryptionInfo()
 }
 
 main();

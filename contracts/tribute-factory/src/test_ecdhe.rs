@@ -5,7 +5,9 @@ use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
 use cosmwasm_std::{Uint128, Uint64};
 use curve25519_dalek::{MontgomeryPoint, Scalar};
+use hkdf::Hkdf;
 use outbe_utils::Base58Binary;
+use sha2::Sha256;
 
 fn generate_keypair() -> ([u8; 32], [u8; 32]) {
     use rand::rngs::OsRng;
@@ -24,6 +26,7 @@ fn generate_keypair() -> ([u8; 32], [u8; 32]) {
 fn encrypt_tribute_input(
     tribute_input: &TributeInputPayload,
     contract_public_key: &[u8; 32],
+    salt: &[u8; 32],
 ) -> Result<(Base58Binary, Base58Binary, Base58Binary), ContractError> {
     use rand::rngs::OsRng;
     use rand::RngCore;
@@ -40,6 +43,12 @@ fn encrypt_tribute_input(
     let contract_public_point = MontgomeryPoint(*contract_public_key);
     let shared_secret = contract_public_point * ephemeral_private_scalar;
 
+    // Use HKDF to derive encryption key from shared secret and salt
+    let hk = Hkdf::<Sha256>::new(Some(salt), &shared_secret.to_bytes());
+    let mut encryption_key = [0u8; 32];
+    hk.expand(b"tribute-factory-encryption", &mut encryption_key)
+        .map_err(|_| ContractError::DecryptionFailed {})?;
+
     // Serialize tribute input
     let plaintext = cosmwasm_std::to_json_binary(tribute_input)
         .map_err(|_| ContractError::InvalidPayload {})?
@@ -49,8 +58,8 @@ fn encrypt_tribute_input(
     let mut nonce_bytes = [0u8; 12];
     OsRng.fill_bytes(&mut nonce_bytes);
 
-    // Encrypt
-    let cipher = ChaCha20Poly1305::new((&shared_secret.to_bytes()).into());
+    // Encrypt using derived key
+    let cipher = ChaCha20Poly1305::new((&encryption_key).into());
     let nonce = Nonce::from_slice(&nonce_bytes);
     let ciphertext = cipher
         .encrypt(nonce, plaintext.as_ref())
@@ -81,16 +90,17 @@ fn test_decrypt_tribute_input() {
         owner: Base58Binary::from("test_owner".as_bytes()),
     };
 
-    // Encrypt tribute input (client side)
-    let (cipher_text, nonce, ephemeral_pubkey) =
-        encrypt_tribute_input(&tribute_input, &public_key).unwrap();
-
-    // Test decryption by calling the contract function directly
+    // Create TeeConfig with salt
+    let salt = [1u8; 32];
     let tee_config = TeeConfig {
         private_key: Base58Binary::from(private_key),
         public_key: Base58Binary::from(public_key),
-        salt: Base58Binary::from([1u8; 32]),
+        salt: Base58Binary::from(salt),
     };
+
+    // Encrypt tribute input (client side)
+    let (cipher_text, nonce, ephemeral_pubkey) =
+        encrypt_tribute_input(&tribute_input, &public_key, &salt).unwrap();
 
     let decrypted_input = crate::contract::decrypt_tribute_input(
         &cipher_text,

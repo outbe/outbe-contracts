@@ -9,9 +9,9 @@ pub enum QueryMsg {
     /// Returns config
     #[returns(ConfigResponse)]
     GetConfig {},
-    /// Returns TEE Ed25519 public key
-    #[returns(PubkeyResponse)]
-    Pubkey {},
+    /// Returns TEE encryption info
+    #[returns(EncryptionInfoResponse)]
+    EncryptionInfo {},
 }
 
 #[cw_serde]
@@ -20,8 +20,9 @@ pub struct ConfigResponse {
 }
 
 #[cw_serde]
-pub struct PubkeyResponse {
+pub struct EncryptionInfoResponse {
     pub public_key: Base58Binary,
+    pub salt: Base58Binary,
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -31,11 +32,19 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetConfig {} => to_json_binary(&ConfigResponse {
             tribute_address: config.tribute_address,
         }),
-        QueryMsg::Pubkey {} => to_json_binary(&PubkeyResponse {
-            public_key: config
+        QueryMsg::EncryptionInfo {} => {
+            let result = config
                 .tee_config
-                .map(|it| it.public_key)
-                .unwrap_or_default(),
-        }),
+                .map(|it| EncryptionInfoResponse {
+                    public_key: it.public_key,
+                    salt: it.salt,
+                })
+                .unwrap_or(EncryptionInfoResponse {
+                    public_key: Base58Binary::default(),
+                    salt: Base58Binary::default(),
+                });
+
+            to_json_binary(&result)
+        }
     }
 }
