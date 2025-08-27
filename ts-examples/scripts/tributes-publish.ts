@@ -49,11 +49,11 @@ async function main() {
     let contractPublicKey = await queryContractPubkey(walletClient, tbFactoryContractAddress)
 
     let instructions: ExecuteInstruction[] = [];
-    for (let i = 0; i < wallets.length; i++) {
+    for (let i = 0; i <1; i++) {
         let tribute = randomTribute(wallets[i].outbe_address, RUN_DATE, coenUsdcRate)
 
-        // let msg = offerTribute(tribute, contractPublicKey)
-        let msg = offerInsecureTribute(tribute, contractPublicKey)
+        let msg = offerTribute(tribute, contractPublicKey)
+        // let msg = offerInsecureTribute(tribute, contractPublicKey)
 
         instructions.push({
                 contractAddress: tbFactoryContractAddress,

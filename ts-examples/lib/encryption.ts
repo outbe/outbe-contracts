@@ -1,6 +1,6 @@
-import { x25519 } from '@noble/curves/ed25519';
-import { chacha20poly1305 } from '@noble/ciphers/chacha';
-import { randomBytes } from 'crypto';
+import {x25519} from '@noble/curves/ed25519';
+import {chacha20poly1305} from '@noble/ciphers/chacha';
+import {randomBytes} from 'crypto';
 import bs58 from 'bs58';
 import {TributeInputPayload} from "../clients/tribute-factory/TributeFactory.types";
 
@@ -18,30 +18,34 @@ const DEFAULT_ENCRYPTION_PRIVATE_KEY = 'a1b2c3d4e5f6789012345678901234567890abcd
  */
 export function encryptTributeInput(
     data: TributeInputPayload,
-    contractPublicKeyHex: string
+    contractPublicKeyBs58: string
 ): EncryptedData {
+    if (!contractPublicKeyBs58) {
+        throw new Error('Contract public key is required');
+    }
+
     // Convert contract public key from hex to bytes
-    const contractPublicKey = bs58.decode(contractPublicKeyHex);
+    const contractPublicKey = bs58.decode(contractPublicKeyBs58);
 
     // Use a fixed private key for encryption
     const ephemeralPrivateKey = Buffer.from(DEFAULT_ENCRYPTION_PRIVATE_KEY, 'hex');
     // Generate ephemeral keypair for client
     // const ephemeralPrivateKey = randomBytes(32);
     const ephemeralPublicKey = x25519.getPublicKey(ephemeralPrivateKey);
-    
+
     // Perform ECDH to get shared secret
     const sharedSecret = x25519.getSharedSecret(ephemeralPrivateKey, contractPublicKey);
-    
+
     // Serialize the data to JSON bytes
     const plaintext = Buffer.from(JSON.stringify(data), 'utf8');
-    
+
     // Generate random nonce (12 bytes for ChaCha20Poly1305)
     const nonce = randomBytes(12);
-    
+
     // Encrypt using ChaCha20Poly1305
     const cipher = chacha20poly1305(sharedSecret, nonce);
     const ciphertext = cipher.encrypt(plaintext);
-    
+
     return {
         cipher_text: bs58.encode(ciphertext),
         nonce: bs58.encode(nonce),
