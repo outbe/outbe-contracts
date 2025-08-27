@@ -36,7 +36,11 @@ pub fn instantiate(
         deps.storage,
         &Config {
             tribute_address: msg.tribute_address,
-            tee_config: None, // todo impl, in scope of tee
+            tee_config: msg.tee_config.map(|config| TeeConfig {
+                private_key: config.private_key,
+                public_key: config.public_key,
+                salt: config.salt,
+            }),
         },
     )?;
 
