@@ -31,7 +31,7 @@ pub enum QueryMsg {
     QueryVotesByAgent { id: String },
 
     #[returns(AccountResponse)]
-    GetAccountAddress { address: Addr },
+    GetAccountByAddress { address: Addr },
 
     #[returns(ListAllAccountsResponse)]
     ListAllAccounts {
@@ -64,7 +64,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         )?),
         QueryMsg::QueryVotesByAgent { id } => to_json_binary(&query_votes_by_agent(deps, id)?),
 
-        QueryMsg::GetAccountAddress { address } => {
+        QueryMsg::GetAccountByAddress { address } => {
             to_json_binary(&query_account_by_address(deps, address)?)
         }
         QueryMsg::ListAllAccounts {
