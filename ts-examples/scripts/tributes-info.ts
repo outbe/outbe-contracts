@@ -18,6 +18,14 @@ async function main() {
     const tributeClient = new TributeQueryClient(walletClient, tributeContractAddress)
     let tokensResp = await tributeClient.numTokens();
     console.log("Number of Tribute tokens: ", tokensResp)
+
+    let all_tokens = await tributeClient.allTokens({})
+    for (let id in all_tokens.tokens) {
+        // let data = await tributeClient.nftInfo({tokenId: id})
+        // console.log("Tribute: ", data)
+    }
+    let data = await tributeClient.dailyTributes({date: 1753570800})
+    console.log("Tribute: ", data)
 }
 
 export async function queryActualRate(walletClient: CosmWasmClient): Promise<number> {

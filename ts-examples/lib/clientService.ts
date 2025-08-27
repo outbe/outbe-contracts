@@ -35,7 +35,7 @@ export async function getContractAddresses(name?: string) {
     const {walletClient} = await initClient();
 
     const contractResp = await walletClient.queryContractSmart(CONTRACT_REGISTRY_ADDRESS!, {
-        get_deployment: {commit_id: "555260aeaac3a039d013ac74de5cf21ea5fee4eb"}, // null means latest
+        get_deployment: {commit_id: "afb0cc1a39085c813035aa35604d889207e4d38d"}, // null means latest
     })
         .catch((error: any) => {
             console.error(error);
