@@ -53,7 +53,7 @@ async function main() {
         let tribute = randomTribute(wallets[i].outbe_address, RUN_DATE, coenUsdcRate)
 
         let msg = offerTribute(tribute, contractPublicKey)
-        // let msg = offerInsecureTribute(tribute, contractPublicKey)
+        // let msg = offerInsecureTribute(tribute)
 
         instructions.push({
                 contractAddress: tbFactoryContractAddress,
@@ -68,6 +68,7 @@ async function main() {
 }
 
 function offerTribute(tribute: TributeInputPayload, contractPublicKey: string): JsonObject {
+    console.log("offerTribute ", tribute,)
     const encryptedData = encryptTributeInput(tribute, contractPublicKey);
     return {
         offer: {
@@ -86,7 +87,7 @@ function offerTribute(tribute: TributeInputPayload, contractPublicKey: string): 
     }
 }
 
-function offerInsecureTribute(tribute: TributeInputPayload, contractPublicKey: string): JsonObject {
+function offerInsecureTribute(tribute: TributeInputPayload): JsonObject {
     let owner = new TextDecoder().decode(bs58.decode(tribute.owner));
     return {
         offer_insecure: {

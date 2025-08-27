@@ -204,6 +204,16 @@
                   }
                 ]
               },
+              "tribute_owner_l1": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Addr"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "zk_proof": {
                 "description": "Zero knowledge proof",
                 "allOf": [

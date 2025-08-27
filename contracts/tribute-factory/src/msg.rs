@@ -52,6 +52,8 @@ pub enum ExecuteMsg {
         ephemeral_pubkey: Base58Binary,
         /// Zero knowledge proof
         zk_proof: ZkProof,
+        #[cfg(feature = "demo")]
+        tribute_owner_l1: Option<Addr>,
     },
 
     /// Accepts raw tribute data and mints a new Tribute
@@ -60,7 +62,6 @@ pub enum ExecuteMsg {
     OfferInsecure {
         tribute_input: TributeInputPayload,
         zk_proof: ZkProof,
-        #[cfg(feature = "demo")]
         tribute_owner_l1: Option<Addr>,
     },
     BurnAll {},
