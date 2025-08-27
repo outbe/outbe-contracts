@@ -79,7 +79,7 @@ pub fn execute(
             ephemeral_pubkey,
             zk_proof,
             #[cfg(feature = "demo")]
-            tribute_owner_l1
+            tribute_owner_l1,
         } => execute_offer(
             deps,
             env,
@@ -96,14 +96,7 @@ pub fn execute(
             tribute_input,
             zk_proof,
             tribute_owner_l1,
-        } => execute_offer_insecure(
-            deps,
-            env,
-            info,
-            tribute_input,
-            zk_proof,
-            tribute_owner_l1,
-        ),
+        } => execute_offer_insecure(deps, env, info, tribute_input, zk_proof, tribute_owner_l1),
         ExecuteMsg::BurnAll {} => execute_burn_all(deps, env, info),
     }
 }
@@ -126,8 +119,7 @@ fn execute_offer(
     nonce: Base58Binary,
     ephemeral_pubkey: Base58Binary,
     zk_proof: ZkProof,
-    #[cfg(feature = "demo")]
-    tribute_owner_l1: Option<Addr>,
+    #[cfg(feature = "demo")] tribute_owner_l1: Option<Addr>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     let tee_config = config.tee_config.ok_or(ContractError::NotInitialized {})?;
