@@ -1,18 +1,56 @@
-install:
+.PHONY: all
+all: help
+
+## Install
+
+.PHONY: install
+install: ## Installs git commit hooks
 	@echo "Installing dependencies and setting up development environment..."
 	@echo "Installing Rust dependencies..."
 	@cargo build
 	@echo "Setting up git hooks..."
 	@./scripts/install-hooks.sh
 
-clippy:
-	cargo clippy --all-targets -- -D warnings
-
-udeps:
+.PHONY: udeps
+udeps: ## Updates dependencies for the wasm target
 	cargo +nightly udeps --target wasm32-unknown-unknown
 
-build:
+## Code Quality
+.PHONY: clippy
+clippy: ## Runs cargo clippy
+	cargo clippy --all-targets -- -D warnings
+
+.PHONY: schema
+schema: ## Runs json schema generation
+	@echo "Generating schemas for all contracts..."
+	@for contract_package in $$(cargo metadata --no-deps --quiet | jq -r '.packages[] | select(.targets[].kind[] == "example") | .name'); do \
+		echo "--- Generating schema for '$$contract_package' ---"; \
+		cargo schema -p $$contract_package; \
+	done
+
+## Build
+.PHONY: build
+build: ## Runs wasm build using cosmwasm docker optimizer
 	docker run --rm -v "$(shell pwd)":/code \
 	--mount type=volume,source="$(shell basename "$(shell pwd)")_cache",target=/target \
 	--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-	cosmwasm/optimizer:0.16.0
+	cosmwasm/optimizer:0.17.0
+
+GREEN  := $(shell tput -Txterm setaf 2)
+YELLOW := $(shell tput -Txterm setaf 3)
+WHITE  := $(shell tput -Txterm setaf 7)
+CYAN   := $(shell tput -Txterm setaf 6)
+RESET  := $(shell tput -Txterm sgr0)
+
+## Help:
+.PHONY: help
+help: ## Show this help
+	@echo ''
+	@echo 'Usage:'
+	@echo '  ${YELLOW}make${RESET} ${GREEN}<target>${RESET}'
+	@echo ''
+	@echo 'Targets:'
+	@awk 'BEGIN {FS = ":.*?## "} { \
+		if (/^[a-zA-Z_-]+:.*?##.*$$/) {printf "    ${YELLOW}%-20s${GREEN}%s${RESET}\n", $$1, $$2} \
+		else if (/^## .*$$/) {printf "  ${CYAN}%s${RESET}\n", substr($$1,4)} \
+		}' $(MAKEFILE_LIST)
