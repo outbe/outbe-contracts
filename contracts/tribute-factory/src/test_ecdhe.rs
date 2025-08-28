@@ -9,7 +9,7 @@ use hkdf::Hkdf;
 use outbe_utils::Base58Binary;
 use sha2::Sha256;
 
-fn generate_keypair() -> ([u8; 32], [u8; 32]) {
+pub(crate) fn generate_keypair() -> ([u8; 32], [u8; 32]) {
     use rand::rngs::OsRng;
     use rand::RngCore;
 

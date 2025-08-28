@@ -434,20 +434,7 @@ mod tests {
     use cosmwasm_std::{Uint128, Uint64};
     use cw_multi_test::{App, Contract, ContractWrapper, Executor};
     use std::str::FromStr;
-
-    fn generate_keypair() -> ([u8; 32], [u8; 32]) {
-        use rand::rngs::OsRng;
-        use rand::RngCore;
-
-        let mut private_key_bytes = [0u8; 32];
-        OsRng.fill_bytes(&mut private_key_bytes);
-        let private_key_scalar = Scalar::from_bytes_mod_order(private_key_bytes);
-
-        let public_key_point = curve25519_dalek::constants::X25519_BASEPOINT * private_key_scalar;
-        let public_key_bytes = public_key_point.to_bytes();
-
-        (private_key_bytes, public_key_bytes)
-    }
+    use crate::test_ecdhe::generate_keypair;
 
     fn tribute_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
@@ -608,7 +595,7 @@ mod tests {
 
     #[test]
     fn test_unique_cu_hash() {
-        let mut deps = cosmwasm_std::testing::mock_dependencies();
+        let mut deps = mock_dependencies();
         let owner = Base58Binary::from("user1".as_bytes());
         let worldwide_day = "2025-05-22".to_string();
 
@@ -708,7 +695,7 @@ mod tests {
             .unwrap();
 
         // Serialize and encrypt
-        let plaintext = cosmwasm_std::to_json_binary(&tribute_input)
+        let plaintext = to_json_binary(&tribute_input)
             .unwrap()
             .to_vec();
         let mut nonce_bytes = [0u8; 12];
