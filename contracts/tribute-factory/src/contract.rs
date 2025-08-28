@@ -77,7 +77,7 @@ pub fn execute(
             new_tee_config,
         ),
         ExecuteMsg::Offer { .. } => {
-            return Err(cosmwasm_std::StdError::generic_err("Offer is not implemented yet").into());
+            Err(cosmwasm_std::StdError::generic_err("Offer is not implemented yet").into())
         }
         ExecuteMsg::OfferInsecure {
             tribute_input,
