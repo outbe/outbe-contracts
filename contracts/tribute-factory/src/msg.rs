@@ -22,8 +22,6 @@ pub struct InstantiateMsg {
 pub struct TeeSetup {
     /// X25519 private key for ECDHE encryption
     pub private_key: Base58Binary,
-    /// X25519 public key for ECDHE encryption
-    pub public_key: Base58Binary,
     /// Salt to be used in hashing operations
     pub salt: Base58Binary,
 }

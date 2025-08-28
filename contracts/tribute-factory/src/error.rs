@@ -28,16 +28,12 @@ pub enum ContractError {
     InvalidDraftId {},
     #[error("Invalid encryption key")]
     InvalidKey {},
-    #[error("Invalid nonce")]
-    InvalidNonce {},
     #[error("Decryption failed")]
     DecryptionFailed {},
     #[error("Invalid payload format")]
     InvalidPayload {},
-    #[error("Invalid TEE configuration")]
-    InvalidTeeConfig {},
-    #[error("Public key does not match private key")]
-    InvalidKeyPair {},
     #[error("Invalid salt length")]
     InvalidSalt {},
+    #[error("Invalid nonce")]
+    InvalidNonce {},
 }

@@ -35,19 +35,21 @@ pub fn instantiate(
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     // Validate TEE config if provided
+    let mut cft: Option<TeeConfig> = None;
     if let Some(ref tee_setup) = msg.tee_config {
-        validate_tee_config(tee_setup)?;
+        let pubkey = validate_tee_config(tee_setup)?;
+        cft = Some(TeeConfig {
+            private_key: tee_setup.private_key.clone(),
+            public_key: pubkey,
+            salt: tee_setup.salt.clone(),
+        });
     }
 
     CONFIG.save(
         deps.storage,
         &Config {
             tribute_address: msg.tribute_address,
-            tee_config: msg.tee_config.map(|config| TeeConfig {
-                private_key: config.private_key,
-                public_key: config.public_key,
-                salt: config.salt,
-            }),
+            tee_config: cft,
         },
     )?;
 
@@ -60,7 +62,7 @@ pub fn instantiate(
         .add_event(Event::new("tribute-factory::instantiate").add_attribute("owner", owner)))
 }
 
-fn validate_tee_config(tee_setup: &TeeSetup) -> Result<(), ContractError> {
+fn validate_tee_config(tee_setup: &TeeSetup) -> Result<Base58Binary, ContractError> {
     // Validate salt length (32 bytes recommended)
     if tee_setup.salt.len() != 32 {
         return Err(ContractError::InvalidSalt {});
@@ -71,11 +73,6 @@ fn validate_tee_config(tee_setup: &TeeSetup) -> Result<(), ContractError> {
         .as_slice()
         .try_into()
         .map_err(|_| ContractError::InvalidKey {})?;
-    let expected_public_key_array: [u8; 32] = tee_setup
-        .public_key
-        .as_slice()
-        .try_into()
-        .map_err(|_| ContractError::InvalidKey {})?;
 
     // Generate public key from private key
     let private_key_scalar = Scalar::from_bytes_mod_order(private_key_array);
@@ -83,12 +80,7 @@ fn validate_tee_config(tee_setup: &TeeSetup) -> Result<(), ContractError> {
         curve25519_dalek::constants::X25519_BASEPOINT * private_key_scalar;
     let derived_public_key_bytes = derived_public_key_point.to_bytes();
 
-    // Compare derived public key with provided public key
-    if derived_public_key_bytes != expected_public_key_array {
-        return Err(ContractError::InvalidKeyPair {});
-    }
-
-    Ok(())
+    Ok(Base58Binary::from(derived_public_key_bytes))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -242,9 +234,10 @@ fn execute_update_config(
             config.tribute_address = Some(new_tribute_address)
         }
         if let Some(new_tee_config) = new_tee_config {
+            let pubkey = validate_tee_config(&new_tee_config)?;
             config.tee_config = Some(TeeConfig {
                 private_key: new_tee_config.private_key,
-                public_key: new_tee_config.public_key,
+                public_key: pubkey,
                 salt: new_tee_config.salt,
             })
         }
@@ -430,11 +423,11 @@ fn generate_tribute_id(
 mod tests {
     use super::*;
     use crate::msg::ZkProofPublicData;
+    use crate::test_ecdhe::generate_keypair;
     use cosmwasm_std::testing::{mock_dependencies, mock_env};
     use cosmwasm_std::{Uint128, Uint64};
     use cw_multi_test::{App, Contract, ContractWrapper, Executor};
     use std::str::FromStr;
-    use crate::test_ecdhe::generate_keypair;
 
     fn tribute_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
@@ -695,9 +688,7 @@ mod tests {
             .unwrap();
 
         // Serialize and encrypt
-        let plaintext = to_json_binary(&tribute_input)
-            .unwrap()
-            .to_vec();
+        let plaintext = to_json_binary(&tribute_input).unwrap().to_vec();
         let mut nonce_bytes = [0u8; 12];
         OsRng.fill_bytes(&mut nonce_bytes);
 
@@ -749,12 +740,11 @@ mod tests {
         };
 
         // Generate valid keypair
-        let (private_key, public_key) = generate_keypair();
+        let (private_key, _) = generate_keypair();
         let salt = [1u8; 32];
 
         let tee_setup = TeeSetup {
             private_key: Base58Binary::from(private_key),
-            public_key: Base58Binary::from(public_key),
             salt: Base58Binary::from(salt),
         };
 
@@ -781,34 +771,6 @@ mod tests {
 
         let tee_setup = TeeSetup {
             private_key: Base58Binary::from([1u8; 16]), // Invalid length
-            public_key: Base58Binary::from([1u8; 32]),
-            salt: Base58Binary::from([1u8; 32]),
-        };
-
-        let instantiate_msg = InstantiateMsg {
-            owner: Some(info.sender.clone()),
-            tribute_address: None,
-            tee_config: Some(tee_setup),
-            zk_config: None,
-        };
-
-        let result = instantiate(deps.as_mut(), env, info, instantiate_msg);
-        assert!(matches!(result, Err(ContractError::InvalidKey {})));
-    }
-
-    #[test]
-    fn test_instantiate_with_invalid_public_key_length() {
-        let mut deps = mock_dependencies();
-        let env = mock_env();
-        let owner_addr = deps.api.addr_make("owner");
-        let info = MessageInfo {
-            sender: owner_addr.clone(),
-            funds: vec![],
-        };
-
-        let tee_setup = TeeSetup {
-            private_key: Base58Binary::from([1u8; 32]),
-            public_key: Base58Binary::from([1u8; 16]), // Invalid length
             salt: Base58Binary::from([1u8; 32]),
         };
 
@@ -833,11 +795,10 @@ mod tests {
             funds: vec![],
         };
 
-        let (private_key, public_key) = generate_keypair();
+        let (private_key, _) = generate_keypair();
 
         let tee_setup = TeeSetup {
             private_key: Base58Binary::from(private_key),
-            public_key: Base58Binary::from(public_key),
             salt: Base58Binary::from([1u8; 16]), // Invalid length
         };
 
@@ -850,36 +811,6 @@ mod tests {
 
         let result = instantiate(deps.as_mut(), env, info, instantiate_msg);
         assert!(matches!(result, Err(ContractError::InvalidSalt {})));
-    }
-
-    #[test]
-    fn test_instantiate_with_mismatched_keypair() {
-        let mut deps = mock_dependencies();
-        let env = mock_env();
-        let owner_addr = deps.api.addr_make("owner");
-        let info = MessageInfo {
-            sender: owner_addr.clone(),
-            funds: vec![],
-        };
-
-        let (private_key, _) = generate_keypair();
-        let (_, wrong_public_key) = generate_keypair(); // Different keypair
-
-        let tee_setup = TeeSetup {
-            private_key: Base58Binary::from(private_key),
-            public_key: Base58Binary::from(wrong_public_key), // Mismatched
-            salt: Base58Binary::from([1u8; 32]),
-        };
-
-        let instantiate_msg = InstantiateMsg {
-            owner: Some(info.sender.clone()),
-            tribute_address: None,
-            tee_config: Some(tee_setup),
-            zk_config: None,
-        };
-
-        let result = instantiate(deps.as_mut(), env, info, instantiate_msg);
-        assert!(matches!(result, Err(ContractError::InvalidKeyPair {})));
     }
 
     #[test]
@@ -906,13 +837,12 @@ mod tests {
     #[test]
     fn test_validate_tee_config() {
         // Generate valid keypair
-        let (private_key, public_key) = generate_keypair();
+        let (private_key, _) = generate_keypair();
         let salt = [1u8; 32];
 
         // Test valid config
         let valid_config = TeeSetup {
             private_key: Base58Binary::from(private_key),
-            public_key: Base58Binary::from(public_key),
             salt: Base58Binary::from(salt),
         };
         assert!(validate_tee_config(&valid_config).is_ok());
@@ -920,7 +850,6 @@ mod tests {
         // Test invalid private key length
         let invalid_private_key = TeeSetup {
             private_key: Base58Binary::from([1u8; 16]), // Invalid length
-            public_key: Base58Binary::from(public_key),
             salt: Base58Binary::from(salt),
         };
         assert!(matches!(
@@ -928,38 +857,14 @@ mod tests {
             Err(ContractError::InvalidKey {})
         ));
 
-        // Test invalid public key length
-        let invalid_public_key = TeeSetup {
-            private_key: Base58Binary::from(private_key),
-            public_key: Base58Binary::from([1u8; 16]), // Invalid length
-            salt: Base58Binary::from(salt),
-        };
-        assert!(matches!(
-            validate_tee_config(&invalid_public_key),
-            Err(ContractError::InvalidKey {})
-        ));
-
         // Test invalid salt length
         let invalid_salt = TeeSetup {
             private_key: Base58Binary::from(private_key),
-            public_key: Base58Binary::from(public_key),
             salt: Base58Binary::from([1u8; 16]), // Invalid length
         };
         assert!(matches!(
             validate_tee_config(&invalid_salt),
             Err(ContractError::InvalidSalt {})
-        ));
-
-        // Test mismatched keypair
-        let (_, wrong_public_key) = generate_keypair(); // Different keypair
-        let mismatched_keypair = TeeSetup {
-            private_key: Base58Binary::from(private_key),
-            public_key: Base58Binary::from(wrong_public_key),
-            salt: Base58Binary::from(salt),
-        };
-        assert!(matches!(
-            validate_tee_config(&mismatched_keypair),
-            Err(ContractError::InvalidKeyPair {})
         ));
     }
 }
