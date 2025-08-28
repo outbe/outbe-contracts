@@ -60,6 +60,37 @@ pub fn instantiate(
         .add_event(Event::new("tribute-factory::instantiate").add_attribute("owner", owner)))
 }
 
+fn validate_tee_config(tee_setup: &TeeSetup) -> Result<(), ContractError> {
+    // Validate salt length (32 bytes recommended)
+    if tee_setup.salt.len() != 32 {
+        return Err(ContractError::InvalidSalt {});
+    }
+
+    let private_key_array: [u8; 32] = tee_setup
+        .private_key
+        .as_slice()
+        .try_into()
+        .map_err(|_| ContractError::InvalidKey {})?;
+    let expected_public_key_array: [u8; 32] = tee_setup
+        .public_key
+        .as_slice()
+        .try_into()
+        .map_err(|_| ContractError::InvalidKey {})?;
+
+    // Generate public key from private key
+    let private_key_scalar = Scalar::from_bytes_mod_order(private_key_array);
+    let derived_public_key_point =
+        curve25519_dalek::constants::X25519_BASEPOINT * private_key_scalar;
+    let derived_public_key_bytes = derived_public_key_point.to_bytes();
+
+    // Compare derived public key with provided public key
+    if derived_public_key_bytes != expected_public_key_array {
+        return Err(ContractError::InvalidKeyPair {});
+    }
+
+    Ok(())
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
@@ -154,31 +185,17 @@ pub(crate) fn decrypt_tribute_input(
     ephemeral_pubkey: &Base58Binary,
     tee_config: &TeeConfig,
 ) -> Result<TributeInputPayload, ContractError> {
-    // Convert Base58 to bytes
-    let cipher_bytes = cipher_text.as_slice();
-    let nonce_bytes = nonce.as_slice();
-    let ephemeral_pubkey_bytes = ephemeral_pubkey.as_slice();
-    let private_key_bytes = tee_config.private_key.as_slice();
-
-    // Validate key sizes
-    if private_key_bytes.len() != 32 {
-        return Err(ContractError::InvalidKey {});
-    }
-    if ephemeral_pubkey_bytes.len() != 32 {
-        return Err(ContractError::InvalidKey {});
-    }
-    if nonce_bytes.len() != 12 {
-        return Err(ContractError::InvalidNonce {});
-    }
-
-    // Create X25519 keys
-    let private_key_array: [u8; 32] = private_key_bytes
+    let private_key_array: [u8; 32] = tee_config
+        .private_key
+        .as_slice()
         .try_into()
         .map_err(|_| ContractError::InvalidKey {})?;
-    let ephemeral_pubkey_array: [u8; 32] = ephemeral_pubkey_bytes
+    let ephemeral_pubkey_array: [u8; 32] = ephemeral_pubkey
+        .as_slice()
         .try_into()
         .map_err(|_| ContractError::InvalidKey {})?;
-    let nonce_array: [u8; 12] = nonce_bytes
+    let nonce_array: [u8; 12] = nonce
+        .as_slice()
         .try_into()
         .map_err(|_| ContractError::InvalidNonce {})?;
 
@@ -196,11 +213,11 @@ pub(crate) fn decrypt_tribute_input(
 
     // Use derived key for ChaCha20Poly1305
     let cipher = ChaCha20Poly1305::new((&encryption_key).into());
-    let nonce = Nonce::from_slice(&nonce_array);
+    let nonce = Nonce::from(nonce_array);
 
     // Decrypt the data
     let decrypted_bytes = cipher
-        .decrypt(nonce, cipher_bytes)
+        .decrypt(&nonce, cipher_text.as_slice())
         .map_err(|_| ContractError::DecryptionFailed {})?;
 
     // Deserialize the decrypted data
@@ -208,46 +225,6 @@ pub(crate) fn decrypt_tribute_input(
         cosmwasm_std::from_json(&decrypted_bytes).map_err(|_| ContractError::InvalidPayload {})?;
 
     Ok(tribute_input)
-}
-
-fn validate_tee_config(tee_setup: &TeeSetup) -> Result<(), ContractError> {
-    // Validate private key length (32 bytes for X25519)
-    if tee_setup.private_key.as_slice().len() != 32 {
-        return Err(ContractError::InvalidKey {});
-    }
-
-    // Validate public key length (32 bytes for X25519)
-    if tee_setup.public_key.as_slice().len() != 32 {
-        return Err(ContractError::InvalidKey {});
-    }
-
-    // Validate salt length (32 bytes recommended)
-    if tee_setup.salt.as_slice().len() != 32 {
-        return Err(ContractError::InvalidSalt {});
-    }
-
-    // Verify that public key matches private key
-    let private_key_bytes = tee_setup.private_key.as_slice();
-    let public_key_bytes = tee_setup.public_key.as_slice();
-
-    let private_key_array: [u8; 32] = private_key_bytes
-        .try_into()
-        .map_err(|_| ContractError::InvalidKey {})?;
-    let expected_public_key_array: [u8; 32] = public_key_bytes
-        .try_into()
-        .map_err(|_| ContractError::InvalidKey {})?;
-
-    // Generate public key from private key
-    let private_key_scalar = Scalar::from_bytes_mod_order(private_key_array);
-    let derived_public_key_point = curve25519_dalek::constants::X25519_BASEPOINT * private_key_scalar;
-    let derived_public_key_bytes = derived_public_key_point.to_bytes();
-
-    // Compare derived public key with provided public key
-    if derived_public_key_bytes != expected_public_key_array {
-        return Err(ContractError::InvalidKeyPair {});
-    }
-
-    Ok(())
 }
 
 fn execute_update_config(
@@ -938,5 +915,65 @@ mod tests {
 
         let result = instantiate(deps.as_mut(), env, info, instantiate_msg);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_tee_config() {
+        // Generate valid keypair
+        let (private_key, public_key) = generate_keypair();
+        let salt = [1u8; 32];
+
+        // Test valid config
+        let valid_config = TeeSetup {
+            private_key: Base58Binary::from(private_key),
+            public_key: Base58Binary::from(public_key),
+            salt: Base58Binary::from(salt),
+        };
+        assert!(validate_tee_config(&valid_config).is_ok());
+
+        // Test invalid private key length
+        let invalid_private_key = TeeSetup {
+            private_key: Base58Binary::from([1u8; 16]), // Invalid length
+            public_key: Base58Binary::from(public_key),
+            salt: Base58Binary::from(salt),
+        };
+        assert!(matches!(
+            validate_tee_config(&invalid_private_key),
+            Err(ContractError::InvalidKey {})
+        ));
+
+        // Test invalid public key length
+        let invalid_public_key = TeeSetup {
+            private_key: Base58Binary::from(private_key),
+            public_key: Base58Binary::from([1u8; 16]), // Invalid length
+            salt: Base58Binary::from(salt),
+        };
+        assert!(matches!(
+            validate_tee_config(&invalid_public_key),
+            Err(ContractError::InvalidKey {})
+        ));
+
+        // Test invalid salt length
+        let invalid_salt = TeeSetup {
+            private_key: Base58Binary::from(private_key),
+            public_key: Base58Binary::from(public_key),
+            salt: Base58Binary::from([1u8; 16]), // Invalid length
+        };
+        assert!(matches!(
+            validate_tee_config(&invalid_salt),
+            Err(ContractError::InvalidSalt {})
+        ));
+
+        // Test mismatched keypair
+        let (_, wrong_public_key) = generate_keypair(); // Different keypair
+        let mismatched_keypair = TeeSetup {
+            private_key: Base58Binary::from(private_key),
+            public_key: Base58Binary::from(wrong_public_key),
+            salt: Base58Binary::from(salt),
+        };
+        assert!(matches!(
+            validate_tee_config(&mismatched_keypair),
+            Err(ContractError::InvalidKeyPair {})
+        ));
     }
 }
