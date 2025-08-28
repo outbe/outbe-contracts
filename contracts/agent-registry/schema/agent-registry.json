@@ -1234,11 +1234,15 @@
           "type": "object",
           "required": [
             "address",
+            "agent_id",
             "approve",
             "at"
           ],
           "properties": {
             "address": {
+              "type": "string"
+            },
+            "agent_id": {
               "type": "string"
             },
             "approve": {
@@ -1291,11 +1295,15 @@
           "type": "object",
           "required": [
             "address",
+            "agent_id",
             "approve",
             "at"
           ],
           "properties": {
             "address": {
+              "type": "string"
+            },
+            "agent_id": {
               "type": "string"
             },
             "approve": {

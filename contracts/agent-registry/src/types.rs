@@ -78,6 +78,7 @@ pub struct AgentResponse {
 #[cw_serde]
 pub struct Vote {
     pub address: String,
+    pub agent_id: String,
     pub approve: bool,
     pub reason: Option<String>,
     pub at: Timestamp,

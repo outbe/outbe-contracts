@@ -162,6 +162,7 @@ pub fn exec_vote_agent(
         address: info.sender.to_string(),
         approve,
         reason,
+        agent_id: id.clone(),
         at: env.block.time,
     };
 
