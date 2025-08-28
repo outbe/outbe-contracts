@@ -213,11 +213,10 @@ pub(crate) fn decrypt_tribute_input(
 
     // Use derived key for ChaCha20Poly1305
     let cipher = ChaCha20Poly1305::new((&encryption_key).into());
-    let nonce = Nonce::from(nonce_array);
 
     // Decrypt the data
     let decrypted_bytes = cipher
-        .decrypt(&nonce, cipher_text.as_slice())
+        .decrypt(&Nonce::from(nonce_array), cipher_text.as_slice())
         .map_err(|_| ContractError::DecryptionFailed {})?;
 
     // Deserialize the decrypted data
