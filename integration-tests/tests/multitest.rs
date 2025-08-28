@@ -260,12 +260,12 @@ fn test_metadosis() {
 
     assert_eq!(response.tokens.len(), 2);
 
-    let response: tribute::query::DailyTributesResponse = app
+    let response: tribute::query::FullTributesResponse = app
         .wrap()
         .query_wasm_smart(
             tribute.address.clone(),
             &QueryMsg::DailyTributes {
-                date: normalize_to_date(&app.block_info().time),
+                date: Some(normalize_to_date(&app.block_info().time)),
                 start_after: None,
                 limit: None,
                 query_order: None,

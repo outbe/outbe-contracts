@@ -784,12 +784,12 @@
         "properties": {
           "daily_tributes": {
             "type": "object",
-            "required": [
-              "date"
-            ],
             "properties": {
               "date": {
-                "type": "integer",
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "format": "uint64",
                 "minimum": 0.0
               },
@@ -1030,7 +1030,7 @@
     },
     "daily_tributes": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "DailyTributesResponse",
+      "title": "FullTributesResponse",
       "type": "object",
       "required": [
         "tributes"

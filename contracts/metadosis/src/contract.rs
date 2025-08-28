@@ -239,10 +239,10 @@ fn do_execute_lysis(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+    let tributes: tribute::query::FullTributesResponse = deps.querier.query_wasm_smart(
         &tribute_address,
         &tribute::query::QueryMsg::DailyTributes {
-            date: execution_date,
+            date: Some(execution_date),
             query_order: None,
             limit: None,
             start_after: run_today.last_tribute_id,
@@ -423,10 +423,10 @@ fn do_execute_touch(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+    let tributes: tribute::query::FullTributesResponse = deps.querier.query_wasm_smart(
         &tribute_address,
         &tribute::query::QueryMsg::DailyTributes {
-            date: execution_date,
+            date: Some(execution_date),
             query_order: None,
             limit: None,
             start_after: None,
