@@ -88,6 +88,10 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
+
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -111,11 +115,14 @@ jobs:
           args: --all-targets -- -D warnings
 
   lint-schema:
-    name: Lint Schema
+    name: Schema Lints
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
 
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
