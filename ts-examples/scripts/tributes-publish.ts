@@ -49,7 +49,7 @@ async function main() {
     let encryptionInfo = await queryEncryptionInfo(walletClient, tbFactoryContractAddress)
 
     let instructions: ExecuteInstruction[] = [];
-    for (let i = 0; i <1; i++) {
+    for (let i = 0; i < wallets.length; i++) {
         let tribute = randomTribute(wallets[i].outbe_address, RUN_DATE, coenUsdcRate)
 
         let msg = offerTribute(tribute, encryptionInfo)
@@ -146,7 +146,7 @@ export async function queryActualRate(walletClient: CosmWasmClient): Promise<num
 
 export async function queryEncryptionInfo(walletClient: CosmWasmClient, address: string): Promise<EncryptionInfoResponse> {
     let client = new TributeFactoryQueryClient(walletClient, address)
-    return  await client.encryptionInfo()
+    return await client.encryptionInfo()
 }
 
 main();
