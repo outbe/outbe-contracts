@@ -65,20 +65,11 @@
         "type": "object",
         "required": [
           "private_key",
-          "public_key",
           "salt"
         ],
         "properties": {
           "private_key": {
             "description": "X25519 private key for ECDHE encryption",
-            "allOf": [
-              {
-                "$ref": "#/definitions/Base58Binary"
-              }
-            ]
-          },
-          "public_key": {
-            "description": "X25519 public key for ECDHE encryption",
             "allOf": [
               {
                 "$ref": "#/definitions/Base58Binary"
@@ -291,20 +282,11 @@
         "type": "object",
         "required": [
           "private_key",
-          "public_key",
           "salt"
         ],
         "properties": {
           "private_key": {
             "description": "X25519 private key for ECDHE encryption",
-            "allOf": [
-              {
-                "$ref": "#/definitions/Base58Binary"
-              }
-            ]
-          },
-          "public_key": {
-            "description": "X25519 public key for ECDHE encryption",
             "allOf": [
               {
                 "$ref": "#/definitions/Base58Binary"
