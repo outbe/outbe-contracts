@@ -3,7 +3,7 @@ use crate::msg::{
     ExecuteMsg, InstantiateMsg, TeeSetup, TributeMintData, TributeMintExtension, TributeMsg,
     ZkProof,
 };
-use crate::state::{Config, CONFIG, OWNER, USED_CU_HASHES, USED_TRIBUTE_IDS};
+use crate::state::{Config, TeeConfig, CONFIG, OWNER, USED_CU_HASHES, USED_TRIBUTE_IDS};
 use crate::types::TributeInputPayload;
 use cosmwasm_std::{
     entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, HexBinary, MessageInfo,
@@ -27,11 +27,23 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
+    let tee_config = match msg.tee_config {
+        Some(cfg) => {
+            let pk: Vec<u8> = cfg.private_key.into();
+            let salt: Vec<u8> = cfg.salt.into();
+            Some(TeeConfig {
+                private_key: HexBinary::from(pk.as_slice()),
+                public_key: HexBinary::default(),
+                salt: HexBinary::from(salt.as_slice()),
+            })
+        }
+        None => None,
+    };
     CONFIG.save(
         deps.storage,
         &Config {
             tribute_address: msg.tribute_address,
-            tee_config: None, // todo impl, in scope of tee
+            tee_config,
         },
     )?;
 
@@ -65,7 +77,7 @@ pub fn execute(
             new_tee_config,
         ),
         ExecuteMsg::Offer { .. } => {
-            unimplemented!()
+            return Err(cosmwasm_std::StdError::generic_err("Offer is not implemented yet").into());
         }
         ExecuteMsg::OfferInsecure {
             tribute_input,
@@ -110,8 +122,14 @@ fn execute_update_config(
         if let Some(new_tribute_address) = new_tribute_address {
             config.tribute_address = Some(new_tribute_address)
         }
-        if let Some(_new_tee_config) = new_tee_config {
-            config.tee_config = None // todo impl tee
+        if let Some(new_tee_config) = new_tee_config {
+            let pk: Vec<u8> = new_tee_config.private_key.into();
+            let salt: Vec<u8> = new_tee_config.salt.into();
+            config.tee_config = Some(TeeConfig {
+                private_key: HexBinary::from(pk.as_slice()),
+                public_key: HexBinary::default(),
+                salt: HexBinary::from(salt.as_slice()),
+            });
         }
         CONFIG.save(deps.storage, &config)?;
     }

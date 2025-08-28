@@ -1,3 +1,4 @@
+use std::ops::Add;
 use crate::state::{ACCOUNTS, AGENTS, AGENT_VOTES};
 use crate::types::{
     Account, AccountResponse, Agent, AgentResponse, AgentVotesResponse, ListAllAccountsResponse,
@@ -29,6 +30,8 @@ pub enum QueryMsg {
     },
     #[returns(AgentVotesResponse)]
     QueryVotesByAgent { id: String },
+    #[returns(AgentVotesResponse)]
+    QueryVotesByAddress { address: Addr },
 
     #[returns(AccountResponse)]
     GetAccountByAddress { address: Addr },
@@ -63,6 +66,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             query_order,
         )?),
         QueryMsg::QueryVotesByAgent { id } => to_json_binary(&query_votes_by_agent(deps, id)?),
+        QueryMsg::QueryVotesByAddress { address } => to_json_binary(&query_votes_by_address(deps, address)?),
+
 
         QueryMsg::GetAccountByAddress { address } => {
             to_json_binary(&query_account_by_address(deps, address)?)
@@ -144,6 +149,21 @@ pub fn query_votes_by_agent(deps: Deps, id: String) -> StdResult<AgentVotesRespo
 
     Ok(AgentVotesResponse { votes })
 }
+
+pub fn query_votes_by_address(deps: Deps, address: Addr) -> StdResult<AgentVotesResponse> {
+
+    let votes: Vec<Vote> = AGENT_VOTES
+        .range(deps.storage, None, None, Order::Ascending)
+        .filter_map(|res| match res {
+            Ok(((_agent_id, voter_address), vote)) if voter_address == address => Some(Ok(vote)),
+            Ok(_) => None, // Этот голос не от нашего адреса
+            Err(e) => Some(Err(e)),
+        })
+        .collect::<StdResult<Vec<Vote>>>()?;
+
+    Ok(AgentVotesResponse { votes })
+}
+
 
 fn query_account_by_address(deps: Deps, address: Addr) -> StdResult<AccountResponse> {
     let account = ACCOUNTS.load(deps.storage, address)?;
