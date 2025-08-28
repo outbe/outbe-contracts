@@ -17,7 +17,7 @@ use curve25519_dalek::{MontgomeryPoint, Scalar};
 use cw_ownable::Action;
 use hkdf::Hkdf;
 use outbe_utils::amount_utils::normalize_amount;
-use outbe_utils::date::{iso_to_days, iso_to_ts, Iso8601Date};
+use outbe_utils::date::{iso_to_days, iso_to_ts, normalize_to_date, Iso8601Date};
 use outbe_utils::denom::Denom;
 use outbe_utils::{gen_compound_hash, gen_hash, Base58Binary};
 use sha2::Sha256;
@@ -303,6 +303,10 @@ fn execute_offer_logic(
     };
 
     let timestamp_date = iso_to_ts(&tribute_input.worldwide_day)?;
+    let today = normalize_to_date(&_env.block.time);
+    if timestamp_date < today {
+        return Err(ContractError::ClosedOfferWindow {});
+    }
     // let timestamp_date = _env.block.time.seconds();
 
     let tribute = tee_obfuscate(tribute_input.clone())?;
