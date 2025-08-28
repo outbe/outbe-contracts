@@ -18,6 +18,9 @@ async function main() {
     const tributeClient = new TributeQueryClient(walletClient, tributeContractAddress)
     let tokensResp = await tributeClient.numTokens();
     console.log("Number of Tribute tokens: ", tokensResp)
+
+    let daily_tokens = await tributeClient.dailyTributes({})
+    console.log("Daily Tribute tokens (1 page): ", daily_tokens)
 }
 
 export async function queryActualRate(walletClient: CosmWasmClient): Promise<number> {

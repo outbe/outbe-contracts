@@ -1,5 +1,5 @@
 use crate::error::ContractError;
-use crate::helpers::{calculate_vwap, get_pair_id};
+use crate::helpers::get_pair_id;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::{
     CREATOR, LATEST_PRICES, LATEST_VWAP, PAIR_DAY_TYPES, PRICE_HISTORY, TOKEN_PAIRS, VWAP_CONFIG,
@@ -212,19 +212,24 @@ fn execute_update_price(
     history.push(price_data);
     PRICE_HISTORY.save(deps.storage, pair_id.clone(), &history)?;
 
+    // TODO temporary disable updating vwap because of error
+    //  rpc error: code = Unknown desc = rpc error: code = Unknown
+    //  desc = failed to execute message; message index: 0: Error calling the VM:
+    //  Error executing Wasm: Wasmer runtime error: RuntimeError: Generic error: Value too big.
+    //  Tried to write 131112 bytes to storage, limit is 131072
     // Calculate and update VWAP
-    let vwap_config = VWAP_CONFIG.load(deps.storage)?;
-    if let Some(vwap_data) = calculate_vwap(&history, env.block.time, vwap_config.window_seconds) {
-        // Save latest VWAP
-        LATEST_VWAP.save(deps.storage, pair_id.clone(), &vwap_data)?;
-
-        // Update VWAP history
-        let mut vwap_history = VWAP_HISTORY
-            .may_load(deps.storage, pair_id.clone())?
-            .unwrap_or_default();
-        vwap_history.push(vwap_data);
-        VWAP_HISTORY.save(deps.storage, pair_id.clone(), &vwap_history)?;
-    }
+    // let vwap_config = VWAP_CONFIG.load(deps.storage)?;
+    // if let Some(vwap_data) = calculate_vwap(&history, env.block.time, vwap_config.window_seconds) {
+    //     // Save latest VWAP
+    //     LATEST_VWAP.save(deps.storage, pair_id.clone(), &vwap_data)?;
+    //
+    //     // Update VWAP history
+    //     let mut vwap_history = VWAP_HISTORY
+    //         .may_load(deps.storage, pair_id.clone())?
+    //         .unwrap_or_default();
+    //     vwap_history.push(vwap_data);
+    //     VWAP_HISTORY.save(deps.storage, pair_id.clone(), &vwap_history)?;
+    // }
 
     Ok(Response::new()
         .add_attribute("action", "price-oracle::update_price")

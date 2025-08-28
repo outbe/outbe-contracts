@@ -20,7 +20,7 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub struct TeeSetup {
-    /// Ed25519 private key for messages encryption
+    /// X25519 private key for ECDHE encryption
     pub private_key: Base58Binary,
     /// Salt to be used in hashing operations
     pub salt: Base58Binary,
@@ -50,14 +50,16 @@ pub enum ExecuteMsg {
         ephemeral_pubkey: Base58Binary,
         /// Zero knowledge proof
         zk_proof: ZkProof,
+        #[cfg(feature = "demo")]
+        tribute_owner_l1: Option<Addr>,
     },
 
     /// Accepts raw tribute data and mints a new Tribute
     /// TEST PURPOSE ONLY
+    #[cfg(feature = "demo")]
     OfferInsecure {
         tribute_input: TributeInputPayload,
         zk_proof: ZkProof,
-        #[cfg(feature = "demo")]
         tribute_owner_l1: Option<Addr>,
     },
     BurnAll {},

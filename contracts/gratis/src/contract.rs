@@ -1,7 +1,6 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
-use blake3;
 use cosmwasm_std::{
     entry_point, Binary, Coin, Deps, DepsMut, Env, MessageInfo, OverflowError, OverflowOperation,
     Response, StdResult, Uint128,
@@ -11,6 +10,7 @@ use cw20_base::contract::{execute as cw20_execute, instantiate as cw20_instantia
 use cw20_base::msg::{ExecuteMsg as Cw20ExecuteMsg, InstantiateMsg as Cw20InstantiateMsg};
 use cw20_base::state::{BALANCES, TOKEN_INFO};
 use cw20_base::ContractError as Cw20ContractError;
+use outbe_utils::gen_compound_hash;
 
 pub const CONTRACT_NAME: &str = "outbe.net:gratis";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -121,11 +121,16 @@ pub fn execute_burn(
     // Mark that user has burned in this block
     USER_BURNS_PER_BLOCK.save(deps.storage, burn_key, &true)?;
 
-    let ticket_data = format!("{},{},{}", sender_address, amount, block_height);
-    let hash = blake3::hash(ticket_data.as_bytes());
-    let ticket = hash.to_hex().to_string();
+    let ticket = gen_compound_hash(
+        None,
+        vec![
+            sender_address.as_bytes(),
+            amount.to_be_bytes().as_slice(),
+            block_height.to_be_bytes().as_slice(),
+        ],
+    );
 
-    TICKETS.save(deps.storage, ticket.clone(), &true)?;
+    TICKETS.save(deps.storage, ticket.to_hex(), &true)?;
 
     // Send native funds to sender
     let send_native_msg = cosmwasm_std::BankMsg::Send {
@@ -141,7 +146,7 @@ pub fn execute_burn(
         .add_attribute("action", "burn")
         .add_attribute("from", sender_address)
         .add_attribute("amount", amount)
-        .add_attribute("ticket", &ticket)
+        .add_attribute("ticket", ticket.to_hex())
         .add_attribute("block_height", block_height.to_string());
 
     Ok(res)

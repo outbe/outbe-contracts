@@ -14,7 +14,7 @@ use cosmwasm_std::{
 use cw_utils::ParseReplyError::SubMsgFailure;
 use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
 use outbe_utils::date::WorldwideDay;
-use outbe_utils::{date, hash_utils};
+use outbe_utils::{date, gen_compound_hash};
 use rand::prelude::SliceRandom;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -239,10 +239,10 @@ fn do_execute_lysis(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+    let tributes: tribute::query::FullTributesResponse = deps.querier.query_wasm_smart(
         &tribute_address,
         &tribute::query::QueryMsg::DailyTributes {
-            date: execution_date,
+            date: Some(execution_date),
             query_order: None,
             limit: None,
             start_after: run_today.last_tribute_id,
@@ -423,10 +423,10 @@ fn do_execute_touch(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let tributes: tribute::query::DailyTributesResponse = deps.querier.query_wasm_smart(
+    let tributes: tribute::query::FullTributesResponse = deps.querier.query_wasm_smart(
         &tribute_address,
         &tribute::query::QueryMsg::DailyTributes {
-            date: execution_date,
+            date: Some(execution_date),
             query_order: None,
             limit: None,
             start_after: None,
@@ -579,8 +579,8 @@ fn save_run_history(
 }
 
 fn generate_nod_id(token_id: &String, owner: &String) -> HexBinary {
-    hash_utils::generate_hash_id(
-        "metadosis:nod_id",
+    gen_compound_hash(
+        Some("metadosis:nod_id"),
         vec![token_id.as_bytes(), owner.as_bytes()],
     )
 }
