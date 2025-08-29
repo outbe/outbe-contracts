@@ -5,11 +5,13 @@ use crate::msg::{
 use crate::types::{TributeConfig, TributeData, TributeNft};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Response, Uint128};
+use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Order, Response, Uint128};
+use cw_storage_plus::Index;
 use outbe_nft::execute::assert_minter;
 use outbe_nft::msg::CollectionInfoMsg;
 use outbe_nft::state::{CollectionInfo, Cw721Config};
 use outbe_utils::consts::DECIMAL_PLACES;
+use outbe_utils::date::WorldwideDay;
 
 const CONTRACT_NAME: &str = "outbe.net:tribute";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -89,8 +91,7 @@ pub fn execute(
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
         #[cfg(feature = "demo")]
         ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
-        // todo remove only for day
-        ExecuteMsg::BurnForDay { .. } => execute_burn_all(deps, &env, &info),
+        ExecuteMsg::BurnForDay { date } => execute_burn_for_day(deps, &env, &info, date),
 
         ExecuteMsg::UpdateMinterOwnership(action) => Ok(
             outbe_nft::execute::update_minter_ownership(deps, &env, &info, action)?,
@@ -271,6 +272,59 @@ fn execute_burn_all(
         ))
 }
 
+fn execute_burn_for_day(
+    deps: DepsMut,
+    _env: &Env,
+    info: &MessageInfo,
+    date: WorldwideDay,
+) -> Result<Response, ContractError> {
+    let config = Cw721Config::<TributeData, TributeConfig>::default();
+
+    // Collect token IDs that match the specified date
+    let tokens_to_burn: Vec<String> = config
+        .nft_info
+        .range(deps.storage, None, None, Order::Ascending)
+        .filter_map(|item| {
+            if let Ok((token_id, token_info)) = item {
+                if token_info.extension.worldwide_day == date {
+                    Some(token_id)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    let burned_count = tokens_to_burn.len();
+
+    // Remove the tokens and update indexes
+    for token_id in tokens_to_burn {
+        if let Ok(token_info) = config.nft_info.load(deps.storage, &token_id) {
+            // Remove from indexes
+            config
+                .nft_info
+                .idx
+                .owner
+                .remove(deps.storage, token_id.as_bytes(), &token_info)?;
+        }
+        // Remove the token
+        config.nft_info.remove(deps.storage, &token_id)?;
+        // Decrement token count
+        config.decrement_tokens(deps.storage)?;
+    }
+
+    Ok(Response::new()
+        .add_attribute("action", "tribute::burn_for_day")
+        .add_event(
+            Event::new("tribute::burn_for_day")
+                .add_attribute("sender", info.sender.to_string())
+                .add_attribute("date", date.to_string())
+                .add_attribute("burned_count", burned_count.to_string()),
+        ))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
@@ -282,7 +336,7 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
 
 #[cfg(test)]
 mod tests {
-    use crate::contract::{calc_sybolics, execute_burn_all, instantiate};
+    use crate::contract::{calc_sybolics, execute_burn_all, execute_burn_for_day, instantiate};
     use crate::msg::{InstantiateMsg, TributeCollectionExtension};
     use crate::types::{TributeConfig, TributeData, TributeNft};
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env, MockApi};
@@ -349,6 +403,75 @@ mod tests {
             .any(|attr| attr.key == "action" && attr.value == "tribute::burn_all"));
     }
 
+    #[test]
+    fn test_burn_for_day() {
+        let api = MockApi::default();
+        let owner_addr = api.addr_make("owner");
+        let oracle_addr = api.addr_make("oracle");
+
+        let mut deps = mock_dependencies();
+        let info = message_info(&owner_addr, &[]);
+        let env = mock_env();
+
+        instantiate(
+            deps.as_mut(),
+            env.clone(),
+            info.clone(),
+            InstantiateMsg {
+                name: "Test".to_string(),
+                symbol: "TEST".to_string(),
+                minter: None,
+                creator: None,
+                burner: None,
+                collection_info_extension: TributeCollectionExtension {
+                    symbolic_rate: Decimal::from_str("0.08").unwrap(),
+                    native_token: Denom::Native("coen".to_string()),
+                    price_oracle: oracle_addr,
+                },
+            },
+        )
+        .unwrap();
+
+        // Create test tokens with different dates
+        create_test_token_with_day(deps.as_mut().storage, "token1", 1);
+        create_test_token_with_day(deps.as_mut().storage, "token2", 1);
+        create_test_token_with_day(deps.as_mut().storage, "token3", 2);
+        create_test_token_with_day(deps.as_mut().storage, "token4", 3);
+
+        let config = Cw721Config::<TributeData, TributeConfig>::default();
+        assert_eq!(config.token_count(&deps.storage).unwrap(), 4);
+
+        // Execute burn for day 1
+        let res = execute_burn_for_day(deps.as_mut(), &env, &info, 1).unwrap();
+
+        // Verify only tokens from day 1 were burned (2 tokens)
+        assert_eq!(config.token_count(&deps.storage).unwrap(), 2);
+
+        // Verify the response attributes
+        assert!(res
+            .attributes
+            .iter()
+            .any(|attr| attr.key == "action" && attr.value == "tribute::burn_for_day"));
+
+        // Verify the event attributes
+        assert!(!res.events.is_empty());
+        let event = &res.events[0];
+        assert!(event
+            .attributes
+            .iter()
+            .any(|attr| attr.key == "date" && attr.value == "1"));
+        assert!(event
+            .attributes
+            .iter()
+            .any(|attr| attr.key == "burned_count" && attr.value == "2"));
+
+        // Verify remaining tokens are from day 2 and 3
+        assert!(config.nft_info.load(&deps.storage, "token1").is_err());
+        assert!(config.nft_info.load(&deps.storage, "token2").is_err());
+        assert!(config.nft_info.load(&deps.storage, "token3").is_ok());
+        assert!(config.nft_info.load(&deps.storage, "token4").is_ok());
+    }
+
     fn create_test_token(storage: &mut dyn Storage, token_id: &str) {
         let config = Cw721Config::<TributeData, TributeConfig>::default();
         let token = TributeNft {
@@ -361,6 +484,25 @@ mod tests {
                 nominal_qty_minor: Uint128::new(100),
                 symbolic_load: Uint128::new(10),
                 worldwide_day: 1,
+                created_at: Timestamp::from_seconds(1000),
+            },
+        };
+        config.nft_info.save(storage, token_id, &token).unwrap();
+        config.increment_tokens(storage).unwrap();
+    }
+
+    fn create_test_token_with_day(storage: &mut dyn Storage, token_id: &str, day: u64) {
+        let config = Cw721Config::<TributeData, TributeConfig>::default();
+        let token = TributeNft {
+            owner: Addr::unchecked("owner"),
+            token_uri: None,
+            extension: TributeData {
+                settlement_amount_minor: Uint128::new(100),
+                settlement_currency: Denom::Fiat(Currency::Usd),
+                nominal_price_minor: Decimal::one(),
+                nominal_qty_minor: Uint128::new(100),
+                symbolic_load: Uint128::new(10),
+                worldwide_day: day,
                 created_at: Timestamp::from_seconds(1000),
             },
         };
