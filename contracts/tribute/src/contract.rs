@@ -278,6 +278,7 @@ fn execute_burn_for_day(
     info: &MessageInfo,
     date: WorldwideDay,
 ) -> Result<Response, ContractError> {
+    outbe_nft::execute::assert_burner(deps.storage, &info.sender)?;
     let config = Cw721Config::<TributeData, TributeConfig>::default();
 
     // Collect token IDs that match the specified date
