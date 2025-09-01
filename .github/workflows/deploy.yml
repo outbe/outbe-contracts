@@ -65,7 +65,7 @@ jobs:
           optimize.sh .
 
       - name: Query and Export Contract Addresses
-        if: ${{ inputs.deploy_all == 'false' }}
+        if: ${{ github.event.inputs.deploy_all == 'false' }}
         run: |
           echo "Querying deployed contract addresses from Contract Registry"
           QUERY_RESPONSE=$(outbe-noded query wasm contract-state smart $CONTRACT_REGISTRY_CONTRACT_ADDRESS \
@@ -81,7 +81,7 @@ jobs:
           done
 
       - name: Deploy wUSDC
-        if: ${{ inputs.deploy_all == 'true' || inputs.deploy_wusdc == 'true' }}
+        if: ${{ github.event.inputs.deploy_all == 'true' || github.event.inputs.deploy_wusdc == 'true' }}
         run: |
           CW20_CODE_ID=$(./scripts/store_code.sh artifacts/cw20_copy.wasm)
           echo "CW20_CODE_ID=$CW20_CODE_ID" >> $GITHUB_ENV
@@ -90,7 +90,7 @@ jobs:
           echo "WUSDC_CONTRACT_ADDRESS=$WUSDC_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Gratis
-        if: ${{ inputs.deploy_all == 'true' || inputs.deploy_gratis == 'true' }}
+        if: ${{ github.event.inputs.deploy_all == 'true' || github.event.inputs.deploy_gratis == 'true' }}
         run: |
           GRATIS_CODE_ID=$(./scripts/store_code.sh artifacts/gratis.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/gratis/fixtures/init.json)
@@ -98,7 +98,7 @@ jobs:
           echo "GRATIS_CONTRACT_ADDRESS=$GRATIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Promis
-        if: ${{ inputs.deploy_all == 'true' || inputs.deploy_promis == 'true' }}
+        if: ${{ github.event.inputs.deploy_all == 'true' || github.event.inputs.deploy_promis == 'true' }}
         run: |
           PROMIS_CODE_ID=$(./scripts/store_code.sh artifacts/promis.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/promis/fixtures/init.json)
