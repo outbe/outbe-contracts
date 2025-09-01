@@ -9,64 +9,20 @@ on:
         default: true
         type: boolean
 
-      deploy_all:
-        description: "Deploy all contracts"
+      deploy_type:
+        type: choice
+        description: "Deploy type"
         required: true
-        type: boolean
-        default: false
+        default: "all"
+        options:
+          - "selected"
+          - "all"
 
-      deploy_wusdc:
-        description: "Deploy wUSDC"
+      selected_contracts:
+        type: string
+        description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tribute_factory tribute nod agent_registry metadosis token_miner"
         required: false
-        type: boolean
-      deploy_gratis:
-        description: "Deploy Gratis"
-        required: false
-        type: boolean
-      deploy_promis:
-        description: "Deploy Promis"
-        required: false
-        type: boolean
-      deploy_price_oracle:
-        description: "Deploy Price Oracle"
-        required: false
-        type: boolean
-      deploy_random_oracle:
-        description: "Deploy Random Oracle"
-        required: false
-        type: boolean
-      deploy_token_allocator:
-        description: "Deploy Token Allocator"
-        required: false
-        type: boolean
-      deploy_vector:
-        description: "Deploy Vector"
-        required: false
-        type: boolean
-      deploy_tribute_factory:
-        description: "Deploy Tribute Factory"
-        required: false
-        type: boolean
-      deploy_tribute:
-        description: "Deploy Tribute"
-        required: false
-        type: boolean
-      deploy_nod:
-        description: "Deploy Nod"
-        required: false
-        type: boolean
-      deploy_agent_registry:
-        description: "Deploy Agent Registry"
-        required: false
-        type: boolean
-      deploy_metadosis:
-        description: "Deploy Metadosis"
-        required: false
-        type: boolean
-      deploy_token_miner:
-        description: "Deploy Token Miner"
-        required: false
-        type: boolean
+        default: ""
 
 env:
   # Chain configuration
@@ -105,7 +61,7 @@ jobs:
           optimize.sh .
 
       - name: Query and Export Contract Addresses
-        if: ${{ inputs.deploy_all == false }}
+        if: ${{ inputs.deploy_type == 'all' }}
         run: |
           echo "Querying deployed contract addresses from Contract Registry"
           QUERY_RESPONSE=$(outbe-noded query wasm contract-state smart $CONTRACT_REGISTRY_CONTRACT_ADDRESS \
@@ -119,7 +75,7 @@ jobs:
           done
 
       - name: Deploy wUSDC
-        if: ${{ inputs.deploy_all || inputs.deploy_wusdc }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'wusdc') }}
         run: |
           CW20_CODE_ID=$(./scripts/store_code.sh artifacts/cw20_copy.wasm)
           echo "CW20_CODE_ID=$CW20_CODE_ID" >> $GITHUB_ENV
@@ -128,7 +84,7 @@ jobs:
           echo "WUSDC_CONTRACT_ADDRESS=$WUSDC_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Gratis
-        if: ${{ inputs.deploy_all || inputs.deploy_gratis }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'gratis') }}
         run: |
           GRATIS_CODE_ID=$(./scripts/store_code.sh artifacts/gratis.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/gratis/fixtures/init.json)
@@ -136,7 +92,7 @@ jobs:
           echo "GRATIS_CONTRACT_ADDRESS=$GRATIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Promis
-        if: ${{ inputs.deploy_all || inputs.deploy_promis }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'promis') }}
         run: |
           PROMIS_CODE_ID=$(./scripts/store_code.sh artifacts/promis.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/promis/fixtures/init.json)
@@ -144,7 +100,7 @@ jobs:
           echo "PROMIS_CONTRACT_ADDRESS=$PROMIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Price Oracle
-        if: ${{ inputs.deploy_all || inputs.deploy_price_oracle }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'price_oracle') }}
         run: |
           PRICE_ORACLE_CODE_ID=$(./scripts/store_code.sh artifacts/price_oracle.wasm)
           INIT_PAYLOAD=$(jq -n --arg usdc_address $WUSDC_CONTRACT_ADDRESS --from-file ./contracts/price-oracle/fixtures/init.json)
@@ -170,7 +126,7 @@ jobs:
           ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Deploy Random Oracle
-        if: ${{ inputs.deploy_all || inputs.deploy_random_oracle }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'random_oracle') }}
         run: |
           RANDOM_ORACLE_CODE_ID=$(./scripts/store_code.sh artifacts/random_oracle.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/random-oracle/fixtures/init.json)
@@ -178,7 +134,7 @@ jobs:
           echo "RANDOM_ORACLE_CONTRACT_ADDRESS=$RANDOM_ORACLE_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Token Allocator
-        if: ${{ inputs.deploy_all || inputs.deploy_token_allocator }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'token_allocator') }}
         run: |
           TOKEN_ALLOCATOR_CODE_ID=$(./scripts/store_code.sh artifacts/token_allocator.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/token-allocator/fixtures/init.json)
@@ -186,7 +142,7 @@ jobs:
           echo "TOKEN_ALLOCATOR_CONTRACT_ADDRESS=$TOKEN_ALLOCATOR_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Vector
-        if: ${{ inputs.deploy_all || inputs.deploy_vector }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'vector') }}
         run: |
           VECTOR_CODE_ID=$(./scripts/store_code.sh artifacts/vector.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/vector/fixtures/init.json)
@@ -194,7 +150,7 @@ jobs:
           echo "VECTOR_CONTRACT_ADDRESS=$VECTOR_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Tribute Factory
-        if: ${{ inputs.deploy_all || inputs.deploy_tribute_factory }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'tribute_factory') }}
         run: |
           TRIBUTE_FACTORY_CODE_ID=$(./scripts/store_code.sh artifacts/tribute_factory.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/tribute-factory/fixtures/init.json)
@@ -202,7 +158,7 @@ jobs:
           echo "TRIBUTE_FACTORY_CONTRACT_ADDRESS=$TRIBUTE_FACTORY_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Tribute
-        if: ${{ inputs.deploy_all || inputs.deploy_tribute }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'tribute') }}
         run: |
           TRIBUTE_CODE_ID=$(./scripts/store_code.sh artifacts/tribute.wasm)
           INIT_PAYLOAD=$(jq -n --arg price_oracle $PRICE_ORACLE_CONTRACT_ADDRESS --arg minter $TRIBUTE_FACTORY_CONTRACT_ADDRESS --from-file ./contracts/tribute/fixtures/init.json)
@@ -210,13 +166,13 @@ jobs:
           echo "TRIBUTE_CONTRACT_ADDRESS=$TRIBUTE_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Link Tribute Factory and Tribute contracts
-        if: ${{ inputs.deploy_all || inputs.deploy_tribute || inputs.deploy_tribute_factory }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'tribute_factory') || contains(inputs.selected_contracts, 'tribute') }}
         run: |
           UPDATE_PAYLOAD=$(jq -n --arg tribute_address $TRIBUTE_CONTRACT_ADDRESS -f ./contracts/tribute-factory/fixtures/update-tribute-address.json)
           ./scripts/execute_tx.sh $TRIBUTE_FACTORY_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Deploy Nod
-        if: ${{ inputs.deploy_all || inputs.deploy_nod }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'nod') }}
         run: |
           NOD_CODE_ID=$(./scripts/store_code.sh artifacts/nod.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/nod/fixtures/init.json)
@@ -224,7 +180,7 @@ jobs:
           echo "NOD_CONTRACT_ADDRESS=$NOD_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Agent Registry
-        if: ${{ inputs.deploy_all || inputs.deploy_agent_registry }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_registry') }}
         run: |
           AGENT_REGISTRY_CODE_ID=$(./scripts/store_code.sh artifacts/agent_registry.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/agent-registry/fixtures/init.json)
@@ -232,7 +188,7 @@ jobs:
           echo "AGENT_REGISTRY_CONTRACT_ADDRESS=$AGENT_REGISTRY_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Metadosis
-        if: ${{ inputs.deploy_all || inputs.deploy_metadosis }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'metadosis') }}
         run: |
           METADOSIS_CODE_ID=$(./scripts/store_code.sh artifacts/metadosis.wasm)
           INIT_PAYLOAD=$(jq -n --arg price_oracle_address $PRICE_ORACLE_CONTRACT_ADDRESS --arg random_oracle_address $RANDOM_ORACLE_CONTRACT_ADDRESS --arg vector_address $VECTOR_CONTRACT_ADDRESS --arg tribute_address $TRIBUTE_CONTRACT_ADDRESS --arg nod_address $NOD_CONTRACT_ADDRESS --arg token_allocator_address $TOKEN_ALLOCATOR_CONTRACT_ADDRESS --from-file ./contracts/metadosis/fixtures/init.json)
@@ -240,13 +196,13 @@ jobs:
           echo "METADOSIS_CONTRACT_ADDRESS=$METADOSIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Update Tribute burner to Metadosis contract
-        if: ${{ inputs.deploy_all || inputs.deploy_tribute || inputs.deploy_metadosis }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'metadosis') || contains(inputs.selected_contracts, 'tribute') }}
         run: |
           UPDATE_PAYLOAD=$(jq -n --arg new_burner $METADOSIS_CONTRACT_ADDRESS -f ./contracts/tribute/fixtures/update-burner.json)
           ./scripts/execute_tx.sh $TRIBUTE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Deploy Token Miner
-        if: ${{ inputs.deploy_all || inputs.deploy_token_miner }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'token_miner') }}
         run: |
           TOKEN_MINER_CODE_ID=$(./scripts/store_code.sh artifacts/token_miner.wasm)
           INIT_PAYLOAD=$(jq -n --arg gratis_address $GRATIS_CONTRACT_ADDRESS --arg promis_address $PROMIS_CONTRACT_ADDRESS --arg nod_address $NOD_CONTRACT_ADDRESS --arg price_oracle_address $PRICE_ORACLE_CONTRACT_ADDRESS --arg faucet_address $FAUCET_ADDRESS --from-file ./contracts/token-miner/fixtures/init.json)
@@ -257,13 +213,13 @@ jobs:
           ./scripts/execute_tx.sh $TOKEN_MINER_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Link Gratis and Token Miner contracts
-        if: ${{ inputs.deploy_all || inputs.deploy_token_miner || inputs.deploy_gratis }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'token_miner') || contains(inputs.selected_contracts, 'gratis') }}
         run: |
           UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/gratis/fixtures/update-minter.json)
           ./scripts/execute_tx.sh $GRATIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Link Promis and Token Miner contracts
-        if: ${{ inputs.deploy_all || inputs.deploy_token_miner || inputs.deploy_promis }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'token_miner') || contains(inputs.selected_contracts, 'promis') }}
         run: |
           UPDATE_PAYLOAD=$(jq -n --arg new_minter $TOKEN_MINER_CONTRACT_ADDRESS -f ./contracts/promis/fixtures/update-minter.json)
           ./scripts/execute_tx.sh $PROMIS_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
