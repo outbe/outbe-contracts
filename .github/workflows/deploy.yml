@@ -15,8 +15,8 @@ on:
         required: true
         default: "all"
         options:
-          - "selected"
           - "all"
+          - "selected"
 
       selected_contracts:
         type: string
