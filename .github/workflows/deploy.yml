@@ -70,8 +70,6 @@ jobs:
           echo "Querying deployed contract addresses from Contract Registry"
           QUERY_RESPONSE=$(outbe-noded query wasm contract-state smart $CONTRACT_REGISTRY_CONTRACT_ADDRESS \
             '{"get_deployment": {"commit_id" : null } }' --node $RPC --output json)
-          echo "Query response: $QUERY_RESPONSE"
-          
           # Parse and export contract addresses
           echo "$QUERY_RESPONSE" | jq -r '.data.deployment.contracts[] | "\(.name)=\(.address)"' | while read -r line; do
             if [[ $line == *"="* ]]; then
