@@ -12,7 +12,7 @@ pub fn assert_minter(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721Co
 
 pub fn assert_burner(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721ContractError> {
     if BURNER.assert_owner(storage, sender).is_err() {
-        return Err(Cw721ContractError::NotMinter {});
+        return Err(Cw721ContractError::NotBurner {});
     }
     Ok(())
 }
