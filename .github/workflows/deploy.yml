@@ -20,7 +20,7 @@ on:
 
       selected_contracts:
         type: string
-        description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tribute_factory tribute nod agent_registry metadosis token_miner"
+        description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_registry metadosis token_miner"
         required: false
         default: ""
 
@@ -150,7 +150,7 @@ jobs:
           echo "VECTOR_CONTRACT_ADDRESS=$VECTOR_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Tribute Factory
-        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'tribute_factory') }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'tr_factory') }}
         run: |
           TRIBUTE_FACTORY_CODE_ID=$(./scripts/store_code.sh artifacts/tribute_factory.wasm)
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/tribute-factory/fixtures/init.json)
@@ -166,7 +166,7 @@ jobs:
           echo "TRIBUTE_CONTRACT_ADDRESS=$TRIBUTE_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Link Tribute Factory and Tribute contracts
-        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'tribute_factory') || contains(inputs.selected_contracts, 'tribute') }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'tr_factory') || contains(inputs.selected_contracts, 'tribute') }}
         run: |
           UPDATE_PAYLOAD=$(jq -n --arg tribute_address $TRIBUTE_CONTRACT_ADDRESS -f ./contracts/tribute-factory/fixtures/update-tribute-address.json)
           ./scripts/execute_tx.sh $TRIBUTE_FACTORY_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
