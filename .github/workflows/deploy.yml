@@ -11,12 +11,12 @@ on:
 
       deploy_type:
         type: choice
-        description: "Deploy type"
+        description: Deploy type
         required: true
-        default: "all"
+        default: all
         options:
-          - "all"
-          - "selected"
+          - all
+          - selected
 
       selected_contracts:
         type: string
