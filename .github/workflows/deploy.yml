@@ -61,7 +61,7 @@ jobs:
           optimize.sh .
 
       - name: Query and Export Contract Addresses
-        if: ${{ inputs.deploy_type == 'all' }}
+        if: ${{ inputs.deploy_type == 'selected' }}
         run: |
           echo "Querying deployed contract addresses from Contract Registry"
           QUERY_RESPONSE=$(outbe-noded query wasm contract-state smart $CONTRACT_REGISTRY_CONTRACT_ADDRESS \
