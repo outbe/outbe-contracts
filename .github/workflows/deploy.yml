@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: ghcr.io/outbe/outbe-wasm-builder:0.1.0
+      image: ghcr.io/outbe/outbe-wasm-builder:0.2.0
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -153,10 +153,6 @@ jobs:
           INIT_PAYLOAD=$(jq -n --arg price_oracle_address $PRICE_ORACLE_CONTRACT_ADDRESS --arg random_oracle_address $RANDOM_ORACLE_CONTRACT_ADDRESS --arg vector_address $VECTOR_CONTRACT_ADDRESS --arg tribute_address $TRIBUTE_CONTRACT_ADDRESS --arg nod_address $NOD_CONTRACT_ADDRESS --arg token_allocator_address $TOKEN_ALLOCATOR_CONTRACT_ADDRESS --from-file ./contracts/metadosis/fixtures/init.json)
           METADOSIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Metadosis" $METADOSIS_CODE_ID "$INIT_PAYLOAD")
           echo "METADOSIS_CONTRACT_ADDRESS=$METADOSIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
-
-          echo "Update Tribute burner to Metadosis contract"
-          UPDATE_PAYLOAD=$(jq -n --arg new_burner $METADOSIS_CONTRACT_ADDRESS -f ./contracts/tribute/fixtures/update-burner.json)
-          ./scripts/execute_tx.sh $TRIBUTE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Deploy Token Miner
         run: |
