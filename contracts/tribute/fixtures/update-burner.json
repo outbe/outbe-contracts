@@ -1,0 +1,7 @@
+{
+  "update_burner_ownership": {
+    "transfer_ownership": {
+      "new_owner": $new_burner
+    }
+  }
+}
