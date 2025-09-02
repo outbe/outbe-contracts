@@ -19,6 +19,11 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
+pub enum MigrateMsg {
+    Migrate {},
+}
+
+#[cw_serde]
 pub struct TeeSetup {
     /// X25519 private key for ECDHE encryption
     pub private_key: Base58Binary,

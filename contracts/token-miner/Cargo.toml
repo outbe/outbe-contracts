@@ -6,6 +6,9 @@ edition = { workspace = true }
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+library = []
+
 [dependencies]
 cosmwasm-schema = { workspace = true }
 cosmwasm-std = { workspace = true }

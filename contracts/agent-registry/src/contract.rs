@@ -1,5 +1,5 @@
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::{ACCOUNTS, AGENTS, AGENT_VOTES, CONFIG};
 use crate::types::{
     Account, AccountInput, AccountStatus, Agent, AgentInput, AgentStatus, Config, Vote,
@@ -33,6 +33,15 @@ pub fn instantiate(
         .add_attribute("action", "agent-registry::instantiate")
         .add_attribute("version", CONTRACT_VERSION)
         .add_attribute("threshold", cfg.threshold.to_string()))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    match msg {
+        MigrateMsg::Migrate {} => Ok(Response::new()),
+    }
 }
 
 #[entry_point]

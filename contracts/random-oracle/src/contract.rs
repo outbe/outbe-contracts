@@ -1,5 +1,5 @@
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, RandomResponse, SeedResponse};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, RandomResponse, SeedResponse};
 use crate::state::RND;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -24,6 +24,12 @@ pub fn instantiate(
     Ok(Response::default()
         .add_attribute("action", "random-oracle::instantiate")
         .add_event(Event::new("tribute::instantiate")))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    Ok(Response::new())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

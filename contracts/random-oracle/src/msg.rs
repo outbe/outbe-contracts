@@ -6,6 +6,11 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
+pub enum MigrateMsg {
+    Migrate {},
+}
+
+#[cw_serde]
 pub enum ExecuteMsg {
     /// Sets a predictable value as "random".
     /// Or removes if None

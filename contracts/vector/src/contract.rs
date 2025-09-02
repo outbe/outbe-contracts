@@ -1,5 +1,5 @@
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::{default_vector_tiers, Config, CONFIG, CREATOR};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -31,6 +31,15 @@ pub fn instantiate(
     Ok(Response::default()
         .add_attribute("action", "vector::instantiate")
         .add_event(Event::new("vector::instantiate").add_attribute("creator", creator)))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    match msg {
+        MigrateMsg::Migrate {} => Ok(Response::new()),
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

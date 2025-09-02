@@ -35,6 +35,15 @@ pub fn instantiate(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    match msg {
+        MigrateMsg::Migrate {} => Ok(Response::new()),
+    }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -71,13 +80,4 @@ fn execute_allocate_tokens(
         .add_attribute("action", "token-allocator::allocate_tokens")
         .add_attribute("date", date.to_string())
         .add_attribute("daily_total_allocation", daily_total_allocation.to_string()))
-}
-
-#[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
-    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
-    match msg {
-        MigrateMsg::Migrate {} => Ok(Response::new()),
-    }
 }

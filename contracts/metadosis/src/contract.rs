@@ -1,5 +1,5 @@
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::prepare;
 use crate::state::{
     Config, DailyRunHistory, DailyRunState, LysisInfo, MetadosisInfo, RunHistoryInfo, RunType,
@@ -11,6 +11,7 @@ use cosmwasm_std::{
     from_json, to_json_binary, Decimal, DepsMut, Env, Event, HexBinary, MessageInfo, Reply,
     Response, StdResult, Storage, SubMsg, Uint128, WasmMsg,
 };
+use cw2::set_contract_version;
 use cw_utils::ParseReplyError::SubMsgFailure;
 use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
 use outbe_utils::date::WorldwideDay;
@@ -56,6 +57,15 @@ pub fn instantiate(
     Ok(Response::default()
         .add_attribute("action", "metadosis::instantiate")
         .add_event(Event::new("metadosis::instantiate").add_attribute("creator", creator)))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    match msg {
+        MigrateMsg::Migrate {} => Ok(Response::new()),
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
