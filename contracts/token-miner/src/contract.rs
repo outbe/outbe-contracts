@@ -6,7 +6,7 @@ use cw2::set_contract_version;
 use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{AccessPermissions, Config, TokenType, ACCESS_LIST, CONFIG};
 
 // Import types from other contracts
@@ -68,6 +68,15 @@ pub fn instantiate(
         .add_attribute("promis_contract", msg.promis_contract)
         .add_attribute("price_oracle_contract", msg.price_oracle_contract)
         .add_attribute("nod_contract", msg.nod_contract))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    match msg {
+        MigrateMsg::Migrate {} => Ok(Response::new()),
+    }
 }
 
 /// Contract execution entry point

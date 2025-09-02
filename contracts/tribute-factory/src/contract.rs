@@ -1,7 +1,7 @@
 use crate::error::ContractError;
 use crate::msg::{
-    ExecuteMsg, InstantiateMsg, TeeSetup, TributeMintData, TributeMintExtension, TributeMsg,
-    ZkProof,
+    ExecuteMsg, InstantiateMsg, MigrateMsg, TeeSetup, TributeMintData, TributeMintExtension,
+    TributeMsg, ZkProof,
 };
 use crate::state::{Config, TeeConfig, CONFIG, OWNER, USED_CU_HASHES, USED_TRIBUTE_IDS};
 use crate::types::TributeInputPayload;
@@ -60,6 +60,19 @@ pub fn instantiate(
     Ok(Response::new()
         .add_attribute("action", "tribute-factory::instantiate")
         .add_event(Event::new("tribute-factory::instantiate").add_attribute("owner", owner)))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(
+    deps: DepsMut,
+    _env: Env,
+    msg: MigrateMsg,
+) -> Result<Response, tribute::error::ContractError> {
+    cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    match msg {
+        MigrateMsg::Migrate {} => Ok(Response::new()),
+    }
 }
 
 fn validate_tee_config(tee_setup: &TeeSetup) -> Result<Base58Binary, ContractError> {

@@ -16,6 +16,11 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
+pub enum MigrateMsg {
+    Migrate {},
+}
+
+#[cw_serde]
 pub enum ExecuteMsg {
     Prepare {
         run_date: Option<WorldwideDay>,

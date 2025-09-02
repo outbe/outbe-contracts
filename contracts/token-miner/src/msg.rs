@@ -19,6 +19,11 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
+pub enum MigrateMsg {
+    Migrate {},
+}
+
+#[cw_serde]
 pub struct AccessMsg {
     /// Address to add to the access list
     pub address: String,
