@@ -36,4 +36,6 @@ pub enum ContractError {
     InvalidSalt {},
     #[error("Invalid nonce")]
     InvalidNonce {},
+    #[error("Tribute date window is closed")]
+    ClosedOfferWindow {},
 }

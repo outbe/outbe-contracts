@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use cosmwasm_std::Timestamp;
 use thiserror::Error;
 
-const SECONDS_IN_DAY: u64 = 86400;
+pub const SECONDS_IN_DAY: u64 = 86400;
 
 /// Normalize any timestamp to midnight UTC of that day.
 pub fn normalize_to_date(timestamp: &Timestamp) -> WorldwideDay {

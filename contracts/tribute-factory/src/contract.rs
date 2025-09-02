@@ -11,13 +11,15 @@ use chacha20poly1305::{
 };
 use cosmwasm_std::{
     entry_point, to_json_binary, Addr, Decimal, DepsMut, Empty, Env, Event, HexBinary, MessageInfo,
-    Response, Storage, WasmMsg,
+    Response, Storage, Timestamp, WasmMsg,
 };
 use curve25519_dalek::{MontgomeryPoint, Scalar};
 use cw_ownable::Action;
 use hkdf::Hkdf;
 use outbe_utils::amount_utils::normalize_amount;
-use outbe_utils::date::{iso_to_days, iso_to_ts, Iso8601Date};
+use outbe_utils::date::{
+    iso_to_days, iso_to_ts, normalize_to_date, Iso8601Date, WorldwideDay, SECONDS_IN_DAY,
+};
 use outbe_utils::denom::Denom;
 use outbe_utils::{gen_compound_hash, gen_hash, Base58Binary};
 use sha2::Sha256;
@@ -81,6 +83,16 @@ fn validate_tee_config(tee_setup: &TeeSetup) -> Result<Base58Binary, ContractErr
     let derived_public_key_bytes = derived_public_key_point.to_bytes();
 
     Ok(Base58Binary::from(derived_public_key_bytes))
+}
+
+fn validate_deadline(wwd_ts: &WorldwideDay, current_time: &Timestamp) -> Result<(), ContractError> {
+    let today_ts = normalize_to_date(current_time);
+    let metadosis_deadline = wwd_ts.saturating_add(3 * SECONDS_IN_DAY);
+
+    if metadosis_deadline < today_ts {
+        return Err(ContractError::ClosedOfferWindow {});
+    }
+    Ok(())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -301,9 +313,9 @@ fn execute_offer_logic(
             info.sender.clone()
         }
     };
+    let wwd_ts = iso_to_ts(&tribute_input.worldwide_day)?;
 
-    let timestamp_date = iso_to_ts(&tribute_input.worldwide_day)?;
-    // let timestamp_date = _env.block.time.seconds();
+    validate_deadline(&wwd_ts, &_env.block.time)?;
 
     let tribute = tee_obfuscate(tribute_input.clone())?;
     update_used_state(deps.storage, &tribute)?;
@@ -336,7 +348,7 @@ fn execute_offer_logic(
             extension: Box::new(TributeMintExtension {
                 data: TributeMintData {
                     tribute_id: tribute_id.to_string(),
-                    worldwide_day: timestamp_date,
+                    worldwide_day: wwd_ts,
                     owner: tribute_owner.to_string(),
                     settlement_amount_minor: settlement_amount,
                     settlement_currency: Denom::Native(tribute.settlement_currency), // TODO use native
@@ -866,5 +878,24 @@ mod tests {
             validate_tee_config(&invalid_salt),
             Err(ContractError::InvalidSalt {})
         ));
+    }
+
+    #[test]
+    fn test_validate_deadline() {
+        // WorldwideDay = 2025-09-01 00:00:00 UTC
+        let wwd_ts = normalize_to_date(&Timestamp::from_seconds(1_756_684_800));
+
+        //  Before deadline: 2025-09-03 00:00:00 UTC (still valid)
+        let current_time_ok = Timestamp::from_seconds(1_756_857_600);
+        let res_ok = validate_deadline(&wwd_ts, &current_time_ok);
+        assert!(res_ok.is_ok(), "expected Ok inside deadline");
+
+        //  After deadline: 2025-09-05 00:00:00 UTC (should fail)
+        let current_time_fail = Timestamp::from_seconds(1_757_030_400);
+        let res_fail = validate_deadline(&wwd_ts, &current_time_fail);
+        assert!(
+            matches!(res_fail, Err(ContractError::ClosedOfferWindow {})),
+            "expected ClosedOfferWindow error after deadline"
+        );
     }
 }
