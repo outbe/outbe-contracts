@@ -8,6 +8,7 @@ pub enum Denom {
     Native(String),
     Cw20(Addr),
     Fiat(Currency),
+    Commodity(CommodityType),
 }
 
 impl Display for Denom {
@@ -21,6 +22,9 @@ impl Display for Denom {
             }
             Self::Fiat(value) => {
                 write!(f, "fiat_{}", value)
+            }
+            Self::Commodity(value) => {
+                write!(f, "commodity_{}", value)
             }
         }
     }
@@ -36,7 +40,20 @@ pub enum Currency {
     // todo add others when required
 }
 
+/// Commodity type representing precious metals and other commodities
+#[cw_serde]
+#[derive(Copy, Eq)]
+pub enum CommodityType {
+    Xau, // gold
+}
+
 impl Display for Currency {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Display for CommodityType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
