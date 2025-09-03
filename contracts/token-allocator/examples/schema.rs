@@ -1,6 +1,6 @@
 use cosmwasm_schema::write_api;
 
-use token_allocator::msg::{ExecuteMsg, InstantiateMsg};
+use token_allocator::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use token_allocator::query::QueryMsg;
 
 fn main() {
@@ -8,5 +8,6 @@ fn main() {
         instantiate: InstantiateMsg,
         query: QueryMsg,
         execute: ExecuteMsg,
+        migrate: MigrateMsg,
     }
 }

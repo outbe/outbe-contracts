@@ -39,3 +39,8 @@ pub enum QueryMsg {
 pub struct CheckTicketResponse {
     pub exists: bool,
 }
+
+#[cw_serde]
+pub enum MigrateMsg {
+    Migrate {},
+}

@@ -1,6 +1,6 @@
 use cosmwasm_schema::write_api;
 
-use price_oracle::msg::{ExecuteMsg, InstantiateMsg};
+use price_oracle::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use price_oracle::query::QueryMsg;
 
 fn main() {
@@ -8,5 +8,6 @@ fn main() {
         instantiate: InstantiateMsg,
         query: QueryMsg,
         execute: ExecuteMsg,
+        migrate: MigrateMsg,
     }
 }
