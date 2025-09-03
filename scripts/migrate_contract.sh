@@ -6,6 +6,7 @@ code_id=$2
 payload=$3
 
 binary=${BINARY:-outbe-noded}
+payload=${payload:-'{ "migrate": {} }'}
 
 $binary tx wasm migrate $contract_address \
   $code_id "$payload" \
