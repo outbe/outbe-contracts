@@ -51,6 +51,7 @@ pub struct NodEntity {
     pub qualified_at: Option<Timestamp>,
 }
 
-/// Migrate message for Nod contract
 #[cw_serde]
-pub enum MigrateMsg {}
+pub enum MigrateMsg {
+    Migrate {},
+}

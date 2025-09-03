@@ -1,5 +1,5 @@
 use cosmwasm_schema::write_api;
-use vector::msg::{ExecuteMsg, InstantiateMsg};
+use vector::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use vector::query::QueryMsg;
 
 fn main() {
@@ -7,5 +7,6 @@ fn main() {
         instantiate: InstantiateMsg,
         query: QueryMsg,
         execute: ExecuteMsg,
+        migrate: MigrateMsg,
     }
 }

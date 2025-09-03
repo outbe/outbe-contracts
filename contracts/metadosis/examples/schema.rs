@@ -1,5 +1,5 @@
 use cosmwasm_schema::write_api;
-use metadosis::msg::{ExecuteMsg, InstantiateMsg};
+use metadosis::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use metadosis::query::QueryMsg;
 
 fn main() {
@@ -7,5 +7,6 @@ fn main() {
         instantiate: InstantiateMsg,
         query: QueryMsg,
         execute: ExecuteMsg,
+        migrate: MigrateMsg,
     }
 }

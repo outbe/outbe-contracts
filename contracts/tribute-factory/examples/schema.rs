@@ -1,5 +1,5 @@
 use cosmwasm_schema::write_api;
-use tribute_factory::msg::{ExecuteMsg, InstantiateMsg};
+use tribute_factory::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use tribute_factory::query::QueryMsg;
 
 fn main() {
@@ -7,5 +7,6 @@ fn main() {
         instantiate: InstantiateMsg,
         query: QueryMsg,
         execute: ExecuteMsg,
+        migrate: MigrateMsg,
     }
 }

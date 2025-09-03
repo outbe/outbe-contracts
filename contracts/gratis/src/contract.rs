@@ -15,7 +15,7 @@ use outbe_utils::gen_compound_hash;
 pub const CONTRACT_NAME: &str = "outbe.net:gratis";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
@@ -44,7 +44,15 @@ pub fn instantiate(
     Ok(res)
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    match msg {
+        MigrateMsg::Migrate {} => Ok(Response::new()),
+    }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -215,18 +223,9 @@ pub fn execute_update_admin(
         .add_attribute("new_admin", new_admin_addr))
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     crate::query::query(deps, env, msg)
-}
-
-#[entry_point]
-pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
-    cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
-    match msg {
-        MigrateMsg::Migrate {} => Ok(Response::new()),
-    }
 }
 
 impl From<Cw20ContractError> for ContractError {
