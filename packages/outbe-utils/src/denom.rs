@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn test_denom_cw20_display() {
-        let deps = mock_dependencies();
+        let _deps = mock_dependencies();
         let addr = Addr::unchecked("cosmos2contract");
         let denom = Denom::Cw20(addr.clone());
         assert_eq!(denom.to_string(), format!("cw20_{}", addr));
