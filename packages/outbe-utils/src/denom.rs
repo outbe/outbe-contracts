@@ -58,3 +58,47 @@ impl Display for CommodityType {
         write!(f, "{:?}", self)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmwasm_std::testing::mock_dependencies;
+
+    #[test]
+    fn test_denom_native_display() {
+        let denom = Denom::Native("ujuno".to_string());
+        assert_eq!(denom.to_string(), "native_ujuno");
+    }
+
+    #[test]
+    fn test_denom_cw20_display() {
+        let deps = mock_dependencies();
+        let addr = Addr::unchecked("cosmos2contract");
+        let denom = Denom::Cw20(addr.clone());
+        assert_eq!(denom.to_string(), format!("cw20_{}", addr));
+    }
+
+    #[test]
+    fn test_denom_fiat_display() {
+        let denom = Denom::Fiat(Currency::Usd);
+        assert_eq!(denom.to_string(), "fiat_Usd");
+
+        let denom = Denom::Fiat(Currency::Eur);
+        assert_eq!(denom.to_string(), "fiat_Eur");
+    }
+
+    #[test]
+    fn test_currency_display() {
+        let currency = Currency::Usd;
+        assert_eq!(currency.to_string(), "Usd");
+
+        let currency = Currency::Eur;
+        assert_eq!(currency.to_string(), "Eur");
+    }
+
+    #[test]
+    fn test_commodity_type_display() {
+        let commodity = CommodityType::Xau;
+        assert_eq!(commodity.to_string(), "Xau");
+    }
+}
