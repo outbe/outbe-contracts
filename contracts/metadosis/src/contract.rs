@@ -19,6 +19,7 @@ use outbe_utils::{date, gen_compound_hash};
 use rand::prelude::SliceRandom;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
+use nod::types::NodIssuer;
 use tribute::query::FullTributeData;
 
 const CONTRACT_NAME: &str = "outbe.net:metadosis";
@@ -366,6 +367,7 @@ fn do_execute_lysis(
                         state: nod::types::State::Issued,
                         owner: tribute.owner.to_string(),
                         qualified_at: None,
+                        issuer: NodIssuer::Lysis,
                     },
                     created_at: None,
                 }),
@@ -540,6 +542,7 @@ fn do_execute_touch(
                         state: nod::types::State::Issued,
                         owner: tribute.owner.to_string(),
                         qualified_at: None,
+                        issuer: NodIssuer::Lysis,
                     },
                     created_at: None,
                 }),
