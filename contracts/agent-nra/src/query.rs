@@ -1,8 +1,5 @@
 use crate::state::{AGENTS, APPLICATIONS, APPLICATION_VOTES};
-use crate::types::{
-    Agent, AgentResponse, ApplicationResponse, ApplicationVotesResponse,
-    ListAllApplicationResponse, Vote, ListAllAgentsResponse
-};
+use crate::types::{Agent, AgentResponse, ApplicationResponse, ApplicationVotesResponse, ListAllApplicationResponse, Vote, ListAllAgentsResponse, Application};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{entry_point, to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
 use cw_storage_plus::Bound;
@@ -52,7 +49,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             start_after,
             limit,
             query_order,
-        } => to_json_binary(&query_all_agents(deps, start_after, limit, query_order)?),
+        } => to_json_binary(&query_all_applications(deps, start_after, limit, query_order)?),
         QueryMsg::GetApplicationById { id } => to_json_binary(&query_by_id(deps, id)?),
         QueryMsg::QueryApplicationByAddress {
             address,
@@ -66,28 +63,28 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             limit,
             query_order,
         )?),
-        QueryMsg::QueryVotesByApplication { id } => to_json_binary(&query_votes_by_agent(deps, id)?),
+        QueryMsg::QueryVotesByApplication { id } => to_json_binary(&query_votes_by_application(deps, id)?),
         QueryMsg::QueryVotesByAddress { address } => {
             to_json_binary(&query_votes_by_address(deps, address)?)
         }
 
         QueryMsg::GetAgentByAddress { address } => {
-            to_json_binary(&query_account_by_address(deps, address)?)
+            to_json_binary(&query_agent_by_address(deps, address)?)
         }
         QueryMsg::ListAllAgents {
             start_after,
             limit,
             query_order,
-        } => to_json_binary(&query_all_accounts(deps, start_after, limit, query_order)?),
+        } => to_json_binary(&query_all_agents(deps, start_after, limit, query_order)?),
     }
 }
 
-fn query_all_agents(
+fn query_all_applications(
     deps: Deps,
     start_after: Option<String>,
     limit: Option<u32>,
     query_order: Option<Order>,
-) -> StdResult<ListAllResponse> {
+) -> StdResult<ListAllApplicationResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let order = query_order.unwrap_or(Order::Ascending);
     let (start, end) = match order {
@@ -95,19 +92,19 @@ fn query_all_agents(
         Order::Descending => (None, start_after.as_deref().map(Bound::exclusive)),
     };
 
-    let agents = AGENTS
+    let applications = APPLICATIONS
         .range(deps.storage, start, end, order)
         .take(limit)
         .map(|item| item.map(|item| item.1))
-        .collect::<StdResult<Vec<Agent>>>()?;
+        .collect::<StdResult<Vec<Application>>>()?;
 
-    Ok(ListAllResponse { agents })
+    Ok(ListAllApplicationResponse { applications })
 }
 
-fn query_by_id(deps: Deps, id: String) -> StdResult<AgentResponse> {
-    let agent = AGENTS.load(deps.storage, id)?;
+fn query_by_id(deps: Deps, id: String) -> StdResult<ApplicationResponse> {
+    let application = APPLICATIONS.load(deps.storage, id)?;
 
-    Ok(AgentResponse { agent })
+    Ok(ApplicationResponse { application })
 }
 
 fn query_by_address(
@@ -116,7 +113,7 @@ fn query_by_address(
     start_after: Option<String>,
     limit: Option<u32>,
     query_order: Option<Order>,
-) -> StdResult<ListAllResponse> {
+) -> StdResult<ListAllApplicationResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let order = query_order.unwrap_or(Order::Ascending);
     let (start, end) = match order {
@@ -126,7 +123,7 @@ fn query_by_address(
 
     let addr = deps.api.addr_validate(&address)?;
 
-    let agents = AGENTS
+    let applications = APPLICATIONS
         .range(deps.storage, start, end, order)
         .filter_map(|item| match item {
             Ok((_id, agent)) if agent.wallet == addr => Some(Ok(agent)),
@@ -134,13 +131,13 @@ fn query_by_address(
             Err(e) => Some(Err(e)),
         })
         .take(limit)
-        .collect::<StdResult<Vec<Agent>>>()?;
+        .collect::<StdResult<Vec<Application>>>()?;
 
-    Ok(ListAllResponse { agents })
+    Ok(ListAllApplicationResponse { applications })
 }
 
-pub fn query_votes_by_agent(deps: Deps, id: String) -> StdResult<AgentVotesResponse> {
-    let votes: Vec<Vote> = AGENT_VOTES
+pub fn query_votes_by_application(deps: Deps, id: String) -> StdResult<ApplicationVotesResponse> {
+    let votes: Vec<Vote> = APPLICATION_VOTES
         .prefix(id.as_str())
         .range(deps.storage, None, None, Order::Ascending)
         .map(|res| {
@@ -149,11 +146,11 @@ pub fn query_votes_by_agent(deps: Deps, id: String) -> StdResult<AgentVotesRespo
         })
         .collect::<StdResult<Vec<Vote>>>()?;
 
-    Ok(AgentVotesResponse { votes })
+    Ok(ApplicationVotesResponse { votes })
 }
 
-pub fn query_votes_by_address(deps: Deps, address: Addr) -> StdResult<AgentVotesResponse> {
-    let votes: Vec<Vote> = AGENT_VOTES
+pub fn query_votes_by_address(deps: Deps, address: Addr) -> StdResult<ApplicationVotesResponse> {
+    let votes: Vec<Vote> = APPLICATION_VOTES
         .range(deps.storage, None, None, Order::Ascending)
         .filter_map(|res| match res {
             Ok(((_agent_id, voter_address), vote)) if voter_address == address => Some(Ok(vote)),
@@ -162,21 +159,21 @@ pub fn query_votes_by_address(deps: Deps, address: Addr) -> StdResult<AgentVotes
         })
         .collect::<StdResult<Vec<Vote>>>()?;
 
-    Ok(AgentVotesResponse { votes })
+    Ok(ApplicationVotesResponse { votes })
 }
 
-fn query_account_by_address(deps: Deps, address: Addr) -> StdResult<AccountResponse> {
-    let account = ACCOUNTS.load(deps.storage, address)?;
+fn query_agent_by_address(deps: Deps, address: Addr) -> StdResult<AgentResponse> {
+    let agent = AGENTS.load(deps.storage, address)?;
 
-    Ok(AccountResponse { account })
+    Ok(AgentResponse { agent })
 }
 
-fn query_all_accounts(
+fn query_all_agents(
     deps: Deps,
     start_after: Option<Addr>,
     limit: Option<u32>,
     query_order: Option<Order>,
-) -> StdResult<ListAllAccountsResponse> {
+) -> StdResult<ListAllAgentsResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let order = query_order.unwrap_or(Order::Ascending);
 
@@ -185,11 +182,11 @@ fn query_all_accounts(
         Order::Descending => (None, start_after.map(Bound::exclusive)),
     };
 
-    let accounts = ACCOUNTS
+    let agents = AGENTS
         .range(deps.storage, start, end, order)
         .take(limit)
         .map(|item| item.map(|(_addr, account)| account))
-        .collect::<StdResult<Vec<Account>>>()?;
+        .collect::<StdResult<Vec<Agent>>>()?;
 
-    Ok(ListAllAccountsResponse { accounts })
+    Ok(ListAllAgentsResponse { agents })
 }

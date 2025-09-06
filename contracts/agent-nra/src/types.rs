@@ -83,7 +83,7 @@ pub enum AgentStatus {
 
 #[cw_serde]
 pub struct ListAllApplicationResponse {
-    pub application: Vec<Application>,
+    pub applications: Vec<Application>,
 }
 
 #[cw_serde]
