@@ -10,26 +10,27 @@ pub struct Config {
 }
 
 #[cw_serde]
-pub struct Agent {
+pub struct Application {
     pub id: u32,
-    pub agent_type: AgentType,
+    pub application_type: ApplicationType,
     pub wallet: Addr,
     pub name: String,
     pub email: String,
-    pub jurisdictions: Vec<String>, // multi-select: ["eu","us",...]
     pub endpoint: Option<String>,
-    pub metadata_json: Option<String>,
-    pub docs_uri: Vec<String>,
     pub discord: Option<String>,
-    pub status: AgentStatus,
+    pub jurisdictions: Vec<String>, // multi-select: ["eu","us",...]
+    pub docs_uri: Vec<String>,
+    pub metadata_json: Option<String>,
+    pub status: ApplicationStatus,
     pub avg_cu: Uint128,
     pub submitted_at: Timestamp,
     pub updated_at: Timestamp,
+    pub ext: ApplicationExt,
 }
 
 #[cw_serde]
-pub struct AgentInput {
-    pub agent_type: AgentType,
+pub struct ApplicationInput {
+    pub application_type: ApplicationType,
     pub name: String,
     pub email: String,
     pub jurisdictions: Vec<String>,
@@ -37,12 +38,24 @@ pub struct AgentInput {
     pub metadata_json: Option<String>,
     pub docs_uri: Vec<String>,
     pub discord: Option<String>,
-    pub status: AgentStatus,
+    pub status: ApplicationStatus,
     pub avg_cu: Uint128,
+    pub ext: ApplicationExt,
+
 }
 
 #[cw_serde]
-pub enum AgentType {
+
+pub enum ApplicationExt {
+    Nra {},
+    Cra { preferred_nra: Option<Vec<String>> },
+    Rfa {},
+    Iba {},
+    Cca {},
+}
+
+#[cw_serde]
+pub enum ApplicationType {
     Nra,
     Cra,
     Rfa,
@@ -51,47 +64,49 @@ pub enum AgentType {
 }
 
 #[cw_serde]
-pub enum AgentStatus {
-    Pending,
+pub enum ApplicationStatus {
+    InReview,
     Approved,
+    OnHold,
     Rejected,
     Recalled,
 }
 
 #[cw_serde]
-pub enum AccountStatus {
-    Approved,
+pub enum AgentStatus {
+    Active,
     Blacklisted,
+    InReview,
     OnHold,
+    Resigned,
 }
 
 #[cw_serde]
-pub struct ListAllResponse {
-    pub agents: Vec<Agent>,
+pub struct ListAllApplicationResponse {
+    pub application: Vec<Application>,
 }
 
 #[cw_serde]
-pub struct AgentResponse {
-    pub agent: Agent,
+pub struct ApplicationResponse {
+    pub application: Application,
 }
 
 #[cw_serde]
 pub struct Vote {
     pub address: String,
-    pub agent_id: String,
+    pub application_id: String,
     pub approve: bool,
     pub reason: Option<String>,
     pub at: Timestamp,
 }
 
 #[cw_serde]
-pub struct AgentVotesResponse {
+pub struct ApplicationVotesResponse {
     pub votes: Vec<Vote>,
 }
 
 #[cw_serde]
-pub struct Account {
-    pub agent_type: AgentType,
+pub struct Agent {
     pub wallet: Addr,
     pub name: String,
     pub email: String,
@@ -100,14 +115,16 @@ pub struct Account {
     pub metadata_json: Option<String>,
     pub docs_uri: Vec<String>,
     pub discord: Option<String>,
-    pub status: AccountStatus,
+    pub status: AgentStatus,
     pub avg_cu: Uint128,
     pub submitted_at: Timestamp,
     pub updated_at: Timestamp,
+    pub ext: ApplicationExt,
+
 }
 
 #[cw_serde]
-pub struct AccountInput {
+pub struct AgentInput {
     pub name: String,
     pub email: String,
     pub jurisdictions: Vec<String>,
@@ -116,14 +133,16 @@ pub struct AccountInput {
     pub docs_uri: Vec<String>,
     pub discord: Option<String>,
     pub avg_cu: Uint128,
+    pub ext: ApplicationExt,
+
 }
 
 #[cw_serde]
-pub struct AccountResponse {
-    pub account: Account,
+pub struct AgentResponse {
+    pub agent: Agent,
 }
 
 #[cw_serde]
-pub struct ListAllAccountsResponse {
-    pub accounts: Vec<Account>,
+pub struct ListAllAgentsResponse {
+    pub agents: Vec<Agent>,
 }

@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "agent-registry"
+name = "agent-nra"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",

@@ -1,7 +1,7 @@
-use crate::state::{ACCOUNTS, AGENTS, AGENT_VOTES};
+use crate::state::{AGENTS, APPLICATIONS, APPLICATION_VOTES};
 use crate::types::{
-    Account, AccountResponse, Agent, AgentResponse, AgentVotesResponse, ListAllAccountsResponse,
-    ListAllResponse, Vote,
+    Agent, AgentResponse, ApplicationResponse, ApplicationVotesResponse,
+    ListAllApplicationResponse, Vote, ListAllAgentsResponse
 };
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{entry_point, to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
@@ -12,31 +12,33 @@ pub const MAX_LIMIT: u32 = 1000;
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(ListAllResponse)]
-    ListAll {
+    // Application
+    #[returns(ListAllApplicationResponse)]
+    ListAllApplication {
         start_after: Option<String>,
         limit: Option<u32>,
         query_order: Option<Order>,
     },
-    #[returns(AgentResponse)]
-    GetById { id: String },
-    #[returns(ListAllResponse)]
-    QueryByAddress {
+    #[returns(ApplicationResponse)]
+    GetApplicationById { id: String },
+    #[returns(ListAllApplicationResponse)]
+    QueryApplicationByAddress {
         address: String,
         start_after: Option<String>,
         limit: Option<u32>,
         query_order: Option<Order>,
     },
-    #[returns(AgentVotesResponse)]
-    QueryVotesByAgent { id: String },
-    #[returns(AgentVotesResponse)]
+    #[returns(ApplicationVotesResponse)]
+    QueryVotesByApplication { id: String },
+    #[returns(ApplicationVotesResponse)]
     QueryVotesByAddress { address: Addr },
 
-    #[returns(AccountResponse)]
-    GetAccountByAddress { address: Addr },
+    // Agent
+    #[returns(AgentResponse)]
+    GetAgentByAddress { address: Addr },
 
-    #[returns(ListAllAccountsResponse)]
-    ListAllAccounts {
+    #[returns(ListAllAgentsResponse)]
+    ListAllAgents {
         start_after: Option<Addr>,
         limit: Option<u32>,
         query_order: Option<Order>,
@@ -46,13 +48,13 @@ pub enum QueryMsg {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::ListAll {
+        QueryMsg::ListAllApplication {
             start_after,
             limit,
             query_order,
         } => to_json_binary(&query_all_agents(deps, start_after, limit, query_order)?),
-        QueryMsg::GetById { id } => to_json_binary(&query_by_id(deps, id)?),
-        QueryMsg::QueryByAddress {
+        QueryMsg::GetApplicationById { id } => to_json_binary(&query_by_id(deps, id)?),
+        QueryMsg::QueryApplicationByAddress {
             address,
             start_after,
             limit,
@@ -64,15 +66,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             limit,
             query_order,
         )?),
-        QueryMsg::QueryVotesByAgent { id } => to_json_binary(&query_votes_by_agent(deps, id)?),
+        QueryMsg::QueryVotesByApplication { id } => to_json_binary(&query_votes_by_agent(deps, id)?),
         QueryMsg::QueryVotesByAddress { address } => {
             to_json_binary(&query_votes_by_address(deps, address)?)
         }
 
-        QueryMsg::GetAccountByAddress { address } => {
+        QueryMsg::GetAgentByAddress { address } => {
             to_json_binary(&query_account_by_address(deps, address)?)
         }
-        QueryMsg::ListAllAccounts {
+        QueryMsg::ListAllAgents {
             start_after,
             limit,
             query_order,

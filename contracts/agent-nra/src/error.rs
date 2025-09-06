@@ -12,10 +12,10 @@ pub enum ContractError {
     #[error("unauthorized")]
     Unauthorized,
 
-    #[error("only the wallet owner can create agent-registry")]
+    #[error("only the wallet owner can create agent-nra")]
     OwnerError {},
 
-    #[error("agent-registry not found")]
+    #[error("agent-nra not found")]
     AgentNotFound {},
 
     #[error("only active NRA can vote")]

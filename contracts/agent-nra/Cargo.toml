@@ -1,5 +1,5 @@
 [package]
-name = "agent-registry"
+name = "agent-nra"
 version = { workspace = true }
 edition = { workspace = true }
 

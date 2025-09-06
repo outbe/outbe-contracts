@@ -71,7 +71,7 @@ fn test_create_agent_success() {
     let info = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info, agent_input.clone()).unwrap();
 
-    // Check agent-registry is saved correctly
+    // Check agent-nra is saved correctly
     let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
     assert_eq!(agent.agent_type, AgentType::Nra);
     assert_eq!(agent.wallet.to_string(), USER1);
@@ -91,12 +91,12 @@ fn test_update_agent_success() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-registry first
+    // Create agent-nra first
     let agent_input = create_test_agent_input();
     let info = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info.clone(), agent_input).unwrap();
 
-    // Update agent-registry
+    // Update agent-nra
     let mut updated_input = create_test_agent_input();
     updated_input.name = "Updated Agent".to_string();
     updated_input.status = AgentStatus::Recalled;
@@ -110,7 +110,7 @@ fn test_update_agent_success() {
     )
     .unwrap();
 
-    // Check agent-registry is updated
+    // Check agent-nra is updated
     let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
     assert_eq!(agent.name, "Updated Agent");
     assert_eq!(agent.status, AgentStatus::Recalled);
@@ -122,7 +122,7 @@ fn test_vote_agent() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-registry
+    // Create agent-nra
     let agent_input = create_test_agent_input();
     let info1 = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
@@ -135,7 +135,7 @@ fn test_vote_agent() {
         info2,
         "1".to_string(),
         true,
-        Some("Good agent-registry".to_string()),
+        Some("Good agent-nra".to_string()),
     )
     .unwrap();
 
@@ -145,7 +145,7 @@ fn test_vote_agent() {
         .unwrap();
     assert_eq!(vote.address, USER2);
     assert!(vote.approve);
-    assert_eq!(vote.reason, Some("Good agent-registry".to_string()));
+    assert_eq!(vote.reason, Some("Good agent-nra".to_string()));
 }
 
 #[test]
@@ -153,12 +153,12 @@ fn test_vote_agent_self_vote() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-registry
+    // Create agent-nra
     let agent_input = create_test_agent_input();
     let info1 = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info1.clone(), agent_input).unwrap();
 
-    // Try to vote for own agent-registry
+    // Try to vote for own agent-nra
     let err = exec_vote_agent(
         deps.as_mut(),
         mock_env(),
@@ -177,7 +177,7 @@ fn test_vote_agent_already_voted() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-registry
+    // Create agent-nra
     let agent_input = create_test_agent_input();
     let info1 = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
@@ -214,7 +214,7 @@ fn test_agent_approval() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-registry
+    // Create agent-nra
     let agent_input = create_test_agent_input();
     let info1 = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
@@ -270,12 +270,12 @@ fn test_agent_rejection() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-registry
+    // Create agent-nra
     let agent_input = create_test_agent_input();
     let info1 = message_info(&Addr::unchecked(USER1), &[]);
     execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
 
-    // Single reject vote should reject the agent-registry
+    // Single reject vote should reject the agent-nra
     let info2 = message_info(&Addr::unchecked(USER2), &[]);
     exec_vote_agent(
         deps.as_mut(),

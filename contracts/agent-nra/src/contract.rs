@@ -1,13 +1,13 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
-use crate::state::{ACCOUNTS, AGENTS, AGENT_VOTES, CONFIG};
+use crate::state::{APPLICATIONS, AGENTS, APPLICATION_VOTES, CONFIG};
 use crate::types::{
-    Account, AccountInput, AccountStatus, Agent, AgentInput, AgentStatus, Config, Vote,
+     Agent, AgentInput, AgentStatus, Config, Vote,
 };
 use cosmwasm_std::{entry_point, Addr, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
-const CONTRACT_NAME: &str = "outbe.net:agent-registry";
+const CONTRACT_NAME: &str = "outbe.net:agent-nra";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[entry_point]
@@ -30,7 +30,7 @@ pub fn instantiate(
     CONFIG.save(deps.storage, &cfg)?;
 
     Ok(Response::new()
-        .add_attribute("action", "agent-registry::instantiate")
+        .add_attribute("action", "agent-nra::instantiate")
         .add_attribute("version", CONTRACT_VERSION)
         .add_attribute("threshold", cfg.threshold.to_string()))
 }
@@ -103,7 +103,7 @@ pub fn execute_add_agent(
     CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new()
-        .add_attribute("action", "agent-registry::add")
+        .add_attribute("action", "agent-nra::add")
         .add_attribute("agent_id", id.to_string())
         .add_attribute("wallet", wallet.to_string()))
 }
@@ -138,7 +138,7 @@ pub fn execute_update_agent(
     AGENTS.save(deps.storage, id.clone(), &existing_agent)?;
 
     Ok(Response::new()
-        .add_attribute("action", "agent-registry::update")
+        .add_attribute("action", "agent-nra::update")
         .add_attribute("agent_id", id)
         .add_attribute("wallet", existing_agent.wallet.to_string()))
 }
@@ -190,7 +190,7 @@ pub fn exec_vote_agent(
     };
 
     let mut response = Response::new()
-        .add_attribute("action", "agent-registry::vote_agent")
+        .add_attribute("action", "agent-nra::vote_agent")
         .add_attribute("agent_id", id.clone())
         .add_attribute("approved", approve.to_string());
 
@@ -280,7 +280,7 @@ pub fn execute_update_account(
     ACCOUNTS.save(deps.storage, info.sender.clone(), &existing_account)?;
 
     Ok(Response::new()
-        .add_attribute("action", "agent-registry::update_account")
+        .add_attribute("action", "agent-nra::update_account")
         .add_attribute("account_address", info.sender.to_string())
         .add_attribute("updated_at", existing_account.updated_at.to_string()))
 }
@@ -304,7 +304,7 @@ pub fn execute_change_account_status(
     ACCOUNTS.save(deps.storage, address.clone(), &account)?;
 
     let mut response = Response::new()
-        .add_attribute("action", "agent-registry::change_account_status")
+        .add_attribute("action", "agent-nra::change_account_status")
         .add_attribute("account_address", address.to_string())
         .add_attribute("old_status", format!("{:?}", old_status))
         .add_attribute("new_status", format!("{:?}", status))
