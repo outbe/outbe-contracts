@@ -159,6 +159,7 @@ mod tests {
             state: State::Issued,
             owner: recipient.to_string(),
             qualified_at: None,
+            is_touch: false,
         };
         let submit_ext = SubmitExtension {
             entity: entity.clone(),
@@ -308,6 +309,7 @@ mod tests {
             state: State::Issued,
             owner: recipient.to_string(),
             qualified_at: None,
+            is_touch: false,
         };
         let submit_ext = SubmitExtension {
             entity: entity.clone(),

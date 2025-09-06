@@ -37,6 +37,7 @@ pub struct NodData {
     pub issued_at: Timestamp,
     /// Timestamp when the Nod was qualified
     pub qualified_at: Option<Timestamp>,
+    pub is_touch: bool,
 }
 
 /// Possible states for a Nod
