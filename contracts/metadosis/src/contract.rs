@@ -14,7 +14,6 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_utils::ParseReplyError::SubMsgFailure;
 use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
-use nod::types::NodIssuer;
 use outbe_utils::date::WorldwideDay;
 use outbe_utils::{date, gen_compound_hash};
 use rand::prelude::SliceRandom;
@@ -367,7 +366,7 @@ fn do_execute_lysis(
                         state: nod::types::State::Issued,
                         owner: tribute.owner.to_string(),
                         qualified_at: None,
-                        issuer: NodIssuer::Lysis,
+                        is_touch: false,
                     },
                     created_at: None,
                 }),
@@ -542,7 +541,7 @@ fn do_execute_touch(
                         state: nod::types::State::Issued,
                         owner: tribute.owner.to_string(),
                         qualified_at: None,
-                        issuer: NodIssuer::Lysis,
+                        is_touch: true,
                     },
                     created_at: None,
                 }),

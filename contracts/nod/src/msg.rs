@@ -1,4 +1,4 @@
-use crate::types::{NodIssuer, State};
+use crate::types::State;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Timestamp, Uint128};
 use outbe_nft::msg::Cw721InstantiateMsg;
@@ -49,7 +49,7 @@ pub struct NodEntity {
     pub state: State,
     pub owner: String,
     pub qualified_at: Option<Timestamp>,
-    pub issuer: NodIssuer,
+    pub is_touch: bool,
 }
 
 #[cw_serde]

@@ -102,7 +102,7 @@ fn execute_submit(
         owner: entity.owner.clone(),
         issued_at: extension.created_at.unwrap_or(env.block.time),
         qualified_at: entity.qualified_at,
-        issuer: entity.issuer,
+        is_touch: entity.is_touch,
     };
     let token = NodNft {
         owner: owner_addr,

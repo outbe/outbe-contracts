@@ -15,7 +15,7 @@ mod test_token_miner {
     use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
     use nod::msg::ExecuteMsg as NodExecuteMsg;
     use nod::query::QueryMsg as NodQueryMsg;
-    use nod::types::{NodData, NodIssuer, State as NodState};
+    use nod::types::{NodData, State as NodState};
     use outbe_nft::msg::NftInfoResponse;
     use outbe_utils::denom::{Currency, Denom};
     use price_oracle::query::QueryMsg as PriceOracleQueryMsg;
@@ -650,7 +650,7 @@ mod test_token_miner {
             owner: owner.to_string(),
             issued_at: Timestamp::from_seconds(1234567890),
             qualified_at: None,
-            issuer: NodIssuer::Lysis,
+            is_touch: false,
         }
     }
 

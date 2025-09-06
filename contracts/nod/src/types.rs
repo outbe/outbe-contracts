@@ -37,7 +37,7 @@ pub struct NodData {
     pub issued_at: Timestamp,
     /// Timestamp when the Nod was qualified
     pub qualified_at: Option<Timestamp>,
-    pub issuer: NodIssuer,
+    pub is_touch: bool,
 }
 
 /// Possible states for a Nod
@@ -45,12 +45,6 @@ pub struct NodData {
 pub enum State {
     Issued,
     Qualified,
-}
-
-#[cw_serde]
-pub enum NodIssuer {
-    Lysis,
-    Touch,
 }
 
 pub type NodNft = NftInfo<NodData>;
