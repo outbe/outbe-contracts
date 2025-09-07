@@ -1,11 +1,11 @@
-name: Deploy Registry SEI
+name: Deploy Registry Outbe-Chain
 
 on:
   workflow_dispatch:
 
 env:
   # Chain configuration
-  CHAIN_ID: outbe-devnet
+  CHAIN_ID: outbe-devnet-1
   FEE_DENOM: unit
   RPC: https://rpc.d.outbe.net
   BINARY: outbe-chaind
