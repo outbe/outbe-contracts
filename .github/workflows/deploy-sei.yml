@@ -1,4 +1,4 @@
-name: Deploy SEI
+name: Deploy Outbe-Chain
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ on:
 
 env:
   # Chain configuration
-  CHAIN_ID: outbe-devnet
+  CHAIN_ID: outbe-devnet-1
   FEE_DENOM: unit
   RPC: https://rpc.d.outbe.net
   BINARY: outbe-chaind
