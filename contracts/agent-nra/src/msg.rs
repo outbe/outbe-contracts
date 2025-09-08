@@ -52,4 +52,12 @@ pub enum ExecuteMsg {
     },
 
     ResignAgent {},
+
+    // BootstrapVote
+    AddBootstrapVoter {
+        address: String,
+    },
+    RemoveBootstrapVoter {
+        address: String,
+    },
 }

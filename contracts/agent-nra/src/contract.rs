@@ -89,6 +89,12 @@ pub fn execute(
         ExecuteMsg::BanAgent { address } => exec_ban_agent(deps, env, info, address),
         ExecuteMsg::ActivateAgent { address } => exec_activate_agent(deps, env, info, address),
         ExecuteMsg::ResignAgent {} => exec_resign_agent(deps, env, info),
+
+        // Bootstrap voters
+        ExecuteMsg::AddBootstrapVoter { address } => exec_add_bootstrap_voter(deps, info, address),
+        ExecuteMsg::RemoveBootstrapVoter { address } => {
+            exec_remove_bootstrap_voter(deps, info, address)
+        }
     }
 }
 
@@ -264,6 +270,51 @@ pub fn exec_hold_application(
         .add_attribute("wallet", existing_aplication.wallet.to_string()))
 }
 
+pub fn exec_add_bootstrap_voter(
+    deps: DepsMut,
+    info: MessageInfo,
+    address: String,
+) -> Result<Response, ContractError> {
+    let mut cfg = CONFIG.load(deps.storage)?;
+    ensure_owner(&cfg, &info.sender)?;
+
+    let voter = deps.api.addr_validate(&address)?;
+
+    if cfg.bootstrap_voters.iter().any(|a| a == &voter) {
+        return Err(ContractError::InvalidBootstrapAction {});
+    }
+
+    cfg.bootstrap_voters.push(voter.clone());
+    CONFIG.save(deps.storage, &cfg)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "agent-nra::add_bootstrap_voter")
+        .add_attribute("voter", voter))
+}
+
+pub fn exec_remove_bootstrap_voter(
+    deps: DepsMut,
+    info: MessageInfo,
+    address: String,
+) -> Result<Response, ContractError> {
+    let mut cfg = CONFIG.load(deps.storage)?;
+    ensure_owner(&cfg, &info.sender)?;
+
+    let voter = deps.api.addr_validate(&address)?;
+
+    if let Some(pos) = cfg.bootstrap_voters.iter().position(|a| a == &voter) {
+        cfg.bootstrap_voters.remove(pos);
+    } else {
+        return Err(ContractError::InvalidBootstrapAction {});
+    }
+
+    CONFIG.save(deps.storage, &cfg)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "agent-nra::remove_bootstrap_voter")
+        .add_attribute("voter", voter))
+}
+
 pub fn count_votes(deps: Deps, id: &str) -> StdResult<(u8, u8)> {
     use cosmwasm_std::Order;
 
@@ -311,5 +362,11 @@ pub fn ensure_active_nra_agent(deps: &DepsMut, sender: &Addr) -> Result<(), Cont
         return Err(ContractError::OnlyActiveNra {});
     }
 
+    Ok(())
+}
+fn ensure_owner(cfg: &Config, sender: &cosmwasm_std::Addr) -> Result<(), ContractError> {
+    if &cfg.owner != sender {
+        return Err(ContractError::Unauthorized {});
+    }
     Ok(())
 }
