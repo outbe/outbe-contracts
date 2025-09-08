@@ -4,10 +4,24 @@ use cosmwasm_std::{Addr, Timestamp, Uint128};
 #[cw_serde]
 pub struct Config {
     pub owner: Addr,
-    pub threshold: u8,
+    pub thresholds: ThresholdConfig,
     pub paused: bool,
     pub last_token_id: u32,
+    pub bootstrap_voters: Vec<Addr>,
+
 }
+
+
+#[cw_serde]
+pub struct ThresholdConfig {
+    pub nra: u8,
+    pub cra: u8,
+    pub rfa: u8,
+    pub iba: u8,
+    pub cca: u8,
+}
+
+
 
 #[cw_serde]
 pub struct Application {
@@ -25,7 +39,7 @@ pub struct Application {
     pub avg_cu: Uint128,
     pub submitted_at: Timestamp,
     pub updated_at: Timestamp,
-    pub ext: ApplicationExt,
+    pub ext: Option<ApplicationExt>,
 }
 
 #[cw_serde]
@@ -38,9 +52,8 @@ pub struct ApplicationInput {
     pub metadata_json: Option<String>,
     pub docs_uri: Vec<String>,
     pub discord: Option<String>,
-    pub status: ApplicationStatus,
     pub avg_cu: Uint128,
-    pub ext: ApplicationExt,
+    pub ext: Option<ApplicationExt>,
 
 }
 

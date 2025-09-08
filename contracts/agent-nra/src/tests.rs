@@ -1,485 +1,408 @@
-use crate::contract::{
-    exec_vote_agent, execute_add_agent, execute_change_account_status, execute_update_account,
-    execute_update_agent, instantiate,
-};
+use crate::contract::{execute, instantiate};
 use crate::error::ContractError;
-use crate::msg::InstantiateMsg;
-use crate::state::{ACCOUNTS, AGENTS, AGENT_VOTES, CONFIG};
-use crate::types::{AccountInput, AccountStatus, AgentInput, AgentStatus, AgentType};
+use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::state::CONFIG;
+use crate::types::{
+    AgentInput, ApplicationExt, ApplicationInput, ApplicationType, ThresholdConfig,
+};
 use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
-use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
+use cosmwasm_std::{coins, Addr, DepsMut, Response, Uint128};
 
-const OWNER: &str = "owner";
+const CREATOR: &str = "owner";
 const USER1: &str = "user1";
 const USER2: &str = "user2";
 const USER3: &str = "user3";
 const USER4: &str = "user4";
+const USER5: &str = "user5";
 
-fn create_test_agent_input() -> AgentInput {
+fn sample_application_input() -> ApplicationInput {
+    ApplicationInput {
+        application_type: ApplicationType::Nra,
+        name: "Test NRA".to_string(),
+        email: "test@nra.com".to_string(),
+        jurisdictions: vec!["US".to_string(), "EU".to_string()],
+        endpoint: Some("https://test-nra.com".to_string()),
+        metadata_json: Some(r#"{"key": "value"}"#.to_string()),
+        docs_uri: vec!["https://docs.test-nra.com".to_string()],
+        discord: Some("test_nra#1234".to_string()),
+        avg_cu: Uint128::new(1000),
+        ext: Some(ApplicationExt::Nra {}),
+    }
+}
+
+fn sample_agent_input() -> AgentInput {
     AgentInput {
-        agent_type: AgentType::Nra,
+        name: "Test Agent".to_string(),
+        email: "agent@test.com".to_string(),
+        jurisdictions: vec!["US".to_string()],
+        endpoint: Some("https://agent.test.com".to_string()),
+        metadata_json: Some(r#"{"agent": "data"}"#.to_string()),
+        docs_uri: vec!["https://agent-docs.com".to_string()],
+        discord: Some("agent#5678".to_string()),
+        avg_cu: Uint128::new(2000),
+        ext: ApplicationExt::Nra {},
+    }
+}
+
+
+fn create_mock_agent(deps: DepsMut, env: &cosmwasm_std::Env, wallet: &str) {
+    use crate::state::AGENTS;
+    use crate::types::{Agent, AgentStatus, ApplicationExt};
+    use cosmwasm_std::{Addr, Uint128};
+
+    let agent = Agent {
+        wallet: Addr::unchecked(wallet),
         name: "Test Agent".to_string(),
         email: "test@example.com".to_string(),
-        jurisdictions: vec!["US".to_string(), "EU".to_string()],
-        endpoint: Some("https://api.example.com".to_string()),
-        metadata_json: Some(r#"{"key": "value"}"#.to_string()),
-        docs_uri: vec!["https://docs.example.com".to_string()],
-        discord: Some("testuser#1234".to_string()),
-        status: AgentStatus::Pending,
-        avg_cu: Uint128::new(1000),
-    }
+        jurisdictions: vec!["US".to_string()],
+        endpoint: Some("https://test.com".to_string()),
+        metadata_json: None,
+        docs_uri: vec![], // Changed from None to empty Vec<String>
+        discord: None,
+        status: AgentStatus::Active,
+        avg_cu: Uint128::new(100), // Changed from u64 to Uint128
+        submitted_at: env.block.time,
+        updated_at: env.block.time,
+        ext: ApplicationExt::Nra {}, // Changed from None to ApplicationExt::Nra {}
+    };
+
+    AGENTS.save(deps.storage, Addr::unchecked(wallet), &agent).unwrap();
 }
 
-fn create_test_account_input() -> AccountInput {
-    AccountInput {
-        name: "Updated Account Name".to_string(),
-        email: "updated@example.com".to_string(),
-        jurisdictions: vec!["US".to_string(), "CA".to_string()],
-        endpoint: Some("https://updated-api.example.com".to_string()),
-        metadata_json: Some(r#"{"updated": "metadata"}"#.to_string()),
-        docs_uri: vec!["https://updated-docs.example.com".to_string()],
-        discord: Some("updateduser#5678".to_string()),
-        avg_cu: Uint128::new(2000),
-    }
-}
+
 
 fn instantiate_contract(deps: DepsMut) -> Result<Response, ContractError> {
+    let env = mock_env();
+    let info = message_info(&Addr::unchecked(CREATOR), &[]);
+
     let msg = InstantiateMsg {
-        threshold: Some(3),
-        paused: Some(false),
+        bootstrap_voters: Some(vec![
+            USER1.to_string(),
+            USER2.to_string(),
+            USER3.to_string(),
+            USER4.to_string(),
+        ]),
+        thresholds: None,
+        paused: None,
     };
-    let info = message_info(&Addr::unchecked(OWNER), &[]);
-    instantiate(deps, mock_env(), info, msg)
+
+    instantiate(deps, env, info, msg)
 }
 
 #[test]
+
 fn test_instantiate_with_defaults() {
     let mut deps = mock_dependencies();
     instantiate_contract(deps.as_mut()).unwrap();
 
     let config = CONFIG.load(&deps.storage).unwrap();
-    assert_eq!(config.threshold, 3); // Default threshold
     assert!(!config.paused); // Default paused
 }
 
 #[test]
-fn test_create_agent_success() {
+fn test_create_application_success() {
     let mut deps = mock_dependencies();
+    let env = mock_env();
+
     instantiate_contract(deps.as_mut()).unwrap();
 
-    let agent_input = create_test_agent_input();
+    // Create application
+    let msg = ExecuteMsg::CreateApplication {
+        application: sample_application_input(),
+    };
+
     let info = message_info(&Addr::unchecked(USER1), &[]);
-    execute_add_agent(deps.as_mut(), mock_env(), info, agent_input.clone()).unwrap();
-
-    // Check agent-nra is saved correctly
-    let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
-    assert_eq!(agent.agent_type, AgentType::Nra);
-    assert_eq!(agent.wallet.to_string(), USER1);
-    assert_eq!(agent.name, "Test Agent");
-    assert_eq!(agent.email, "test@example.com");
-    assert_eq!(agent.jurisdictions, vec!["US", "EU"]);
-    assert_eq!(agent.status, AgentStatus::Pending);
-
-    // Check token ID is incremented
-    let config = CONFIG.load(&deps.storage).unwrap();
-    println!("config = {:?}", agent);
-    assert_eq!(config.last_token_id, 2u32);
+    let res = execute(deps.as_mut(), env, info, msg).unwrap();
+    assert_eq!(0, res.messages.len());
+    assert_eq!(res.attributes.len(), 3);
+    assert_eq!(res.attributes[0].key, "action");
+    assert_eq!(res.attributes[0].value, "application::add");
 }
 
 #[test]
-fn test_update_agent_success() {
+fn test_edit_application_success() {
     let mut deps = mock_dependencies();
+    let env = mock_env();
+
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-nra first
-    let agent_input = create_test_agent_input();
-    let info = message_info(&Addr::unchecked(USER1), &[]);
-    execute_add_agent(deps.as_mut(), mock_env(), info.clone(), agent_input).unwrap();
+    // Create application
+    let create_msg = ExecuteMsg::CreateApplication {
+        application: sample_application_input(),
+    };
+    let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
+    execute(deps.as_mut(), env.clone(), info_user1.clone(), create_msg).unwrap();
 
-    // Update agent-nra
-    let mut updated_input = create_test_agent_input();
-    updated_input.name = "Updated Agent".to_string();
-    updated_input.status = AgentStatus::Recalled;
+    // Edit application
+    let mut updated_app = sample_application_input();
+    updated_app.name = "Updated NRA Name".to_string();
 
-    execute_update_agent(
-        deps.as_mut(),
-        mock_env(),
-        info,
-        "1".to_string(),
-        updated_input,
-    )
-    .unwrap();
+    let edit_msg = ExecuteMsg::EditApplication {
+        id: "1".to_string(),
+        application: updated_app,
+    };
 
-    // Check agent-nra is updated
-    let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
-    assert_eq!(agent.name, "Updated Agent");
-    assert_eq!(agent.status, AgentStatus::Recalled);
-    assert_eq!(agent.wallet.to_string(), USER1); // Should remain the same
+    let res = execute(deps.as_mut(), env, info_user1, edit_msg).unwrap();
+    assert_eq!(res.attributes[0].key, "action");
+    assert_eq!(res.attributes[0].value, "application::update");
 }
 
 #[test]
-fn test_vote_agent() {
+fn test_edit_application_unauthorized() {
     let mut deps = mock_dependencies();
+    let env = mock_env();
+
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-nra
-    let agent_input = create_test_agent_input();
-    let info1 = message_info(&Addr::unchecked(USER1), &[]);
-    execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
+    // Create application as USER1
+    let create_msg = ExecuteMsg::CreateApplication {
+        application: sample_application_input(),
+    };
+    let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
+    execute(deps.as_mut(), env.clone(), info_user1, create_msg).unwrap();
 
-    // Vote for approval
-    let info2 = message_info(&Addr::unchecked(USER2), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info2,
-        "1".to_string(),
-        true,
-        Some("Good agent-nra".to_string()),
-    )
-    .unwrap();
-
-    // Check vote is saved
-    let vote = AGENT_VOTES
-        .load(&deps.storage, ("1", &Addr::unchecked(USER2)))
-        .unwrap();
-    assert_eq!(vote.address, USER2);
-    assert!(vote.approve);
-    assert_eq!(vote.reason, Some("Good agent-nra".to_string()));
+    // Try to edit application as USER2 (unauthorized)
+    let edit_msg = ExecuteMsg::EditApplication {
+        id: "1".to_string(),
+        application: sample_application_input(),
+    };
+    let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
+    let res = execute(deps.as_mut(), env, info_user2, edit_msg);
+    assert!(res.is_err());
 }
 
 #[test]
-fn test_vote_agent_self_vote() {
+fn test_vote_application_approve() {
     let mut deps = mock_dependencies();
+    let env = mock_env();
+
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-nra
-    let agent_input = create_test_agent_input();
-    let info1 = message_info(&Addr::unchecked(USER1), &[]);
-    execute_add_agent(deps.as_mut(), mock_env(), info1.clone(), agent_input).unwrap();
+    let create_msg = ExecuteMsg::CreateApplication {
+        application: sample_application_input(),
+    };
+    let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
+    execute(deps.as_mut(), env.clone(), info_user1, create_msg).unwrap();
 
-    // Try to vote for own agent-nra
-    let err = exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info1,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap_err();
+    let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
 
-    assert!(matches!(err, ContractError::SelfVote {}));
+    // Vote on application
+    let vote_msg = ExecuteMsg::VoteApplication {
+        id: "1".to_string(),
+        approve: true,
+        reason: Some("Good application".to_string()),
+    };
+
+    let res = execute(deps.as_mut(), env, info_user2, vote_msg).unwrap();
+    assert_eq!(res.attributes[0].key, "action");
+    assert_eq!(res.attributes[0].value, "application::vote_application");
 }
 
 #[test]
-fn test_vote_agent_already_voted() {
+fn test_vote_application_reject() {
     let mut deps = mock_dependencies();
+    let env = mock_env();
+
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-nra
-    let agent_input = create_test_agent_input();
-    let info1 = message_info(&Addr::unchecked(USER1), &[]);
-    execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
+    let create_msg = ExecuteMsg::CreateApplication {
+        application: sample_application_input(),
+    };
+    let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
+    execute(deps.as_mut(), env.clone(), info_user1, create_msg).unwrap();
 
-    // Vote first time
-    let info2 = message_info(&Addr::unchecked(USER2), &[]);
+    // Submit agent
+    let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
 
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info2.clone(),
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
+    // Vote reject
+    let vote_msg = ExecuteMsg::VoteApplication {
+        id: "1".to_string(),
+        approve: false,
+        reason: Some("Insufficient documentation".to_string()),
+    };
 
-    // Try to vote second time
-    let err = exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info2,
-        "1".to_string(),
-        false,
-        None,
-    )
-    .unwrap_err();
-
-    assert!(matches!(err, ContractError::AlreadyVoted {}));
+    let res = execute(deps.as_mut(), env, info_user2, vote_msg).unwrap();
+    assert_eq!(res.attributes[0].key, "action");
+    assert_eq!(res.attributes[0].value, "application::vote_application");
 }
 
 #[test]
-fn test_agent_approval() {
+fn test_vote_application_non_exist() {
     let mut deps = mock_dependencies();
+    let env = mock_env();
+
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-nra
-    let agent_input = create_test_agent_input();
-    let info1 = message_info(&Addr::unchecked(USER1), &[]);
-    execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
+    let create_msg = ExecuteMsg::CreateApplication {
+        application: sample_application_input(),
+    };
+    let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
+    execute(deps.as_mut(), env.clone(), info_user1.clone(), create_msg).unwrap();
 
-    // Vote 1 - should not approve yet (a threshold is 3)
-    let info2 = message_info(&Addr::unchecked(USER2), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info2,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
+    // Vote on nonexistent application
+    let vote_msg = ExecuteMsg::VoteApplication {
+        id: "999".to_string(),
+        approve: true,
+        reason: None,
+    };
 
-    let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
-    assert_eq!(agent.status, AgentStatus::Pending);
+    let res = execute(deps.as_mut(), env, info_user1, vote_msg);
 
-    // Vote 2 - still pending
-    let info3 = message_info(&Addr::unchecked(USER3), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info3,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
-
-    let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
-    assert_eq!(agent.status, AgentStatus::Pending);
-
-    // Vote 3 - should approve now
-    let info4 = message_info(&Addr::unchecked(USER4), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info4,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
-
-    let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
-    assert_eq!(agent.status, AgentStatus::Approved);
+    assert!(res.is_err());
+    match res.unwrap_err() {
+        ContractError::ApplicationNotFound {} => {}
+        other => panic!("Expected ApplicationNotFound error, got: {:?}", other),
+    }
 }
 
 #[test]
-fn test_agent_rejection() {
+fn test_hold_application() {
     let mut deps = mock_dependencies();
+    let env = mock_env();
+
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent-nra
-    let agent_input = create_test_agent_input();
-    let info1 = message_info(&Addr::unchecked(USER1), &[]);
-    execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
+    let create_msg = ExecuteMsg::CreateApplication {
+        application: sample_application_input(),
+    };
+    let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
+    execute(deps.as_mut(), env.clone(), info_user1, create_msg).unwrap();
 
-    // Single reject vote should reject the agent-nra
-    let info2 = message_info(&Addr::unchecked(USER2), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info2,
-        "1".to_string(),
-        false,
-        Some("Not qualified".to_string()),
-    )
-    .unwrap();
 
-    let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
-    assert_eq!(agent.status, AgentStatus::Rejected);
+    let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
+
+
+    // Hold application
+    let hold_msg = ExecuteMsg::HoldApplication {
+        id: "1".to_string(),
+    };
+
+    let res = execute(deps.as_mut(), env, info_user2, hold_msg).unwrap();
+    assert_eq!(res.attributes[0].key, "action");
+    assert_eq!(res.attributes[0].value, "application::hold");
 }
 
 #[test]
-fn test_account_created_on_agent_approval() {
+fn test_submit_agent() {
     let mut deps = mock_dependencies();
+    let env = mock_env();
+
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create agent
-    let agent_input = create_test_agent_input();
-    let info1 = message_info(&Addr::unchecked(USER1), &[]);
-    execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
+    // Step 1: Create application
+    let create_msg = ExecuteMsg::CreateApplication {
+        application: sample_application_input(),
+    };
+    let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
+    let res = execute(deps.as_mut(), env.clone(), info_user1.clone(), create_msg).unwrap();
 
-    // Vote 3 times to approve agent (threshold is 3)
-    let info2 = message_info(&Addr::unchecked(USER2), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info2,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
+    // Get application ID from response
+    let app_id = res.attributes.iter()
+        .find(|attr| attr.key == "application_id")
+        .unwrap()
+        .value.clone();
 
-    let info3 = message_info(&Addr::unchecked(USER3), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info3,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
+    // Step 2: Vote to approve the application (need 3 votes for NRA threshold)
+    // First vote
+    let vote_msg = ExecuteMsg::VoteApplication {
+        id: app_id.clone(),
+        approve: true,
+        reason: Some("Good candidate".to_string()),
+    };
+    let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
+    execute(deps.as_mut(), env.clone(), info_user2, vote_msg.clone()).unwrap();
 
-    let info4 = message_info(&Addr::unchecked(USER4), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info4,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
+    // Second vote
+    let info_user3 = message_info(&Addr::unchecked(USER3), &[]);
+    execute(deps.as_mut(), env.clone(), info_user3, vote_msg.clone()).unwrap();
 
-    // Check that agent is approved
-    let agent = AGENTS.load(&deps.storage, "1".to_string()).unwrap();
-    assert_eq!(agent.status, AgentStatus::Approved);
+    // Third vote (reaches threshold)
+    let info_user4 = message_info(&Addr::unchecked(USER4), &[]);
+    execute(deps.as_mut(), env.clone(), info_user4, vote_msg).unwrap();
 
-    // Check that account was created automatically
-    let account = ACCOUNTS
-        .load(&deps.storage, Addr::unchecked(USER1))
-        .unwrap();
-    assert_eq!(account.name, "Test Agent");
-    assert_eq!(account.email, "test@example.com");
-    assert_eq!(account.status, AccountStatus::Approved);
-    assert_eq!(account.agent_type, AgentType::Nra);
+    // Step 3: Submit agent (now application should be approved)
+    let submit_msg = ExecuteMsg::SubmitAgent {
+        id: app_id.clone(),
+    };
+
+    let res = execute(deps.as_mut(), env, info_user1, submit_msg).unwrap();
+
+    // Verify response attributes
+    assert_eq!(res.attributes[0].key, "action");
+    assert_eq!(res.attributes[0].value, "agent::submit");
+    assert_eq!(res.attributes[1].key, "application_id");
+    assert_eq!(res.attributes[1].value, app_id);
+    assert_eq!(res.attributes[2].key, "wallet");
+    assert_eq!(res.attributes[2].value, USER1);
+}
+
+
+#[test]
+fn test_edit_agent() {
+    let mut deps = mock_dependencies();
+    let env = mock_env();
+
+    instantiate_contract(deps.as_mut()).unwrap();
+
+    // Create mock agent directly in storage instead of going through full process
+    create_mock_agent(deps.as_mut(), &env, USER1);
+
+    // Edit agent
+    let edit_msg = ExecuteMsg::EditAgent {
+        agent: sample_agent_input(),
+    };
+    let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
+
+    let res = execute(deps.as_mut(), env, info_user1, edit_msg).unwrap();
+    assert_eq!(res.attributes[0].key, "action");
+    assert_eq!(res.attributes[0].value, "edit_agent");
 }
 
 #[test]
-fn test_update_account_success() {
+fn test_unauthorized_operations() {
     let mut deps = mock_dependencies();
+    let env = mock_env();
+
     instantiate_contract(deps.as_mut()).unwrap();
 
-    // Create and approve agent first (to create account)
-    let agent_input = create_test_agent_input();
-    let info1 = message_info(&Addr::unchecked(USER1), &[]);
-    execute_add_agent(deps.as_mut(), mock_env(), info1.clone(), agent_input).unwrap();
+    // Create mock agents - USER1 and USER2 are active NRA agents
+    create_mock_agent(deps.as_mut(), &env, USER1);
+    create_mock_agent(deps.as_mut(), &env, USER2);
 
-    // Approve agent (create account)
-    let info2 = message_info(&Addr::unchecked(USER2), &[]);
-    exec_vote_agent(
+    // USER5 is not an NRA agent and not in bootstrap voters
+    let unauthorized_info = message_info(&Addr::unchecked(USER5), &[]);
+
+    // Test: Unauthorized user tries to vote on application
+    // First create an application
+    let create_msg = ExecuteMsg::CreateApplication {
+        application: sample_application_input(),
+    };
+    let res = execute(
         deps.as_mut(),
-        mock_env(),
-        info2,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
-    let info3 = message_info(&Addr::unchecked(USER3), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info3,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
-    let info4 = message_info(&Addr::unchecked(USER4), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info4,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
+        env.clone(),
+        message_info(&Addr::unchecked(USER1), &[]),
+        create_msg,
+    ).unwrap();
 
-    // Update account
-    let account_input = create_test_account_input();
-    execute_update_account(deps.as_mut(), mock_env(), info1, account_input).unwrap();
+    // Get application ID from response
+    let app_id = res.attributes.iter()
+        .find(|attr| attr.key == "application_id")
+        .unwrap()
+        .value.clone();
 
-    // Check account is updated
-    let account = ACCOUNTS
-        .load(&deps.storage, Addr::unchecked(USER1))
-        .unwrap();
-    assert_eq!(account.name, "Updated Account Name");
-    assert_eq!(account.email, "updated@example.com");
-    assert_eq!(account.jurisdictions, vec!["US", "CA"]);
-    assert_eq!(account.avg_cu, Uint128::new(2000));
-    assert_eq!(account.status, AccountStatus::Approved); // Status should remain unchanged
-}
+    // Try to vote with unauthorized user
+    let vote_msg = ExecuteMsg::VoteApplication {
+        id: app_id,
+        approve: true,
+        reason: Some("Unauthorized vote".to_string()),
+    };
+    let res = execute(deps.as_mut(), env, unauthorized_info, vote_msg);
 
-#[test]
-fn test_change_account_status_success() {
-    let mut deps = mock_dependencies();
-    instantiate_contract(deps.as_mut()).unwrap();
-
-    // Create and approve agent first (to create account)
-    let agent_input = create_test_agent_input();
-    let info1 = message_info(&Addr::unchecked(USER1), &[]);
-    execute_add_agent(deps.as_mut(), mock_env(), info1, agent_input).unwrap();
-
-    // Approve agent (create account)
-    let info2 = message_info(&Addr::unchecked(USER2), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info2,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
-    let info3 = message_info(&Addr::unchecked(USER3), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info3,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
-    let info4 = message_info(&Addr::unchecked(USER4), &[]);
-    exec_vote_agent(
-        deps.as_mut(),
-        mock_env(),
-        info4,
-        "1".to_string(),
-        true,
-        None,
-    )
-    .unwrap();
-
-    // Check initial status
-    let account_before = ACCOUNTS
-        .load(&deps.storage, Addr::unchecked(USER1))
-        .unwrap();
-    assert_eq!(account_before.status, AccountStatus::Approved);
-
-    // Change account status to Blacklisted
-    execute_change_account_status(
-        deps.as_mut(),
-        mock_env(),
-        Addr::unchecked(USER1),
-        AccountStatus::Blacklisted,
-        Some("Violation of terms".to_string()),
-    )
-    .unwrap();
-
-    // Check account status is updated
-    let account_after = ACCOUNTS
-        .load(&deps.storage, Addr::unchecked(USER1))
-        .unwrap();
-    assert_eq!(account_after.status, AccountStatus::Blacklisted);
-}
-
-#[test]
-fn test_update_account_not_found() {
-    let mut deps = mock_dependencies();
-    instantiate_contract(deps.as_mut()).unwrap();
-
-    // Try to update account that doesn't exist
-    let account_input = create_test_account_input();
-    let info1 = message_info(&Addr::unchecked(USER1), &[]);
-
-    let err = execute_update_account(deps.as_mut(), mock_env(), info1, account_input).unwrap_err();
-    assert!(matches!(err, ContractError::AccountNotFound {}));
+    assert!(res.is_err());
+    match res.unwrap_err() {
+        ContractError::OnlyActiveNra {} => {
+            // Correct error - test passes
+        }
+        other => panic!("Expected OnlyActiveNra error, got: {:?}", other),
+    }
 }

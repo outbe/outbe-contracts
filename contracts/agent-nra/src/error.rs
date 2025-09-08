@@ -16,8 +16,20 @@ pub enum ContractError {
     OwnerError {},
 
     #[error("agent-nra not found")]
-    AgentNotFound {},
+    ApplicationNotFound {},
 
+    #[error("only the application owner can submit agent")]
+    ApplicationOwnerError {},
+
+    #[error("application not approved")]
+    ApplicationNotApproved {},
+
+    #[error("invalid application type")]
+    ApplicationInvalidType {},
+    #[error("Invalid application status for this operation")]
+    InvalidApplicationStatus {},
+
+    // Vote
     #[error("only active NRA can vote")]
     OnlyActiveNra {},
 
@@ -29,7 +41,16 @@ pub enum ContractError {
 
     #[error("already finalized")]
     AlreadyFinalized {},
+    // Agent
+    #[error("Agent not found")]
+    AgentNotFound {},
+    #[error("Invalid agent status for this operation")]
+    InvalidAgentStatus {},
 
-    #[error("Account not found")]
-    AccountNotFound {},
+
+
+
+
+
+
 }

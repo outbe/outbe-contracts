@@ -1,8 +1,10 @@
+use crate::agent_common::*;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
-use crate::state::{APPLICATIONS, AGENTS, APPLICATION_VOTES, CONFIG};
+use crate::state::{AGENTS, APPLICATIONS, APPLICATION_VOTES, CONFIG};
 use crate::types::{
-     Agent, AgentInput, AgentStatus, Config, Vote,
+    AgentStatus, Application, ApplicationInput, ApplicationStatus, ApplicationType, Config,
+    ThresholdConfig, Vote,
 };
 use cosmwasm_std::{entry_point, Addr, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
@@ -19,20 +21,35 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let owner = info.sender.clone();
+
+    let default_thresholds = ThresholdConfig {
+        nra: 3,
+        cra: 1,
+        rfa: 1,
+        iba: 1,
+        cca: 1,
+    };
+
+    let bootstrap_voters: Vec<Addr> = msg
+        .bootstrap_voters
+        .unwrap_or_default()
+        .into_iter()
+        .map(Addr::unchecked)
+        .collect();
 
     let cfg = Config {
-        owner,
-        threshold: msg.threshold.unwrap_or(3),
+        owner: info.sender.clone(),
+        thresholds: msg.thresholds.unwrap_or(default_thresholds),
         paused: msg.paused.unwrap_or(false),
         last_token_id: 1u32,
+        bootstrap_voters,
     };
+
     CONFIG.save(deps.storage, &cfg)?;
 
     Ok(Response::new()
         .add_attribute("action", "agent-nra::instantiate")
-        .add_attribute("version", CONTRACT_VERSION)
-        .add_attribute("threshold", cfg.threshold.to_string()))
+        .add_attribute("version", CONTRACT_VERSION))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -52,27 +69,35 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::CreateAgent { agent } => execute_add_agent(deps, env, info, agent),
-        ExecuteMsg::UpdateAgent { id, agent } => execute_update_agent(deps, env, info, id, agent),
-        ExecuteMsg::VoteAgent {
+        // Application
+        ExecuteMsg::CreateApplication { application } => {
+            execute_add_application(deps, env, info, application)
+        }
+        ExecuteMsg::EditApplication { id, application } => {
+            execute_update_application(deps, env, info, id, application)
+        }
+        ExecuteMsg::VoteApplication {
             id,
             approve,
             reason,
-        } => exec_vote_agent(deps, env, info, id, approve, reason),
-        ExecuteMsg::UpdateAccount { account } => execute_update_account(deps, env, info, account),
-        ExecuteMsg::ChangeAccountStatus {
-            address,
-            status,
-            reason,
-        } => execute_change_account_status(deps, env, address, status, reason),
+        } => exec_vote_application(deps, env, info, id, approve, reason),
+        ExecuteMsg::HoldApplication { id } => exec_hold_application(deps, env, info, id),
+
+        // Agent
+        ExecuteMsg::SubmitAgent { id } => exec_submit_agent(deps, env, info, id),
+        ExecuteMsg::EditAgent { agent } => exec_edit_agent(deps, env, info, agent),
+        ExecuteMsg::HoldAgent { address } => exec_hold_agent(deps, env, info, address),
+        ExecuteMsg::BanAgent { address } => exec_ban_agent(deps, env, info, address),
+        ExecuteMsg::ActivateAgent { address } => exec_activate_agent(deps, env, info, address),
+        ExecuteMsg::ResignAgent {} => exec_resign_agent(deps, env, info),
     }
 }
 
-pub fn execute_add_agent(
+pub fn execute_add_application(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    input: AgentInput,
+    input: ApplicationInput,
 ) -> Result<Response, ContractError> {
     let wallet = info.sender;
 
@@ -81,9 +106,9 @@ pub fn execute_add_agent(
     let now = env.block.time;
     let id = config.last_token_id;
 
-    let agent = Agent {
+    let application = Application {
         id,
-        agent_type: input.agent_type,
+        application_type: ApplicationType::Nra,
         wallet: wallet.clone(),
         name: input.name,
         email: input.email,
@@ -92,58 +117,65 @@ pub fn execute_add_agent(
         metadata_json: input.metadata_json,
         docs_uri: input.docs_uri,
         discord: input.discord,
-        status: AgentStatus::Pending,
+        status: ApplicationStatus::InReview,
         avg_cu: input.avg_cu,
         submitted_at: now,
         updated_at: now,
+        ext: input.ext,
     };
-    AGENTS.save(deps.storage, id.to_string(), &agent)?;
+    APPLICATIONS.save(deps.storage, id.to_string(), &application)?;
 
     config.last_token_id = id.saturating_add(1);
     CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new()
-        .add_attribute("action", "agent-nra::add")
-        .add_attribute("agent_id", id.to_string())
+        .add_attribute("action", "application::add")
+        .add_attribute("application_id", id.to_string())
         .add_attribute("wallet", wallet.to_string()))
 }
 
-pub fn execute_update_agent(
+pub fn execute_update_application(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
     id: String,
-    input: AgentInput,
+    input: ApplicationInput,
 ) -> Result<Response, ContractError> {
-    let mut existing_agent = AGENTS
+    let mut existing_aplication = APPLICATIONS
         .may_load(deps.storage, id.clone())?
-        .ok_or(ContractError::AgentNotFound {})?;
+        .ok_or(ContractError::ApplicationNotFound {})?;
 
-    if info.sender != existing_agent.wallet {
+    if info.sender != existing_aplication.wallet {
         return Err(ContractError::OwnerError {});
     }
 
-    existing_agent.agent_type = input.agent_type;
-    existing_agent.name = input.name.trim().to_string();
-    existing_agent.email = input.email.trim().to_string();
-    existing_agent.jurisdictions = input.jurisdictions;
-    existing_agent.endpoint = input.endpoint;
-    existing_agent.metadata_json = input.metadata_json;
-    existing_agent.docs_uri = input.docs_uri;
-    existing_agent.discord = input.discord;
-    existing_agent.status = input.status;
-    existing_agent.avg_cu = input.avg_cu;
-    existing_agent.updated_at = env.block.time;
+    if !matches!(
+        existing_aplication.status,
+        ApplicationStatus::InReview | ApplicationStatus::OnHold
+    ) {
+        return Err(ContractError::InvalidApplicationStatus {});
+    }
 
-    AGENTS.save(deps.storage, id.clone(), &existing_agent)?;
+    existing_aplication.name = input.name.trim().to_string();
+    existing_aplication.email = input.email.trim().to_string();
+    existing_aplication.jurisdictions = input.jurisdictions;
+    existing_aplication.endpoint = input.endpoint;
+    existing_aplication.metadata_json = input.metadata_json;
+    existing_aplication.docs_uri = input.docs_uri;
+    existing_aplication.discord = input.discord;
+    existing_aplication.status = ApplicationStatus::InReview;
+    existing_aplication.avg_cu = input.avg_cu;
+    existing_aplication.updated_at = env.block.time;
+
+    APPLICATIONS.save(deps.storage, id.clone(), &existing_aplication)?;
 
     Ok(Response::new()
-        .add_attribute("action", "agent-nra::update")
-        .add_attribute("agent_id", id)
-        .add_attribute("wallet", existing_agent.wallet.to_string()))
+        .add_attribute("action", "application::update")
+        .add_attribute("application_id", id)
+        .add_attribute("wallet", existing_aplication.wallet.to_string()))
 }
 
-pub fn exec_vote_agent(
+pub fn exec_vote_application(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -151,19 +183,25 @@ pub fn exec_vote_agent(
     approve: bool,
     reason: Option<String>,
 ) -> Result<Response, ContractError> {
-    let mut agent = AGENTS
-        .may_load(deps.storage, id.clone())?
-        .ok_or(ContractError::AgentNotFound {})?;
+    // Check if sender is an active NRA agent
+    ensure_active_nra_agent(&deps, &info.sender)?;
 
-    if info.sender == agent.wallet {
+    let mut application = APPLICATIONS
+        .may_load(deps.storage, id.clone())?
+        .ok_or(ContractError::ApplicationNotFound {})?;
+
+    if info.sender == application.wallet {
         return Err(ContractError::SelfVote {});
     }
 
-    if AGENT_VOTES.has(deps.storage, (id.as_str(), &info.sender)) {
+    if APPLICATION_VOTES.has(deps.storage, (id.as_str(), &info.sender)) {
         return Err(ContractError::AlreadyVoted {});
     }
 
-    if matches!(agent.status, AgentStatus::Approved | AgentStatus::Rejected) {
+    if matches!(
+        application.status,
+        ApplicationStatus::Approved | ApplicationStatus::Rejected
+    ) {
         return Err(ContractError::AlreadyFinalized {});
     }
 
@@ -171,53 +209,69 @@ pub fn exec_vote_agent(
         address: info.sender.to_string(),
         approve,
         reason,
-        agent_id: id.clone(),
+        application_id: id.clone(),
         at: env.block.time,
     };
 
-    AGENT_VOTES.save(deps.storage, (id.as_str(), &info.sender), &vote)?;
+    APPLICATION_VOTES.save(deps.storage, (id.as_str(), &info.sender), &vote)?;
 
-    let threshold = CONFIG.load(deps.storage)?.threshold as usize;
+    let threshold = get_threshold(deps.as_ref(), &application.application_type)?;
     let (approvals, rejects) = count_votes(deps.as_ref(), id.as_str())?;
 
     // Update Agent Status
     let new_status = if approvals >= threshold {
-        Some(AgentStatus::Approved)
+        Some(ApplicationStatus::Approved)
     } else if rejects >= 1 {
-        Some(AgentStatus::Rejected)
+        Some(ApplicationStatus::Rejected)
     } else {
         None
     };
 
-    let mut response = Response::new()
-        .add_attribute("action", "agent-nra::vote_agent")
-        .add_attribute("agent_id", id.clone())
+    let response = Response::new()
+        .add_attribute("action", "application::vote_application")
+        .add_attribute("application_id", id.clone())
         .add_attribute("approved", approve.to_string());
 
     if let Some(status) = new_status {
-        agent.status = status.clone();
-        agent.updated_at = env.block.time;
-        AGENTS.save(deps.storage, id.clone(), &agent)?;
-
-        // Generate account if approved
-        if matches!(status, AgentStatus::Approved) {
-            create_account_from_agent(deps, env, &agent)?;
-            response = response
-                .add_attribute("account_created", "true")
-                .add_attribute("account_address", agent.wallet.to_string());
-        }
+        application.status = status.clone();
+        application.updated_at = env.block.time;
+        APPLICATIONS.save(deps.storage, id.clone(), &application)?;
     }
 
     Ok(response)
 }
 
-pub fn count_votes(deps: Deps, id: &str) -> StdResult<(usize, usize)> {
+pub fn exec_hold_application(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    id: String,
+) -> Result<Response, ContractError> {
+    // Check if sender is an active NRA agent
+    ensure_active_nra_agent(&deps, &info.sender)?;
+
+    let mut existing_aplication = APPLICATIONS
+        .may_load(deps.storage, id.clone())?
+        .ok_or(ContractError::ApplicationNotFound {})?;
+
+    existing_aplication.status = ApplicationStatus::OnHold;
+    existing_aplication.updated_at = env.block.time;
+
+    APPLICATIONS.save(deps.storage, id.clone(), &existing_aplication)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "application::hold")
+        .add_attribute("application_id", id)
+        .add_attribute("wallet", existing_aplication.wallet.to_string()))
+}
+
+pub fn count_votes(deps: Deps, id: &str) -> StdResult<(u8, u8)> {
     use cosmwasm_std::Order;
 
-    let mut approvals = 0usize;
-    let mut rejects = 0usize;
+    let mut approvals = 0;
+    let mut rejects = 0;
 
-    for item in AGENT_VOTES
+    for item in APPLICATION_VOTES
         .prefix(id)
         .range(deps.storage, None, None, Order::Ascending)
     {
@@ -231,88 +285,32 @@ pub fn count_votes(deps: Deps, id: &str) -> StdResult<(usize, usize)> {
     Ok((approvals, rejects))
 }
 
-fn create_account_from_agent(deps: DepsMut, env: Env, agent: &Agent) -> Result<(), ContractError> {
-    // Create account from approved agent, using agent's wallet as key
-    let account = Account {
-        agent_type: agent.agent_type.clone(),
-        wallet: agent.wallet.clone(),
-        name: agent.name.clone(),
-        email: agent.email.clone(),
-        jurisdictions: agent.jurisdictions.clone(),
-        endpoint: agent.endpoint.clone(),
-        metadata_json: agent.metadata_json.clone(),
-        docs_uri: agent.docs_uri.clone(),
-        discord: agent.discord.clone(),
-        status: AccountStatus::Approved,
-        avg_cu: agent.avg_cu,
-        submitted_at: env.block.time,
-        updated_at: env.block.time,
-    };
-
-    ACCOUNTS.save(deps.storage, agent.wallet.clone(), &account)?;
-
-    Ok(())
+pub fn get_threshold(deps: Deps, agent_type: &ApplicationType) -> StdResult<u8> {
+    let thresholds = CONFIG.load(deps.storage)?.thresholds;
+    Ok(match agent_type {
+        ApplicationType::Nra => thresholds.nra,
+        ApplicationType::Cra => thresholds.cra,
+        ApplicationType::Rfa => thresholds.rfa,
+        ApplicationType::Iba => thresholds.iba,
+        ApplicationType::Cca => thresholds.cca,
+    })
 }
 
-pub fn execute_update_account(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    account_input: AccountInput,
-) -> Result<Response, ContractError> {
-    // Check if account exists for this address
-    let mut existing_account = ACCOUNTS
-        .may_load(deps.storage, info.sender.clone())?
-        .ok_or(ContractError::AccountNotFound {})?;
+fn ensure_active_nra_agent(deps: &DepsMut, sender: &Addr) -> Result<(), ContractError> {
+    let config = CONFIG.load(deps.storage)?;
 
-    // Update account fields
-    existing_account.name = account_input.name.trim().to_string();
-    existing_account.email = account_input.email.trim().to_string();
-    existing_account.jurisdictions = account_input.jurisdictions;
-    existing_account.endpoint = account_input.endpoint;
-    existing_account.metadata_json = account_input.metadata_json;
-    existing_account.docs_uri = account_input.docs_uri;
-    existing_account.discord = account_input.discord;
-    existing_account.avg_cu = account_input.avg_cu;
-    existing_account.updated_at = env.block.time;
-
-    // Save updated account
-    ACCOUNTS.save(deps.storage, info.sender.clone(), &existing_account)?;
-
-    Ok(Response::new()
-        .add_attribute("action", "agent-nra::update_account")
-        .add_attribute("account_address", info.sender.to_string())
-        .add_attribute("updated_at", existing_account.updated_at.to_string()))
-}
-
-pub fn execute_change_account_status(
-    deps: DepsMut,
-    env: Env,
-    address: Addr,
-    status: AccountStatus,
-    reason: Option<String>,
-) -> Result<Response, ContractError> {
-    // Check if account exists
-    let mut account = ACCOUNTS
-        .may_load(deps.storage, address.clone())?
-        .ok_or(ContractError::AccountNotFound {})?;
-
-    let old_status = account.status.clone();
-    account.status = status.clone();
-    account.updated_at = env.block.time;
-
-    ACCOUNTS.save(deps.storage, address.clone(), &account)?;
-
-    let mut response = Response::new()
-        .add_attribute("action", "agent-nra::change_account_status")
-        .add_attribute("account_address", address.to_string())
-        .add_attribute("old_status", format!("{:?}", old_status))
-        .add_attribute("new_status", format!("{:?}", status))
-        .add_attribute("updated_at", account.updated_at.to_string());
-
-    if let Some(reason_text) = reason {
-        response = response.add_attribute("reason", reason_text);
+    // Check if sender is in bootstrap voters
+    if config.bootstrap_voters.contains(sender) {
+        return Ok(());
     }
 
-    Ok(response)
+    let agent = AGENTS
+        .may_load(deps.storage, sender.clone())?
+        .ok_or(ContractError::OnlyActiveNra {})?;
+
+    if !matches!(agent.status, AgentStatus::Active) {
+        return Err(ContractError::OnlyActiveNra {});
+    }
+
+    Ok(())
 }

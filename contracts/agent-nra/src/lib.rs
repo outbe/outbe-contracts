@@ -6,3 +6,4 @@ mod state;
 #[cfg(test)]
 mod tests;
 pub mod types;
+mod agent_common;
