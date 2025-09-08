@@ -30,4 +30,4 @@ fi
 RESPONSE=$($binary query tx --type=hash "$TX_HASH" --node "$RPC" --output json | jq -r "$json_filter")
 CONTRACT_ADDRESS=$(echo "$RESPONSE" | jq -r "$json_filter")
 
-echo "$CONTRACT_ADDRESS"
+echo $CONTRACT_ADDRESS

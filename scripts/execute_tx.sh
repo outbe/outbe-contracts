@@ -15,4 +15,4 @@ TX_HASH=$(echo "$RESPONSE" | jq -r '.txhash')
 
 sleep 7
 
-echo "$TX_HASH"
+echo $TX_HASH

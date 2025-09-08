@@ -85,7 +85,9 @@ jobs:
         run: |
           CW20_CODE_ID=$(./scripts/store_code.sh artifacts/cw20_copy.wasm)
           echo "CW20_CODE_ID=$CW20_CODE_ID" >> $GITHUB_ENV
+          echo "CW20_CODE_ID=$CW20_CODE_ID"
           INIT_PAYLOAD=$(jq -n --arg minter $OWNER_ADDRESS --from-file ./contracts/cw20/fixtures/wusdc_init.json)
+          echo "INIT_PAYLOAD=$INIT_PAYLOAD"
           WUSDC_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "wUSDC" $CW20_CODE_ID "$INIT_PAYLOAD")
           echo "WUSDC_CONTRACT_ADDRESS=$WUSDC_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
