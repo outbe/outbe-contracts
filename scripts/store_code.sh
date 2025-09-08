@@ -15,9 +15,6 @@ RESPONSE=$($binary tx wasm store $filename \
   -y --from ci --keyring-backend test --broadcast-mode sync \
   --node $RPC --chain-id $CHAIN_ID --gas-prices 0.25$FEE_DENOM --gas auto --gas-adjustment 1.3 --output json)
 
-echo "Store code response:"
-echo "$RESPONSE"
-
 TX_HASH=$(echo "$RESPONSE" | jq -r '.txhash')
 
 sleep 7
