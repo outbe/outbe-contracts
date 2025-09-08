@@ -184,13 +184,13 @@ jobs:
           NOD_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Nod" $NOD_CODE_ID "$INIT_PAYLOAD")
           echo "NOD_CONTRACT_ADDRESS=$NOD_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
-      - name: Deploy Agent Registry
-        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_registry') }}
+      - name: Deploy Agent NRA
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_nra') }}
         run: |
-          AGENT_REGISTRY_CODE_ID=$(./scripts/store_code.sh artifacts/agent_registry.wasm)
-          INIT_PAYLOAD=$(jq -n --from-file ./contracts/agent-registry/fixtures/init.json)
-          AGENT_REGISTRY_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent Registry" $AGENT_REGISTRY_CODE_ID "$INIT_PAYLOAD")
-          echo "AGENT_REGISTRY_CONTRACT_ADDRESS=$AGENT_REGISTRY_CONTRACT_ADDRESS" >> $GITHUB_ENV
+          AGENT_NRA_CODE_ID=$(./scripts/store_code.sh artifacts/agent_nra.wasm)
+          INIT_PAYLOAD=$(jq -n --from-file ./contracts/agent-nra/fixtures/init.json)
+          AGENT_NRA_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent NRA" $AGENT_NRA_CODE_ID "$INIT_PAYLOAD")
+          echo "AGENT_NRA_CONTRACT_ADDRESS=$AGENT_NRA_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Metadosis
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'metadosis') }}
