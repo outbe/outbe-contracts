@@ -14,7 +14,7 @@ on:
 
       selected_contracts:
         type: string
-        description: "Select: gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_registry metadosis token_miner"
+        description: "Select: gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_nra metadosis token_miner"
         required: false
         default: ""
 
@@ -127,10 +127,10 @@ jobs:
           ./scripts/migrate_contract.sh $NOD_CONTRACT_ADDRESS $CODE_ID
 
       - name: Migrate Agent Registry
-        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_registry') }}
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_nra') }}
         run: |
-          CODE_ID=$(./scripts/store_code.sh artifacts/agent_registry.wasm)
-          ./scripts/migrate_contract.sh $AGENT_REGISTRY_CONTRACT_ADDRESS $CODE_ID
+          CODE_ID=$(./scripts/store_code.sh artifacts/agent_nra.wasm)
+          ./scripts/migrate_contract.sh $AGENT_NRA_CONTRACT_ADDRESS $CODE_ID
 
       - name: Migrate Metadosis
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'metadosis') }}
