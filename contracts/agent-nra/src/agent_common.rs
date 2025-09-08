@@ -1,8 +1,10 @@
+use crate::contract::ensure_active_nra_agent;
 use crate::error::ContractError;
-use crate::types::{Agent, AgentInput, AgentStatus, Application, ApplicationStatus, ApplicationType};
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
 use crate::state::{AGENTS, APPLICATIONS};
-
+use crate::types::{
+    Agent, AgentInput, AgentStatus, ApplicationStatus, ApplicationType,
+};
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
 
 pub fn exec_submit_agent(
     deps: DepsMut,
@@ -10,7 +12,7 @@ pub fn exec_submit_agent(
     info: MessageInfo,
     id: String,
 ) -> Result<Response, ContractError> {
-    let mut existing_application = APPLICATIONS
+    let existing_application = APPLICATIONS
         .may_load(deps.storage, id.clone())?
         .ok_or(ContractError::ApplicationNotFound {})?;
     // Check owner
@@ -26,40 +28,28 @@ pub fn exec_submit_agent(
     if !matches!(existing_application.application_type, ApplicationType::Nra) {
         return Err(ContractError::ApplicationInvalidType {});
     }
+    let agent = Agent {
+        wallet: existing_application.wallet.clone(),
+        name: existing_application.name.clone(),
+        email: existing_application.email.clone(),
+        jurisdictions: existing_application.jurisdictions.clone(),
+        endpoint: existing_application.endpoint.clone(),
+        metadata_json: existing_application.metadata_json.clone(),
+        docs_uri: existing_application.docs_uri.clone(),
+        discord: existing_application.discord.clone(),
+        status: AgentStatus::Active,
+        avg_cu: existing_application.avg_cu,
+        submitted_at: env.block.time,
+        updated_at: env.block.time,
+        ext: existing_application.ext.unwrap().clone(),
+    };
 
-    create_agent_from_app(deps, env, existing_application.clone());
+    AGENTS.save(deps.storage, existing_application.wallet.clone(), &agent)?;
 
     Ok(Response::new()
         .add_attribute("action", "agent::submit")
         .add_attribute("application_id", id)
         .add_attribute("wallet", existing_application.wallet.to_string()))
-}
-pub fn create_agent_from_app(
-    deps: DepsMut,
-    env: Env,
-    application: Application,
-) -> Result<(), ContractError> {
-    // Create account from approved agent, using agent's wallet as key
-    let agent = Agent {
-        wallet: application.wallet.clone(),
-        name: application.name.clone(),
-        email: application.email.clone(),
-        jurisdictions: application.jurisdictions.clone(),
-        endpoint: application.endpoint.clone(),
-        metadata_json: application.metadata_json.clone(),
-        docs_uri: application.docs_uri.clone(),
-        discord: application.discord.clone(),
-        status: AgentStatus::Active,
-        avg_cu: application.avg_cu,
-        submitted_at: env.block.time,
-        updated_at: env.block.time,
-        ext: application.ext.unwrap().clone(),
-
-    };
-
-    AGENTS.save(deps.storage, application.wallet.clone(), &agent)?;
-
-    Ok(())
 }
 
 pub fn exec_edit_agent(
@@ -103,8 +93,7 @@ pub fn exec_hold_agent(
     info: MessageInfo,
     address: String,
 ) -> Result<Response, ContractError> {
-    //TODO check if NRA
-
+    ensure_active_nra_agent(&deps, &info.sender)?;
 
     // Parse address string
     let agent_addr = deps.api.addr_validate(&address)?;
@@ -118,7 +107,6 @@ pub fn exec_hold_agent(
     if !matches!(agent.status, AgentStatus::Active) {
         return Err(ContractError::InvalidAgentStatus {});
     }
-
 
     let old_status = agent.status.clone();
     agent.status = AgentStatus::OnHold;
@@ -141,9 +129,7 @@ pub fn exec_ban_agent(
     info: MessageInfo,
     address: String,
 ) -> Result<Response, ContractError> {
-    //TODO check if NRA
-
-
+    ensure_active_nra_agent(&deps, &info.sender)?;
     // Parse address string
     let agent_addr = deps.api.addr_validate(&address)?;
 
@@ -178,7 +164,8 @@ pub fn exec_activate_agent(
     info: MessageInfo,
     address: String,
 ) -> Result<Response, ContractError> {
-    //TODO check if NRA
+    ensure_active_nra_agent(&deps, &info.sender)?;
+
     // Parse address string
     let agent_addr = deps.api.addr_validate(&address)?;
 
@@ -192,11 +179,7 @@ pub fn exec_activate_agent(
         return Err(ContractError::InvalidAgentStatus {});
     }
 
-
     let old_status = agent.status.clone();
-
-
-
 
     agent.status = AgentStatus::Active;
     agent.updated_at = env.block.time;
@@ -241,6 +224,3 @@ pub fn exec_resign_agent(
         .add_attribute("new_status", "Resigned")
         .add_attribute("updated_at", agent.updated_at.to_string()))
 }
-
-
-

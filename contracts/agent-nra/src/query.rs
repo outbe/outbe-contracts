@@ -1,5 +1,8 @@
 use crate::state::{AGENTS, APPLICATIONS, APPLICATION_VOTES};
-use crate::types::{Agent, AgentResponse, ApplicationResponse, ApplicationVotesResponse, ListAllApplicationResponse, Vote, ListAllAgentsResponse, Application};
+use crate::types::{
+    Agent, AgentResponse, Application, ApplicationResponse, ApplicationVotesResponse,
+    ListAllAgentsResponse, ListAllApplicationResponse, Vote,
+};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{entry_point, to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
 use cw_storage_plus::Bound;
@@ -49,7 +52,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             start_after,
             limit,
             query_order,
-        } => to_json_binary(&query_all_applications(deps, start_after, limit, query_order)?),
+        } => to_json_binary(&query_all_applications(
+            deps,
+            start_after,
+            limit,
+            query_order,
+        )?),
         QueryMsg::GetApplicationById { id } => to_json_binary(&query_by_id(deps, id)?),
         QueryMsg::QueryApplicationByAddress {
             address,
@@ -63,7 +71,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             limit,
             query_order,
         )?),
-        QueryMsg::QueryVotesByApplication { id } => to_json_binary(&query_votes_by_application(deps, id)?),
+        QueryMsg::QueryVotesByApplication { id } => {
+            to_json_binary(&query_votes_by_application(deps, id)?)
+        }
         QueryMsg::QueryVotesByAddress { address } => {
             to_json_binary(&query_votes_by_address(deps, address)?)
         }

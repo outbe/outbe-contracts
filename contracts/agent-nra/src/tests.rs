@@ -2,11 +2,9 @@ use crate::contract::{execute, instantiate};
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::CONFIG;
-use crate::types::{
-    AgentInput, ApplicationExt, ApplicationInput, ApplicationType, ThresholdConfig,
-};
+use crate::types::{AgentInput, ApplicationExt, ApplicationInput, ApplicationType};
 use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
-use cosmwasm_std::{coins, Addr, DepsMut, Response, Uint128};
+use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
 
 const CREATOR: &str = "owner";
 const USER1: &str = "user1";
@@ -44,7 +42,6 @@ fn sample_agent_input() -> AgentInput {
     }
 }
 
-
 fn create_mock_agent(deps: DepsMut, env: &cosmwasm_std::Env, wallet: &str) {
     use crate::state::AGENTS;
     use crate::types::{Agent, AgentStatus, ApplicationExt};
@@ -66,10 +63,10 @@ fn create_mock_agent(deps: DepsMut, env: &cosmwasm_std::Env, wallet: &str) {
         ext: ApplicationExt::Nra {}, // Changed from None to ApplicationExt::Nra {}
     };
 
-    AGENTS.save(deps.storage, Addr::unchecked(wallet), &agent).unwrap();
+    AGENTS
+        .save(deps.storage, Addr::unchecked(wallet), &agent)
+        .unwrap();
 }
-
-
 
 fn instantiate_contract(deps: DepsMut) -> Result<Response, ContractError> {
     let env = mock_env();
@@ -268,9 +265,7 @@ fn test_hold_application() {
     let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
     execute(deps.as_mut(), env.clone(), info_user1, create_msg).unwrap();
 
-
     let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
-
 
     // Hold application
     let hold_msg = ExecuteMsg::HoldApplication {
@@ -297,10 +292,13 @@ fn test_submit_agent() {
     let res = execute(deps.as_mut(), env.clone(), info_user1.clone(), create_msg).unwrap();
 
     // Get application ID from response
-    let app_id = res.attributes.iter()
+    let app_id = res
+        .attributes
+        .iter()
         .find(|attr| attr.key == "application_id")
         .unwrap()
-        .value.clone();
+        .value
+        .clone();
 
     // Step 2: Vote to approve the application (need 3 votes for NRA threshold)
     // First vote
@@ -321,9 +319,7 @@ fn test_submit_agent() {
     execute(deps.as_mut(), env.clone(), info_user4, vote_msg).unwrap();
 
     // Step 3: Submit agent (now application should be approved)
-    let submit_msg = ExecuteMsg::SubmitAgent {
-        id: app_id.clone(),
-    };
+    let submit_msg = ExecuteMsg::SubmitAgent { id: app_id.clone() };
 
     let res = execute(deps.as_mut(), env, info_user1, submit_msg).unwrap();
 
@@ -335,7 +331,6 @@ fn test_submit_agent() {
     assert_eq!(res.attributes[2].key, "wallet");
     assert_eq!(res.attributes[2].value, USER1);
 }
-
 
 #[test]
 fn test_edit_agent() {
@@ -359,7 +354,7 @@ fn test_edit_agent() {
 }
 
 #[test]
-fn test_unauthorized_operations() {
+fn test_unauthorized_vote() {
     let mut deps = mock_dependencies();
     let env = mock_env();
 
@@ -382,13 +377,17 @@ fn test_unauthorized_operations() {
         env.clone(),
         message_info(&Addr::unchecked(USER1), &[]),
         create_msg,
-    ).unwrap();
+    )
+    .unwrap();
 
     // Get application ID from response
-    let app_id = res.attributes.iter()
+    let app_id = res
+        .attributes
+        .iter()
         .find(|attr| attr.key == "application_id")
         .unwrap()
-        .value.clone();
+        .value
+        .clone();
 
     // Try to vote with unauthorized user
     let vote_msg = ExecuteMsg::VoteApplication {

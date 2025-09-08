@@ -21,7 +21,6 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-
     let default_thresholds = ThresholdConfig {
         nra: 3,
         cra: 1,
@@ -296,7 +295,7 @@ pub fn get_threshold(deps: Deps, agent_type: &ApplicationType) -> StdResult<u8> 
     })
 }
 
-fn ensure_active_nra_agent(deps: &DepsMut, sender: &Addr) -> Result<(), ContractError> {
+pub fn ensure_active_nra_agent(deps: &DepsMut, sender: &Addr) -> Result<(), ContractError> {
     let config = CONFIG.load(deps.storage)?;
 
     // Check if sender is in bootstrap voters

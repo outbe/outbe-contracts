@@ -8,9 +8,7 @@ pub struct Config {
     pub paused: bool,
     pub last_token_id: u32,
     pub bootstrap_voters: Vec<Addr>,
-
 }
-
 
 #[cw_serde]
 pub struct ThresholdConfig {
@@ -20,8 +18,6 @@ pub struct ThresholdConfig {
     pub iba: u8,
     pub cca: u8,
 }
-
-
 
 #[cw_serde]
 pub struct Application {
@@ -54,7 +50,6 @@ pub struct ApplicationInput {
     pub discord: Option<String>,
     pub avg_cu: Uint128,
     pub ext: Option<ApplicationExt>,
-
 }
 
 #[cw_serde]
@@ -133,7 +128,6 @@ pub struct Agent {
     pub submitted_at: Timestamp,
     pub updated_at: Timestamp,
     pub ext: ApplicationExt,
-
 }
 
 #[cw_serde]
@@ -147,7 +141,6 @@ pub struct AgentInput {
     pub discord: Option<String>,
     pub avg_cu: Uint128,
     pub ext: ApplicationExt,
-
 }
 
 #[cw_serde]

@@ -1,15 +1,12 @@
 use crate::types::{AgentInput, ApplicationInput, ThresholdConfig};
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Addr;
 
 #[cw_serde]
 pub struct InstantiateMsg {
     pub thresholds: Option<ThresholdConfig>,
     pub paused: Option<bool>,
     pub bootstrap_voters: Option<Vec<String>>,
-
 }
-
 
 #[cw_serde]
 pub enum MigrateMsg {
@@ -35,28 +32,24 @@ pub enum ExecuteMsg {
         id: String,
     },
 
-
-
     // Agent
     SubmitAgent {
         id: String,
     },
 
     EditAgent {
-        agent:AgentInput,
+        agent: AgentInput,
     },
 
     HoldAgent {
-        address: String
+        address: String,
     },
     BanAgent {
-        address: String
+        address: String,
     },
     ActivateAgent {
-        address: String
+        address: String,
     },
 
-    ResignAgent {
-    },
-
+    ResignAgent {},
 }
