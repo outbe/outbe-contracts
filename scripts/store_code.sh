@@ -11,14 +11,18 @@ if [ "$binary" != "outbe-noded" ]; then
   json_filter=".logs[] | $json_filter"
 fi
 
-RESULT=$($binary tx wasm store $filename \
+RESPONSE=$($binary tx wasm store $filename \
   -y --from ci --keyring-backend test --broadcast-mode sync \
   --node $RPC --chain-id $CHAIN_ID --gas-prices 0.25$FEE_DENOM --gas auto --gas-adjustment 1.3 --output json)
-TX_HASH=$(echo "$RESULT" | jq -r '.txhash')
+
+echo "Store code response:"
+echo "$RESPONSE"
+
+TX_HASH=$(echo "$TX_HASH" | jq -r '.txhash')
 
 sleep 7
 
 TX_INFO=$($binary query tx --type=hash $TX_HASH --node $RPC --output json)
-CODE_ID=$(echo "$TX_INFO"| jq -r "$json_filter")
+CODE_ID=$(echo "$TX_INFO" | jq -r "$json_filter")
 
 echo $CODE_ID

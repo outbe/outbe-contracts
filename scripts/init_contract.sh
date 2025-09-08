@@ -9,13 +9,13 @@ binary=${BINARY:-outbe-noded}
 
 ADMIN_ADDRESS=$($binary keys show --keyring-backend test ci -a)
 
-RESULT=$($binary tx wasm instantiate \
+RESPONSE=$($binary tx wasm instantiate \
   $code_id "$payload" \
   --label "$label" \
   --from ci --keyring-backend test -y --admin "$ADMIN_ADDRESS" \
   --node "$RPC" --chain-id "$CHAIN_ID" --gas-prices 0.25$FEE_DENOM --gas auto --gas-adjustment 1.3 --output json)
 
-TX_HASH=$(echo "$RESULT" | jq -r '.txhash')
+TX_HASH=$(echo "$RESPONSE" | jq -r '.txhash')
 
 sleep 7
 
@@ -27,7 +27,7 @@ fi
 
 # Query a created contract
 # NB: we also need to filter by code_id because it may create several contracts under the hood
-RESULT=$($binary query tx --type=hash "$TX_HASH" --node "$RPC" --output json | jq -r "$json_filter")
-CONTRACT_ADDRESS=$(echo "$RESULT" | jq -r "$json_filter")
+RESPONSE=$($binary query tx --type=hash "$TX_HASH" --node "$RPC" --output json | jq -r "$json_filter")
+CONTRACT_ADDRESS=$(echo "$RESPONSE" | jq -r "$json_filter")
 
 echo "$CONTRACT_ADDRESS"
