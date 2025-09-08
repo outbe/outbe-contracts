@@ -1,9 +1,7 @@
 use crate::contract::ensure_active_nra_agent;
 use crate::error::ContractError;
 use crate::state::{AGENTS, APPLICATIONS};
-use crate::types::{
-    Agent, AgentInput, AgentStatus, ApplicationStatus, ApplicationType,
-};
+use crate::types::{Agent, AgentInput, AgentStatus, ApplicationStatus, ApplicationType};
 use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
 
 pub fn exec_submit_agent(
@@ -30,9 +28,10 @@ pub fn exec_submit_agent(
     }
     let agent = Agent {
         wallet: existing_application.wallet.clone(),
-        name: existing_application.name.clone(),
-        email: existing_application.email.clone(),
-        jurisdictions: existing_application.jurisdictions.clone(),
+        name: existing_application.name,
+        email: existing_application.email,
+        agent_type: existing_application.application_type,
+        jurisdictions: existing_application.jurisdictions,
         endpoint: existing_application.endpoint.clone(),
         metadata_json: existing_application.metadata_json.clone(),
         docs_uri: existing_application.docs_uri.clone(),

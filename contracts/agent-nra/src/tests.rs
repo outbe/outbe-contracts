@@ -49,6 +49,7 @@ fn create_mock_agent(deps: DepsMut, env: &cosmwasm_std::Env, wallet: &str) {
 
     let agent = Agent {
         wallet: Addr::unchecked(wallet),
+        agent_type: ApplicationType::Nra,
         name: "Test Agent".to_string(),
         email: "test@example.com".to_string(),
         jurisdictions: vec!["US".to_string()],

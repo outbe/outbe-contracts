@@ -116,6 +116,7 @@ pub struct ApplicationVotesResponse {
 #[cw_serde]
 pub struct Agent {
     pub wallet: Addr,
+    pub agent_type: ApplicationType,
     pub name: String,
     pub email: String,
     pub jurisdictions: Vec<String>, // multi-select: ["eu","us",...]
