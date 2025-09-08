@@ -14,12 +14,11 @@ fi
 RESPONSE=$($binary tx wasm store $filename \
   -y --from ci --keyring-backend test --broadcast-mode sync \
   --node $RPC --chain-id $CHAIN_ID --gas-prices 0.25$FEE_DENOM --gas auto --gas-adjustment 1.3 --output json)
-
 TX_HASH=$(echo "$RESPONSE" | jq -r '.txhash')
 
 sleep 7
 
-TX_INFO=$($binary query tx --type=hash $TX_HASH --node $RPC --output json)
-CODE_ID=$(echo "$TX_INFO" | jq -r "$json_filter")
+RESPONSE=$($binary query tx --type=hash $TX_HASH --node $RPC --output json)
+CODE_ID=$(echo "$RESPONSE" | jq -r "$json_filter")
 
 echo $CODE_ID
