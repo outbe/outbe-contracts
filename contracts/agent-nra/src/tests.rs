@@ -23,7 +23,7 @@ fn sample_application_input() -> ApplicationInput {
         metadata_json: Some(r#"{"key": "value"}"#.to_string()),
         docs_uri: vec!["https://docs.test-nra.com".to_string()],
         discord: Some("test_nra#1234".to_string()),
-        avg_cu: Uint128::new(1000),
+        avg_cu: Option::from(Uint128::new(1000)),
         ext: Some(ApplicationExt::Nra {}),
     }
 }
@@ -37,7 +37,7 @@ fn sample_agent_input() -> AgentInput {
         metadata_json: Some(r#"{"agent": "data"}"#.to_string()),
         docs_uri: vec!["https://agent-docs.com".to_string()],
         discord: Some("agent#5678".to_string()),
-        avg_cu: Uint128::new(2000),
+        avg_cu: Option::from(Uint128::new(2000)),
         ext: ApplicationExt::Nra {},
     }
 }
@@ -57,7 +57,7 @@ fn create_mock_agent(deps: DepsMut, env: &cosmwasm_std::Env, wallet: &str) {
         docs_uri: vec![], // Changed from None to empty Vec<String>
         discord: None,
         status: AgentStatus::Active,
-        avg_cu: Uint128::new(100), // Changed from u64 to Uint128
+        avg_cu: Option::from(Uint128::new(100)), // Changed from u64 to Uint128
         submitted_at: env.block.time,
         updated_at: env.block.time,
         ext: ApplicationExt::Nra {}, // Changed from None to ApplicationExt::Nra {}

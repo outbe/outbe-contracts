@@ -32,7 +32,7 @@ pub struct Application {
     pub docs_uri: Vec<String>,
     pub metadata_json: Option<String>,
     pub status: ApplicationStatus,
-    pub avg_cu: Uint128,
+    pub avg_cu: Option<Uint128>,
     pub submitted_at: Timestamp,
     pub updated_at: Timestamp,
     pub ext: Option<ApplicationExt>,
@@ -48,7 +48,7 @@ pub struct ApplicationInput {
     pub metadata_json: Option<String>,
     pub docs_uri: Vec<String>,
     pub discord: Option<String>,
-    pub avg_cu: Uint128,
+    pub avg_cu: Option<Uint128>,
     pub ext: Option<ApplicationExt>,
 }
 
@@ -124,7 +124,7 @@ pub struct Agent {
     pub docs_uri: Vec<String>,
     pub discord: Option<String>,
     pub status: AgentStatus,
-    pub avg_cu: Uint128,
+    pub avg_cu: Option<Uint128>,
     pub submitted_at: Timestamp,
     pub updated_at: Timestamp,
     pub ext: ApplicationExt,
@@ -139,7 +139,7 @@ pub struct AgentInput {
     pub metadata_json: Option<String>,
     pub docs_uri: Vec<String>,
     pub discord: Option<String>,
-    pub avg_cu: Uint128,
+    pub avg_cu: Option<Uint128>,
     pub ext: ApplicationExt,
 }
 

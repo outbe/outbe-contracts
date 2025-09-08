@@ -107,7 +107,7 @@ pub fn execute_add_application(
 
     let application = Application {
         id,
-        application_type: ApplicationType::Nra,
+        application_type: input.application_type,
         wallet: wallet.clone(),
         name: input.name,
         email: input.email,

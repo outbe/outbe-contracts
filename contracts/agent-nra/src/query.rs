@@ -14,7 +14,7 @@ pub const MAX_LIMIT: u32 = 1000;
 pub enum QueryMsg {
     // Application
     #[returns(ListAllApplicationResponse)]
-    ListAllApplication {
+    ListAllApplications {
         start_after: Option<String>,
         limit: Option<u32>,
         query_order: Option<Order>,
@@ -48,7 +48,7 @@ pub enum QueryMsg {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::ListAllApplication {
+        QueryMsg::ListAllApplications {
             start_after,
             limit,
             query_order,
