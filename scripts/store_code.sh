@@ -18,7 +18,7 @@ RESPONSE=$($binary tx wasm store $filename \
 echo "Store code response:"
 echo "$RESPONSE"
 
-TX_HASH=$(echo "$TX_HASH" | jq -r '.txhash')
+TX_HASH=$(echo "$RESPONSE" | jq -r '.txhash')
 
 sleep 7
 
