@@ -1,11 +1,9 @@
-use crate::state::{AGENTS, APPLICATIONS, APPLICATION_VOTES};
-use crate::types::{
-    Agent, AgentResponse, Application, ApplicationResponse, ApplicationVotesResponse,
-    ListAllAgentsResponse, ListAllApplicationResponse, Vote,
-};
+use crate::state::{AGENTS, APPLICATIONS, APPLICATION_VOTES, CONFIG};
+use crate::types::{Agent, AgentResponse, Application, ApplicationResponse, ApplicationVotesResponse, ListAllAgentsResponse, ListAllApplicationResponse, Vote, NraAccessResponse, AgentStatus};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{entry_point, to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
 use cw_storage_plus::Bound;
+use crate::error::ContractError;
 
 pub const DEFAULT_LIMIT: u32 = 10;
 pub const MAX_LIMIT: u32 = 1000;
@@ -43,6 +41,9 @@ pub enum QueryMsg {
         limit: Option<u32>,
         query_order: Option<Order>,
     },
+
+    #[returns(NraAccessResponse)]
+    EnsureActiveNra { address: Addr },
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -86,6 +87,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             limit,
             query_order,
         } => to_json_binary(&query_all_agents(deps, start_after, limit, query_order)?),
+
+        QueryMsg::EnsureActiveNra {address} => {
+            to_json_binary(&query_ensure_active_nra(deps, address)?)
+        }
     }
 }
 
@@ -112,7 +117,7 @@ fn query_all_applications(
 }
 
 fn query_by_id(deps: Deps, id: String) -> StdResult<ApplicationResponse> {
-    let application = APPLICATIONS.load(deps.storage, id)?;
+    let application = APPLICATIONS.may_load(deps.storage, id)?;
 
     Ok(ApplicationResponse { application })
 }
@@ -199,4 +204,20 @@ fn query_all_agents(
         .collect::<StdResult<Vec<Agent>>>()?;
 
     Ok(ListAllAgentsResponse { agents })
+}
+
+pub fn query_ensure_active_nra(deps: Deps, address: Addr) -> StdResult<NraAccessResponse> {
+    let cfg  = CONFIG.load(deps.storage)?;
+
+    // Check if sender is in bootstrap voters
+    if cfg.bootstrap_voters.iter().any(|a| a == &address) {
+        return Ok(NraAccessResponse { allowed: true });
+    }
+
+    let allowed = match AGENTS.may_load(deps.storage, address)? {
+        Some(agent) =>agent.status == AgentStatus::Active,
+        None => false,
+    };
+
+    Ok(NraAccessResponse { allowed })
 }

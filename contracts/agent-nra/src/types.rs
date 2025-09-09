@@ -96,7 +96,7 @@ pub struct ListAllApplicationResponse {
 
 #[cw_serde]
 pub struct ApplicationResponse {
-    pub application: Application,
+    pub application: Option<Application>,
 }
 
 #[cw_serde]
@@ -152,4 +152,9 @@ pub struct AgentResponse {
 #[cw_serde]
 pub struct ListAllAgentsResponse {
     pub agents: Vec<Agent>,
+}
+
+#[cw_serde]
+pub struct NraAccessResponse {
+    pub allowed: bool,
 }
