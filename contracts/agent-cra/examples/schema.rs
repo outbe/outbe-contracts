@@ -1,5 +1,5 @@
-use agent_nra::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
-use agent_nra::query::QueryMsg;
+use agent_cra::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
+use agent_cra::query::QueryMsg;
 use cosmwasm_schema::write_api;
 
 fn main() {

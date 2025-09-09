@@ -4,7 +4,7 @@ use cosmwasm_std::Addr;
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub agent_registry: Addr,
+    pub application_registry_addr: Addr,
     pub paused: Option<bool>,
 }
 

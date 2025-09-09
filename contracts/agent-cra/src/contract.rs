@@ -20,7 +20,7 @@ pub fn instantiate(
 
     let cfg = Config {
         owner: info.sender.clone(),
-        agent_registry: msg.agent_registry,
+        agent_registry: msg.application_registry_addr,
         paused: msg.paused.unwrap_or(false),
         last_token_id: 1u32,
     };
