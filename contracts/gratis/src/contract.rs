@@ -9,7 +9,6 @@ use cw2::set_contract_version;
 use cw20_base::contract::{execute as cw20_execute, instantiate as cw20_instantiate};
 use cw20_base::msg::{ExecuteMsg as Cw20ExecuteMsg, InstantiateMsg as Cw20InstantiateMsg};
 use cw20_base::state::{BALANCES, TOKEN_INFO};
-use cw20_base::ContractError as Cw20ContractError;
 use outbe_utils::gen_compound_hash;
 
 pub const CONTRACT_NAME: &str = "outbe.net:gratis";
@@ -79,9 +78,7 @@ pub fn execute_burn(
     amount: Uint128,
 ) -> Result<Response, ContractError> {
     if amount.is_zero() {
-        return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
-            "Invalid zero amount",
-        )));
+        return Err(ContractError::Cw20Error(cw20_base::ContractError::InvalidZeroAmount {}));
     }
 
     let block_height = env.block.height;
@@ -226,25 +223,4 @@ pub fn execute_update_admin(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     crate::query::query(deps, env, msg)
-}
-
-impl From<Cw20ContractError> for ContractError {
-    fn from(err: Cw20ContractError) -> Self {
-        match err {
-            Cw20ContractError::Std(std_err) => ContractError::Std(std_err),
-            Cw20ContractError::Unauthorized {} => ContractError::Unauthorized {},
-            Cw20ContractError::CannotSetOwnAccount {} => ContractError::CannotSetOwnAccount {},
-            Cw20ContractError::Expired {} => ContractError::Expired {},
-            Cw20ContractError::NoAllowance {} => ContractError::NoAllowance {},
-            Cw20ContractError::CannotExceedCap {} => ContractError::CannotExceedCap {},
-            Cw20ContractError::LogoTooBig {} => ContractError::LogoTooBig {},
-            Cw20ContractError::InvalidXmlPreamble {} => ContractError::InvalidXmlPreamble {},
-            Cw20ContractError::InvalidPngHeader {} => ContractError::InvalidPngHeader {},
-            Cw20ContractError::DuplicateInitialBalanceAddresses {} => {
-                ContractError::DuplicateInitialBalanceAddresses {}
-            }
-            Cw20ContractError::InvalidExpiration {} => ContractError::Expired {},
-            _ => ContractError::Std(cosmwasm_std::StdError::generic_err("Unhandled cw20 error")),
-        }
-    }
 }

@@ -5,7 +5,7 @@ use cosmwasm_schema::cw_serde;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_json_binary, DepsMut, Env, Event, MessageInfo, Response, Uint128};
+use cosmwasm_std::{to_json_binary, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Uint128};
 use cw2::set_contract_version;
 use outbe_utils::date::WorldwideDay;
 
