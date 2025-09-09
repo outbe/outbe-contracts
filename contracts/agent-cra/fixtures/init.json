@@ -1,9 +1,4 @@
 {
   "paused": null,
-  "bootstrap_voters": [
-    "outbe19dew74cngq3dk3y7rep5p0jp7fuphtt4ldjwad",
-    "outbe1e8r7rng6lratxymrakgqtndkqcnenun54s0uaw",
-    "outbe1vl099pkagn9g5g8emf9gaaqfchq7gzrduvl3vq"
-  ]
-
+  "application_registry_addr": $application_registry_addr
 }

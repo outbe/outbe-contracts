@@ -9,6 +9,7 @@ async function main() {
     let height = await walletClient.getHeight()
     console.log("Current Height: ", height)
 
+    console.log( await getContractAddresses());
     const metadosisContractAddress = await getContractAddresses('METADOSIS_CONTRACT_ADDRESS')
     const metadosisClient = new MetadosisQueryClient(walletClient, metadosisContractAddress)
     let info: MetadosisInfoResponse = await metadosisClient.metadosisInfo()
