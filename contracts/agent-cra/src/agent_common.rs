@@ -2,7 +2,8 @@ use crate::state::{AGENTS, CONFIG};
 use agent_nra::error::ContractError;
 use agent_nra::query::QueryMsg as NraQueryMsg;
 use agent_nra::types::{
-    Agent, AgentInput, AgentStatus, ApplicationStatus, ApplicationType, NraAccessResponse,ApplicationResponse
+    Agent, AgentInput, AgentStatus, ApplicationResponse, ApplicationStatus, ApplicationType,
+    NraAccessResponse,
 };
 use cosmwasm_std::{Addr, Deps, DepsMut, Env, MessageInfo, Response};
 
@@ -16,13 +17,12 @@ pub fn exec_submit_agent(
 
     let resp: ApplicationResponse = deps.querier.query_wasm_smart(
         cfg.agent_registry,
-        &NraQueryMsg::GetApplicationById { id:id.clone() },
+        &NraQueryMsg::GetApplicationById { id: id.clone() },
     )?;
 
     let existing_application = resp
         .application
         .ok_or(ContractError::ApplicationNotFound {})?;
-
 
     if info.sender != existing_application.wallet {
         return Err(ContractError::ApplicationOwnerError {});

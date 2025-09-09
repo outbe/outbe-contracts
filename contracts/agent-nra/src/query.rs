@@ -1,9 +1,11 @@
 use crate::state::{AGENTS, APPLICATIONS, APPLICATION_VOTES, CONFIG};
-use crate::types::{Agent, AgentResponse, Application, ApplicationResponse, ApplicationVotesResponse, ListAllAgentsResponse, ListAllApplicationResponse, Vote, NraAccessResponse, AgentStatus};
+use crate::types::{
+    Agent, AgentResponse, AgentStatus, Application, ApplicationResponse, ApplicationVotesResponse,
+    ListAllAgentsResponse, ListAllApplicationResponse, NraAccessResponse, Vote,
+};
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{entry_point, to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
 use cw_storage_plus::Bound;
-use crate::error::ContractError;
 
 pub const DEFAULT_LIMIT: u32 = 10;
 pub const MAX_LIMIT: u32 = 1000;
@@ -88,7 +90,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             query_order,
         } => to_json_binary(&query_all_agents(deps, start_after, limit, query_order)?),
 
-        QueryMsg::EnsureActiveNra {address} => {
+        QueryMsg::EnsureActiveNra { address } => {
             to_json_binary(&query_ensure_active_nra(deps, address)?)
         }
     }
@@ -207,15 +209,15 @@ fn query_all_agents(
 }
 
 pub fn query_ensure_active_nra(deps: Deps, address: Addr) -> StdResult<NraAccessResponse> {
-    let cfg  = CONFIG.load(deps.storage)?;
+    let cfg = CONFIG.load(deps.storage)?;
 
     // Check if sender is in bootstrap voters
-    if cfg.bootstrap_voters.iter().any(|a| a == &address) {
+    if cfg.bootstrap_voters.contains(&address) {
         return Ok(NraAccessResponse { allowed: true });
     }
 
     let allowed = match AGENTS.may_load(deps.storage, address)? {
-        Some(agent) =>agent.status == AgentStatus::Active,
+        Some(agent) => agent.status == AgentStatus::Active,
         None => false,
     };
 

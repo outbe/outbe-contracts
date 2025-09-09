@@ -280,7 +280,7 @@ pub fn exec_add_bootstrap_voter(
 
     let voter = deps.api.addr_validate(&address)?;
 
-    if cfg.bootstrap_voters.iter().any(|a| a == &voter) {
+    if cfg.bootstrap_voters.contains(&voter) {
         return Err(ContractError::InvalidBootstrapAction {});
     }
 
@@ -302,7 +302,7 @@ pub fn exec_remove_bootstrap_voter(
 
     let voter = deps.api.addr_validate(&address)?;
 
-    if let Some(pos) = cfg.bootstrap_voters.iter().position(|a| a == &voter) {
+    if let Some(pos) = cfg.bootstrap_voters.iter().position(|a| a == voter) {
         cfg.bootstrap_voters.remove(pos);
     } else {
         return Err(ContractError::InvalidBootstrapAction {});
@@ -365,7 +365,7 @@ pub fn ensure_active_nra_agent(deps: &DepsMut, sender: &Addr) -> Result<(), Cont
     Ok(())
 }
 fn ensure_owner(cfg: &Config, sender: &cosmwasm_std::Addr) -> Result<(), ContractError> {
-    if &cfg.owner != sender {
+    if cfg.owner != sender {
         return Err(ContractError::Unauthorized {});
     }
     Ok(())
