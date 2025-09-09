@@ -33,7 +33,7 @@ pub fn exec_submit_agent(
     }
 
     //Check application type
-    if !matches!(existing_application.application_type, ApplicationType::Nra) {
+    if !matches!(existing_application.application_type, ApplicationType::Cra) {
         return Err(ContractError::ApplicationInvalidType {});
     }
     let agent = Agent {
