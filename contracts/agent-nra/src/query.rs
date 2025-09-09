@@ -4,7 +4,7 @@ use crate::types::{
     ListAllAgentsResponse, ListAllApplicationResponse, NraAccessResponse, Vote,
 };
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, Order, StdResult,entry_point};
 use cw_storage_plus::Bound;
 
 pub const DEFAULT_LIMIT: u32 = 10;
