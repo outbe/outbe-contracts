@@ -102,8 +102,8 @@ jobs:
       - name: Deploy tokenminer
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'tokenminer') }}
         run: |
-          GRATIS_CODE_ID=$(./scripts/store_code.sh artifacts/outbe_tokenminer.wasm)
-          GRATIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "TM" $GRATIS_CODE_ID "{}")
+          CODE_ID=$(./scripts/store_code.sh artifacts/outbe_tokenminer.wasm)
+          TOKENMINER_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "TM" $CODE_ID "{}")
           echo "TOKENMINER_CONTRACT_ADDRESS=$TOKENMINER_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Promis
