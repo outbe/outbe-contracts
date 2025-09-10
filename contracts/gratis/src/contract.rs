@@ -69,7 +69,37 @@ pub fn execute(
             execute_update_minter(deps, env, info, new_minter)
         }
         ExecuteMsg::UpdateAdmin { new_admin } => execute_update_admin(deps, env, info, new_admin),
+        #[cfg(feature = "demo")]
+        ExecuteMsg::MintNative { recipient, amount } => {
+            execute_mint_native(deps, env, info, recipient, amount)
+        }
     }
+}
+
+#[cfg(feature = "demo")]
+pub fn execute_mint_native(
+    _deps: DepsMut,
+    env: Env,
+    _info: MessageInfo,
+    recipient: String,
+    amount: Uint128,
+) -> Result<Response, ContractError> {
+    // Send native funds to sender
+    let send_native_msg = create_mine_tokens_msg(
+        env.contract.address.to_string(),
+        recipient.to_string(),
+        Coin {
+            denom: "unit".to_string(),
+            amount,
+        },
+    )?;
+
+    let res = Response::new()
+        .add_message(send_native_msg)
+        .add_attribute("action", "mint_native")
+        .add_attribute("amount", amount);
+
+    Ok(res)
 }
 
 pub fn execute_burn(
