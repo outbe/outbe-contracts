@@ -185,7 +185,7 @@ pub fn execute_burn(
 }
 
 // Message structure matching the TokenMiner module
-pub(crate) const MINT_MSG: &str = "outbe.tokenminer.MsgMineTokens";
+pub(crate) const MINT_MSG: &str = "/outbe.tokenminer.MsgMineTokens";
 
 fn create_mine_tokens_msg(
     sender: String,
