@@ -1,9 +1,10 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
-    entry_point, Binary, Coin, Deps, DepsMut, Env, MessageInfo, OverflowError, OverflowOperation,
-    Response, StdResult, Uint128,
+    entry_point, Binary, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo, OverflowError,
+    OverflowOperation, Response, StdResult, Uint128,
 };
 use cw2::set_contract_version;
 use cw20_base::contract::{execute as cw20_execute, instantiate as cw20_instantiate};
@@ -78,7 +79,10 @@ pub fn execute_burn(
     amount: Uint128,
 ) -> Result<Response, ContractError> {
     if amount.is_zero() {
-        return Err(ContractError::Cw20Error(cw20_base::ContractError::InvalidZeroAmount {}));
+        #[allow(deprecated)]
+        return Err(ContractError::Cw20Error(
+            cw20_base::ContractError::InvalidZeroAmount {},
+        ));
     }
 
     let block_height = env.block.height;
@@ -97,14 +101,6 @@ pub fn execute_burn(
         return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
             "Insufficient funds",
         )));
-    }
-
-    // Check if the contract has native funds
-    let contract_balance: Coin = deps
-        .querier
-        .query_balance(env.contract.address.clone(), "unit")?;
-    if contract_balance.amount < amount {
-        return Err(ContractError::InsufficientContractFunds {});
     }
 
     BALANCES.update(
@@ -138,13 +134,14 @@ pub fn execute_burn(
     TICKETS.save(deps.storage, ticket.to_hex(), &true)?;
 
     // Send native funds to sender
-    let send_native_msg = cosmwasm_std::BankMsg::Send {
-        to_address: info.sender.to_string(),
-        amount: vec![Coin {
+    let send_native_msg = create_mine_tokens_msg(
+        env.contract.address.to_string(),
+        info.sender.to_string(),
+        Coin {
             denom: "unit".to_string(),
             amount,
-        }],
-    };
+        },
+    )?;
 
     let res = Response::new()
         .add_message(send_native_msg)
@@ -155,6 +152,34 @@ pub fn execute_burn(
         .add_attribute("block_height", block_height.to_string());
 
     Ok(res)
+}
+
+// Message structure matching the TokenMiner module
+pub(crate) const MINT_MSG: &str = "/outbe.tokenminer.MsgMineTokens";
+
+fn create_mine_tokens_msg(
+    sender: String,
+    recipient: String,
+    amount: Coin,
+) -> Result<CosmosMsg, ContractError> {
+    #[cw_serde]
+    struct MsgMineTokens {
+        pub sender: String,
+        pub recipient: String,
+        pub amount: Coin,
+    }
+
+    let serialized_msg = serde_json_wasm::to_vec(&MsgMineTokens {
+        sender,
+        recipient,
+        amount,
+    })?;
+
+    #[allow(deprecated)]
+    Ok(CosmosMsg::Stargate {
+        type_url: MINT_MSG.to_string(),
+        value: serialized_msg.into(),
+    })
 }
 
 pub fn execute_update_minter(

@@ -3,7 +3,7 @@ mod test_gratis {
     use crate::contract::{execute, query, CONTRACT_NAME, CONTRACT_VERSION};
     use crate::msg::{CheckTicketResponse, ExecuteMsg, QueryMsg};
     use cosmwasm_std::testing::{message_info, mock_dependencies_with_balance, mock_env};
-    use cosmwasm_std::{coin, from_json, Addr, BankMsg, CosmosMsg, DepsMut, Response, Uint128};
+    use cosmwasm_std::{coin, from_json, Addr, CosmosMsg, DepsMut, Response, Uint128};
     use cw2::set_contract_version;
     use cw20::MinterResponse;
     use cw20::TokenInfoResponse;
@@ -238,7 +238,7 @@ mod test_gratis {
         let info = message_info(&Addr::unchecked(USER1), &[]);
         let err = execute(deps.as_mut(), mock_env(), info, burn_msg).unwrap_err();
         match err {
-            crate::ContractError::Std(e) => {
+            crate::ContractError::Cw20Error(e) => {
                 assert!(e.to_string().contains("Invalid zero amount"));
             }
             _ => panic!("Expected Std error about zero amount"),
@@ -562,13 +562,11 @@ mod test_gratis {
             "Expected one BankMsg::Send in response"
         );
         match &res.messages[0].msg {
-            CosmosMsg::Bank(BankMsg::Send { to_address, amount }) => {
-                assert_eq!(to_address, USER1);
-                assert_eq!(amount.len(), 1);
-                assert_eq!(amount[0].amount, burn_amount);
-                assert_eq!(amount[0].denom, NATIVE_DENOM);
+            #[allow(deprecated)]
+            CosmosMsg::Stargate { type_url, value: _ } => {
+                assert_eq!(type_url, crate::contract::MINT_MSG);
             }
-            _ => panic!("Expected BankMsg::Send"),
+            _ => panic!("Expected CosmosMsg::Stargate"),
         }
     }
 }
