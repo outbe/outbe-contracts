@@ -15,7 +15,7 @@ documentation = "TODO"
 
 [workspace.dependencies]
 cosmwasm-schema = { version = "2.0.0" }
-cosmwasm-std = { version = "2.0.0" }
+cosmwasm-std = { version = "2.0.0" , features = ["stargate"]}
 
 sha2 = { version = "0.10.9" }
 bs58 = { version = "0.5.1" }
