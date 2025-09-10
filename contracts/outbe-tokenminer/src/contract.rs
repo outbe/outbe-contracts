@@ -67,18 +67,12 @@ pub fn execute_mint_native(
     Ok(res)
 }
 
-// Message structure matching the TokenMiner module
-pub(crate) const MINT_MSG: &str = "/outbe.tokenminer.MsgMineTokens";
-
-
 #[cw_serde]
 struct MsgMineTokens {
     pub sender: String,
     pub recipient: String,
     pub amount: Coin,
 }
-
-
 
 fn create_mine_tokens_msg(
     sender: String,
@@ -91,9 +85,8 @@ fn create_mine_tokens_msg(
         amount,
     })?;
 
-    #[allow(deprecated)]
     Ok(CosmosMsg::Stargate {
-        type_url: MINT_MSG.to_string(),
+        type_url: "/outbe.tokenminer.MsgMineTokens".to_string(),
         value: serialized_msg,
     })
 }
