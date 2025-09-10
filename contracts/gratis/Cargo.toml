@@ -21,4 +21,3 @@ cw20 = { workspace = true }
 thiserror = { workspace = true }
 
 outbe-utils = { workspace = true }
-serde-json-wasm = "1.0.1"

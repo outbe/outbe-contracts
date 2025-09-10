@@ -3,8 +3,8 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
-    entry_point, Binary, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo, OverflowError,
-    OverflowOperation, Response, StdResult, Uint128,
+    entry_point, to_json_binary, Binary, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo,
+    OverflowError, OverflowOperation, Response, StdResult, Uint128,
 };
 use cw2::set_contract_version;
 use cw20_base::contract::{execute as cw20_execute, instantiate as cw20_instantiate};
@@ -199,7 +199,7 @@ fn create_mine_tokens_msg(
         pub amount: Coin,
     }
 
-    let serialized_msg = serde_json_wasm::to_vec(&MsgMineTokens {
+    let serialized_msg = to_json_binary(&MsgMineTokens {
         sender,
         recipient,
         amount,
@@ -208,7 +208,7 @@ fn create_mine_tokens_msg(
     #[allow(deprecated)]
     Ok(CosmosMsg::Stargate {
         type_url: MINT_MSG.to_string(),
-        value: serialized_msg.into(),
+        value: serialized_msg,
     })
 }
 
