@@ -783,14 +783,11 @@ version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-ownable",
  "cw-storage-plus",
  "cw2",
  "cw20",
  "cw20-base",
  "outbe-utils",
- "schemars",
- "serde",
  "serde-json-wasm",
  "thiserror 1.0.69",
 ]
