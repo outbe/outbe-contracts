@@ -7,6 +7,7 @@ use cosmwasm_std::{
     entry_point, to_json_binary, Binary, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo,
     OverflowOperation, Response, StdResult, Uint128,
 };
+use prost::Message;
 
 pub const CONTRACT_NAME: &str = "outbe.net:gratis";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -53,9 +54,9 @@ pub fn execute_mint_native(
     let send_native_msg = create_mine_tokens_msg(
         env.contract.address.to_string(),
         recipient.to_string(),
-        Coin {
+        ProtoCoin {
             denom: "unit".to_string(),
-            amount,
+            amount: amount.to_string(),
         },
     )?;
 
@@ -67,28 +68,39 @@ pub fn execute_mint_native(
     Ok(res)
 }
 
-#[cw_serde]
-struct MsgMineTokens {
-    pub sender: String,
-    pub recipient: String,
-    pub amount: Coin,
-}
-
 fn create_mine_tokens_msg(
     sender: String,
     recipient: String,
-    amount: Coin,
+    amount: ProtoCoin,
 ) -> Result<CosmosMsg, ContractError> {
-    let serialized_msg = to_json_binary(&MsgMineTokens {
+    let serialized_msg = MineTokensMsg {
         sender,
         recipient,
-        amount,
-    })?;
+        amount: Some(amount),
+    }.encode_to_vec();
 
     Ok(CosmosMsg::Stargate {
         type_url: "/outbe.tokenminer.MsgMineTokens".to_string(),
-        value: serialized_msg,
+        value: serialized_msg.into(),
     })
+}
+
+#[derive(Clone, PartialEq, prost::Message)]
+pub struct MineTokensMsg {
+    #[prost(string, tag = "1")]
+    pub sender: String,
+    #[prost(string, tag = "2")]
+    pub recipient: String,
+    #[prost(message, optional, tag = "3")]
+    pub amount: Option<ProtoCoin>,
+}
+
+#[derive(Clone, PartialEq, prost::Message)]
+pub struct ProtoCoin {
+    #[prost(string, tag = "1")]
+    pub denom: String,
+    #[prost(string, tag = "2")]
+    pub amount: String,
 }
 
 

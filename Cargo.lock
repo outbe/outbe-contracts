@@ -1195,6 +1195,7 @@ version = "0.1.0"
 dependencies = [
  "cosmwasm-schema 1.5.11",
  "cosmwasm-std 1.5.11",
+ "prost",
  "serde",
  "thiserror 1.0.69",
 ]

@@ -12,6 +12,7 @@ library = []
 [dependencies]
 cosmwasm-std = { version = "1.5.4", features = ["stargate"] }
 cosmwasm-schema = { version = "1.5.4" }
+prost = "0.14.1"
 
 [dependencies.serde]
 version = "1.0.103"
