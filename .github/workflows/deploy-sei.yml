@@ -20,7 +20,7 @@ on:
 
       selected_contracts:
         type: string
-        description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_registry metadosis token_miner"
+        description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_registry metadosis token_miner tokenminer"
         required: false
         default: ""
 
@@ -98,6 +98,13 @@ jobs:
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/gratis/fixtures/init.json)
           GRATIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Gratis" $GRATIS_CODE_ID "$INIT_PAYLOAD")
           echo "GRATIS_CONTRACT_ADDRESS=$GRATIS_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy tokenminer
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'tokenminer') }}
+        run: |
+          GRATIS_CODE_ID=$(./scripts/store_code.sh artifacts/outbe_tokenminer.wasm)
+          GRATIS_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "TM" $GRATIS_CODE_ID "{}")
+          echo "TOKENMINER_CONTRACT_ADDRESS=$TOKENMINER_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Promis
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'promis') }}
