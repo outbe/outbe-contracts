@@ -56,7 +56,10 @@ pub struct ApplicationInput {
 
 pub enum ApplicationExt {
     Nra {},
-    Cra { preferred_nra: Option<Vec<String>> },
+    Cra {
+        preferred_nra: Option<Vec<Addr>>,
+        additional_wallets: Option<Vec<String>>,
+    },
     Rfa {},
     Iba {},
     Cca {},

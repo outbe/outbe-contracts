@@ -3,8 +3,8 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::{AGENTS, APPLICATIONS, APPLICATION_VOTES, CONFIG};
 use crate::types::{
-    AgentStatus, Application, ApplicationInput, ApplicationStatus, ApplicationType, Config,
-    ThresholdConfig, Vote,
+    AgentStatus, Application, ApplicationExt, ApplicationInput, ApplicationStatus, ApplicationType,
+    Config, ThresholdConfig, Vote,
 };
 use cosmwasm_std::{entry_point, Addr, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
@@ -199,6 +199,11 @@ pub fn exec_vote_application(
         return Err(ContractError::SelfVote {});
     }
 
+    //check prefered nra
+    if application.application_type == ApplicationType::Cra {
+        ensure_preferred_nra(&application.ext, &info.sender);
+    }
+
     if APPLICATION_VOTES.has(deps.storage, (id.as_str(), &info.sender)) {
         return Err(ContractError::AlreadyVoted {});
     }
@@ -367,6 +372,22 @@ pub fn ensure_active_nra_agent(deps: &DepsMut, sender: &Addr) -> Result<(), Cont
 fn ensure_owner(cfg: &Config, sender: &cosmwasm_std::Addr) -> Result<(), ContractError> {
     if cfg.owner != sender {
         return Err(ContractError::Unauthorized {});
+    }
+    Ok(())
+}
+
+fn ensure_preferred_nra(ext: &Option<ApplicationExt>, sender: &Addr) -> Result<(), ContractError> {
+    if let Some(ApplicationExt::Cra {
+        preferred_nra: Some(list),
+        ..
+    }) = ext
+    {
+        if !list.is_empty() {
+            let allowed = list.iter().any(|w| w == sender);
+            if !allowed {
+                return Err(ContractError::OnlyPreferredNra {});
+            }
+        }
     }
     Ok(())
 }
