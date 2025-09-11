@@ -1,9 +1,10 @@
 #[cfg(test)]
 mod test_gratis {
     use crate::contract::{execute, query, CONTRACT_NAME, CONTRACT_VERSION};
+    use crate::error::ContractError;
     use crate::msg::{CheckTicketResponse, ExecuteMsg, QueryMsg};
     use cosmwasm_std::testing::{message_info, mock_dependencies_with_balance, mock_env};
-    use cosmwasm_std::{coin, from_json, Addr, BankMsg, CosmosMsg, DepsMut, Response, Uint128};
+    use cosmwasm_std::{coin, from_json, Addr, CosmosMsg, DepsMut, Response, Uint128};
     use cw2::set_contract_version;
     use cw20::MinterResponse;
     use cw20::TokenInfoResponse;
@@ -17,7 +18,7 @@ mod test_gratis {
     const NEW_MINTER: &str = "new_minter";
     const NATIVE_DENOM: &str = "unit";
 
-    fn init_contract(deps: DepsMut) -> Result<Response, crate::ContractError> {
+    fn init_contract(deps: DepsMut) -> Result<Response, ContractError> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
         // Manually initialize basic CW20 state to bypass address validation
@@ -42,10 +43,7 @@ mod test_gratis {
         Ok(Response::new())
     }
 
-    fn init_contract_with_admin(
-        deps: DepsMut,
-        admin: &str,
-    ) -> Result<Response, crate::ContractError> {
+    fn init_contract_with_admin(deps: DepsMut, admin: &str) -> Result<Response, ContractError> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
         // Manually initialize basic CW20 state to bypass address validation
@@ -222,7 +220,7 @@ mod test_gratis {
         // Second burn in same block should fail
         let err = execute(deps.as_mut(), mock_env(), info, burn_msg).unwrap_err();
         match err {
-            crate::ContractError::AlreadyBurnedInBlock {} => {}
+            ContractError::AlreadyBurnedInBlock {} => {}
             _ => panic!("Expected AlreadyBurnedInBlock error"),
         }
     }
@@ -238,7 +236,7 @@ mod test_gratis {
         let info = message_info(&Addr::unchecked(USER1), &[]);
         let err = execute(deps.as_mut(), mock_env(), info, burn_msg).unwrap_err();
         match err {
-            crate::ContractError::Std(e) => {
+            ContractError::Cw20Error(e) => {
                 assert!(e.to_string().contains("Invalid zero amount"));
             }
             _ => panic!("Expected Std error about zero amount"),
@@ -256,7 +254,7 @@ mod test_gratis {
         let info = message_info(&Addr::unchecked(USER1), &[]);
         let err = execute(deps.as_mut(), mock_env(), info, burn_msg).unwrap_err();
         match err {
-            crate::ContractError::Std(e) => {
+            ContractError::Std(e) => {
                 assert!(
                     e.to_string().contains("not found") || e.to_string().contains("Insufficient")
                 );
@@ -415,7 +413,7 @@ mod test_gratis {
         let info = message_info(user1_addr, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap_err();
         match err {
-            crate::ContractError::Unauthorized {} => {}
+            ContractError::Unauthorized {} => {}
             _ => panic!("Expected Unauthorized error"),
         }
     }
@@ -468,7 +466,7 @@ mod test_gratis {
         let info = message_info(user1_addr, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap_err();
         match err {
-            crate::ContractError::Unauthorized {} => {}
+            ContractError::Unauthorized {} => {}
             _ => panic!("Expected Unauthorized error"),
         }
     }
@@ -497,7 +495,7 @@ mod test_gratis {
         let info = message_info(admin_addr, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, update_msg).unwrap_err();
         match err {
-            crate::ContractError::Unauthorized {} => {}
+            ContractError::Unauthorized {} => {}
             _ => panic!("Expected Unauthorized error"),
         }
 
@@ -562,13 +560,11 @@ mod test_gratis {
             "Expected one BankMsg::Send in response"
         );
         match &res.messages[0].msg {
-            CosmosMsg::Bank(BankMsg::Send { to_address, amount }) => {
-                assert_eq!(to_address, USER1);
-                assert_eq!(amount.len(), 1);
-                assert_eq!(amount[0].amount, burn_amount);
-                assert_eq!(amount[0].denom, NATIVE_DENOM);
+            #[allow(deprecated)]
+            CosmosMsg::Stargate { type_url, value: _ } => {
+                assert_eq!(type_url, "/outbe.tokenminer.MsgMineTokens");
             }
-            _ => panic!("Expected BankMsg::Send"),
+            _ => panic!("Expected CosmosMsg::Stargate"),
         }
     }
 }
