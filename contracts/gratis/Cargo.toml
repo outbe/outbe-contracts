@@ -21,3 +21,4 @@ cw20 = { workspace = true }
 thiserror = { workspace = true }
 
 outbe-utils = { workspace = true }
+prost = "0.14.1"

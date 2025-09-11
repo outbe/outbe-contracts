@@ -1,9 +1,9 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::native_mint::{MineTokensMsg, ProtoCoin};
 use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
-use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
-    entry_point, to_json_binary, Binary, Coin, CosmosMsg, Deps, DepsMut, Env, MessageInfo,
+    entry_point, Binary, Deps, DepsMut, Env, MessageInfo,
     OverflowError, OverflowOperation, Response, StdResult, Uint128,
 };
 use cw2::set_contract_version;
@@ -85,18 +85,19 @@ pub fn execute_mint_native(
     amount: Uint128,
 ) -> Result<Response, ContractError> {
     // Send native funds to sender
-    let send_native_msg = create_mine_tokens_msg(
-        env.contract.address.to_string(),
-        recipient.to_string(),
-        Coin {
+    let send_native_msg = MineTokensMsg {
+        sender: env.contract.address.to_string(),
+        recipient: recipient.clone(),
+        amount: Some(ProtoCoin {
             denom: "unit".to_string(),
-            amount,
-        },
-    )?;
+            amount: amount.to_string(),
+        }),
+    };
 
     let res = Response::new()
         .add_message(send_native_msg)
         .add_attribute("action", "mint_native")
+        .add_attribute("recipient", recipient)
         .add_attribute("amount", amount);
 
     Ok(res)
@@ -164,14 +165,14 @@ pub fn execute_burn(
     TICKETS.save(deps.storage, ticket.to_hex(), &true)?;
 
     // Send native funds to sender
-    let send_native_msg = create_mine_tokens_msg(
-        env.contract.address.to_string(),
-        info.sender.to_string(),
-        Coin {
+    let send_native_msg = MineTokensMsg {
+        sender: env.contract.address.to_string(),
+        recipient: info.sender.to_string(),
+        amount: Some(ProtoCoin {
             denom: "unit".to_string(),
-            amount,
-        },
-    )?;
+            amount: amount.to_string(),
+        }),
+    };
 
     let res = Response::new()
         .add_message(send_native_msg)
@@ -182,34 +183,6 @@ pub fn execute_burn(
         .add_attribute("block_height", block_height.to_string());
 
     Ok(res)
-}
-
-// Message structure matching the TokenMiner module
-pub(crate) const MINT_MSG: &str = "/outbe.tokenminer.MsgMineTokens";
-
-fn create_mine_tokens_msg(
-    sender: String,
-    recipient: String,
-    amount: Coin,
-) -> Result<CosmosMsg, ContractError> {
-    #[cw_serde]
-    struct MsgMineTokens {
-        pub sender: String,
-        pub recipient: String,
-        pub amount: Coin,
-    }
-
-    let serialized_msg = to_json_binary(&MsgMineTokens {
-        sender,
-        recipient,
-        amount,
-    })?;
-
-    #[allow(deprecated)]
-    Ok(CosmosMsg::Stargate {
-        type_url: MINT_MSG.to_string(),
-        value: serialized_msg,
-    })
 }
 
 pub fn execute_update_minter(

@@ -564,7 +564,7 @@ mod test_gratis {
         match &res.messages[0].msg {
             #[allow(deprecated)]
             CosmosMsg::Stargate { type_url, value: _ } => {
-                assert_eq!(type_url, crate::contract::MINT_MSG);
+                assert_eq!(type_url, "/outbe.tokenminer.MsgMineTokens");
             }
             _ => panic!("Expected CosmosMsg::Stargate"),
         }

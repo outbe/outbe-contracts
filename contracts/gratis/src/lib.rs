@@ -6,5 +6,6 @@ pub mod state;
 
 #[cfg(test)]
 mod tests;
+mod native_mint;
 
 pub use crate::error::ContractError;
