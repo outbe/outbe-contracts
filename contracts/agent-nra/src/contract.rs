@@ -201,7 +201,7 @@ pub fn exec_vote_application(
 
     //check prefered nra
     if application.application_type == ApplicationType::Cra {
-        ensure_preferred_nra(&application.ext, &info.sender);
+        ensure_preferred_nra(&application.ext, &info.sender)?;
     }
 
     if APPLICATION_VOTES.has(deps.storage, (id.as_str(), &info.sender)) {
@@ -384,6 +384,7 @@ fn ensure_preferred_nra(ext: &Option<ApplicationExt>, sender: &Addr) -> Result<(
     {
         if !list.is_empty() {
             let allowed = list.iter().any(|w| w == sender);
+
             if !allowed {
                 return Err(ContractError::OnlyPreferredNra {});
             }

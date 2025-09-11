@@ -5,6 +5,7 @@ use crate::state::CONFIG;
 use crate::types::{AgentInput, ApplicationExt, ApplicationInput, ApplicationType};
 use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
 use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
+use cw_multi_test::IntoAddr;
 
 const CREATOR: &str = "owner";
 const USER1: &str = "user1";
@@ -405,4 +406,60 @@ fn test_unauthorized_vote() {
         }
         other => panic!("Expected OnlyActiveNra error, got: {:?}", other),
     }
+}
+
+
+#[test]
+fn test_preferred_nra_restrict() {
+    let mut deps = mock_dependencies();
+    let env = mock_env();
+
+    instantiate_contract(deps.as_mut()).unwrap();
+
+    create_mock_agent(deps.as_mut(), &env, USER2);
+    create_mock_agent(deps.as_mut(), &env, USER3);
+
+    let mut app = sample_application_input();
+    app.application_type = ApplicationType::Cra;
+    app.ext = Some(ApplicationExt::Cra {
+        preferred_nra: Some(vec![Addr::unchecked(USER2)]),
+        additional_wallets: None,
+    });
+
+    let create_res = execute(
+        deps.as_mut(),
+        env.clone(),
+        message_info(&Addr::unchecked(USER1), &[]),
+        ExecuteMsg::CreateApplication { application: app },
+    ).unwrap();
+
+    let app_id = create_res.attributes
+        .iter()
+        .find(|a| a.key == "application_id")
+        .map(|a| a.value.clone())
+        .unwrap_or_else(|| "1".to_string());
+
+    let res = execute(
+        deps.as_mut(),
+        env.clone(),
+        message_info(&Addr::unchecked(USER3), &[]),
+        ExecuteMsg::VoteApplication { id: app_id.clone(), approve: true, reason: None },
+    );
+
+    println!("{:?}", res);
+    assert!(res.is_err());
+    match res.unwrap_err() {
+        ContractError::OnlyPreferredNra {} => {}
+        other => panic!("Expected OnlyPreferredNra error, got: {:?}", other),
+    }
+
+    let res_ok = execute(
+        deps.as_mut(),
+        env,
+        message_info(&Addr::unchecked(USER2), &[]),
+        ExecuteMsg::VoteApplication { id: app_id, approve: true, reason: Some("ok".into()) },
+    ).unwrap();
+
+    assert_eq!(res_ok.attributes[0].key, "action");
+    assert_eq!(res_ok.attributes[0].value, "application::vote_application");
 }
