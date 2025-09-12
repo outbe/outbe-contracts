@@ -205,7 +205,7 @@ jobs:
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_rfa') }}
         run: |
           AGENT_RFA_CODE_ID=$(./scripts/store_code.sh artifacts/agent_rfa.wasm)
-          INIT_PAYLOAD=$(jq -n --arg application_registry_addr $AGENT_RFA_CONTRACT_ADDRESS --from-file ./contracts/agent-rfa/fixtures/init.json)
+          INIT_PAYLOAD=$(jq -n --arg application_registry_addr $AGENT_NRA_CONTRACT_ADDRESS --from-file ./contracts/agent-rfa/fixtures/init.json)
           AGENT_RFA_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent RFA" $AGENT_RFA_CODE_ID "$INIT_PAYLOAD")
           echo "AGENT_RFA_CONTRACT_ADDRESS=$AGENT_RFA_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
@@ -213,7 +213,7 @@ jobs:
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_iba') }}
         run: |
           AGENT_iba_CODE_ID=$(./scripts/store_code.sh artifacts/agent_iba.wasm)
-          INIT_PAYLOAD=$(jq -n --arg application_registry_addr $AGENT_IBA_CONTRACT_ADDRESS --from-file ./contracts/agent-iba/fixtures/init.json)
+          INIT_PAYLOAD=$(jq -n --arg application_registry_addr $AGENT_NRA_CONTRACT_ADDRESS --from-file ./contracts/agent-iba/fixtures/init.json)
           AGENT_IBA_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent IBA" $AGENT_IBA_CODE_ID "$INIT_PAYLOAD")
           echo "AGENT_IBA_CONTRACT_ADDRESS=$AGENT_IBA_CONTRACT_ADDRESS" >> $GITHUB_ENV    
 
