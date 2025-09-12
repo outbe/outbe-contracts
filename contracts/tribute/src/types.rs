@@ -30,7 +30,6 @@ pub struct TributeData {
     pub symbolic_load: Uint128,
     /// Date of Consumption
     pub worldwide_day: WorldwideDay,
-
     /// Time when the Tribute NFT was created on the network
     pub created_at: Timestamp,
 }
