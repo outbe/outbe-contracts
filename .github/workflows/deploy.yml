@@ -200,8 +200,14 @@ jobs:
           INIT_PAYLOAD=$(jq -n --arg application_registry_addr $AGENT_NRA_CONTRACT_ADDRESS --from-file ./contracts/agent-cra/fixtures/init.json)
           AGENT_CRA_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent CRA" $AGENT_CRA_CODE_ID "$INIT_PAYLOAD")
           echo "AGENT_CRA_CONTRACT_ADDRESS=$AGENT_CRA_CONTRACT_ADDRESS" >> $GITHUB_ENV
-      
-      
+
+      - name: Deploy Agent RFA
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_rfa') }}
+        run: |
+          AGENT_RFA_CODE_ID=$(./scripts/store_code.sh artifacts/agent_rfa.wasm)
+          INIT_PAYLOAD=$(jq -n --arg application_registry_addr $AGENT_RFA_CONTRACT_ADDRESS --from-file ./contracts/agent-rfa/fixtures/init.json)
+          AGENT_RFA_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent RFA" $AGENT_RFA_CODE_ID "$INIT_PAYLOAD")
+          echo "AGENT_RFA_CONTRACT_ADDRESS=$AGENT_RFA_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Metadosis
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'metadosis') }}
