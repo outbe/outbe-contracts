@@ -347,7 +347,6 @@ pub fn get_threshold(deps: Deps, agent_type: &ApplicationType) -> StdResult<u8> 
         ApplicationType::Cra => thresholds.cra,
         ApplicationType::Rfa => thresholds.rfa,
         ApplicationType::Iba => thresholds.iba,
-        ApplicationType::Cca => thresholds.cca,
     })
 }
 

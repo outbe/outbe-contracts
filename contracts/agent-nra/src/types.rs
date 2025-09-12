@@ -62,7 +62,6 @@ pub enum ApplicationExt {
     },
     Rfa {},
     Iba {},
-    Cca {},
 }
 
 #[cw_serde]
@@ -71,7 +70,6 @@ pub enum ApplicationType {
     Cra,
     Rfa,
     Iba,
-    Cca,
 }
 
 #[cw_serde]
