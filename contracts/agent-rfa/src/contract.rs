@@ -6,7 +6,7 @@ use agent_nra::error::ContractError;
 use cosmwasm_std::{entry_point, DepsMut, Env, MessageInfo, Response};
 use cw2::set_contract_version;
 
-const CONTRACT_NAME: &str = "outbe.net:agent-cra";
+const CONTRACT_NAME: &str = "outbe.net:agent-rfa";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[entry_point]
@@ -28,7 +28,7 @@ pub fn instantiate(
     CONFIG.save(deps.storage, &cfg)?;
 
     Ok(Response::new()
-        .add_attribute("action", "agent-cra::instantiate")
+        .add_attribute("action", "agent-rfa::instantiate")
         .add_attribute("version", CONTRACT_VERSION))
 }
 
