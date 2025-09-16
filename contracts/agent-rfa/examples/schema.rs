@@ -1,6 +1,7 @@
-use agent_rfa::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
+use agent_rfa::msg::{ExecuteMsg, MigrateMsg};
 use agent_rfa::query::QueryMsg;
 use cosmwasm_schema::write_api;
+use agent_common::msg::InstantiateMsg;
 
 fn main() {
     write_api! {

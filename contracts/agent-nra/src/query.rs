@@ -1,10 +1,14 @@
-use crate::state::{AGENTS, APPLICATIONS, APPLICATION_VOTES, CONFIG};
-use crate::types::{
-    Agent, AgentResponse, AgentStatus, Application, ApplicationResponse, ApplicationVotesResponse,
-    ListAllAgentsResponse, ListAllApplicationResponse, NraAccessResponse, Vote,
+use crate::msg::{
+    ApplicationResponse, ApplicationVotesResponse, ListAllApplicationResponse, NraAccessResponse,
 };
+use crate::state::{APPLICATIONS, APPLICATION_VOTES, CONFIG};
+use crate::types::{Application, Vote};
+use agent_common::msg::{AgentResponse, ListAllAgentsResponse};
+use agent_common::query::{query_agent_by_address, query_all_agents};
+use agent_common::state::AGENTS;
+use agent_common::types::AgentStatus;
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, Order, StdResult,entry_point};
+use cosmwasm_std::{to_json_binary, entry_point,  Addr, Binary, Deps, Env, Order, StdResult};
 use cw_storage_plus::Bound;
 
 pub const DEFAULT_LIMIT: u32 = 10;
@@ -177,35 +181,6 @@ pub fn query_votes_by_address(deps: Deps, address: Addr) -> StdResult<Applicatio
         .collect::<StdResult<Vec<Vote>>>()?;
 
     Ok(ApplicationVotesResponse { votes })
-}
-
-fn query_agent_by_address(deps: Deps, address: Addr) -> StdResult<AgentResponse> {
-    let agent = AGENTS.load(deps.storage, address)?;
-
-    Ok(AgentResponse { agent })
-}
-
-fn query_all_agents(
-    deps: Deps,
-    start_after: Option<Addr>,
-    limit: Option<u32>,
-    query_order: Option<Order>,
-) -> StdResult<ListAllAgentsResponse> {
-    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
-    let order = query_order.unwrap_or(Order::Ascending);
-
-    let (start, end) = match order {
-        Order::Ascending => (start_after.map(Bound::exclusive), None),
-        Order::Descending => (None, start_after.map(Bound::exclusive)),
-    };
-
-    let agents = AGENTS
-        .range(deps.storage, start, end, order)
-        .take(limit)
-        .map(|item| item.map(|(_addr, account)| account))
-        .collect::<StdResult<Vec<Agent>>>()?;
-
-    Ok(ListAllAgentsResponse { agents })
 }
 
 pub fn query_ensure_active_nra(deps: Deps, address: Addr) -> StdResult<NraAccessResponse> {

@@ -1,12 +1,5 @@
-use agent_nra::types::AgentInput;
+use agent_common::types::AgentInput;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Addr;
-
-#[cw_serde]
-pub struct InstantiateMsg {
-    pub application_registry_addr: Addr,
-    pub paused: Option<bool>,
-}
 
 #[cw_serde]
 pub enum MigrateMsg {

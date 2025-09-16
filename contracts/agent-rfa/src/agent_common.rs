@@ -1,11 +1,10 @@
-use crate::state::{AGENTS, CONFIG};
 use agent_nra::error::ContractError;
 use agent_nra::query::QueryMsg as NraQueryMsg;
-use agent_nra::types::{
-    Agent, AgentInput, AgentStatus, ApplicationResponse, ApplicationStatus, ApplicationType,
-    NraAccessResponse,
-};
+use agent_nra::types::ApplicationStatus;
 use cosmwasm_std::{Addr, Deps, DepsMut, Env, MessageInfo, Response};
+use agent_common::state::{AGENTS, CONFIG};
+use agent_common::types::{Agent, AgentInput, AgentStatus};
+use agent_nra::msg::{ApplicationResponse, NraAccessResponse};
 
 pub fn exec_submit_agent(
     deps: DepsMut,
@@ -32,10 +31,6 @@ pub fn exec_submit_agent(
         return Err(ContractError::ApplicationNotApproved {});
     }
 
-    //Check application type
-    if !matches!(existing_application.application_type, ApplicationType::Rfa) {
-        return Err(ContractError::ApplicationInvalidType {});
-    }
     let agent = Agent {
         wallet: existing_application.wallet.clone(),
         name: existing_application.name,

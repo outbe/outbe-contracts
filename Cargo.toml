@@ -55,8 +55,9 @@ random-oracle = { version = "*", path = "contracts/random-oracle", features = [
     "library",
 ] }
 
+agent-common = { version = "*", path = "packages/agent-common" }
+
+
 agent-nra = { version = "*", path = "contracts/agent-nra", features = [
     "library",
 ] }
-
-

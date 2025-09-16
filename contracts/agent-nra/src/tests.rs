@@ -2,10 +2,11 @@ use crate::contract::{execute, instantiate};
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::CONFIG;
-use crate::types::{AgentInput, ApplicationExt, ApplicationInput, ApplicationType};
+use crate::types::ApplicationInput;
+use agent_common::types::{Agent, AgentExt, AgentInput, AgentStatus, AgentType};
 use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
 use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
-use cw_multi_test::IntoAddr;
+use agent_common::state::AGENTS;
 
 const CREATOR: &str = "owner";
 const USER1: &str = "user1";
@@ -16,7 +17,7 @@ const USER5: &str = "user5";
 
 fn sample_application_input() -> ApplicationInput {
     ApplicationInput {
-        application_type: ApplicationType::Nra,
+        application_type: AgentType::Nra,
         name: "Test NRA".to_string(),
         email: "test@nra.com".to_string(),
         jurisdictions: vec!["US".to_string(), "EU".to_string()],
@@ -25,7 +26,7 @@ fn sample_application_input() -> ApplicationInput {
         docs_uri: vec!["https://docs.test-nra.com".to_string()],
         discord: Some("test_nra#1234".to_string()),
         avg_cu: Option::from(Uint128::new(1000)),
-        ext: Some(ApplicationExt::Nra {}),
+        ext: Some(AgentExt::Nra {}),
     }
 }
 
@@ -39,18 +40,14 @@ fn sample_agent_input() -> AgentInput {
         docs_uri: vec!["https://agent-docs.com".to_string()],
         discord: Some("agent#5678".to_string()),
         avg_cu: Option::from(Uint128::new(2000)),
-        ext: ApplicationExt::Nra {},
+        ext: AgentExt::Nra {},
     }
 }
 
 fn create_mock_agent(deps: DepsMut, env: &cosmwasm_std::Env, wallet: &str) {
-    use crate::state::AGENTS;
-    use crate::types::{Agent, AgentStatus, ApplicationExt};
-    use cosmwasm_std::{Addr, Uint128};
-
     let agent = Agent {
         wallet: Addr::unchecked(wallet),
-        agent_type: ApplicationType::Nra,
+        agent_type: AgentType::Nra,
         name: "Test Agent".to_string(),
         email: "test@example.com".to_string(),
         jurisdictions: vec!["US".to_string()],
@@ -62,7 +59,7 @@ fn create_mock_agent(deps: DepsMut, env: &cosmwasm_std::Env, wallet: &str) {
         avg_cu: Option::from(Uint128::new(100)), // Changed from u64 to Uint128
         submitted_at: env.block.time,
         updated_at: env.block.time,
-        ext: ApplicationExt::Nra {}, // Changed from None to ApplicationExt::Nra {}
+        ext: AgentExt::Nra {}, // Changed from None to ApplicationExt::Nra {}
     };
 
     AGENTS
@@ -408,7 +405,6 @@ fn test_unauthorized_vote() {
     }
 }
 
-
 #[test]
 fn test_preferred_nra_restrict() {
     let mut deps = mock_dependencies();
@@ -420,8 +416,8 @@ fn test_preferred_nra_restrict() {
     create_mock_agent(deps.as_mut(), &env, USER3);
 
     let mut app = sample_application_input();
-    app.application_type = ApplicationType::Cra;
-    app.ext = Some(ApplicationExt::Cra {
+    app.application_type = AgentType::Cra;
+    app.ext = Some(AgentExt::Cra {
         preferred_nra: Some(vec![Addr::unchecked(USER2)]),
         additional_wallets: None,
     });
@@ -431,9 +427,11 @@ fn test_preferred_nra_restrict() {
         env.clone(),
         message_info(&Addr::unchecked(USER1), &[]),
         ExecuteMsg::CreateApplication { application: app },
-    ).unwrap();
+    )
+    .unwrap();
 
-    let app_id = create_res.attributes
+    let app_id = create_res
+        .attributes
         .iter()
         .find(|a| a.key == "application_id")
         .map(|a| a.value.clone())
@@ -443,7 +441,11 @@ fn test_preferred_nra_restrict() {
         deps.as_mut(),
         env.clone(),
         message_info(&Addr::unchecked(USER3), &[]),
-        ExecuteMsg::VoteApplication { id: app_id.clone(), approve: true, reason: None },
+        ExecuteMsg::VoteApplication {
+            id: app_id.clone(),
+            approve: true,
+            reason: None,
+        },
     );
 
     println!("{:?}", res);
@@ -457,8 +459,13 @@ fn test_preferred_nra_restrict() {
         deps.as_mut(),
         env,
         message_info(&Addr::unchecked(USER2), &[]),
-        ExecuteMsg::VoteApplication { id: app_id, approve: true, reason: Some("ok".into()) },
-    ).unwrap();
+        ExecuteMsg::VoteApplication {
+            id: app_id,
+            approve: true,
+            reason: Some("ok".into()),
+        },
+    )
+    .unwrap();
 
     assert_eq!(res_ok.attributes[0].key, "action");
     assert_eq!(res_ok.attributes[0].value, "application::vote_application");

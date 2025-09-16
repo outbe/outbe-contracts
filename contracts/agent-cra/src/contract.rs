@@ -1,10 +1,10 @@
 use crate::agent_common::*;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
-use crate::state::CONFIG;
-use crate::types::Config;
+use crate::msg::{ExecuteMsg, MigrateMsg};
 use agent_nra::error::ContractError;
 use cosmwasm_std::{entry_point, DepsMut, Env, MessageInfo, Response};
 use cw2::set_contract_version;
+use agent_common::msg::InstantiateMsg;
+use agent_common::state::{Config, CONFIG};
 
 const CONTRACT_NAME: &str = "outbe.net:agent-cra";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");

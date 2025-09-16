@@ -1,5 +1,6 @@
-use crate::types::{AgentInput, ApplicationInput, ThresholdConfig};
+use crate::types::{Application, ApplicationInput, ThresholdConfig, Vote};
 use cosmwasm_schema::cw_serde;
+use agent_common::types::AgentInput;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -60,4 +61,25 @@ pub enum ExecuteMsg {
     RemoveBootstrapVoter {
         address: String,
     },
+}
+
+#[cw_serde]
+pub struct ListAllApplicationResponse {
+    pub applications: Vec<Application>,
+}
+
+#[cw_serde]
+pub struct ApplicationResponse {
+    pub application: Option<Application>,
+}
+
+#[cw_serde]
+pub struct ApplicationVotesResponse {
+    pub votes: Vec<Vote>,
+}
+
+
+#[cw_serde]
+pub struct NraAccessResponse {
+    pub allowed: bool,
 }

@@ -1,13 +1,14 @@
 use crate::agent_common::*;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
-use crate::state::{AGENTS, APPLICATIONS, APPLICATION_VOTES, CONFIG};
+use crate::state::{ APPLICATIONS, APPLICATION_VOTES, CONFIG};
 use crate::types::{
-    AgentStatus, Application, ApplicationExt, ApplicationInput, ApplicationStatus, ApplicationType,
-    Config, ThresholdConfig, Vote,
+    Application, ApplicationInput, ApplicationStatus, Config, ThresholdConfig, Vote,
 };
+use agent_common::types::{AgentExt, AgentStatus, AgentType};
 use cosmwasm_std::{entry_point, Addr, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
+use agent_common::state::AGENTS;
 
 const CONTRACT_NAME: &str = "outbe.net:agent-nra";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -200,7 +201,7 @@ pub fn exec_vote_application(
     }
 
     //check prefered nra
-    if application.application_type == ApplicationType::Cra {
+    if application.application_type == AgentType::Cra {
         ensure_preferred_nra(&application.ext, &info.sender)?;
     }
 
@@ -340,13 +341,13 @@ pub fn count_votes(deps: Deps, id: &str) -> StdResult<(u8, u8)> {
     Ok((approvals, rejects))
 }
 
-pub fn get_threshold(deps: Deps, agent_type: &ApplicationType) -> StdResult<u8> {
+pub fn get_threshold(deps: Deps, agent_type: &AgentType) -> StdResult<u8> {
     let thresholds = CONFIG.load(deps.storage)?.thresholds;
     Ok(match agent_type {
-        ApplicationType::Nra => thresholds.nra,
-        ApplicationType::Cra => thresholds.cra,
-        ApplicationType::Rfa => thresholds.rfa,
-        ApplicationType::Iba => thresholds.iba,
+        AgentType::Nra => thresholds.nra,
+        AgentType::Cra => thresholds.cra,
+        AgentType::Rfa => thresholds.rfa,
+        AgentType::Iba => thresholds.iba,
     })
 }
 
@@ -375,8 +376,8 @@ fn ensure_owner(cfg: &Config, sender: &cosmwasm_std::Addr) -> Result<(), Contrac
     Ok(())
 }
 
-fn ensure_preferred_nra(ext: &Option<ApplicationExt>, sender: &Addr) -> Result<(), ContractError> {
-    if let Some(ApplicationExt::Cra {
+fn ensure_preferred_nra(ext: &Option<AgentExt>, sender: &Addr) -> Result<(), ContractError> {
+    if let Some(AgentExt::Cra {
         preferred_nra: Some(list),
         ..
     }) = ext

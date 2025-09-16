@@ -18,6 +18,8 @@ cw-storage-plus = { workspace = true }
 serde = { workspace = true }
 cw2 = { workspace = true }
 thiserror = { workspace = true }
+agent-common = { workspace = true }
+
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
