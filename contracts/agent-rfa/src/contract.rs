@@ -1,15 +1,17 @@
-use crate::agent_common::*;
 use crate::msg::{ExecuteMsg, MigrateMsg};
 use agent_common::msg::InstantiateMsg;
 use agent_common::state::{Config, CONFIG};
+use agent_nra::agent_common::*;
 use agent_nra::error::ContractError;
-use cosmwasm_std::{entry_point, DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
 use cw2::set_contract_version;
+#[cfg(not(feature = "library"))]
+use cosmwasm_std::entry_point;
 
 const CONTRACT_NAME: &str = "outbe.net:agent-rfa";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -41,7 +43,7 @@ pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, Co
     }
 }
 
-#[entry_point]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
