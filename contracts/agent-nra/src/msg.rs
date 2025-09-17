@@ -17,11 +17,11 @@ pub enum MigrateMsg {
 #[cw_serde]
 pub enum ApplicationMsg {
     CreateApplication {
-        application: ApplicationInput,
+        application: Box<ApplicationInput>,
     },
     EditApplication {
         id: String,
-        application: ApplicationInput,
+        application:  Box<ApplicationInput>
     },
     VoteApplication {
         id: String,

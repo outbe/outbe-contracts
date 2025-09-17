@@ -17,8 +17,8 @@ const USER3: &str = "user3";
 const USER4: &str = "user4";
 const USER5: &str = "user5";
 
-fn sample_application_input() -> ApplicationInput {
-    ApplicationInput {
+fn sample_application_input() -> Box<ApplicationInput> {
+    Box::from(ApplicationInput {
         application_type: AgentType::Nra,
         name: "Test NRA".to_string(),
         email: "test@nra.com".to_string(),
@@ -29,7 +29,7 @@ fn sample_application_input() -> ApplicationInput {
         discord: Some("test_nra#1234".to_string()),
         avg_cu: Option::from(Uint128::new(1000)),
         ext: Some(AgentExt::Nra {}),
-    }
+    })
 }
 
 fn sample_agent_input() -> AgentInput {

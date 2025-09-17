@@ -71,10 +71,10 @@ pub fn execute(
     match msg {
         ExecuteMsg::Application(app_msg) => match app_msg {
             ApplicationMsg::CreateApplication { application } => {
-                exec_add_application(deps, env, info, application)
+                exec_add_application(deps, env, info, *application)
             }
             ApplicationMsg::EditApplication { id, application } => {
-                exec_update_application(deps, env, info, id, application)
+                exec_update_application(deps, env, info, id, *application)
             }
             ApplicationMsg::VoteApplication {
                 id,
