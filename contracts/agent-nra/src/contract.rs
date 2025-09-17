@@ -40,7 +40,7 @@ pub fn instantiate(
         owner: info.sender.clone(),
         thresholds: msg.thresholds.unwrap_or(default_thresholds),
         paused: msg.paused.unwrap_or(false),
-        last_token_id: 1u32,
+        last_application_id: 0u32,
         bootstrap_voters,
     };
 
@@ -117,7 +117,7 @@ pub fn exec_add_application(
     let mut config = CONFIG.load(deps.storage)?;
 
     let now = env.block.time;
-    let id = config.last_token_id;
+    let id = config.last_application_id;
 
     let application = Application {
         id,
@@ -138,7 +138,7 @@ pub fn exec_add_application(
     };
     APPLICATIONS.save(deps.storage, id.to_string(), &application)?;
 
-    config.last_token_id = id.saturating_add(1);
+    config.last_application_id = id.saturating_add(1);
     CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new()

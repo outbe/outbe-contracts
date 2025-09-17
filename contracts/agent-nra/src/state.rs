@@ -8,7 +8,7 @@ pub struct Config {
     pub owner: Addr,
     pub thresholds: ThresholdConfig,
     pub paused: bool,
-    pub last_token_id: u32,
+    pub last_application_id: u32,
     pub bootstrap_voters: Vec<Addr>,
 }
 

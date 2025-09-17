@@ -136,7 +136,7 @@ fn test_edit_application_success() {
     updated_app.name = "Updated NRA Name".to_string();
 
     let edit_msg = ExecuteMsg::Application(ApplicationMsg::EditApplication {
-        id: "1".to_string(),
+        id: "0".to_string(),
         application: updated_app,
     });
 
@@ -186,7 +186,7 @@ fn test_vote_application_approve() {
 
     // Vote on application
     let vote_msg = ExecuteMsg::Application(ApplicationMsg::VoteApplication {
-        id: "1".to_string(),
+        id: "0".to_string(),
         approve: true,
         reason: Some("Good application".to_string()),
     });
@@ -214,7 +214,7 @@ fn test_vote_application_reject() {
 
     // Vote reject
     let vote_msg = ExecuteMsg::Application(ApplicationMsg::VoteApplication {
-        id: "1".to_string(),
+        id: "0".to_string(),
         approve: false,
         reason: Some("Insufficient documentation".to_string()),
     });
@@ -270,7 +270,7 @@ fn test_hold_application() {
 
     // Hold application
     let hold_msg = ExecuteMsg::Application(ApplicationMsg::HoldApplication {
-        id: "1".to_string(),
+        id: "0".to_string(),
     });
 
     let res = execute(deps.as_mut(), env, info_user2, hold_msg).unwrap();
