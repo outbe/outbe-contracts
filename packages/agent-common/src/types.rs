@@ -20,7 +20,7 @@ pub enum AgentExt {
     Rfa {},
     Iba {
         preferred_nra: Option<Vec<Addr>>,
-        additional_wallets: Option<Vec<String>>,
+        additional_wallets: Option<Vec<ExternalWallet>>,
     },
 }
 
@@ -60,4 +60,19 @@ pub struct AgentInput {
     pub discord: Option<String>,
     pub avg_cu: Option<Uint128>,
     pub ext: AgentExt,
+}
+
+
+#[cw_serde]
+pub enum WalletType {
+    Cosmos,
+    Evm,
+    Solana,
+
+}
+
+#[cw_serde]
+pub struct ExternalWallet {
+    pub wallet_type: WalletType,
+    pub address: String,
 }
