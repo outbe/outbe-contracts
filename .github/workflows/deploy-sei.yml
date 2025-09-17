@@ -3,6 +3,10 @@ name: Deploy Outbe-Chain
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: environment
       is_latest:
         description: "Mark as 'latest'"
         required: true
@@ -25,10 +29,7 @@ on:
         default: ""
 
 env:
-  # Chain configuration
-  CHAIN_ID: outbe-devnet-1
   FEE_DENOM: unit
-  RPC: https://rpc.d.outbe.net
   BINARY: outbe-chaind
 
   CONTRACT_REGISTRY_CONTRACT_ADDRESS: "outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9"
@@ -38,9 +39,12 @@ jobs:
   deploy:
     name: Optimize & Deploy
     runs-on: ubuntu-latest
-
     container:
       image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      RPC: ${{ vars.RPC }}
+      CHAIN_ID: ${{ vars.CHAIN_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,9 +55,9 @@ jobs:
 
       - name: Configure wallet
         env:
-          WALLET_MNEMONIC_SEI_DEVNET: ${{ secrets.WALLET_MNEMONIC_SEI_DEVNET }}
+          WALLET_MNEMONIC: ${{ secrets.WALLET_MNEMONIC }}
         run: |
-          echo $WALLET_MNEMONIC_SEI_DEVNET | $BINARY keys add ci --keyring-backend test --recover
+          echo $WALLET_MNEMONIC | $BINARY keys add ci --keyring-backend test --recover
           OWNER_ADDRESS=$($BINARY keys show ci --keyring-backend test --output json | jq -r '.address')
           echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
 
