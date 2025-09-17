@@ -62,13 +62,11 @@ pub struct AgentInput {
     pub ext: AgentExt,
 }
 
-
 #[cw_serde]
 pub enum WalletType {
     Cosmos,
     Evm,
     Solana,
-
 }
 
 #[cw_serde]
