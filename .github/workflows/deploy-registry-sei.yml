@@ -11,14 +11,15 @@ on:
 env:
   FEE_DENOM: unit
   BINARY: outbe-chaind
-  RPC: ${{ vars.RPC }}
-  CHAIN_ID: ${{ vars.CHAIN_ID }}
 
 jobs:
   deploy:
     name: Optimize & Deploy
     runs-on: ubuntu-latest
-
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      RPC: ${{ vars.RPC }}
+      CHAIN_ID: ${{ vars.CHAIN_ID }}
     container:
       image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
     steps:
