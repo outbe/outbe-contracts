@@ -14,7 +14,7 @@ on:
 
       selected_contracts:
         type: string
-        description: "Select: gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_nra metadosis token_miner"
+        description: "Select: gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_nra agent_cra agent_iba agent_rfa  metadosis token_miner"
         required: false
         default: ""
 
@@ -126,11 +126,29 @@ jobs:
           CODE_ID=$(./scripts/store_code.sh artifacts/nod.wasm)
           ./scripts/migrate_contract.sh $NOD_CONTRACT_ADDRESS $CODE_ID
 
-      - name: Migrate Agent Registry
+      - name: Migrate Agent NRA
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_nra') }}
         run: |
           CODE_ID=$(./scripts/store_code.sh artifacts/agent_nra.wasm)
           ./scripts/migrate_contract.sh $AGENT_NRA_CONTRACT_ADDRESS $CODE_ID
+
+      - name: Migrate Agent CRA
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_cra') }}
+        run: |
+          CODE_ID=$(./scripts/store_code.sh artifacts/agent_cra.wasm)
+          ./scripts/migrate_contract.sh $AGENT_CRA_CONTRACT_ADDRESS $CODE_ID
+
+      - name: Migrate Agent IBA
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_iba') }}
+        run: |
+          CODE_ID=$(./scripts/store_code.sh artifacts/agent_iba.wasm)
+          ./scripts/migrate_contract.sh $AGENT_IBA_CONTRACT_ADDRESS $CODE_ID
+
+      - name: Migrate Agent RFA
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_rfa') }}
+        run: |
+          CODE_ID=$(./scripts/store_code.sh artifacts/agent_rfa.wasm)
+          ./scripts/migrate_contract.sh $AGENT_RFA_CONTRACT_ADDRESS $CODE_ID
 
       - name: Migrate Metadosis
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'metadosis') }}

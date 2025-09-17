@@ -20,7 +20,7 @@ on:
 
       selected_contracts:
         type: string
-        description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_nra metadosis token_miner"
+        description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_nra agent_cra agent_iba agent_rfa metadosis token_miner"
         required: false
         default: ""
 
