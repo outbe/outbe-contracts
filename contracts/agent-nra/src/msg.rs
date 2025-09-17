@@ -21,7 +21,7 @@ pub enum ApplicationMsg {
     },
     EditApplication {
         id: String,
-        application:  Box<ApplicationInput>
+        application: Box<ApplicationInput>,
     },
     VoteApplication {
         id: String,
