@@ -3,7 +3,6 @@ use crate::msg::{
 };
 use crate::state::{APPLICATIONS, APPLICATION_VOTES, CONFIG};
 use crate::types::{Application, Vote};
-use agent_common::msg::{AgentResponse, ListAllAgentsResponse};
 use agent_common::query::{query_agent_by_address, query_all_agents};
 use agent_common::state::AGENTS;
 use agent_common::types::AgentStatus;
@@ -41,10 +40,10 @@ pub enum QueryMsg {
     QueryVotesByAddress { address: Addr },
 
     // Agent
-    #[returns(AgentResponse)]
+    #[returns(agent_common::msg::AgentResponse)]
     GetAgentByAddress { address: Addr },
 
-    #[returns(ListAllAgentsResponse)]
+    #[returns(agent_common::msg::ListAllAgentsResponse)]
     ListAllAgents {
         start_after: Option<Addr>,
         limit: Option<u32>,

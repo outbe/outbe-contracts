@@ -1,4 +1,3 @@
-use agent_common::msg::{AgentResponse, ListAllAgentsResponse};
 use agent_common::query::{query_agent_by_address, query_all_agents};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{entry_point, to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
@@ -7,10 +6,10 @@ use cosmwasm_std::{entry_point, to_json_binary, Addr, Binary, Deps, Env, Order, 
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     // Agent
-    #[returns(AgentResponse)]
+    #[returns(agent_common::msg::AgentResponse)]
     GetAgentByAddress { address: Addr },
 
-    #[returns(ListAllAgentsResponse)]
+    #[returns(agent_common::msg::ListAllAgentsResponse)]
     ListAllAgents {
         start_after: Option<Addr>,
         limit: Option<u32>,
