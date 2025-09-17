@@ -7,21 +7,18 @@ edition = { workspace = true }
 crate-type = ["cdylib", "rlib"]
 
 [features]
+default = ["demo"]
+demo = []
 library = []
 
 [dependencies]
-cosmwasm-std = { workspace = true }
+cosmwasm-std = { workspace = true, features = ["stargate"] }
 cosmwasm-schema = { workspace = true }
 cw-storage-plus = { workspace = true }
-serde = { workspace = true }
 cw2 = { workspace = true }
 cw20-base = { workspace = true }
 cw20 = { workspace = true }
 thiserror = { workspace = true }
-cw-ownable = { workspace = true }
 
-schemars = { workspace = true }
 outbe-utils = { workspace = true }
-
-[dev-dependencies]
-cosmwasm-schema = { workspace = true }
+prost = "0.14.1"

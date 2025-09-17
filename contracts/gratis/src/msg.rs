@@ -9,10 +9,25 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    Burn { amount: Uint128 },
-    Mint { recipient: String, amount: Uint128 },
-    UpdateMinter { new_minter: Option<String> },
-    UpdateAdmin { new_admin: String },
+    Burn {
+        amount: Uint128,
+    },
+    Mint {
+        recipient: String,
+        amount: Uint128,
+    },
+    UpdateMinter {
+        new_minter: Option<String>,
+    },
+    UpdateAdmin {
+        new_admin: String,
+    },
+
+    #[cfg(feature = "demo")]
+    MintNative {
+        recipient: String,
+        amount: Uint128,
+    },
 }
 
 #[cw_serde]

@@ -7,11 +7,11 @@ extra_args=$3
 
 binary=${BINARY:-outbe-noded}
 
-TX_HASH=$($binary tx wasm execute $contract_address "$message" \
+RESPONSE=$($binary tx wasm execute $contract_address "$message" \
   --node $RPC --from ci --keyring-backend test --chain-id $CHAIN_ID \
-  --gas auto --gas-adjustment 1.5 --gas-prices 0.025$FEE_DENOM -y --output json $extra_args \
-  | jq -r '.txhash')
+  --gas auto --gas-adjustment 1.5 --gas-prices 0.025$FEE_DENOM -y --output json $extra_args)
 
+TX_HASH=$(echo "$RESPONSE" | jq -r '.txhash')
 sleep 7
 
 echo $TX_HASH

@@ -1,22 +1,27 @@
-name: Deploy Registry SEI
+name: Deploy Registry Outbe-Chain
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: environment
 
 env:
-  # Chain configuration
-  CHAIN_ID: outbe-devnet
   FEE_DENOM: unit
-  RPC: https://rpc.d.outbe.net
   BINARY: outbe-chaind
 
 jobs:
   deploy:
     name: Optimize & Deploy
     runs-on: ubuntu-latest
-
     container:
       image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      RPC: ${{ vars.RPC }}
+      CHAIN_ID: ${{ vars.CHAIN_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,9 +32,9 @@ jobs:
 
       - name: Configure wallet
         env:
-          WALLET_MNEMONIC_SEI_DEVNET: ${{ secrets.WALLET_MNEMONIC_SEI_DEVNET }}
+          WALLET_MNEMONIC: ${{ secrets.WALLET_MNEMONIC }}
         run: |
-          echo $WALLET_MNEMONIC_SEI_DEVNET | $BINARY keys add ci --keyring-backend test --recover
+          echo $WALLET_MNEMONIC | $BINARY keys add ci --keyring-backend test --recover
           OWNER_ADDRESS=$($BINARY keys show ci --keyring-backend test --output json | jq -r '.address')
           echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
 

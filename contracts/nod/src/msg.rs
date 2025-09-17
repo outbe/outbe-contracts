@@ -49,6 +49,7 @@ pub struct NodEntity {
     pub state: State,
     pub owner: String,
     pub qualified_at: Option<Timestamp>,
+    pub is_touch: bool,
 }
 
 #[cw_serde]

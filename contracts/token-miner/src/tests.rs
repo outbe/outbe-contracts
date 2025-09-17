@@ -650,6 +650,7 @@ mod test_token_miner {
             owner: owner.to_string(),
             issued_at: Timestamp::from_seconds(1234567890),
             qualified_at: None,
+            is_touch: false,
         }
     }
 

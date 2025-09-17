@@ -1,15 +1,15 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::native_mint::{MineTokensMsg, ProtoCoin};
 use crate::state::{ADMIN, TICKETS, USER_BURNS_PER_BLOCK};
 use cosmwasm_std::{
-    entry_point, Binary, Coin, Deps, DepsMut, Env, MessageInfo, OverflowError, OverflowOperation,
+    entry_point, Binary, Deps, DepsMut, Env, MessageInfo, OverflowError, OverflowOperation,
     Response, StdResult, Uint128,
 };
 use cw2::set_contract_version;
 use cw20_base::contract::{execute as cw20_execute, instantiate as cw20_instantiate};
 use cw20_base::msg::{ExecuteMsg as Cw20ExecuteMsg, InstantiateMsg as Cw20InstantiateMsg};
 use cw20_base::state::{BALANCES, TOKEN_INFO};
-use cw20_base::ContractError as Cw20ContractError;
 use outbe_utils::gen_compound_hash;
 
 pub const CONTRACT_NAME: &str = "outbe.net:gratis";
@@ -69,7 +69,38 @@ pub fn execute(
             execute_update_minter(deps, env, info, new_minter)
         }
         ExecuteMsg::UpdateAdmin { new_admin } => execute_update_admin(deps, env, info, new_admin),
+        #[cfg(feature = "demo")]
+        ExecuteMsg::MintNative { recipient, amount } => {
+            execute_mint_native(deps, env, info, recipient, amount)
+        }
     }
+}
+
+#[cfg(feature = "demo")]
+pub fn execute_mint_native(
+    _deps: DepsMut,
+    env: Env,
+    _info: MessageInfo,
+    recipient: String,
+    amount: Uint128,
+) -> Result<Response, ContractError> {
+    // Send native funds to sender
+    let send_native_msg = MineTokensMsg {
+        sender: env.contract.address.to_string(),
+        recipient: recipient.clone(),
+        amount: Some(ProtoCoin {
+            denom: "unit".to_string(),
+            amount: amount.to_string(),
+        }),
+    };
+
+    let res = Response::new()
+        .add_message(send_native_msg)
+        .add_attribute("action", "mint_native")
+        .add_attribute("recipient", recipient)
+        .add_attribute("amount", amount);
+
+    Ok(res)
 }
 
 pub fn execute_burn(
@@ -79,9 +110,10 @@ pub fn execute_burn(
     amount: Uint128,
 ) -> Result<Response, ContractError> {
     if amount.is_zero() {
-        return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
-            "Invalid zero amount",
-        )));
+        #[allow(deprecated)]
+        return Err(ContractError::Cw20Error(
+            cw20_base::ContractError::InvalidZeroAmount {},
+        ));
     }
 
     let block_height = env.block.height;
@@ -100,14 +132,6 @@ pub fn execute_burn(
         return Err(ContractError::Std(cosmwasm_std::StdError::generic_err(
             "Insufficient funds",
         )));
-    }
-
-    // Check if the contract has native funds
-    let contract_balance: Coin = deps
-        .querier
-        .query_balance(env.contract.address.clone(), "unit")?;
-    if contract_balance.amount < amount {
-        return Err(ContractError::InsufficientContractFunds {});
     }
 
     BALANCES.update(
@@ -141,12 +165,13 @@ pub fn execute_burn(
     TICKETS.save(deps.storage, ticket.to_hex(), &true)?;
 
     // Send native funds to sender
-    let send_native_msg = cosmwasm_std::BankMsg::Send {
-        to_address: info.sender.to_string(),
-        amount: vec![Coin {
+    let send_native_msg = MineTokensMsg {
+        sender: env.contract.address.to_string(),
+        recipient: info.sender.to_string(),
+        amount: Some(ProtoCoin {
             denom: "unit".to_string(),
-            amount,
-        }],
+            amount: amount.to_string(),
+        }),
     };
 
     let res = Response::new()
@@ -226,25 +251,4 @@ pub fn execute_update_admin(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     crate::query::query(deps, env, msg)
-}
-
-impl From<Cw20ContractError> for ContractError {
-    fn from(err: Cw20ContractError) -> Self {
-        match err {
-            Cw20ContractError::Std(std_err) => ContractError::Std(std_err),
-            Cw20ContractError::Unauthorized {} => ContractError::Unauthorized {},
-            Cw20ContractError::CannotSetOwnAccount {} => ContractError::CannotSetOwnAccount {},
-            Cw20ContractError::Expired {} => ContractError::Expired {},
-            Cw20ContractError::NoAllowance {} => ContractError::NoAllowance {},
-            Cw20ContractError::CannotExceedCap {} => ContractError::CannotExceedCap {},
-            Cw20ContractError::LogoTooBig {} => ContractError::LogoTooBig {},
-            Cw20ContractError::InvalidXmlPreamble {} => ContractError::InvalidXmlPreamble {},
-            Cw20ContractError::InvalidPngHeader {} => ContractError::InvalidPngHeader {},
-            Cw20ContractError::DuplicateInitialBalanceAddresses {} => {
-                ContractError::DuplicateInitialBalanceAddresses {}
-            }
-            Cw20ContractError::InvalidExpiration {} => ContractError::Expired {},
-            _ => ContractError::Std(cosmwasm_std::StdError::generic_err("Unhandled cw20 error")),
-        }
-    }
 }
