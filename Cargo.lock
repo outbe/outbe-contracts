@@ -13,9 +13,67 @@ dependencies = [
 ]
 
 [[package]]
-name = "agent-registry"
+name = "agent-common"
 version = "0.1.0"
 dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "schemars",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "agent-cra"
+version = "0.1.0"
+dependencies = [
+ "agent-common",
+ "agent-nra",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-storage-plus",
+ "cw2",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "agent-iba"
+version = "0.1.0"
+dependencies = [
+ "agent-common",
+ "agent-nra",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-storage-plus",
+ "cw2",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "agent-nra"
+version = "0.1.0"
+dependencies = [
+ "agent-common",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-storage-plus",
+ "cw2",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "agent-rfa"
+version = "0.1.0"
+dependencies = [
+ "agent-common",
+ "agent-nra",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-multi-test",

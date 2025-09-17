@@ -54,3 +54,7 @@ token-allocator = { version = "*", path = "contracts/token-allocator", features 
 random-oracle = { version = "*", path = "contracts/random-oracle", features = [
     "library",
 ] }
+agent-nra = { version = "*", path = "contracts/agent-nra", features = [
+    "library",
+] }
+agent-common = { version = "*", path = "packages/agent-common" }
