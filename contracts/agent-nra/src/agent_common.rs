@@ -97,7 +97,7 @@ pub fn exec_hold_agent(
     address: String,
     registry_address: Addr,
 ) -> Result<Response, ContractError> {
-    ensure_active_nra_agent(deps.as_ref(), registry_address, info.sender)?;
+    check_active_nra_agent(deps.as_ref(), registry_address, info.sender)?;
 
     // Parse address string
     let agent_addr = deps.api.addr_validate(&address)?;
@@ -134,7 +134,7 @@ pub fn exec_ban_agent(
     address: String,
     registry_address: Addr,
 ) -> Result<Response, ContractError> {
-    ensure_active_nra_agent(deps.as_ref(), registry_address, info.sender)?;
+    check_active_nra_agent(deps.as_ref(), registry_address, info.sender)?;
     // Parse address string
     let agent_addr = deps.api.addr_validate(&address)?;
 
@@ -170,7 +170,7 @@ pub fn exec_activate_agent(
     address: String,
     registry_address: Addr,
 ) -> Result<Response, ContractError> {
-    ensure_active_nra_agent(deps.as_ref(), registry_address, info.sender)?;
+    check_active_nra_agent(deps.as_ref(), registry_address, info.sender)?;
 
     // Parse address string
     let agent_addr = deps.api.addr_validate(&address)?;
@@ -231,7 +231,7 @@ pub fn exec_resign_agent(
         .add_attribute("updated_at", agent.updated_at.to_string()))
 }
 
-pub fn ensure_active_nra_agent(
+pub fn check_active_nra_agent(
     deps: Deps,
     registry_address: Addr,
     sender: Addr,
