@@ -18,7 +18,10 @@ pub enum AgentExt {
         additional_wallets: Option<Vec<String>>,
     },
     Rfa {},
-    Iba {},
+    Iba {
+        preferred_nra: Option<Vec<Addr>>,
+        additional_wallets: Option<Vec<String>>,
+    },
 }
 
 #[cw_serde]
