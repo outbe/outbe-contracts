@@ -51,8 +51,8 @@ pub fn prepare_executions(
     )?;
 
     let total_gratis_limit = (total_emission_limit - TOTAL_FEES) * DECIMALS; // NB convert to units
-    let touch_limit = total_gratis_limit / Uint128::new(24);
-    let mut total_lysis_limit = total_gratis_limit * Uint128::new(23) / Uint128::new(24);
+    let touch_limit = total_gratis_limit * Uint128::new(4) / Uint128::new(100);
+    let mut total_lysis_limit = total_gratis_limit - touch_limit;
 
     let gold_price: price_oracle::types::PriceData = deps.querier.query_wasm_smart(
         &price_oracle_address,
