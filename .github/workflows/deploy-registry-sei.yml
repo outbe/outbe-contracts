@@ -2,12 +2,18 @@ name: Deploy Registry Outbe-Chain
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'devnet'
+        type: environment
+        options:
+          - devnet
+          - testnet
 
 env:
-  # Chain configuration
-  CHAIN_ID: outbe-devnet-1
   FEE_DENOM: unit
-  RPC: https://rpc.d.outbe.net
   BINARY: outbe-chaind
 
 jobs:
@@ -25,13 +31,31 @@ jobs:
           cache-on-failure: true
           cache-all-crates: true
 
-      - name: Configure wallet
+      - name: Setup Env (devnet)
+        if: ${{ inputs.environment == 'devnet' }}
         env:
-          WALLET_MNEMONIC_SEI_DEVNET: ${{ secrets.WALLET_MNEMONIC_SEI_DEVNET }}
+          WALLET_MNEMONIC: ${{ secrets.WALLET_MNEMONIC_SEI_DEVNET }}
+          CHAIN_ID: 'outbe-devnet-1'
+          RPC: 'https://rpc.d.outbe.net'
         run: |
-          echo $WALLET_MNEMONIC_SEI_DEVNET | $BINARY keys add ci --keyring-backend test --recover
+          echo $WALLET_MNEMONIC | $BINARY keys add ci --keyring-backend test --recover
           OWNER_ADDRESS=$($BINARY keys show ci --keyring-backend test --output json | jq -r '.address')
           echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
+          echo "CHAIN_ID=$CHAIN_ID" >> $GITHUB_ENV
+          echo "RPC=$RPC" >> $GITHUB_ENV
+
+      - name: Setup Env (testnet)
+        if: ${{ inputs.environment == 'testnet' }}
+        env:
+          WALLET_MNEMONIC: ${{ secrets.WALLET_MNEMONIC_PRIVATE_TESTNET }}
+          CHAIN_ID: 'outbe-testnet-1'
+          RPC: 'https://rpc.p.outbe.net'
+        run: |
+          echo $WALLET_MNEMONIC | $BINARY keys add ci --keyring-backend test --recover
+          OWNER_ADDRESS=$($BINARY keys show ci --keyring-backend test --output json | jq -r '.address')
+          echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
+          echo "CHAIN_ID=$CHAIN_ID" >> $GITHUB_ENV
+          echo "RPC=$RPC" >> $GITHUB_ENV
 
       - name: Make Optimized build
         run: |
