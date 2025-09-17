@@ -18,8 +18,8 @@ cw-storage-plus = { workspace = true }
 serde = { workspace = true }
 cw2 = { workspace = true }
 thiserror = { workspace = true }
-agent-nra = { workspace = true }
-agent-common = { workspace = true, default-features = false }
+agent-nra = { workspace = true, default-features = false }
+agent-common = { workspace = true }
 
 
 
