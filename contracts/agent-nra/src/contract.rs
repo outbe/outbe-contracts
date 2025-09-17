@@ -1,14 +1,12 @@
 use crate::agent_common::*;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
-use crate::state::{ APPLICATIONS, APPLICATION_VOTES, CONFIG};
-use crate::types::{
-    Application, ApplicationInput, ApplicationStatus, Config, ThresholdConfig, Vote,
-};
+use crate::state::{Config, ThresholdConfig, APPLICATIONS, APPLICATION_VOTES, CONFIG};
+use crate::types::{Application, ApplicationInput, ApplicationStatus, Vote};
+use agent_common::state::AGENTS;
 use agent_common::types::{AgentExt, AgentStatus, AgentType};
 use cosmwasm_std::{entry_point, Addr, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use agent_common::state::AGENTS;
 
 const CONTRACT_NAME: &str = "outbe.net:agent-nra";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -68,13 +66,14 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    let contract_address = env.contract.address.clone();
     match msg {
         // Application
         ExecuteMsg::CreateApplication { application } => {
-            execute_add_application(deps, env, info, application)
+            exec_add_application(deps, env, info, application)
         }
         ExecuteMsg::EditApplication { id, application } => {
-            execute_update_application(deps, env, info, id, application)
+            exec_update_application(deps, env, info, id, application)
         }
         ExecuteMsg::VoteApplication {
             id,
@@ -84,11 +83,19 @@ pub fn execute(
         ExecuteMsg::HoldApplication { id } => exec_hold_application(deps, env, info, id),
 
         // Agent
-        ExecuteMsg::SubmitAgent { id } => exec_submit_agent(deps, env, info, id),
+        ExecuteMsg::SubmitAgent { id } => {
+            exec_submit_agent(deps, env.clone(), info, id, contract_address)
+        }
         ExecuteMsg::EditAgent { agent } => exec_edit_agent(deps, env, info, agent),
-        ExecuteMsg::HoldAgent { address } => exec_hold_agent(deps, env, info, address),
-        ExecuteMsg::BanAgent { address } => exec_ban_agent(deps, env, info, address),
-        ExecuteMsg::ActivateAgent { address } => exec_activate_agent(deps, env, info, address),
+        ExecuteMsg::HoldAgent { address } => {
+            exec_hold_agent(deps, env, info, address, contract_address)
+        }
+        ExecuteMsg::BanAgent { address } => {
+            exec_ban_agent(deps, env, info, address, contract_address)
+        }
+        ExecuteMsg::ActivateAgent { address } => {
+            exec_activate_agent(deps, env, info, address, contract_address)
+        }
         ExecuteMsg::ResignAgent {} => exec_resign_agent(deps, env, info),
 
         // Bootstrap voters
@@ -99,7 +106,7 @@ pub fn execute(
     }
 }
 
-pub fn execute_add_application(
+pub fn exec_add_application(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
@@ -140,7 +147,7 @@ pub fn execute_add_application(
         .add_attribute("wallet", wallet.to_string()))
 }
 
-pub fn execute_update_application(
+pub fn exec_update_application(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,

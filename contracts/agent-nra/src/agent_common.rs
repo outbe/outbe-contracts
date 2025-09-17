@@ -1,20 +1,26 @@
-use crate::contract::ensure_active_nra_agent;
 use crate::error::ContractError;
-use crate::state::{APPLICATIONS};
-use crate::types::{ApplicationStatus};
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
+use crate::msg::{ApplicationResponse, NraAccessResponse};
+use crate::types::ApplicationStatus;
 use agent_common::state::AGENTS;
 use agent_common::types::{Agent, AgentInput, AgentStatus};
+use cosmwasm_std::{Addr, Deps, DepsMut, Env, MessageInfo, Response};
 
 pub fn exec_submit_agent(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
     id: String,
+    registry_address: Addr,
 ) -> Result<Response, ContractError> {
-    let existing_application = APPLICATIONS
-        .may_load(deps.storage, id.clone())?
+    let resp: ApplicationResponse = deps.querier.query_wasm_smart(
+        registry_address,
+        &crate::query::QueryMsg::GetApplicationById { id: id.clone() },
+    )?;
+
+    let existing_application = resp
+        .application
         .ok_or(ContractError::ApplicationNotFound {})?;
+
     // Check owner
     if info.sender != existing_application.wallet {
         return Err(ContractError::ApplicationOwnerError {});
@@ -89,8 +95,9 @@ pub fn exec_hold_agent(
     env: Env,
     info: MessageInfo,
     address: String,
+    registry_address: Addr,
 ) -> Result<Response, ContractError> {
-    ensure_active_nra_agent(&deps, &info.sender)?;
+    ensure_active_nra_agent(deps.as_ref(), registry_address, info.sender)?;
 
     // Parse address string
     let agent_addr = deps.api.addr_validate(&address)?;
@@ -125,8 +132,9 @@ pub fn exec_ban_agent(
     env: Env,
     info: MessageInfo,
     address: String,
+    registry_address: Addr,
 ) -> Result<Response, ContractError> {
-    ensure_active_nra_agent(&deps, &info.sender)?;
+    ensure_active_nra_agent(deps.as_ref(), registry_address, info.sender)?;
     // Parse address string
     let agent_addr = deps.api.addr_validate(&address)?;
 
@@ -160,8 +168,9 @@ pub fn exec_activate_agent(
     env: Env,
     info: MessageInfo,
     address: String,
+    registry_address: Addr,
 ) -> Result<Response, ContractError> {
-    ensure_active_nra_agent(&deps, &info.sender)?;
+    ensure_active_nra_agent(deps.as_ref(), registry_address, info.sender)?;
 
     // Parse address string
     let agent_addr = deps.api.addr_validate(&address)?;
@@ -220,4 +229,21 @@ pub fn exec_resign_agent(
         .add_attribute("old_status", format!("{:?}", old_status))
         .add_attribute("new_status", "Resigned")
         .add_attribute("updated_at", agent.updated_at.to_string()))
+}
+
+pub fn ensure_active_nra_agent(
+    deps: Deps,
+    registry_address: Addr,
+    sender: Addr,
+) -> Result<(), ContractError> {
+    let resp: NraAccessResponse = deps.querier.query_wasm_smart(
+        registry_address.clone(),
+        &crate::query::QueryMsg::EnsureActiveNra { address: sender },
+    )?;
+
+    if resp.allowed {
+        Ok(())
+    } else {
+        Err(ContractError::OnlyActiveNra {})
+    }
 }

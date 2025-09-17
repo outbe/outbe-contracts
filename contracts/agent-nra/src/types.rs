@@ -1,25 +1,6 @@
+use agent_common::types::{AgentExt, AgentType};
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Timestamp, Uint128};
-use agent_common::types::{AgentExt, AgentType};
-
-#[cw_serde]
-pub struct Config {
-    pub owner: Addr,
-    pub thresholds: ThresholdConfig,
-    pub paused: bool,
-    pub last_token_id: u32,
-    pub bootstrap_voters: Vec<Addr>,
-}
-
-#[cw_serde]
-pub struct ThresholdConfig {
-    pub nra: u8,
-    pub cra: u8,
-    pub rfa: u8,
-    pub iba: u8,
-    pub cca: u8,
-}
-
 #[cw_serde]
 pub struct Application {
     pub id: u32,
@@ -53,8 +34,6 @@ pub struct ApplicationInput {
     pub ext: Option<AgentExt>,
 }
 
-
-
 #[cw_serde]
 pub enum ApplicationStatus {
     InReview,
@@ -72,8 +51,3 @@ pub struct Vote {
     pub reason: Option<String>,
     pub at: Timestamp,
 }
-
-
-
-
-

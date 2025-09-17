@@ -1,6 +1,7 @@
-use crate::types::{Application, ApplicationInput, ThresholdConfig, Vote};
-use cosmwasm_schema::cw_serde;
+use crate::state::ThresholdConfig;
+use crate::types::{Application, ApplicationInput, Vote};
 use agent_common::types::AgentInput;
+use cosmwasm_schema::cw_serde;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -77,7 +78,6 @@ pub struct ApplicationResponse {
 pub struct ApplicationVotesResponse {
     pub votes: Vec<Vote>,
 }
-
 
 #[cw_serde]
 pub struct NraAccessResponse {

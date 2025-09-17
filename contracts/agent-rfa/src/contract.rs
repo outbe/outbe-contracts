@@ -1,10 +1,10 @@
-use crate::agent_common::*;
 use crate::msg::{ExecuteMsg, MigrateMsg};
+use agent_common::msg::InstantiateMsg;
+use agent_common::state::{Config, CONFIG};
+use agent_nra::agent_common::*;
 use agent_nra::error::ContractError;
 use cosmwasm_std::{entry_point, DepsMut, Env, MessageInfo, Response};
 use cw2::set_contract_version;
-use agent_common::msg::InstantiateMsg;
-use agent_common::state::{Config, CONFIG};
 
 const CONTRACT_NAME: &str = "outbe.net:agent-rfa";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -48,13 +48,23 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
+    let cfg = CONFIG.load(deps.storage)?;
+
     match msg {
         // Agent
-        ExecuteMsg::SubmitAgent { id } => exec_submit_agent(deps, env, info, id),
+        ExecuteMsg::SubmitAgent { id } => {
+            exec_submit_agent(deps, env, info, id, cfg.agent_registry)
+        }
         ExecuteMsg::EditAgent { agent } => exec_edit_agent(deps, env, info, agent),
-        ExecuteMsg::HoldAgent { address } => exec_hold_agent(deps, env, info, address),
-        ExecuteMsg::BanAgent { address } => exec_ban_agent(deps, env, info, address),
-        ExecuteMsg::ActivateAgent { address } => exec_activate_agent(deps, env, info, address),
+        ExecuteMsg::HoldAgent { address } => {
+            exec_hold_agent(deps, env, info, address, cfg.agent_registry)
+        }
+        ExecuteMsg::BanAgent { address } => {
+            exec_ban_agent(deps, env, info, address, cfg.agent_registry)
+        }
+        ExecuteMsg::ActivateAgent { address } => {
+            exec_activate_agent(deps, env, info, address, cfg.agent_registry)
+        }
         ExecuteMsg::ResignAgent {} => exec_resign_agent(deps, env, info),
     }
 }

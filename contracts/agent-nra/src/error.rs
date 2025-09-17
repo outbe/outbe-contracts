@@ -38,7 +38,7 @@ pub enum ContractError {
 
     #[error("already voted")]
     AlreadyVoted {},
-    
+
     #[error("Only preferred NRA can vote on this CRA application")]
     OnlyPreferredNra {},
 

@@ -1,9 +1,8 @@
-use cosmwasm_std::{Addr, Deps, Order, StdResult};
-use cw_storage_plus::Bound;
 use crate::msg::{AgentResponse, ListAllAgentsResponse};
 use crate::state::AGENTS;
 use crate::types::Agent;
-
+use cosmwasm_std::{Addr, Deps, Order, StdResult};
+use cw_storage_plus::Bound;
 
 pub const DEFAULT_LIMIT: u32 = 10;
 pub const MAX_LIMIT: u32 = 1000;

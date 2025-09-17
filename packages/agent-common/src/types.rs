@@ -58,6 +58,3 @@ pub struct AgentInput {
     pub avg_cu: Option<Uint128>,
     pub ext: AgentExt,
 }
-
-
-

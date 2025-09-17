@@ -1,12 +1,14 @@
 use crate::contract::{execute, instantiate};
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::query::query;
 use crate::state::CONFIG;
 use crate::types::ApplicationInput;
+use agent_common::state::AGENTS;
 use agent_common::types::{Agent, AgentExt, AgentInput, AgentStatus, AgentType};
 use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
 use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
-use agent_common::state::AGENTS;
+use cw_multi_test::{App, ContractWrapper, Executor};
 
 const CREATOR: &str = "owner";
 const USER1: &str = "user1";
@@ -277,60 +279,99 @@ fn test_hold_application() {
 }
 
 #[test]
-fn test_submit_agent() {
-    let mut deps = mock_dependencies();
-    let env = mock_env();
+fn test_submit_agent_flow() {
+    // Spin up a mock chain
+    let mut app = App::default();
+    let owner = app.api().addr_make("owner");
+    let user1 = app.api().addr_make("user1");
+    let user2 = app.api().addr_make("user2");
+    let user3 = app.api().addr_make("user3");
+    let user4 = app.api().addr_make("user4");
 
-    instantiate_contract(deps.as_mut()).unwrap();
+    // Upload our contract code
+    let code = ContractWrapper::new(execute, instantiate, query);
+    let code_id = app.store_code(Box::new(code));
 
-    // Step 1: Create application
-    let create_msg = ExecuteMsg::CreateApplication {
-        application: sample_application_input(),
+    // Instantiate NRA with bootstrap voters
+    let init_msg = InstantiateMsg {
+        bootstrap_voters: Some(vec![
+            user1.to_string(),
+            user2.to_string(),
+            user3.to_string(),
+            user4.to_string(),
+        ]),
+        thresholds: None,
+        paused: None,
     };
-    let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
-    let res = execute(deps.as_mut(), env.clone(), info_user1.clone(), create_msg).unwrap();
+    let nra_addr = app
+        .instantiate_contract(code_id, owner.clone(), &init_msg, &[], "agent-nra", None)
+        .unwrap();
 
-    // Get application ID from response
-    let app_id = res
-        .attributes
+    // 1) Create application from user1
+    let create_res = app
+        .execute_contract(
+            user1.clone(),
+            nra_addr.clone(),
+            &ExecuteMsg::CreateApplication {
+                application: sample_application_input(), // <-- твой helper
+            },
+            &[],
+        )
+        .unwrap();
+
+    // Extract application_id from events
+    let app_id = create_res
+        .events
         .iter()
-        .find(|attr| attr.key == "application_id")
-        .unwrap()
+        .flat_map(|e| e.attributes.iter())
+        .find(|a| a.key == "application_id")
+        .expect("application_id not found")
         .value
         .clone();
 
-    // Step 2: Vote to approve the application (need 3 votes for NRA threshold)
-    // First vote
-    let vote_msg = ExecuteMsg::VoteApplication {
-        id: app_id.clone(),
-        approve: true,
-        reason: Some("Good candidate".to_string()),
+    // 2) Vote 3 times to reach Approved status
+    for voter in [&user2, &user3, &user4] {
+        app.execute_contract(
+            voter.clone(),
+            nra_addr.clone(),
+            &ExecuteMsg::VoteApplication {
+                id: app_id.clone(),
+                approve: true,
+                reason: Some("good".to_string()),
+            },
+            &[],
+        )
+        .unwrap();
+    }
+
+    // 3) Submit agent
+    let submit_res = app
+        .execute_contract(
+            user1.clone(),
+            nra_addr.clone(),
+            &ExecuteMsg::SubmitAgent { id: app_id.clone() },
+            &[],
+        )
+        .unwrap();
+
+    // Verify response attributes (from events)
+    let attrs: Vec<_> = submit_res
+        .events
+        .iter()
+        .flat_map(|e| &e.attributes)
+        .collect();
+    let get = |k: &str| {
+        attrs
+            .iter()
+            .find(|a| a.key == k)
+            .unwrap_or_else(|| panic!("missing attribute '{k}'"))
+            .value
+            .clone()
     };
-    let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
-    execute(deps.as_mut(), env.clone(), info_user2, vote_msg.clone()).unwrap();
-
-    // Second vote
-    let info_user3 = message_info(&Addr::unchecked(USER3), &[]);
-    execute(deps.as_mut(), env.clone(), info_user3, vote_msg.clone()).unwrap();
-
-    // Third vote (reaches threshold)
-    let info_user4 = message_info(&Addr::unchecked(USER4), &[]);
-    execute(deps.as_mut(), env.clone(), info_user4, vote_msg).unwrap();
-
-    // Step 3: Submit agent (now application should be approved)
-    let submit_msg = ExecuteMsg::SubmitAgent { id: app_id.clone() };
-
-    let res = execute(deps.as_mut(), env, info_user1, submit_msg).unwrap();
-
-    // Verify response attributes
-    assert_eq!(res.attributes[0].key, "action");
-    assert_eq!(res.attributes[0].value, "agent::submit");
-    assert_eq!(res.attributes[1].key, "application_id");
-    assert_eq!(res.attributes[1].value, app_id);
-    assert_eq!(res.attributes[2].key, "wallet");
-    assert_eq!(res.attributes[2].value, USER1);
+    assert_eq!(get("action"), "agent::submit");
+    assert_eq!(get("application_id"), app_id);
+    assert_eq!(get("wallet"), user1.to_string());
 }
-
 #[test]
 fn test_edit_agent() {
     let mut deps = mock_dependencies();

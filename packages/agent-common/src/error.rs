@@ -5,13 +5,8 @@ use thiserror::Error;
 pub enum ContractError {
     #[error(transparent)]
     Std(#[from] StdError),
-
-    #[error("unauthorized")]
-    Unauthorized,
     #[error("Agent not found")]
     AgentNotFound {},
     #[error("Invalid agent status for this operation")]
     InvalidAgentStatus {},
-
-
 }
