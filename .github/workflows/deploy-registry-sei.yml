@@ -6,15 +6,13 @@ on:
       environment:
         description: 'Environment to deploy to'
         required: true
-        default: 'devnet'
         type: environment
-        options:
-          - devnet
-          - testnet
 
 env:
   FEE_DENOM: unit
   BINARY: outbe-chaind
+  RPC: ${{ vars.RPC }}
+  CHAIN_ID: ${{ vars.CHAIN_ID }}
 
 jobs:
   deploy:
@@ -31,31 +29,13 @@ jobs:
           cache-on-failure: true
           cache-all-crates: true
 
-      - name: Setup Env (devnet)
-        if: ${{ inputs.environment == 'devnet' }}
+      - name: Configure wallet
         env:
-          WALLET_MNEMONIC: ${{ secrets.WALLET_MNEMONIC_SEI_DEVNET }}
-          CHAIN_ID: 'outbe-devnet-1'
-          RPC: 'https://rpc.d.outbe.net'
+          WALLET_MNEMONIC: ${{ secrets.WALLET_MNEMONIC }}
         run: |
           echo $WALLET_MNEMONIC | $BINARY keys add ci --keyring-backend test --recover
           OWNER_ADDRESS=$($BINARY keys show ci --keyring-backend test --output json | jq -r '.address')
           echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
-          echo "CHAIN_ID=$CHAIN_ID" >> $GITHUB_ENV
-          echo "RPC=$RPC" >> $GITHUB_ENV
-
-      - name: Setup Env (testnet)
-        if: ${{ inputs.environment == 'testnet' }}
-        env:
-          WALLET_MNEMONIC: ${{ secrets.WALLET_MNEMONIC_PRIVATE_TESTNET }}
-          CHAIN_ID: 'outbe-testnet-1'
-          RPC: 'https://rpc.p.outbe.net'
-        run: |
-          echo $WALLET_MNEMONIC | $BINARY keys add ci --keyring-backend test --recover
-          OWNER_ADDRESS=$($BINARY keys show ci --keyring-backend test --output json | jq -r '.address')
-          echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
-          echo "CHAIN_ID=$CHAIN_ID" >> $GITHUB_ENV
-          echo "RPC=$RPC" >> $GITHUB_ENV
 
       - name: Make Optimized build
         run: |
