@@ -1,7 +1,7 @@
+use crate::agent_common::*;
 use crate::msg::{ExecuteMsg, MigrateMsg};
 use agent_common::msg::InstantiateMsg;
 use agent_common::state::{Config, CONFIG};
-use agent_nra::agent_common::*;
 use agent_nra::error::ContractError;
 use cosmwasm_std::{entry_point, DepsMut, Env, MessageInfo, Response};
 use cw2::set_contract_version;

@@ -1,3 +1,7 @@
+use crate::agent_common::{
+    exec_activate_agent, exec_ban_agent, exec_edit_agent, exec_hold_agent, exec_resign_agent,
+    exec_submit_agent,
+};
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::{Config, ThresholdConfig, APPLICATIONS, APPLICATION_VOTES, CONFIG};
@@ -6,7 +10,6 @@ use agent_common::state::AGENTS;
 use agent_common::types::{AgentExt, AgentStatus, AgentType};
 use cosmwasm_std::{entry_point, Addr, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use crate::agent_common::{exec_activate_agent, exec_ban_agent, exec_edit_agent, exec_hold_agent, exec_resign_agent, exec_submit_agent};
 
 const CONTRACT_NAME: &str = "outbe.net:agent-nra";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
