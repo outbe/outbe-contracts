@@ -12,7 +12,6 @@ on:
         required: true
         default: true
         type: boolean
-
       deploy_type:
         type: choice
         description: Deploy type
@@ -21,7 +20,6 @@ on:
         options:
           - all
           - selected
-
       selected_contracts:
         type: string
         description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_registry metadosis token_miner"
@@ -31,8 +29,8 @@ on:
 env:
   FEE_DENOM: unit
   BINARY: outbe-chaind
-
-  CONTRACT_REGISTRY_CONTRACT_ADDRESS: "outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9"
+  CONTRACT_REGISTRY_DEVNET: "outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9"
+  CONTRACT_REGISTRY_PRIVNET: "outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9"
   FAUCET_ADDRESS: "outbe13a6zjh96w9z9y2defkktdc6vn4r5h3s7xk6jkv"
 
 jobs:
@@ -65,6 +63,14 @@ jobs:
         run: |
           optimize.sh .
 
+      - name: Configure Contract Registry (Devnet)
+        if: ${{ github.event.inputs.environment == 'devnet' }}
+        run: |
+          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_DEVNET" >> $GITHUB_ENV
+      - name: Configure Contract Registry (Privnet)
+        if: ${{ github.event.inputs.environment == 'privnet' }}
+        run: |
+          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_PRIVNET" >> $GITHUB_ENV
       - name: Query and Export Contract Addresses
         if: ${{ inputs.deploy_type == 'selected' }}
         run: |
