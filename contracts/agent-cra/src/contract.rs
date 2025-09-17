@@ -55,7 +55,7 @@ pub fn execute(
         ExecuteMsg::SubmitAgent { id } => {
             exec_submit_agent(deps, env, info, id, cfg.agent_registry)
         }
-        ExecuteMsg::EditAgent { agent } => exec_edit_agent(deps, env, info, agent),
+        ExecuteMsg::EditAgent { agent } => exec_edit_agent(deps, env, info, *agent),
         ExecuteMsg::HoldAgent { address } => {
             exec_hold_agent(deps, env, info, address, cfg.agent_registry)
         }

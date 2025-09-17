@@ -11,7 +11,7 @@ pub enum ExecuteMsg {
     // Agent
     SubmitAgent { id: String },
 
-    EditAgent { agent: AgentInput },
+    EditAgent { agent: Box<AgentInput> },
 
     HoldAgent { address: String },
     BanAgent { address: String },
