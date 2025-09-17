@@ -22,7 +22,7 @@ on:
           - selected
       selected_contracts:
         type: string
-        description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_registry metadosis token_miner"
+        description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_nra agent_cra agent_rfa agent_iba agent_registry metadosis token_miner"
         required: false
         default: ""
 
@@ -196,6 +196,38 @@ jobs:
           INIT_PAYLOAD=$(jq -n --from-file ./contracts/nod/fixtures/init.json)
           NOD_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Nod" $NOD_CODE_ID "$INIT_PAYLOAD")
           echo "NOD_CONTRACT_ADDRESS=$NOD_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Agent NRA
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_nra') }}
+        run: |
+          AGENT_NRA_CODE_ID=$(./scripts/store_code.sh artifacts/agent_nra.wasm)
+          INIT_PAYLOAD=$(jq -n --from-file ./contracts/agent-nra/fixtures/init.json)
+          AGENT_NRA_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent NRA" $AGENT_NRA_CODE_ID "$INIT_PAYLOAD")
+          echo "AGENT_NRA_CONTRACT_ADDRESS=$AGENT_NRA_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Agent CRA
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_cra') }}
+        run: |
+          AGENT_CRA_CODE_ID=$(./scripts/store_code.sh artifacts/agent_cra.wasm)
+          INIT_PAYLOAD=$(jq -n --arg application_registry_addr $AGENT_NRA_CONTRACT_ADDRESS --from-file ./contracts/agent-cra/fixtures/init.json)
+          AGENT_CRA_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent CRA" $AGENT_CRA_CODE_ID "$INIT_PAYLOAD")
+          echo "AGENT_CRA_CONTRACT_ADDRESS=$AGENT_CRA_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Agent RFA
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_rfa') }}
+        run: |
+          AGENT_RFA_CODE_ID=$(./scripts/store_code.sh artifacts/agent_rfa.wasm)
+          INIT_PAYLOAD=$(jq -n --arg application_registry_addr $AGENT_NRA_CONTRACT_ADDRESS --from-file ./contracts/agent-rfa/fixtures/init.json)
+          AGENT_RFA_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent RFA" $AGENT_RFA_CODE_ID "$INIT_PAYLOAD")
+          echo "AGENT_RFA_CONTRACT_ADDRESS=$AGENT_RFA_CONTRACT_ADDRESS" >> $GITHUB_ENV
+
+      - name: Deploy Agent IBA
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_iba') }}
+        run: |
+          AGENT_IBA_CODE_ID=$(./scripts/store_code.sh artifacts/agent_iba.wasm)
+          INIT_PAYLOAD=$(jq -n --arg application_registry_addr $AGENT_NRA_CONTRACT_ADDRESS --from-file ./contracts/agent-iba/fixtures/init.json)
+          AGENT_IBA_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Agent IBA" $AGENT_IBA_CODE_ID "$INIT_PAYLOAD")
+          echo "AGENT_IBA_CONTRACT_ADDRESS=$AGENT_IBA_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
       - name: Deploy Agent Registry
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_registry') }}
