@@ -3,10 +3,10 @@ use agent_common::msg::InstantiateMsg;
 use agent_common::state::{Config, CONFIG};
 use agent_nra::agent_common::*;
 use agent_nra::error::ContractError;
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
-use cw2::set_contract_version;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
+use cw2::set_contract_version;
 
 const CONTRACT_NAME: &str = "outbe.net:agent-rfa";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
