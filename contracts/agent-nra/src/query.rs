@@ -8,9 +8,9 @@ use agent_common::query::{query_agent_by_address, query_all_agents};
 use agent_common::state::AGENTS;
 use agent_common::types::AgentStatus;
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, Order, StdResult};
 
 use cw_storage_plus::Bound;
 
