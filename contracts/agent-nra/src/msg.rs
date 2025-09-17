@@ -1,6 +1,5 @@
 use crate::state::ThresholdConfig;
 use crate::types::{Application, ApplicationInput, Vote};
-use agent_common::types::AgentInput;
 use cosmwasm_schema::cw_serde;
 
 #[cw_serde]

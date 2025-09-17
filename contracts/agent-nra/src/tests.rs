@@ -1,6 +1,6 @@
 use crate::contract::{execute, instantiate};
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::msg::{ApplicationMsg, ExecuteMsg, InstantiateMsg};
 use crate::query::query;
 use crate::state::CONFIG;
 use crate::types::ApplicationInput;
@@ -105,9 +105,9 @@ fn test_create_application_success() {
     instantiate_contract(deps.as_mut()).unwrap();
 
     // Create application
-    let msg = ExecuteMsg::CreateApplication {
+    let msg = ExecuteMsg::Application(ApplicationMsg::CreateApplication {
         application: sample_application_input(),
-    };
+    });
 
     let info = message_info(&Addr::unchecked(USER1), &[]);
     let res = execute(deps.as_mut(), env, info, msg).unwrap();
@@ -125,9 +125,9 @@ fn test_edit_application_success() {
     instantiate_contract(deps.as_mut()).unwrap();
 
     // Create application
-    let create_msg = ExecuteMsg::CreateApplication {
+    let create_msg = ExecuteMsg::Application(ApplicationMsg::CreateApplication {
         application: sample_application_input(),
-    };
+    });
     let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
     execute(deps.as_mut(), env.clone(), info_user1.clone(), create_msg).unwrap();
 
@@ -135,10 +135,10 @@ fn test_edit_application_success() {
     let mut updated_app = sample_application_input();
     updated_app.name = "Updated NRA Name".to_string();
 
-    let edit_msg = ExecuteMsg::EditApplication {
+    let edit_msg = ExecuteMsg::Application(ApplicationMsg::EditApplication {
         id: "1".to_string(),
         application: updated_app,
-    };
+    });
 
     let res = execute(deps.as_mut(), env, info_user1, edit_msg).unwrap();
     assert_eq!(res.attributes[0].key, "action");
@@ -153,17 +153,17 @@ fn test_edit_application_unauthorized() {
     instantiate_contract(deps.as_mut()).unwrap();
 
     // Create application as USER1
-    let create_msg = ExecuteMsg::CreateApplication {
+    let create_msg = ExecuteMsg::Application(ApplicationMsg::CreateApplication {
         application: sample_application_input(),
-    };
+    });
     let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
     execute(deps.as_mut(), env.clone(), info_user1, create_msg).unwrap();
 
     // Try to edit application as USER2 (unauthorized)
-    let edit_msg = ExecuteMsg::EditApplication {
+    let edit_msg = ExecuteMsg::Application(ApplicationMsg::EditApplication {
         id: "1".to_string(),
         application: sample_application_input(),
-    };
+    });
     let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
     let res = execute(deps.as_mut(), env, info_user2, edit_msg);
     assert!(res.is_err());
@@ -176,20 +176,20 @@ fn test_vote_application_approve() {
 
     instantiate_contract(deps.as_mut()).unwrap();
 
-    let create_msg = ExecuteMsg::CreateApplication {
+    let create_msg = ExecuteMsg::Application(ApplicationMsg::CreateApplication {
         application: sample_application_input(),
-    };
+    });
     let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
     execute(deps.as_mut(), env.clone(), info_user1, create_msg).unwrap();
 
     let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
 
     // Vote on application
-    let vote_msg = ExecuteMsg::VoteApplication {
+    let vote_msg = ExecuteMsg::Application(ApplicationMsg::VoteApplication {
         id: "1".to_string(),
         approve: true,
         reason: Some("Good application".to_string()),
-    };
+    });
 
     let res = execute(deps.as_mut(), env, info_user2, vote_msg).unwrap();
     assert_eq!(res.attributes[0].key, "action");
@@ -203,9 +203,9 @@ fn test_vote_application_reject() {
 
     instantiate_contract(deps.as_mut()).unwrap();
 
-    let create_msg = ExecuteMsg::CreateApplication {
+    let create_msg = ExecuteMsg::Application(ApplicationMsg::CreateApplication {
         application: sample_application_input(),
-    };
+    });
     let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
     execute(deps.as_mut(), env.clone(), info_user1, create_msg).unwrap();
 
@@ -213,11 +213,11 @@ fn test_vote_application_reject() {
     let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
 
     // Vote reject
-    let vote_msg = ExecuteMsg::VoteApplication {
+    let vote_msg = ExecuteMsg::Application(ApplicationMsg::VoteApplication {
         id: "1".to_string(),
         approve: false,
         reason: Some("Insufficient documentation".to_string()),
-    };
+    });
 
     let res = execute(deps.as_mut(), env, info_user2, vote_msg).unwrap();
     assert_eq!(res.attributes[0].key, "action");
@@ -231,18 +231,18 @@ fn test_vote_application_non_exist() {
 
     instantiate_contract(deps.as_mut()).unwrap();
 
-    let create_msg = ExecuteMsg::CreateApplication {
+    let create_msg = ExecuteMsg::Application(ApplicationMsg::CreateApplication {
         application: sample_application_input(),
-    };
+    });
     let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
     execute(deps.as_mut(), env.clone(), info_user1.clone(), create_msg).unwrap();
 
     // Vote on nonexistent application
-    let vote_msg = ExecuteMsg::VoteApplication {
+    let vote_msg = ExecuteMsg::Application(ApplicationMsg::VoteApplication {
         id: "999".to_string(),
         approve: true,
         reason: None,
-    };
+    });
 
     let res = execute(deps.as_mut(), env, info_user1, vote_msg);
 
@@ -260,18 +260,18 @@ fn test_hold_application() {
 
     instantiate_contract(deps.as_mut()).unwrap();
 
-    let create_msg = ExecuteMsg::CreateApplication {
+    let create_msg = ExecuteMsg::Application(ApplicationMsg::CreateApplication {
         application: sample_application_input(),
-    };
+    });
     let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
     execute(deps.as_mut(), env.clone(), info_user1, create_msg).unwrap();
 
     let info_user2 = message_info(&Addr::unchecked(USER2), &[]);
 
     // Hold application
-    let hold_msg = ExecuteMsg::HoldApplication {
+    let hold_msg = ExecuteMsg::Application(ApplicationMsg::HoldApplication {
         id: "1".to_string(),
-    };
+    });
 
     let res = execute(deps.as_mut(), env, info_user2, hold_msg).unwrap();
     assert_eq!(res.attributes[0].key, "action");
@@ -312,9 +312,9 @@ fn test_submit_agent_flow() {
         .execute_contract(
             user1.clone(),
             nra_addr.clone(),
-            &ExecuteMsg::CreateApplication {
+            &ExecuteMsg::Application(ApplicationMsg::CreateApplication {
                 application: sample_application_input(), // <-- твой helper
-            },
+            }),
             &[],
         )
         .unwrap();
@@ -334,11 +334,11 @@ fn test_submit_agent_flow() {
         app.execute_contract(
             voter.clone(),
             nra_addr.clone(),
-            &ExecuteMsg::VoteApplication {
+            &ExecuteMsg::Application(ApplicationMsg::VoteApplication {
                 id: app_id.clone(),
                 approve: true,
                 reason: Some("good".to_string()),
-            },
+            }),
             &[],
         )
         .unwrap();
@@ -349,7 +349,7 @@ fn test_submit_agent_flow() {
         .execute_contract(
             user1.clone(),
             nra_addr.clone(),
-            &ExecuteMsg::SubmitAgent { id: app_id.clone() },
+            &ExecuteMsg::Agent(agent_common::msg::ExecuteMsg::SubmitAgent { id: app_id.clone() }),
             &[],
         )
         .unwrap();
@@ -383,9 +383,9 @@ fn test_edit_agent() {
     create_mock_agent(deps.as_mut(), &env, USER1);
 
     // Edit agent
-    let edit_msg = ExecuteMsg::EditAgent {
-        agent: sample_agent_input(),
-    };
+    let edit_msg = ExecuteMsg::Agent(agent_common::msg::ExecuteMsg::EditAgent {
+        agent: Box::new(sample_agent_input()),
+    });
     let info_user1 = message_info(&Addr::unchecked(USER1), &[]);
 
     let res = execute(deps.as_mut(), env, info_user1, edit_msg).unwrap();
@@ -409,9 +409,9 @@ fn test_unauthorized_vote() {
 
     // Test: Unauthorized user tries to vote on application
     // First create an application
-    let create_msg = ExecuteMsg::CreateApplication {
+    let create_msg = ExecuteMsg::Application(ApplicationMsg::CreateApplication {
         application: sample_application_input(),
-    };
+    });
     let res = execute(
         deps.as_mut(),
         env.clone(),
@@ -430,11 +430,11 @@ fn test_unauthorized_vote() {
         .clone();
 
     // Try to vote with unauthorized user
-    let vote_msg = ExecuteMsg::VoteApplication {
+    let vote_msg = ExecuteMsg::Application(ApplicationMsg::VoteApplication {
         id: app_id,
         approve: true,
         reason: Some("Unauthorized vote".to_string()),
-    };
+    });
     let res = execute(deps.as_mut(), env, unauthorized_info, vote_msg);
 
     assert!(res.is_err());
@@ -467,7 +467,7 @@ fn test_preferred_nra_restrict() {
         deps.as_mut(),
         env.clone(),
         message_info(&Addr::unchecked(USER1), &[]),
-        ExecuteMsg::CreateApplication { application: app },
+        ExecuteMsg::Application(ApplicationMsg::CreateApplication { application: app }),
     )
     .unwrap();
 
@@ -482,11 +482,11 @@ fn test_preferred_nra_restrict() {
         deps.as_mut(),
         env.clone(),
         message_info(&Addr::unchecked(USER3), &[]),
-        ExecuteMsg::VoteApplication {
+        ExecuteMsg::Application(ApplicationMsg::VoteApplication {
             id: app_id.clone(),
             approve: true,
             reason: None,
-        },
+        }),
     );
 
     println!("{:?}", res);
@@ -500,11 +500,11 @@ fn test_preferred_nra_restrict() {
         deps.as_mut(),
         env,
         message_info(&Addr::unchecked(USER2), &[]),
-        ExecuteMsg::VoteApplication {
+        ExecuteMsg::Application(ApplicationMsg::VoteApplication {
             id: app_id,
             approve: true,
             reason: Some("ok".into()),
-        },
+        }),
     )
     .unwrap();
 
