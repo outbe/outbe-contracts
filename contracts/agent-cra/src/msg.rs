@@ -6,16 +6,4 @@ pub enum MigrateMsg {
     Migrate {},
 }
 
-#[cw_serde]
-pub enum ExecuteMsg {
-    // Agent
-    SubmitAgent { id: String },
-
-    EditAgent { agent: Box<AgentInput> },
-
-    HoldAgent { address: String },
-    BanAgent { address: String },
-    ActivateAgent { address: String },
-
-    ResignAgent {},
-}
+pub type ExecuteMsg = agent_common::msg::ExecuteMsg;

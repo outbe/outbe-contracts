@@ -16,8 +16,7 @@ pub enum MigrateMsg {
 }
 
 #[cw_serde]
-pub enum ExecuteMsg {
-    // Application
+pub enum ApplicationMsg {
     CreateApplication {
         application: ApplicationInput,
     },
@@ -33,28 +32,6 @@ pub enum ExecuteMsg {
     HoldApplication {
         id: String,
     },
-
-    // Agent
-    SubmitAgent {
-        id: String,
-    },
-
-    EditAgent {
-        agent: AgentInput,
-    },
-
-    HoldAgent {
-        address: String,
-    },
-    BanAgent {
-        address: String,
-    },
-    ActivateAgent {
-        address: String,
-    },
-
-    ResignAgent {},
-
     // BootstrapVote
     AddBootstrapVoter {
         address: String,
@@ -62,6 +39,14 @@ pub enum ExecuteMsg {
     RemoveBootstrapVoter {
         address: String,
     },
+}
+
+pub type AgentMsg = agent_common::msg::ExecuteMsg;
+
+#[cw_serde]
+pub enum ExecuteMsg {
+    Agent(AgentMsg),
+    Application(ApplicationMsg),
 }
 
 #[cw_serde]

@@ -1,6 +1,6 @@
 use crate::agent_common::*;
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
+use crate::msg::{AgentMsg, ApplicationMsg, ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::{Config, ThresholdConfig, APPLICATIONS, APPLICATION_VOTES, CONFIG};
 use crate::types::{Application, ApplicationInput, ApplicationStatus, Vote};
 use agent_common::state::AGENTS;
@@ -67,43 +67,42 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    let contract_address = env.contract.address.clone();
+    let registry = env.contract.address.clone();
     match msg {
-        // Application
-        ExecuteMsg::CreateApplication { application } => {
-            exec_add_application(deps, env, info, application)
-        }
-        ExecuteMsg::EditApplication { id, application } => {
-            exec_update_application(deps, env, info, id, application)
-        }
-        ExecuteMsg::VoteApplication {
-            id,
-            approve,
-            reason,
-        } => exec_vote_application(deps, env, info, id, approve, reason),
-        ExecuteMsg::HoldApplication { id } => exec_hold_application(deps, env, info, id),
+        ExecuteMsg::Application(app_msg) => match app_msg {
+            ApplicationMsg::CreateApplication { application } => {
+                exec_add_application(deps, env, info, application)
+            }
+            ApplicationMsg::EditApplication { id, application } => {
+                exec_update_application(deps, env, info, id, application)
+            }
+            ApplicationMsg::VoteApplication {
+                id,
+                approve,
+                reason,
+            } => exec_vote_application(deps, env, info, id, approve, reason),
+            ApplicationMsg::HoldApplication { id } => exec_hold_application(deps, env, info, id),
 
-        // Agent
-        ExecuteMsg::SubmitAgent { id } => {
-            exec_submit_agent(deps, env.clone(), info, id, contract_address)
-        }
-        ExecuteMsg::EditAgent { agent } => exec_edit_agent(deps, env, info, agent),
-        ExecuteMsg::HoldAgent { address } => {
-            exec_hold_agent(deps, env, info, address, contract_address)
-        }
-        ExecuteMsg::BanAgent { address } => {
-            exec_ban_agent(deps, env, info, address, contract_address)
-        }
-        ExecuteMsg::ActivateAgent { address } => {
-            exec_activate_agent(deps, env, info, address, contract_address)
-        }
-        ExecuteMsg::ResignAgent {} => exec_resign_agent(deps, env, info),
+            ApplicationMsg::AddBootstrapVoter { address } => {
+                exec_add_bootstrap_voter(deps, info, address)
+            }
+            ApplicationMsg::RemoveBootstrapVoter { address } => {
+                exec_remove_bootstrap_voter(deps, info, address)
+            }
+        },
 
-        // Bootstrap voters
-        ExecuteMsg::AddBootstrapVoter { address } => exec_add_bootstrap_voter(deps, info, address),
-        ExecuteMsg::RemoveBootstrapVoter { address } => {
-            exec_remove_bootstrap_voter(deps, info, address)
-        }
+        ExecuteMsg::Agent(agent_msg) => match agent_msg {
+            AgentMsg::SubmitAgent { id } => {
+                exec_submit_agent(deps, env.clone(), info, id, registry)
+            }
+            AgentMsg::EditAgent { agent } => exec_edit_agent(deps, env, info, *agent),
+            AgentMsg::HoldAgent { address } => exec_hold_agent(deps, env, info, address, registry),
+            AgentMsg::BanAgent { address } => exec_ban_agent(deps, env, info, address, registry),
+            AgentMsg::ActivateAgent { address } => {
+                exec_activate_agent(deps, env, info, address, registry)
+            }
+            AgentMsg::ResignAgent {} => exec_resign_agent(deps, env, info),
+        },
     }
 }
 
