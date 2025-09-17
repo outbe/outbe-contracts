@@ -3,12 +3,15 @@ name: Deploy Outbe-Chain
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: environment
       is_latest:
         description: "Mark as 'latest'"
         required: true
         default: true
         type: boolean
-
       deploy_type:
         type: choice
         description: Deploy type
@@ -17,7 +20,6 @@ on:
         options:
           - all
           - selected
-
       selected_contracts:
         type: string
         description: "Select: wusdc gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_registry metadosis token_miner"
@@ -25,22 +27,22 @@ on:
         default: ""
 
 env:
-  # Chain configuration
-  CHAIN_ID: outbe-devnet-1
   FEE_DENOM: unit
-  RPC: https://rpc.d.outbe.net
   BINARY: outbe-chaind
-
-  CONTRACT_REGISTRY_CONTRACT_ADDRESS: "outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9"
+  CONTRACT_REGISTRY_DEVNET: "outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9"
+  CONTRACT_REGISTRY_PRIVNET: "outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9"
   FAUCET_ADDRESS: "outbe13a6zjh96w9z9y2defkktdc6vn4r5h3s7xk6jkv"
 
 jobs:
   deploy:
     name: Optimize & Deploy
     runs-on: ubuntu-latest
-
     container:
       image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      RPC: ${{ vars.RPC }}
+      CHAIN_ID: ${{ vars.CHAIN_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,9 +53,9 @@ jobs:
 
       - name: Configure wallet
         env:
-          WALLET_MNEMONIC_SEI_DEVNET: ${{ secrets.WALLET_MNEMONIC_SEI_DEVNET }}
+          WALLET_MNEMONIC: ${{ secrets.WALLET_MNEMONIC }}
         run: |
-          echo $WALLET_MNEMONIC_SEI_DEVNET | $BINARY keys add ci --keyring-backend test --recover
+          echo $WALLET_MNEMONIC | $BINARY keys add ci --keyring-backend test --recover
           OWNER_ADDRESS=$($BINARY keys show ci --keyring-backend test --output json | jq -r '.address')
           echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
 
@@ -61,6 +63,14 @@ jobs:
         run: |
           optimize.sh .
 
+      - name: Configure Contract Registry (Devnet)
+        if: ${{ github.event.inputs.environment == 'devnet' }}
+        run: |
+          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_DEVNET" >> $GITHUB_ENV
+      - name: Configure Contract Registry (Privnet)
+        if: ${{ github.event.inputs.environment == 'privnet' }}
+        run: |
+          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_PRIVNET" >> $GITHUB_ENV
       - name: Query and Export Contract Addresses
         if: ${{ inputs.deploy_type == 'selected' }}
         run: |
