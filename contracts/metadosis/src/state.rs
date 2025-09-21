@@ -69,7 +69,7 @@ pub struct TouchInfo {
     pub total_gratis_limit: Uint128,
     /// Total fees to be paid for validators (currently 0)
     pub total_fees: Uint128,
-    /// Touch limit = `(total_emission_limit - total_fees) / 24`
+    /// Touch limit = 4 % of `total_emission_limit - total_fees`
     pub touch_limit: Uint128,
     /// Gold ignot price in native coins
     pub gold_ignot_price: Decimal,
