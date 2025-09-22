@@ -13,7 +13,7 @@ install: ## Installs git commit hooks
 
 .PHONY: udeps
 udeps: ## Updates dependencies for the wasm target
-	cargo +nightly udeps --target wasm32-unknown-unknown
+	cargo udeps --target wasm32-unknown-unknown
 
 ## Code Quality
 .PHONY: clippy
