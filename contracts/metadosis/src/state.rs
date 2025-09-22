@@ -34,12 +34,8 @@ pub const WINNERS: Map<String, ()> = Map::new("tribute_winners");
 
 #[cw_serde]
 pub enum MetadosisInfo {
-    Lysis {
-        lysis_info: LysisInfo,
-    },
-    Touch {
-        touch_info: TouchInfo,
-    },
+    Lysis { lysis_info: LysisInfo },
+    Touch { touch_info: TouchInfo },
 }
 
 #[cw_serde]
