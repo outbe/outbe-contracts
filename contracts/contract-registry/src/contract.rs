@@ -4,7 +4,7 @@ use crate::state::{DeploymentInfoState, DEPLOYMENTS, LATEST_DEPLOYMENT};
 use crate::types::Deployment;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
 use cw2::set_contract_version;
 
 const CONTRACT_NAME: &str = "outbe.net:contract-registry";
@@ -54,15 +54,27 @@ fn execute_publish_deployment(
         deps.storage,
         &commit,
         &DeploymentInfoState {
-            commit_id: deployment.commit_id,
-            contracts: deployment.contracts,
+            commit_id: deployment.commit_id.clone(),
+            contracts: deployment.contracts.clone(),
         },
     )?;
     if deployment.is_latest {
         LATEST_DEPLOYMENT.save(deps.storage, &commit)?;
     }
 
-    Ok(Response::new())
+    Ok(Response::new()
+        .add_attribute("action", "contract-registry::deployment")
+        .add_event(
+            Event::new("contract-registry::deployment")
+                .add_attribute("commit_id", deployment.commit_id)
+                .add_attribute("is_latest", deployment.is_latest.to_string())
+                .add_attributes(
+                    deployment
+                        .contracts
+                        .into_iter()
+                        .map(|c| (c.name, c.address.to_string())),
+                ),
+        ))
 }
 
 #[cfg(test)]
