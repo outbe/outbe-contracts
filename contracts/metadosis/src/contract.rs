@@ -190,20 +190,14 @@ fn execute_run(
 
     let mut clean_tributes = false;
     let result: Result<Response, ContractError> = match info {
-        MetadosisInfo::LysisAndTouch {
-            lysis_info,
-            touch_info,
-        } => {
-            match run_today.number_of_runs {
-                1..=23 => do_execute_lysis(deps, execution_date, lysis_info, run_today),
-                24 => {
-                    // execute touch
-                    clean_tributes = true;
-                    do_execute_touch(deps, execution_date, touch_info, run_today)
-                }
-                _ => return Err(ContractError::BadRunConfiguration {}),
+        MetadosisInfo::Lysis { lysis_info } => match run_today.number_of_runs {
+            1..23 => do_execute_lysis(deps, execution_date, lysis_info, run_today),
+            23 => {
+                clean_tributes = true;
+                do_execute_lysis(deps, execution_date, lysis_info, run_today)
             }
-        }
+            _ => return Err(ContractError::BadRunConfiguration {}),
+        },
         MetadosisInfo::Touch { touch_info } => {
             if run_today.number_of_runs > 1 {
                 return Err(ContractError::BadRunConfiguration {});

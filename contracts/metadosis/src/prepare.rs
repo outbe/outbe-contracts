@@ -105,7 +105,7 @@ pub fn prepare_executions(
 
             println!("Vector rates = {:?}", vector_rates);
 
-            MetadosisInfo::LysisAndTouch {
+            MetadosisInfo::Lysis {
                 lysis_info: LysisInfo {
                     total_gratis_limit,
                     total_fees: TOTAL_FEES,
@@ -115,12 +115,6 @@ pub fn prepare_executions(
                     total_deficit: total_lysis_deficit,
                     lysis_deficits,
                     vector_rates,
-                },
-                touch_info: TouchInfo {
-                    total_gratis_limit,
-                    total_fees: TOTAL_FEES,
-                    touch_limit,
-                    gold_ignot_price,
                 },
             }
         }
