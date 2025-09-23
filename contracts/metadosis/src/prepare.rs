@@ -2,7 +2,7 @@ use crate::deficit::{calc_lysis_deficits, calc_total_deficit};
 use crate::error::ContractError;
 use crate::state::{LysisInfo, MetadosisInfo, TouchInfo, CONFIG, METADOSIS_INFO};
 use cosmwasm_std::{Addr, Decimal, DepsMut, QuerierWrapper, Uint128};
-use outbe_utils::consts::DECIMALS;
+use outbe_utils::consts::{to_decimals_amount, DECIMALS};
 use outbe_utils::date::WorldwideDay;
 use outbe_utils::denom::{Currency, Denom};
 use price_oracle::types::DayType;
@@ -71,11 +71,16 @@ pub fn prepare_executions(
             let total_tribute_interest: Uint128 =
                 query_total_tribute_interest(deps.querier, &tribute_address, execution_date)?;
             println!("Total tribute interest = {}", total_tribute_interest);
+            let total_tribute_interest =
+                (to_decimals_amount(total_tribute_interest) * config.lysis_limit_percent).atomics();
 
             // Total Lysis Deficit is calculated as the maximum of
             // (Total Tribute Interest - Total Lysis Limit) or 32% of Total Tribute Interest.
-            let total_lysis_deficit =
-                calc_total_deficit(total_tribute_interest, total_lysis_limit, config.deficit);
+            let total_lysis_deficit = calc_total_deficit(
+                total_tribute_interest,
+                total_lysis_limit,
+                config.lysis_limit_percent,
+            );
             println!("Total deficit = {}", total_lysis_deficit);
             println!("Total Lysis Limit = {}", total_lysis_limit);
 
@@ -125,5 +130,5 @@ fn query_total_tribute_interest(
 ) -> Result<Uint128, ContractError> {
     let response: tribute::query::TotalInterestResponse =
         querier.query_wasm_smart(addr, &tribute::query::QueryMsg::TotalInterest { date })?;
-    Ok(response.total_symbolic_load)
+    Ok(response.total_nominal_quantity)
 }

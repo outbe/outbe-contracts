@@ -12,7 +12,7 @@ pub struct Config {
     pub price_oracle: Option<Addr>,
     pub random_oracle: Option<Addr>,
     /// Percentage of Total Tribute Interest
-    pub deficit: Decimal,
+    pub lysis_limit_percent: Decimal,
 }
 
 pub const CONFIG: Item<Config> = Item::new("config");

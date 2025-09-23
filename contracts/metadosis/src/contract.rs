@@ -14,6 +14,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_utils::ParseReplyError::SubMsgFailure;
 use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
+use outbe_utils::consts::to_decimals_amount;
 use outbe_utils::date::WorldwideDay;
 use outbe_utils::{date, gen_compound_hash};
 use rand::prelude::SliceRandom;
@@ -50,7 +51,7 @@ pub fn instantiate(
             token_allocator: msg.token_allocator,
             price_oracle: msg.price_oracle,
             random_oracle: msg.random_oracle,
-            deficit: msg.deficit,
+            lysis_limit_percent: msg.lysis_limit_percent,
         },
     )?;
 
@@ -281,10 +282,13 @@ fn do_execute_lysis(
     let mut allocated_tributes_sum = Uint128::zero();
     let mut allocated_tributes: Vec<FullTributeData> = vec![];
     for tribute in tributes.tributes {
-        if allocated_tributes_sum + tribute.data.symbolic_load > lysis_capacity {
+        let symbolic_load = (to_decimals_amount(tribute.data.nominal_qty_minor)
+            * config.lysis_limit_percent)
+            .atomics();
+        if allocated_tributes_sum + symbolic_load > lysis_capacity {
             break;
         }
-        allocated_tributes_sum += tribute.data.symbolic_load;
+        allocated_tributes_sum += symbolic_load;
         allocated_tributes.push(tribute);
     }
 
@@ -296,11 +300,6 @@ fn do_execute_lysis(
         "Tributes in current run {}: count = {}, sum = {}",
         run_today.number_of_runs, allocated_tributes_count, allocated_tributes_sum
     );
-
-    let tribute_info: tribute::query::TributeContractInfoResponse = deps
-        .querier
-        .query_wasm_smart(&tribute_address, &tribute::query::QueryMsg::ContractInfo {})?;
-    let tribute_info = tribute_info.collection_config;
 
     // shuffle here like the following
     let seed: random_oracle::msg::SeedResponse = deps.querier.query_wasm_smart(
@@ -318,11 +317,15 @@ fn do_execute_lysis(
     for tribute in allocated_tributes {
         // todo here we need to give full win for last tribute in this lysis
         //  and take some allocation limit from the next lysis run (if any)
-        if winners_sum + tribute.data.symbolic_load > lysis_limit {
+        let symbolic_load = (to_decimals_amount(tribute.data.nominal_qty_minor)
+            * config.lysis_limit_percent)
+            .atomics();
+
+        if winners_sum + symbolic_load > lysis_limit {
             break;
         }
         WINNERS.save(deps.storage, tribute.token_id.clone(), &())?;
-        winners_sum += tribute.data.symbolic_load;
+        winners_sum += symbolic_load;
         winners.push(tribute);
     }
     let winners_len = winners.len();
@@ -335,6 +338,10 @@ fn do_execute_lysis(
         let floor_price =
             exchange_rate.price * (Decimal::one() + Decimal::from_str("0.08").unwrap());
 
+        let symbolic_load = (to_decimals_amount(tribute.data.nominal_qty_minor)
+            * config.lysis_limit_percent)
+            .atomics();
+
         let mod_issuance_price = exchange_rate.price.max(tribute.data.nominal_price_minor);
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
@@ -345,11 +352,11 @@ fn do_execute_lysis(
                     entity: nod::msg::NodEntity {
                         nod_id: token_id.to_hex(),
                         settlement_currency: tribute.data.settlement_currency.clone(),
-                        symbolic_rate: tribute_info.symbolic_rate,
+                        symbolic_rate: config.lysis_limit_percent,
                         floor_rate: Decimal::zero(), // todo populate
                         nominal_price_minor: tribute.data.nominal_price_minor,
                         issuance_price_minor: mod_issuance_price,
-                        gratis_load_minor: tribute.data.symbolic_load,
+                        gratis_load_minor: symbolic_load,
                         floor_price_minor: floor_price,
                         state: nod::types::State::Issued,
                         owner: tribute.owner.to_string(),
@@ -501,11 +508,6 @@ fn do_execute_touch(
     }
     let actual_winners_len = winners.len();
 
-    let tribute_info: tribute::query::TributeContractInfoResponse = deps
-        .querier
-        .query_wasm_smart(&tribute_address, &tribute::query::QueryMsg::ContractInfo {})?;
-    let tribute_info = tribute_info.collection_config;
-
     let mut messages: Vec<SubMsg> = vec![];
     for tribute in winners {
         let token_id = generate_nod_id(&tribute.token_id, &tribute.owner);
@@ -520,7 +522,7 @@ fn do_execute_touch(
                     entity: nod::msg::NodEntity {
                         nod_id: token_id.to_hex(),
                         settlement_currency: tribute.data.settlement_currency.clone(),
-                        symbolic_rate: tribute_info.symbolic_rate,
+                        symbolic_rate: config.lysis_limit_percent,
                         floor_rate: Decimal::zero(),
                         nominal_price_minor: tribute.data.nominal_price_minor,
                         issuance_price_minor: mod_issuance_price,

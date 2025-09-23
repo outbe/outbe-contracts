@@ -10,8 +10,8 @@ pub struct InstantiateMsg {
     pub token_allocator: Option<Addr>,
     pub price_oracle: Option<Addr>,
     pub random_oracle: Option<Addr>,
-    /// Deficit config where 1 mean 100%
-    pub deficit: Decimal,
+    /// Lysis limit config where 1 mean 100%
+    pub lysis_limit_percent: Decimal,
 }
 
 #[cw_serde]

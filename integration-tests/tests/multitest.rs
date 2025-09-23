@@ -379,7 +379,6 @@ fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedCon
         name: "consumption unit".to_string(),
         symbol: "cu".to_string(),
         collection_info_extension: TributeCollectionExtension {
-            symbolic_rate: Decimal::from_str("0.08").unwrap(),
             native_token: Denom::Native(NATIVE_DENOM.to_string()),
             price_oracle,
         },
@@ -475,7 +474,7 @@ fn deploy_metadosis(
         token_allocator: Some(token_allocator),
         price_oracle: Some(price_oracle),
         random_oracle: Some(random_oracle),
-        deficit: Decimal::from_str("0.08").unwrap(),
+        lysis_limit_percent: Decimal::from_str("0.08").unwrap(),
     };
     let address = app
         .instantiate_contract(

@@ -26,7 +26,6 @@ pub fn instantiate(
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     let cfg = TributeConfig {
-        symbolic_rate: msg.collection_info_extension.symbolic_rate,
         native_token: msg.collection_info_extension.native_token.clone(),
         price_oracle: msg.collection_info_extension.price_oracle.clone(),
     };
@@ -136,7 +135,6 @@ pub fn update_collection_info(
         config.collection_config.save(
             deps.storage,
             &TributeConfig {
-                symbolic_rate: data.symbolic_rate,
                 native_token: data.native_token,
                 price_oracle: data.price_oracle,
             },
@@ -174,7 +172,6 @@ fn execute_mint(
     }
 
     let config = Cw721Config::<TributeData, TributeConfig>::default();
-    let col_config = config.collection_config.load(deps.storage)?;
 
     // TODO here we need to check that given exchange_rate is in daily bounds
     // let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
@@ -183,11 +180,7 @@ fn execute_mint(
     // )?;
     //
 
-    let (nominal_qty, symbolic_load) = calc_sybolics(
-        entity.settlement_amount_minor,
-        entity.nominal_price_minor,
-        col_config.symbolic_rate,
-    );
+    let nominal_qty = calc_nominal_qty(entity.settlement_amount_minor, entity.nominal_price_minor);
 
     // create the token
     let data = TributeData {
@@ -195,7 +188,6 @@ fn execute_mint(
         settlement_currency: entity.settlement_currency,
         nominal_price_minor: entity.nominal_price_minor,
         nominal_qty_minor: nominal_qty,
-        symbolic_load,
         worldwide_day: entity.worldwide_day,
         created_at: env.block.time,
     };
@@ -224,21 +216,15 @@ fn execute_mint(
         ))
 }
 
-fn calc_sybolics(
-    settlement_amount: Uint128,
-    exchange_rate: Decimal,
-    symbolic_rate: Decimal,
-) -> (Uint128, Uint128) {
+fn calc_nominal_qty(settlement_amount: Uint128, exchange_rate: Decimal) -> Uint128 {
     let settlement_value_dec = Decimal::from_atomics(settlement_amount, DECIMAL_PLACES).unwrap();
     let nominal_qty = settlement_value_dec / exchange_rate;
-    let symbolic_load = nominal_qty * symbolic_rate / (Decimal::one() + symbolic_rate);
 
     println!("settlement_value: {}", settlement_amount);
     println!("exchange_rate: {}", exchange_rate);
-    println!("symbolic_rate: {}", symbolic_rate);
     println!("nominal_qty: {}", nominal_qty);
-    println!("symbolic_load: {}", symbolic_load);
-    (nominal_qty.atomics(), symbolic_load.atomics())
+
+    nominal_qty.atomics()
 }
 
 fn execute_burn(
@@ -337,7 +323,7 @@ fn execute_burn_for_day(
 
 #[cfg(test)]
 mod tests {
-    use crate::contract::{calc_sybolics, execute_burn_all, execute_burn_for_day, instantiate};
+    use crate::contract::{calc_nominal_qty, execute_burn_all, execute_burn_for_day, instantiate};
     use crate::msg::{InstantiateMsg, TributeCollectionExtension};
     use crate::types::{TributeConfig, TributeData, TributeNft};
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env, MockApi};
@@ -348,13 +334,11 @@ mod tests {
 
     #[test]
     fn test_symbolics_calc() {
-        let (nominal, load) = calc_sybolics(
+        let nominal = calc_nominal_qty(
             Uint128::new(500_000000000000000000u128),
             Decimal::from_str("0.2").unwrap(),
-            Decimal::from_str("0.08").unwrap(),
         );
         assert_eq!(nominal, Uint128::new(2500000000000000000000u128));
-        assert_eq!(load, Uint128::new(185185185185185185185u128));
     }
 
     #[test]
@@ -378,7 +362,6 @@ mod tests {
                 creator: None,
                 burner: None,
                 collection_info_extension: TributeCollectionExtension {
-                    symbolic_rate: Decimal::from_str("0.08").unwrap(),
                     native_token: Denom::Native("coen".to_string()),
                     price_oracle: oracle_addr,
                 },
@@ -425,7 +408,6 @@ mod tests {
                 creator: None,
                 burner: None,
                 collection_info_extension: TributeCollectionExtension {
-                    symbolic_rate: Decimal::from_str("0.08").unwrap(),
                     native_token: Denom::Native("coen".to_string()),
                     price_oracle: oracle_addr,
                 },
@@ -483,7 +465,6 @@ mod tests {
                 settlement_currency: Denom::Fiat(Currency::Usd),
                 nominal_price_minor: Decimal::one(),
                 nominal_qty_minor: Uint128::new(100),
-                symbolic_load: Uint128::new(10),
                 worldwide_day: 1,
                 created_at: Timestamp::from_seconds(1000),
             },
@@ -502,7 +483,6 @@ mod tests {
                 settlement_currency: Denom::Fiat(Currency::Usd),
                 nominal_price_minor: Decimal::one(),
                 nominal_qty_minor: Uint128::new(100),
-                symbolic_load: Uint128::new(10),
                 worldwide_day: day,
                 created_at: Timestamp::from_seconds(1000),
             },

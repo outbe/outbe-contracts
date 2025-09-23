@@ -5,10 +5,8 @@ use outbe_nft::traits::Cw721CollectionConfig;
 use outbe_utils::date::WorldwideDay;
 use outbe_utils::denom::Denom;
 
-/// ConsumptionUnit contract config
 #[cw_serde]
 pub struct TributeConfig {
-    pub symbolic_rate: Decimal,
     pub native_token: Denom,
     pub price_oracle: Addr,
 }
@@ -26,8 +24,6 @@ pub struct TributeData {
     pub nominal_qty_minor: Uint128,
     /// Price in Native coins with a rate on the moment of the transaction
     pub nominal_price_minor: Decimal,
-    /// Signals an eligible interest to the network
-    pub symbolic_load: Uint128,
     /// Date of Consumption
     pub worldwide_day: WorldwideDay,
     /// Time when the Tribute NFT was created on the network

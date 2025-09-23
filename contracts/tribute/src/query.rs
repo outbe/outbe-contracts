@@ -73,7 +73,7 @@ pub struct FullTributeData {
 }
 #[cw_serde]
 pub struct TotalInterestResponse {
-    pub total_symbolic_load: Uint128,
+    pub total_nominal_quantity: Uint128,
 }
 
 #[cw_serde]
@@ -197,11 +197,11 @@ fn query_total_interest(
             |item| matches!(item, Ok((_id, tribute)) if tribute.extension.worldwide_day == date),
         )
         .map(|it| it.unwrap())
-        .map(|(_, tribute)| tribute.extension.symbolic_load)
+        .map(|(_, tribute)| tribute.extension.nominal_qty_minor)
         .fold(Uint128::zero(), |acc, t| acc + t);
 
     Ok(TotalInterestResponse {
-        total_symbolic_load: total_interest,
+        total_nominal_quantity: total_interest,
     })
 }
 
@@ -214,7 +214,6 @@ mod tests {
     use cw_multi_test::{App, ContractWrapper, Executor};
     use cw_ownable::Ownership;
     use outbe_utils::denom::{Currency, Denom};
-    use std::str::FromStr;
 
     #[test]
     fn test_query_config() {
@@ -228,7 +227,6 @@ mod tests {
             name: "tribute".to_string(),
             symbol: "t".to_string(),
             collection_info_extension: TributeCollectionExtension {
-                symbolic_rate: Decimal::from_str("0.08").unwrap(),
                 native_token: Denom::Native("native".to_string()),
                 price_oracle: Addr::unchecked("price_oracle"),
             },
@@ -276,7 +274,6 @@ mod tests {
             name: "tribute".to_string(),
             symbol: "t".to_string(),
             collection_info_extension: TributeCollectionExtension {
-                symbolic_rate: Decimal::from_str("0.08").unwrap(),
                 native_token: Denom::Native("native".to_string()),
                 price_oracle: Addr::unchecked("price_oracle"),
             },
@@ -349,8 +346,8 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            response.total_symbolic_load,
-            Uint128::new(11111111111111111110u128)
+            response.total_nominal_quantity,
+            Uint128::new(150000000000000000000)
         );
 
         // Query total interest for different date should return zero
@@ -365,6 +362,6 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(response.total_symbolic_load, Uint128::zero());
+        assert_eq!(response.total_nominal_quantity, Uint128::zero());
     }
 }
