@@ -9,7 +9,7 @@ async function main() {
     const { walletClient, account } = await initClient();
     console.log("Using address:", account.address);
 
-    const agentNraAddress = await getContractAddresses('agent-nra');
+    const agentNraAddress = await getContractAddresses('AGENT_NRA_CONTRACT_ADDRESS');
     const agentNraClient = new AgentNraClient(walletClient, account.address, agentNraAddress);
 
     for (let i = 0; i < NRA_AGENTS.length; i++) {
