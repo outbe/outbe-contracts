@@ -6,7 +6,6 @@ use outbe_utils::date::WorldwideDay;
 
 #[cw_serde]
 pub struct Config {
-    pub vector: Option<Addr>,
     pub tribute: Option<Addr>,
     pub nod: Option<Addr>,
     pub token_allocator: Option<Addr>,
@@ -54,8 +53,6 @@ pub struct LysisInfo {
     pub total_deficit: Uint128,
     /// Deficits for each execution where the index in 0..23 corresponds for each daily execution
     pub lysis_deficits: Vec<Uint128>,
-    /// Vector rates for each execution where the index in 0..23 corresponds for each daily execution
-    pub vector_rates: Vec<Uint128>,
 }
 
 #[cw_serde]
@@ -88,7 +85,7 @@ pub struct RunHistoryInfo {
     /// Identifies what kind of run it was
     pub run_type: RunType,
     /// Vector rate or None for Touch
-    pub vector_rate: Option<Uint128>,
+    pub vector_rate: Option<Decimal>,
     /// Lysis or Touch limit
     pub limit: Uint128,
     /// Lysis deficit or 0 for Touch

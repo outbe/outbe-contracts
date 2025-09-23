@@ -1,6 +1,5 @@
 {
   "creator": null,
-  "vector": $vector_address,
   "tribute": $tribute_address,
   "token_allocator": $token_allocator_address,
   "nod": $nod_address,

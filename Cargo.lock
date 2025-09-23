@@ -1005,7 +1005,6 @@ dependencies = [
  "thiserror 1.0.69",
  "token-allocator",
  "tribute",
- "vector",
 ]
 
 [[package]]

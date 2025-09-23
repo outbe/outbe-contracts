@@ -5,7 +5,6 @@ use outbe_utils::date::WorldwideDay;
 #[cw_serde]
 pub struct InstantiateMsg {
     pub creator: Option<String>,
-    pub vector: Option<Addr>,
     pub tribute: Option<Addr>,
     pub nod: Option<Addr>,
     pub token_allocator: Option<Addr>,

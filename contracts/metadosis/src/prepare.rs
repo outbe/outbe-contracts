@@ -43,7 +43,6 @@ pub fn prepare_executions(
     let price_oracle_address = config
         .price_oracle
         .ok_or(ContractError::NotInitialized {})?;
-    let vector_address = config.vector.ok_or(ContractError::NotInitialized {})?;
 
     let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
         &price_oracle_address,
@@ -92,19 +91,6 @@ pub fn prepare_executions(
             let lysis_deficits: Vec<Uint128> = calc_lysis_deficits(total_lysis_deficit);
             println!("Lysis deficits = {:?}", lysis_deficits);
 
-            let vector_info: vector::query::AllVectorsResponse = deps
-                .querier
-                .query_wasm_smart(&vector_address, &vector::query::QueryMsg::Vectors {})?;
-
-            let vector_rates: Vec<Uint128> = vector_info
-                .vectors
-                .iter()
-                .map(|it| it.vector_rate)
-                .rev() // NB: reverse order because lysis starts from 23
-                .collect();
-
-            println!("Vector rates = {:?}", vector_rates);
-
             MetadosisInfo::Lysis {
                 lysis_info: LysisInfo {
                     total_gratis_limit,
@@ -114,7 +100,6 @@ pub fn prepare_executions(
                     total_tribute_interest,
                     total_deficit: total_lysis_deficit,
                     lysis_deficits,
-                    vector_rates,
                 },
             }
         }

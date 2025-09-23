@@ -19,6 +19,7 @@ use outbe_utils::{date, gen_compound_hash};
 use rand::prelude::SliceRandom;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
+use std::str::FromStr;
 use tribute::query::FullTributeData;
 
 const CONTRACT_NAME: &str = "outbe.net:metadosis";
@@ -44,7 +45,6 @@ pub fn instantiate(
     CONFIG.save(
         deps.storage,
         &Config {
-            vector: msg.vector,
             tribute: msg.tribute,
             nod: msg.nod,
             token_allocator: msg.token_allocator,
@@ -302,13 +302,6 @@ fn do_execute_lysis(
         .query_wasm_smart(&tribute_address, &tribute::query::QueryMsg::ContractInfo {})?;
     let tribute_info = tribute_info.collection_config;
 
-    // Get vector rate for this run
-    let vector_rate = lysis_info
-        .vector_rates
-        .get(run_today.number_of_runs - 1)
-        .ok_or(ContractError::BadRunConfiguration {})?;
-    let vector_rate_dec = Decimal::percent(vector_rate.u128() as u64);
-
     // shuffle here like the following
     let seed: random_oracle::msg::SeedResponse = deps.querier.query_wasm_smart(
         &random_oracle_address,
@@ -339,7 +332,8 @@ fn do_execute_lysis(
         let token_id = generate_nod_id(&tribute.token_id, &tribute.owner);
 
         // todo check if we need to calc floor price at the moment of lysis or take from tribute
-        let floor_price = exchange_rate.price * (Decimal::one() + vector_rate_dec);
+        let floor_price =
+            exchange_rate.price * (Decimal::one() + Decimal::from_str("0.08").unwrap());
 
         let mod_issuance_price = exchange_rate.price.max(tribute.data.nominal_price_minor);
         let nod_mint = WasmMsg::Execute {
@@ -352,7 +346,7 @@ fn do_execute_lysis(
                         nod_id: token_id.to_hex(),
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
-                        floor_rate: *vector_rate,
+                        floor_rate: Decimal::zero(), // todo populate
                         nominal_price_minor: tribute.data.nominal_price_minor,
                         issuance_price_minor: mod_issuance_price,
                         gratis_load_minor: tribute.data.symbolic_load,
@@ -387,7 +381,7 @@ fn do_execute_lysis(
         execution_date,
         RunHistoryInfo {
             run_type: RunType::Lysis,
-            vector_rate: Some(*vector_rate),
+            vector_rate: Some(Decimal::zero()), // todo populate
             limit: lysis_limit,
             deficit: *lysis_deficit,
             capacity: lysis_capacity,
@@ -527,7 +521,7 @@ fn do_execute_touch(
                         nod_id: token_id.to_hex(),
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: tribute_info.symbolic_rate,
-                        floor_rate: Uint128::zero(),
+                        floor_rate: Decimal::zero(),
                         nominal_price_minor: tribute.data.nominal_price_minor,
                         issuance_price_minor: mod_issuance_price,
                         gratis_load_minor: win_amount,

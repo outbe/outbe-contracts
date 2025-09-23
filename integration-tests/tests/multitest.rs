@@ -97,9 +97,6 @@ fn test_metadosis() {
     println!("📦 Deploy Token Allocator");
     let token_allocator = deploy_token_allocator(&mut app, config.owner_addr.clone());
 
-    println!("📦 Deploy Vector");
-    let vector = deploy_vector(&mut app, config.owner_addr.clone());
-
     println!("📦 Deploy Metadosis");
     let metadosis = deploy_metadosis(
         &mut app,
@@ -107,7 +104,6 @@ fn test_metadosis() {
         tribute.address.clone(),
         nod.address.clone(),
         token_allocator.address.clone(),
-        vector.address.clone(),
         price_oracle.address.clone(),
         random_oracle.address.clone(),
     );
@@ -462,7 +458,6 @@ fn deploy_metadosis(
     tribute: Addr,
     nod: Addr,
     token_allocator: Addr,
-    vector: Addr,
     price_oracle: Addr,
     random_oracle: Addr,
 ) -> DeployedContract {
@@ -475,7 +470,6 @@ fn deploy_metadosis(
 
     let instantiate_msg = InstantiateMsg {
         creator: Some(owner.to_string()),
-        vector: Some(vector),
         tribute: Some(tribute),
         nod: Some(nod),
         token_allocator: Some(token_allocator),
@@ -545,6 +539,7 @@ fn deploy_token_allocator(app: &mut App, owner: Addr) -> DeployedContract {
     DeployedContract { address, code_id }
 }
 
+#[allow(dead_code)]
 fn deploy_vector(app: &mut App, owner: Addr) -> DeployedContract {
     use vector::contract::{execute, instantiate};
     use vector::msg::InstantiateMsg;
