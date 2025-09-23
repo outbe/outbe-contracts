@@ -23,3 +23,21 @@ export function RUN_DATE_TS(): number {
   return toTimestamp(RUN_DATE);
 }
 
+export const NRA_AGENTS = [
+  {
+    address: "outbe1xc2tflxk3d0yqejmc8np4xaxrpgalgf7fr50vt",
+    name: "NRA Agent 1",
+    email: "nra_1_main@proton.me"
+  },
+  {
+    address: "outbe19dew74cngq3dk3y7rep5p0jp7fuphtt4ldjwad",
+    name: "NRA Agent 2",
+    email: "nra_2_main@proton.me"
+  },
+  {
+    address: "outbe1e8r7rng6lratxymrakgqtndkqcnenun54s0uaw",
+    name: "NRA Alya",
+    email: "xiaoxiongmao88@proton.me"
+  }
+];
+

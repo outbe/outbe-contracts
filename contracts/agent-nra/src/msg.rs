@@ -1,5 +1,6 @@
 use crate::state::ThresholdConfig;
 use crate::types::{Application, ApplicationInput, Vote};
+use agent_common::types::AgentInput;
 use cosmwasm_schema::cw_serde;
 
 #[cw_serde]
@@ -31,12 +32,20 @@ pub enum ApplicationMsg {
     HoldApplication {
         id: String,
     },
+}
+
+#[cw_serde]
+pub enum OwnerMsg {
     // BootstrapVote
     AddBootstrapVoter {
         address: String,
     },
     RemoveBootstrapVoter {
         address: String,
+    },
+    AddNraDirectly {
+        address: String,
+        agent: Box<AgentInput>,
     },
 }
 
@@ -46,6 +55,7 @@ pub type AgentMsg = agent_common::msg::ExecuteMsg;
 pub enum ExecuteMsg {
     Agent(AgentMsg),
     Application(ApplicationMsg),
+    Owner(OwnerMsg),
 }
 
 #[cw_serde]

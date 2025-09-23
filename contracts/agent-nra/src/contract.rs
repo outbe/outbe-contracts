@@ -1,10 +1,10 @@
 use crate::agent_common::*;
 use crate::error::ContractError;
-use crate::msg::{AgentMsg, ApplicationMsg, ExecuteMsg, InstantiateMsg, MigrateMsg};
+use crate::msg::{AgentMsg, ApplicationMsg, ExecuteMsg, InstantiateMsg, MigrateMsg, OwnerMsg};
 use crate::state::{Config, ThresholdConfig, APPLICATIONS, APPLICATION_VOTES, CONFIG};
 use crate::types::{Application, ApplicationInput, ApplicationStatus, Vote};
 use agent_common::state::AGENTS;
-use agent_common::types::{AgentExt, AgentStatus, AgentType};
+use agent_common::types::{Agent, AgentExt, AgentInput, AgentStatus, AgentType};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Addr, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
@@ -82,13 +82,6 @@ pub fn execute(
                 reason,
             } => exec_vote_application(deps, env, info, id, approve, reason),
             ApplicationMsg::HoldApplication { id } => exec_hold_application(deps, env, info, id),
-
-            ApplicationMsg::AddBootstrapVoter { address } => {
-                exec_add_bootstrap_voter(deps, info, address)
-            }
-            ApplicationMsg::RemoveBootstrapVoter { address } => {
-                exec_remove_bootstrap_voter(deps, info, address)
-            }
         },
 
         ExecuteMsg::Agent(agent_msg) => match agent_msg {
@@ -102,6 +95,18 @@ pub fn execute(
                 exec_activate_agent(deps, env, info, address, registry)
             }
             AgentMsg::ResignAgent {} => exec_resign_agent(deps, env, info),
+        },
+
+        ExecuteMsg::Owner(owner_msg) => match owner_msg {
+            OwnerMsg::AddNraDirectly { address, agent } => {
+                exec_add_nra_directly(deps, env, info, address, *agent)
+            }
+            OwnerMsg::AddBootstrapVoter { address } => {
+                exec_add_bootstrap_voter(deps, info, address)
+            }
+            OwnerMsg::RemoveBootstrapVoter { address } => {
+                exec_remove_bootstrap_voter(deps, info, address)
+            }
         },
     }
 }
@@ -326,6 +331,61 @@ pub fn exec_remove_bootstrap_voter(
     Ok(Response::new()
         .add_attribute("action", "agent-nra::remove_bootstrap_voter")
         .add_attribute("voter", voter))
+}
+
+pub fn exec_add_nra_directly(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    address: String,
+    agent_input: AgentInput,
+) -> Result<Response, ContractError> {
+    let config = crate::state::CONFIG.load(deps.storage)?;
+
+    // Ensure only owner can call this function
+    if config.owner != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Parse and validate the agent address
+    let agent_addr = if cfg!(test) {
+        Addr::unchecked(&address)
+    } else {
+        deps.api.addr_validate(&address)?
+    };
+
+    // Check if agent already exists
+    if AGENTS.has(deps.storage, agent_addr.clone()) {
+        return Err(ContractError::AgentAlreadyExists {});
+    }
+
+    // Create the agent with Active status directly
+    let agent = Agent {
+        wallet: agent_addr.clone(),
+        name: agent_input.name.trim().to_string(),
+        email: agent_input.email.trim().to_string(),
+        agent_type: agent_common::types::AgentType::Nra, // Force NRA type
+        jurisdictions: agent_input.jurisdictions,
+        endpoint: agent_input.endpoint,
+        metadata_json: agent_input.metadata_json,
+        docs_uri: agent_input.docs_uri,
+        discord: agent_input.discord,
+        status: AgentStatus::Active,
+        avg_cu: agent_input.avg_cu,
+        submitted_at: env.block.time,
+        updated_at: env.block.time,
+        ext: agent_input.ext,
+    };
+
+    // Save the agent
+    AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "add_agent_directly")
+        .add_attribute("agent_address", agent_addr.to_string())
+        .add_attribute("agent_type", "NRA")
+        .add_attribute("status", "Active")
+        .add_attribute("submitted_at", agent.submitted_at.to_string()))
 }
 
 pub fn count_votes(deps: Deps, id: &str) -> StdResult<(u8, u8)> {
