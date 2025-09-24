@@ -41,7 +41,7 @@ pub struct NodEntity {
     pub nod_id: String,
     pub settlement_currency: Denom,
     pub symbolic_rate: Decimal,
-    pub floor_rate: Uint128,
+    pub floor_rate: Decimal,
     pub nominal_price_minor: Decimal,
     pub issuance_price_minor: Decimal,
     pub gratis_load_minor: Uint128,

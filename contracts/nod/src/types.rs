@@ -20,7 +20,7 @@ pub struct NodData {
     /// Symbolic rate
     pub symbolic_rate: Decimal,
     /// Account specific, from Lysis
-    pub floor_rate: Uint128,
+    pub floor_rate: Decimal,
     /// From Tribute
     pub nominal_price_minor: Decimal,
     /// coen Price at the moment of Nod issuance

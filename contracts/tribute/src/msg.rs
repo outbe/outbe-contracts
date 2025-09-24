@@ -6,7 +6,6 @@ use outbe_utils::denom::Denom;
 
 #[cw_serde]
 pub struct TributeCollectionExtension {
-    pub symbolic_rate: Decimal,
     pub native_token: Denom,
     pub price_oracle: Addr,
 }

@@ -641,7 +641,7 @@ mod test_token_miner {
             nod_id: "test_nod_1".to_string(),
             settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::one(),
-            floor_rate: Uint128::new(100),
+            floor_rate: Decimal::from_str("100").unwrap(),
             nominal_price_minor: Decimal::from_str("1000").unwrap(),
             issuance_price_minor: Decimal::from_str("900").unwrap(),
             gratis_load_minor,

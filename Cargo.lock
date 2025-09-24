@@ -919,6 +919,7 @@ version = "0.1.0"
 dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
+ "cw-ownable",
  "metadosis",
  "nod",
  "outbe-nft",
@@ -1005,7 +1006,6 @@ dependencies = [
  "thiserror 1.0.69",
  "token-allocator",
  "tribute",
- "vector",
 ]
 
 [[package]]

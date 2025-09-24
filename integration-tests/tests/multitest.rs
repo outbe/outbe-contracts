@@ -97,9 +97,6 @@ fn test_metadosis() {
     println!("📦 Deploy Token Allocator");
     let token_allocator = deploy_token_allocator(&mut app, config.owner_addr.clone());
 
-    println!("📦 Deploy Vector");
-    let vector = deploy_vector(&mut app, config.owner_addr.clone());
-
     println!("📦 Deploy Metadosis");
     let metadosis = deploy_metadosis(
         &mut app,
@@ -107,11 +104,9 @@ fn test_metadosis() {
         tribute.address.clone(),
         nod.address.clone(),
         token_allocator.address.clone(),
-        vector.address.clone(),
         price_oracle.address.clone(),
         random_oracle.address.clone(),
     );
-
     println!("🧪 Perform tests");
 
     println!("☑️ Add token pair");
@@ -316,59 +311,6 @@ fn test_metadosis() {
             },
         )
         .unwrap();
-
-    // TODO uncomment when finalize lysis
-    // assert_eq!(response.tokens.len(), 2);
-    //
-    // println!("🔬 Lysis 2");
-    // app.execute_contract(
-    //     config.owner_addr.clone(),
-    //     metadosis.address.clone(),
-    //     &metadosis::msg::ExecuteMsg::Execute { run_date: None },
-    //     &[],
-    // )
-    // .unwrap();
-    //
-    // let response: outbe_nft::msg::TokensResponse = app
-    //     .wrap()
-    //     .query_wasm_smart(
-    //         nod.address.clone(),
-    //         &QueryMsg::AllTokens {
-    //             start_after: None,
-    //             limit: None,
-    //             query_order: None,
-    //         },
-    //     )
-    //     .unwrap();
-    //
-    // assert_eq!(response.tokens.len(), 2);
-    //
-    // println!("🔬 Lysis 3");
-    // app.execute_contract(
-    //     config.owner_addr.clone(),
-    //     metadosis.address.clone(),
-    //     &metadosis::msg::ExecuteMsg::Execute { run_date: None },
-    //     &[],
-    // )
-    // .unwrap();
-    //
-    // let response: outbe_nft::msg::TokensResponse = app
-    //     .wrap()
-    //     .query_wasm_smart(
-    //         nod.address.clone(),
-    //         &QueryMsg::AllTokens {
-    //             start_after: None,
-    //             limit: None,
-    //             query_order: None,
-    //         },
-    //     )
-    //     .unwrap();
-    //
-    // assert_eq!(
-    //     response.tokens.len(),
-    //     2,
-    //     "No new nods because there were no tributes"
-    // );
 }
 
 fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedContract {
@@ -383,7 +325,6 @@ fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedCon
         name: "consumption unit".to_string(),
         symbol: "cu".to_string(),
         collection_info_extension: TributeCollectionExtension {
-            symbolic_rate: Decimal::from_str("0.08").unwrap(),
             native_token: Denom::Native(NATIVE_DENOM.to_string()),
             price_oracle,
         },
@@ -462,7 +403,6 @@ fn deploy_metadosis(
     tribute: Addr,
     nod: Addr,
     token_allocator: Addr,
-    vector: Addr,
     price_oracle: Addr,
     random_oracle: Addr,
 ) -> DeployedContract {
@@ -475,13 +415,12 @@ fn deploy_metadosis(
 
     let instantiate_msg = InstantiateMsg {
         creator: Some(owner.to_string()),
-        vector: Some(vector),
         tribute: Some(tribute),
         nod: Some(nod),
         token_allocator: Some(token_allocator),
         price_oracle: Some(price_oracle),
         random_oracle: Some(random_oracle),
-        deficit: Decimal::from_str("0.08").unwrap(),
+        lysis_limit_percent: Decimal::from_str("0.08").unwrap(),
     };
     let address = app
         .instantiate_contract(
@@ -545,6 +484,7 @@ fn deploy_token_allocator(app: &mut App, owner: Addr) -> DeployedContract {
     DeployedContract { address, code_id }
 }
 
+#[allow(dead_code)]
 fn deploy_vector(app: &mut App, owner: Addr) -> DeployedContract {
     use vector::contract::{execute, instantiate};
     use vector::msg::InstantiateMsg;

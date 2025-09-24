@@ -452,7 +452,6 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env};
     use cosmwasm_std::{Uint128, Uint64};
     use cw_multi_test::{App, Contract, ContractWrapper, Executor};
-    use std::str::FromStr;
 
     fn tribute_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
@@ -502,7 +501,6 @@ mod tests {
                     name: "tribute".to_string(),
                     symbol: "tt".to_string(),
                     collection_info_extension: tribute::msg::TributeCollectionExtension {
-                        symbolic_rate: Decimal::from_str("0.8").unwrap(),
                         native_token: Denom::Native("coen".to_string()),
                         price_oracle: oracle.clone(),
                     },
