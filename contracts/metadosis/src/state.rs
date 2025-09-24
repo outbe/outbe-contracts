@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Decimal, Uint128};
+use cosmwasm_std::{Addr, Decimal, Timestamp, Uint128};
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Item, Map};
 use outbe_utils::date::WorldwideDay;
@@ -25,9 +25,6 @@ pub const METADOSIS_INFO: Map<WorldwideDay, MetadosisInfo> = Map::new("metadosis
 /// Map to track how many runs were happened for each day
 pub const DAILY_RUN_STATE: Map<WorldwideDay, DailyRunState> = Map::new("daily_runs");
 
-/// Saves history to show on UI
-pub const DAILY_RUNS_HISTORY: Map<WorldwideDay, DailyRunHistory> = Map::new("daily_runs_history");
-
 /// Saves winners to do not peek them in Touch
 pub const WINNERS: Map<String, ()> = Map::new("tribute_winners");
 
@@ -45,22 +42,17 @@ pub struct LysisInfo {
     pub total_fees: Uint128,
     /// Total Lysis Limit = `total_emission_limit - total_fees`
     pub total_lysis_limit: Uint128,
-    /// Lysis limit = `total_lysis_limit / 24`
-    pub lysis_limit: Uint128,
     /// Total Tributes interest
     pub total_tribute_interest: Uint128,
     /// Total Deficit
-    pub total_deficit: Uint128,
-    /// Deficits for each execution where the index in 0..23 corresponds for each daily execution
-    pub lysis_deficits: Vec<Uint128>,
+    pub total_lysis_deficit: Uint128,
+    pub distribution_percent: Decimal,
 }
 
 #[cw_serde]
 pub struct TouchInfo {
     /// Total emission limit in native coins for this day
     pub total_gratis_limit: Uint128,
-    /// Total fees to be paid for validators (currently 0)
-    pub total_fees: Uint128,
     /// Touch limit = 4 % of `total_emission_limit - total_fees`
     pub touch_limit: Uint128,
     /// Gold ignot price in native coins
@@ -75,34 +67,53 @@ pub struct DailyRunState {
 }
 
 #[cw_serde]
-pub enum RunType {
-    Lysis,
-    Touch,
-}
-
-#[cw_serde]
-pub struct RunHistoryInfo {
-    /// Identifies what kind of run it was
-    pub run_type: RunType,
-    /// Vector rate or None for Touch
-    pub vector_rate: Option<Decimal>,
-    /// Lysis or Touch limit
+pub struct LysisEntity {
+    /// Lysis ID
+    pub id: String,
+    /// Position in the daily lysis sequence
+    pub index: usize,
+    /// Lysis limit
     pub limit: Uint128,
-    /// Lysis deficit or 0 for Touch
+    /// Lysis deficit
     pub deficit: Uint128,
-    /// Lysis capacity or = limit for Touch
+    /// Lysis capacity
     pub capacity: Uint128,
+    /// Worldwide day
+    pub worldwide_day: WorldwideDay,
+    /// Timestamp of the last tribute was recognized
+    pub timestamp: Timestamp,
+    /// Total emission limit in native coins for this day
+    pub total_gratis_limit: Uint128,
     /// Count of tributes was assigned for this run
     pub assigned_tributes: usize,
-    /// Sum of tributes were assigned for this run or touch_limit for Touch
+    /// Sum of tributes were assigned for this run
     pub assigned_tributes_sum: Uint128,
-    /// Count of winners in this run
-    pub winner_tributes: usize,
-    /// Winners sum in this run or touch_limit for Touch
-    pub winner_tributes_sum: Uint128,
 }
 
 #[cw_serde]
-pub struct DailyRunHistory {
-    pub data: Vec<RunHistoryInfo>,
+pub struct TouchEntity {
+    /// Touch ID
+    pub id: String,
+    /// Worldwide day
+    pub worldwide_day: WorldwideDay,
+    /// Total emission limit in native coins for this day
+    pub total_gratis_limit: Uint128,
+    /// Gold ignot price in native coins
+    pub gold_ignot_price: Decimal,
+    /// Touch limit
+    pub touch_limit: Uint128,
+    /// Count of tributes was assigned for this run
+    pub assigned_tributes: usize,
+    /// IDs of the recognized tributes
+    pub recognised_tributes: Vec<String>,
+    /// Timestamp of the last tribute was recognized
+    pub timestamp: Timestamp,
 }
+
+#[cw_serde]
+pub enum Entry {
+    Lysis(LysisEntity),
+    Touch(TouchEntity),
+}
+
+pub const ENTRY_STATE: Map<WorldwideDay, Entry> = Map::new("entry_state");

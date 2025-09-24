@@ -3,6 +3,7 @@ use cw_ownable::Ownership;
 use cw_storage_plus::Bound;
 
 use crate::msg::ContractInfoResponse;
+use crate::state::BURNER;
 use crate::traits::Cw721CollectionConfig;
 use crate::{
     msg::{NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse},
@@ -20,6 +21,10 @@ pub fn query_minter_ownership(storage: &dyn Storage) -> StdResult<Ownership<Addr
 
 pub fn query_creator_ownership(storage: &dyn Storage) -> StdResult<Ownership<Addr>> {
     CREATOR.get_ownership(storage)
+}
+
+pub fn query_burner_ownership(storage: &dyn Storage) -> StdResult<Ownership<Addr>> {
+    BURNER.get_ownership(storage)
 }
 
 pub fn query_num_tokens(storage: &dyn Storage) -> StdResult<NumTokensResponse> {

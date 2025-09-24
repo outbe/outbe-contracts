@@ -16,3 +16,5 @@ price-oracle = { workspace = true }
 token-allocator = { workspace = true}
 vector = { workspace = true}
 random-oracle = { workspace = true}
+[dependencies]
+cw-ownable = "2.1.0"

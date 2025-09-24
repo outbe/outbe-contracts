@@ -29,6 +29,8 @@ pub enum QueryMsg {
 
     #[returns(cw_ownable::Ownership<String>)]
     GetCreatorOwnership {},
+    #[returns(cw_ownable::Ownership<String>)]
+    GetBurnerOwnership {},
 
     #[returns(TributeInfoResponse)]
     NftInfo { token_id: String },
@@ -100,6 +102,9 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         }
         QueryMsg::GetCreatorOwnership {} => {
             to_json_binary(&outbe_nft::query::query_creator_ownership(deps.storage)?)
+        }
+        QueryMsg::GetBurnerOwnership {} => {
+            to_json_binary(&outbe_nft::query::query_burner_ownership(deps.storage)?)
         }
         QueryMsg::NftInfo { token_id } => to_json_binary(&outbe_nft::query::query_nft_info::<
             TributeData,

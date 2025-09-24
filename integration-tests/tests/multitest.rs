@@ -107,7 +107,6 @@ fn test_metadosis() {
         price_oracle.address.clone(),
         random_oracle.address.clone(),
     );
-
     println!("🧪 Perform tests");
 
     println!("☑️ Add token pair");
@@ -312,59 +311,6 @@ fn test_metadosis() {
             },
         )
         .unwrap();
-
-    // TODO uncomment when finalize lysis
-    // assert_eq!(response.tokens.len(), 2);
-    //
-    // println!("🔬 Lysis 2");
-    // app.execute_contract(
-    //     config.owner_addr.clone(),
-    //     metadosis.address.clone(),
-    //     &metadosis::msg::ExecuteMsg::Execute { run_date: None },
-    //     &[],
-    // )
-    // .unwrap();
-    //
-    // let response: outbe_nft::msg::TokensResponse = app
-    //     .wrap()
-    //     .query_wasm_smart(
-    //         nod.address.clone(),
-    //         &QueryMsg::AllTokens {
-    //             start_after: None,
-    //             limit: None,
-    //             query_order: None,
-    //         },
-    //     )
-    //     .unwrap();
-    //
-    // assert_eq!(response.tokens.len(), 2);
-    //
-    // println!("🔬 Lysis 3");
-    // app.execute_contract(
-    //     config.owner_addr.clone(),
-    //     metadosis.address.clone(),
-    //     &metadosis::msg::ExecuteMsg::Execute { run_date: None },
-    //     &[],
-    // )
-    // .unwrap();
-    //
-    // let response: outbe_nft::msg::TokensResponse = app
-    //     .wrap()
-    //     .query_wasm_smart(
-    //         nod.address.clone(),
-    //         &QueryMsg::AllTokens {
-    //             start_after: None,
-    //             limit: None,
-    //             query_order: None,
-    //         },
-    //     )
-    //     .unwrap();
-    //
-    // assert_eq!(
-    //     response.tokens.len(),
-    //     2,
-    //     "No new nods because there were no tributes"
-    // );
 }
 
 fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedContract {

@@ -1,6 +1,5 @@
 use crate::state::{
-    DailyRunHistory, DailyRunState, MetadosisInfo, DAILY_RUNS_HISTORY, DAILY_RUN_STATE,
-    METADOSIS_INFO,
+    DailyRunState, Entry, MetadosisInfo, DAILY_RUN_STATE, ENTRY_STATE, METADOSIS_INFO,
 };
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
@@ -31,13 +30,7 @@ pub struct MetadosisInfoResponse {
 
 #[cw_serde]
 pub struct HistoryResponse {
-    pub data: Vec<HistoryData>,
-}
-
-#[cw_serde]
-pub struct HistoryData {
-    pub date: WorldwideDay,
-    pub daily_run_history: DailyRunHistory,
+    pub data: Vec<Entry>,
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -75,13 +68,10 @@ fn query_metadosis_info(deps: Deps, _env: Env) -> StdResult<MetadosisInfoRespons
 }
 
 fn query_history(deps: Deps, _env: Env) -> StdResult<HistoryResponse> {
-    let result: StdResult<Vec<HistoryData>> = DAILY_RUNS_HISTORY
+    let result: StdResult<Vec<Entry>> = ENTRY_STATE
         .range(deps.storage, None, None, Order::Ascending)
         .filter_map(|item| match item {
-            Ok((k, v)) => Some(Ok(HistoryData {
-                date: k,
-                daily_run_history: v,
-            })),
+            Ok((_, v)) => Some(Ok(v)),
             _ => None,
         })
         .collect();
