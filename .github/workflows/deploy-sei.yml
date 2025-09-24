@@ -136,9 +136,6 @@ jobs:
           echo "add pair xau/usd"
           UPDATE_PAYLOAD=$(jq -n -f ./contracts/price-oracle/fixtures/add_xau_usd_pair.json )
           ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
-          echo "set green day for pair xau/usd"
-          UPDATE_PAYLOAD=$(jq -n -f ./contracts/price-oracle/fixtures/set_xau_usd_day_type.json )
-          ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
           echo "update price for pair xau/usd"
           UPDATE_PAYLOAD=$(jq -n -f ./contracts/price-oracle/fixtures/update_price_xau_usd.json )
           ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
