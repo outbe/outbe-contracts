@@ -1,9 +1,9 @@
 {
   "creator": null,
   "tribute": $tribute_address,
-  "token_allocator": $token_allocator_address,
   "nod": $nod_address,
+  "token_allocator": $token_allocator_address,
   "price_oracle": $price_oracle_address,
   "random_oracle": $random_oracle_address,
-  "deficit": "0.32"
+  "lysis_limit_percent": "0.08"
 }
