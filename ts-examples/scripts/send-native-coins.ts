@@ -37,7 +37,7 @@ async function main() {
     const result = await walletClient.sendTokens(
       account.address,
       wallets[i].outbe_address,
-      coins("1000000000000000000", "unit"),
+      coins("1", "coen"),
       TX_FEE
     );
     console.log(i, ": Sent 1 coin to ", wallets[i].outbe_address, " tx ", result.transactionHash)
