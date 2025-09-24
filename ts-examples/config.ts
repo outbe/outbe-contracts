@@ -1,11 +1,11 @@
 import {parseCoins} from "@cosmjs/amino";
 
-export const RPC_ENDPOINT = "https://rpc.dev.outbe.net";
-export const CONTRACT_REGISTRY_ADDRESS = 'outbe1pu6e36nugjxv3w2tcvxgld39y5kx3zz6l74dwxyyytx9cz5xwg5s4sknnl'
+export const RPC_ENDPOINT = "https://rpc.d.outbe.net";
+export const CONTRACT_REGISTRY_ADDRESS = 'outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9'
 
 export const TX_FEE = {
-  amount: parseCoins("1unit"),
-  gas: "50000000",
+  amount: parseCoins("100000unit"),
+  gas: "1000000",
 }
 
 export const NUMBER_OF_WALLETS = 200;
@@ -22,4 +22,22 @@ export function toTimestamp(dateStr: string): number {
 export function RUN_DATE_TS(): number {
   return toTimestamp(RUN_DATE);
 }
+
+export const NRA_AGENTS = [
+  {
+    address: "outbe1xc2tflxk3d0yqejmc8np4xaxrpgalgf7fr50vt",
+    name: "NRA Agent 1",
+    email: "nra_1_main@proton.me"
+  },
+  {
+    address: "outbe19dew74cngq3dk3y7rep5p0jp7fuphtt4ldjwad",
+    name: "NRA Agent 2",
+    email: "nra_2_main@proton.me"
+  },
+  {
+    address: "outbe1e8r7rng6lratxymrakgqtndkqcnenun54s0uaw",
+    name: "NRA Alya",
+    email: "xiaoxiongmao88@proton.me"
+  }
+];
 

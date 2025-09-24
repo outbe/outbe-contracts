@@ -1,6 +1,6 @@
 use crate::contract::{execute, instantiate};
 use crate::error::ContractError;
-use crate::msg::{ApplicationMsg, ExecuteMsg, InstantiateMsg};
+use crate::msg::{ApplicationMsg, ExecuteMsg, InstantiateMsg, OwnerMsg};
 use crate::query::query;
 use crate::state::CONFIG;
 use crate::types::ApplicationInput;
@@ -510,4 +510,79 @@ fn test_preferred_nra_restrict() {
 
     assert_eq!(res_ok.attributes[0].key, "action");
     assert_eq!(res_ok.attributes[0].value, "application::vote_application");
+}
+
+#[test]
+fn test_add_agent_directly_success() {
+    let mut deps = mock_dependencies();
+    let env = mock_env();
+
+    instantiate_contract(deps.as_mut()).unwrap();
+
+    // Owner adds agent directly
+    let agent_address = USER1.to_string();
+    let agent_input = sample_agent_input();
+
+    let msg = ExecuteMsg::Owner(OwnerMsg::AddNraDirectly {
+        address: agent_address.clone(),
+        agent: Box::new(agent_input.clone()),
+    });
+
+    let info_owner = message_info(&Addr::unchecked(CREATOR), &[]);
+    let res = execute(deps.as_mut(), env.clone(), info_owner, msg).unwrap();
+
+    // Check response attributes
+    assert_eq!(res.attributes.len(), 5);
+    assert_eq!(res.attributes[0].key, "action");
+    assert_eq!(res.attributes[0].value, "add_agent_directly");
+    assert_eq!(res.attributes[1].key, "agent_address");
+    assert_eq!(res.attributes[1].value, agent_address);
+    assert_eq!(res.attributes[2].key, "agent_type");
+    assert_eq!(res.attributes[2].value, "NRA");
+    assert_eq!(res.attributes[3].key, "status");
+    assert_eq!(res.attributes[3].value, "Active");
+
+    // Verify agent was created in storage
+    let agent_addr = Addr::unchecked(&agent_address);
+    let agent = AGENTS.load(&deps.storage, agent_addr.clone()).unwrap();
+    assert_eq!(agent.wallet, agent_addr);
+    assert_eq!(agent.name, agent_input.name);
+    assert_eq!(agent.email, agent_input.email);
+    assert_eq!(agent.agent_type, AgentType::Nra);
+    assert_eq!(agent.status, AgentStatus::Active);
+    assert_eq!(agent.jurisdictions, agent_input.jurisdictions);
+    assert_eq!(agent.endpoint, agent_input.endpoint);
+    assert_eq!(agent.avg_cu, agent_input.avg_cu);
+}
+
+#[test]
+fn test_add_agent_directly_unauthorized() {
+    let mut deps = mock_dependencies();
+    let env = mock_env();
+
+    instantiate_contract(deps.as_mut()).unwrap();
+
+    // Non-owner tries to add agent directly
+    let agent_address = USER1.to_string();
+    let agent_input = sample_agent_input();
+
+    let msg = ExecuteMsg::Owner(OwnerMsg::AddNraDirectly {
+        address: agent_address.clone(),
+        agent: Box::new(agent_input),
+    });
+
+    let info_user = message_info(&Addr::unchecked(USER2), &[]);
+    let res = execute(deps.as_mut(), env, info_user, msg);
+
+    // Should fail with Unauthorized error
+    assert!(res.is_err());
+    match res.unwrap_err() {
+        ContractError::Unauthorized => {}
+        other => panic!("Expected Unauthorized error, got: {:?}", other),
+    }
+
+    // Verify no agent was created
+    let agent_addr = Addr::unchecked(&agent_address);
+    let agent = AGENTS.may_load(&deps.storage, agent_addr).unwrap();
+    assert!(agent.is_none());
 }

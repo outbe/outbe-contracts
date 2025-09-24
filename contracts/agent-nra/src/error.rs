@@ -49,6 +49,8 @@ pub enum ContractError {
     AgentNotFound {},
     #[error("Invalid agent status for this operation")]
     InvalidAgentStatus {},
+    #[error("Agent already exists")]
+    AgentAlreadyExists {},
 
     //Botstrap voterrs
     #[error("Invalid action")]
