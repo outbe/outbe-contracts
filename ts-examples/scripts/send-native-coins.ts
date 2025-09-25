@@ -27,7 +27,7 @@ async function main() {
 
   const {walletClient, account} = await initClient()
 
-  let balance = await walletClient.getBalance(account.address, "coen")
+  let balance = await walletClient.getBalance(account.address, "unit")
   console.log("Balance: ", balance)
   let height = await walletClient.getHeight()
   console.log("Current Height: ", height)
