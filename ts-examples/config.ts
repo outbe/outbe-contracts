@@ -1,6 +1,6 @@
 import {parseCoins} from "@cosmjs/amino";
 
-export const RPC_ENDPOINT = "https://rpc.d.outbe.net";
+export const RPC_ENDPOINT = "https://rpc.p.outbe.net";
 export const CONTRACT_REGISTRY_ADDRESS = 'outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9'
 
 export const TX_FEE = {
