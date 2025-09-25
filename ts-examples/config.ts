@@ -4,8 +4,8 @@ export const RPC_ENDPOINT = "https://rpc.d.outbe.net";
 export const CONTRACT_REGISTRY_ADDRESS = 'outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9'
 
 export const TX_FEE = {
-  amount: parseCoins("100000unit"),
-  gas: "1000000",
+  amount: parseCoins("1350000unit"),
+  gas: "135000000",
 }
 
 export const NUMBER_OF_WALLETS = 200;
@@ -13,7 +13,7 @@ export const NUMBER_OF_WALLETS = 200;
 export const NUMBER_OF_METADOSIS_RUNS=1
 
 // SPECIFY HERE DATE FOR RUN FOR METADOSIS
-export const RUN_DATE = "2025-07-27";
+export const RUN_DATE = "2025-09-22";
 
 export function toTimestamp(dateStr: string): number {
   return Math.floor(new Date(dateStr).getTime() / 1000);
