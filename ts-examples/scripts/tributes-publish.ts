@@ -62,7 +62,7 @@ async function main() {
         )
     }
     let tx = await walletClient.executeMultiple(account.address, instructions, TX_FEE)
-    console.log("created Tributes, tx ", tx.transactionHash)
+    console.log(instructions.length , "Tributes created, tx ", tx.transactionHash)
 
     console.log("Number of Tribute tokens: ", await tributeClient.numTokens())
 }

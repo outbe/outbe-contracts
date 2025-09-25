@@ -27,11 +27,10 @@ async function main() {
 
   const {walletClient, account} = await initClient()
 
-  let balance = await walletClient.getBalance(account.address, "unit")
+  let balance = await walletClient.getBalance(account.address, "coen")
   console.log("Balance: ", balance)
   let height = await walletClient.getHeight()
   console.log("Current Height: ", height)
-
 
   for (let i = 0; i < wallets.length; i++) {
     const result = await walletClient.sendTokens(
@@ -40,7 +39,7 @@ async function main() {
       coins("1", "coen"),
       TX_FEE
     );
-    console.log(i, ": Sent 1 coin to ", wallets[i].outbe_address, " tx ", result.transactionHash)
+    console.log(i, ": Sent 1 coen to", wallets[i].outbe_address, "tx", result.transactionHash)
   }
 }
 
