@@ -32,7 +32,7 @@ async function main() {
   let height = await walletClient.getHeight()
   console.log("Current Height: ", height)
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < wallets.length; i++) {
     const result = await walletClient.sendTokens(
       account.address,
       wallets[i].outbe_address,
