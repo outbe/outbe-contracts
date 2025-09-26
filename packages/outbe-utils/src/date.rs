@@ -10,6 +10,7 @@ pub fn normalize_to_date(timestamp: &Timestamp) -> WorldwideDay {
     let days = seconds / SECONDS_IN_DAY;
     days * SECONDS_IN_DAY
 }
+
 pub fn is_valid(date: &WorldwideDay) -> Result<(), DateError> {
     if date % SECONDS_IN_DAY == 0 {
         Ok(())

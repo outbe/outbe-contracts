@@ -523,10 +523,15 @@ fn get_execution_date(
     run_date: Option<WorldwideDay>,
     env: &Env,
 ) -> Result<WorldwideDay, ContractError> {
-    let execution_date = run_date.unwrap_or(date::normalize_to_date(&env.block.time));
+    let execution_date = run_date.unwrap_or(calc_run_date(&env.block.time));
     date::is_valid(&execution_date)?;
     println!("execution date = {}", execution_date);
     Ok(execution_date)
+}
+
+fn calc_run_date(timestamp: &Timestamp) -> WorldwideDay {
+    let normalized = date::normalize_to_date(timestamp);
+    normalized - 3 * date::SECONDS_IN_DAY
 }
 
 #[cfg(feature = "demo")]
