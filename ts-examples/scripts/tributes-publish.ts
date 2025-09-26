@@ -69,6 +69,7 @@ async function main() {
 
 function offerTribute(tribute: TributeInputPayload, encryption: EncryptionInfoResponse): JsonObject {
   const encryptedData = encryptTributeInput(tribute, encryption.public_key, encryption.salt);
+  let owner = new TextDecoder().decode(bs58.decode(tribute.owner));
   return {
     offer: {
       cipher_text: encryptedData.cipher_text,
@@ -81,7 +82,8 @@ function offerTribute(tribute: TributeInputPayload, encryption: EncryptionInfoRe
           merkle_root: "",
         },
         verification_key: "",
-      }
+      },
+      tribute_owner_l1: owner,
     }
   }
 }
