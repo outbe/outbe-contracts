@@ -16,6 +16,10 @@ async function main() {
   console.log("info: ")
   console.log(JSON.stringify(info, null, 2))
 
+  let config = await metadosisClient.config()
+  console.log("config: ")
+  console.log(JSON.stringify(config, null, 2))
+
   let history: HistoryResponse = await metadosisClient.history()
   console.log("")
   console.log("history:")

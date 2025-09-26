@@ -1,5 +1,6 @@
 use crate::state::{
-    DailyRunState, Entry, MetadosisInfo, DAILY_RUN_STATE, ENTRY_STATE, METADOSIS_INFO,
+    Config, DailyRunState, Entry, MetadosisInfo, CONFIG, DAILY_RUN_STATE, ENTRY_STATE,
+    METADOSIS_INFO,
 };
 use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cfg(not(feature = "library"))]
@@ -10,6 +11,8 @@ use outbe_utils::date::WorldwideDay;
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(ConfigResponse)]
+    Config {},
     #[returns(MetadosisInfoResponse)]
     MetadosisInfo {},
     #[returns(HistoryResponse)]
@@ -33,11 +36,17 @@ pub struct HistoryResponse {
     pub data: Vec<Entry>,
 }
 
+#[cw_serde]
+pub struct ConfigResponse {
+    pub data: Config,
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::MetadosisInfo {} => to_json_binary(&query_metadosis_info(deps, env)?),
         QueryMsg::History {} => to_json_binary(&query_history(deps, env)?),
+        QueryMsg::Config {} => to_json_binary(&query_config(deps, env)?),
     }
 }
 
@@ -77,4 +86,9 @@ fn query_history(deps: Deps, _env: Env) -> StdResult<HistoryResponse> {
         .collect();
 
     Ok(HistoryResponse { data: result? })
+}
+
+fn query_config(deps: Deps, _env: Env) -> StdResult<ConfigResponse> {
+    let result = CONFIG.load(deps.storage)?;
+    Ok(ConfigResponse { data: result })
 }

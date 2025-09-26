@@ -139,14 +139,12 @@ fn handle_token_allocation_reply(deps: DepsMut, msg: Reply) -> Result<Response, 
     let subcall_result = msg.result.into_result().map_err(SubMsgFailure)?;
 
     // 2. Get the data from the successful reply
-    let data = subcall_result
-        .msg_responses
-        .first()
-        .ok_or(ContractError::NoDataInReply {})?;
+    #[allow(deprecated)] // NB: older version for SEI
+    let data = subcall_result.data.ok_or(ContractError::NoDataInReply {})?;
 
     // 3. Deserialize the data into your expected struct
     let allocation_result: MsgExecuteContractResponse =
-        parse_execute_response_data(data.value.as_slice())?;
+        parse_execute_response_data(data.as_slice())?;
 
     let allocation_result = allocation_result
         .data
@@ -525,10 +523,15 @@ fn get_execution_date(
     run_date: Option<WorldwideDay>,
     env: &Env,
 ) -> Result<WorldwideDay, ContractError> {
-    let execution_date = run_date.unwrap_or(date::normalize_to_date(&env.block.time));
+    let execution_date = run_date.unwrap_or(calc_run_date(&env.block.time));
     date::is_valid(&execution_date)?;
     println!("execution date = {}", execution_date);
     Ok(execution_date)
+}
+
+fn calc_run_date(timestamp: &Timestamp) -> WorldwideDay {
+    let normalized = date::normalize_to_date(timestamp);
+    normalized - 3 * date::SECONDS_IN_DAY
 }
 
 #[cfg(feature = "demo")]
@@ -632,5 +635,19 @@ mod tests {
         // Should still produce valid hex string of correct length
         assert!(nod_id.to_hex().chars().all(|c| c.is_ascii_hexdigit()));
         assert_eq!(nod_id.len(), 32);
+    }
+
+    #[test]
+    fn test_calc_run_date() {
+        let current_time = Timestamp::from_seconds(1632960000); // 2021-09-30 00:00:00 UTC
+        let result = calc_run_date(&current_time);
+        assert_eq!(result, date::iso_to_ts(&"2021-09-27".to_string()).unwrap());
+    }
+
+    #[test]
+    fn test_calc_run_date2() {
+        let current_time = Timestamp::from_seconds(1758889055); // 2025-09-26 12:17:35 UTC
+        let result = calc_run_date(&current_time);
+        assert_eq!(result, date::iso_to_ts(&"2025-09-23".to_string()).unwrap());
     }
 }
