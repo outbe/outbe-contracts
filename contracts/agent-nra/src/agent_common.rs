@@ -94,7 +94,6 @@ pub fn exec_edit_agent(
         .add_attribute("agent_wallet", info.sender.to_string())
         .add_attribute("updated_at", agent.updated_at.to_string());
 
-
     Ok(Response::new()
         .add_event(event)
         .add_attribute("action", "agent::edit")
@@ -199,7 +198,6 @@ pub fn exec_activate_agent(
     if !matches!(agent.status, AgentStatus::OnHold | AgentStatus::InReview) {
         return Err(ContractError::InvalidAgentStatus {});
     }
-
 
     agent.status = AgentStatus::Active;
     agent.updated_at = env.block.time;
