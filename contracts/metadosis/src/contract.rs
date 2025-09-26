@@ -139,14 +139,12 @@ fn handle_token_allocation_reply(deps: DepsMut, msg: Reply) -> Result<Response, 
     let subcall_result = msg.result.into_result().map_err(SubMsgFailure)?;
 
     // 2. Get the data from the successful reply
-    let data = subcall_result
-        .msg_responses
-        .first()
-        .ok_or(ContractError::NoDataInReply {})?;
+    #[allow(deprecated)] // NB: older version for SEI
+    let data = subcall_result.data.ok_or(ContractError::NoDataInReply {})?;
 
     // 3. Deserialize the data into your expected struct
     let allocation_result: MsgExecuteContractResponse =
-        parse_execute_response_data(data.value.as_slice())?;
+        parse_execute_response_data(data.as_slice())?;
 
     let allocation_result = allocation_result
         .data
