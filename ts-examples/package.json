@@ -11,7 +11,8 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@cosmwasm/ts-codegen": "^1.13.0",
+    "@cosmwasm/ts-codegen": "^1.13.1",
+    "@interchainjs/types": "^1.17.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.15.14",
     "@types/secp256k1": "^4.0.6",
