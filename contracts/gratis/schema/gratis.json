@@ -146,6 +146,31 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "mint_native"
+        ],
+        "properties": {
+          "mint_native": {
+            "type": "object",
+            "required": [
+              "amount",
+              "recipient"
+            ],
+            "properties": {
+              "amount": {
+                "$ref": "#/definitions/Uint128"
+              },
+              "recipient": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ],
     "definitions": {

@@ -23,10 +23,15 @@ clippy: ## Runs cargo clippy
 .PHONY: schema
 schema: ## Runs json schema generation
 	@echo "Generating schemas for all contracts..."
-	@for contract_package in $$(cargo metadata --no-deps --quiet | jq -r '.packages[] | select(.targets[].kind[] == "example") | .name'); do \
-		echo "--- Generating schema for '$$contract_package' ---"; \
-		cargo schema -p $$contract_package; \
+	@cd contracts && \
+	for contract in */; do \
+		if [ -d "$$contract" ]; then \
+			echo "--- Generating schema for $$contract ---"; \
+			cd "$$contract" && cargo schema && cd ..; \
+		fi \
 	done
+	@echo "✅ Done"
+
 
 ## Build
 .PHONY: build
@@ -35,6 +40,10 @@ build: ## Runs wasm build using cosmwasm docker optimizer
 	--mount type=volume,source="$(shell basename "$(shell pwd)")_cache",target=/target \
 	--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
 	cosmwasm/optimizer:0.17.0
+
+.PHONY: clean
+clean: ## Clean build artifacts
+	cargo clean
 
 GREEN  := $(shell tput -Txterm setaf 2)
 YELLOW := $(shell tput -Txterm setaf 3)
