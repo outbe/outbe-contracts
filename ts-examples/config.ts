@@ -10,7 +10,7 @@ export const TX_FEE = {
 
 export const NUMBER_OF_WALLETS = 200;
 
-export const NUMBER_OF_METADOSIS_RUNS=1
+export const NUMBER_OF_METADOSIS_RUNS = 1
 
 // SPECIFY HERE DATE FOR RUN FOR METADOSIS
 export const RUN_DATE = "2025-09-22";

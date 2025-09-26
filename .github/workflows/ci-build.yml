@@ -132,12 +132,9 @@ jobs:
           override: true
       - name: Generate Schema
         run: make schema
-      - name: Show Schema changes
-        run: git status --porcelain
-
       - name: Check Schema Changes
         # fails if any changes not committed
         run: |
           CHANGES=$(git status --porcelain)
-          echo $CHANGES        
+          echo "${CHANGES:-schema is up to date}"
           test -z "$CHANGES"
