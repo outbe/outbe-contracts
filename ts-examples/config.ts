@@ -13,7 +13,7 @@ export const NUMBER_OF_WALLETS = 200;
 export const NUMBER_OF_METADOSIS_RUNS = 1
 
 // SPECIFY HERE DATE FOR RUN FOR METADOSIS
-export const RUN_DATE = "2025-09-22";
+export const RUN_DATE = "2025-09-23";
 
 export function toTimestamp(dateStr: string): number {
   return Math.floor(new Date(dateStr).getTime() / 1000);
