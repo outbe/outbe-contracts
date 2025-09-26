@@ -3,7 +3,7 @@ use crate::msg::{ApplicationResponse, NraAccessResponse};
 use crate::types::ApplicationStatus;
 use agent_common::state::AGENTS;
 use agent_common::types::{Agent, AgentInput, AgentStatus};
-use cosmwasm_std::{Addr, Deps, DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{Addr, Deps, DepsMut, Env, Event, MessageInfo, Response};
 
 pub fn exec_submit_agent(
     deps: DepsMut,
@@ -34,7 +34,7 @@ pub fn exec_submit_agent(
         wallet: existing_application.wallet.clone(),
         name: existing_application.name,
         email: existing_application.email,
-        agent_type: existing_application.application_type,
+        agent_type: existing_application.application_type.clone(),
         jurisdictions: existing_application.jurisdictions,
         endpoint: existing_application.endpoint.clone(),
         metadata_json: existing_application.metadata_json.clone(),
@@ -49,7 +49,12 @@ pub fn exec_submit_agent(
 
     AGENTS.save(deps.storage, existing_application.wallet.clone(), &agent)?;
 
+    let event = Event::new("agent::submit")
+        .add_attribute("application_id", &id)
+        .add_attribute("wallet", existing_application.wallet.to_string());
+
     Ok(Response::new()
+        .add_event(event)
         .add_attribute("action", "agent::submit")
         .add_attribute("application_id", id)
         .add_attribute("wallet", existing_application.wallet.to_string()))
@@ -85,8 +90,14 @@ pub fn exec_edit_agent(
     // Save the updated agent
     AGENTS.save(deps.storage, info.sender.clone(), &agent)?;
 
+    let event = Event::new("agent::edit")
+        .add_attribute("agent_wallet", info.sender.to_string())
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
+
     Ok(Response::new()
-        .add_attribute("action", "edit_agent")
+        .add_event(event)
+        .add_attribute("action", "agent::edit")
         .add_attribute("agent_wallet", info.sender.to_string())
         .add_attribute("updated_at", agent.updated_at.to_string()))
 }
@@ -112,18 +123,20 @@ pub fn exec_hold_agent(
         return Err(ContractError::InvalidAgentStatus {});
     }
 
-    let old_status = agent.status.clone();
     agent.status = AgentStatus::OnHold;
     agent.updated_at = env.block.time;
 
     // Save updated agent
     AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
 
+    let event = Event::new("agent::hold")
+        .add_attribute("address", &address)
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
     Ok(Response::new()
-        .add_attribute("action", "hold_agent")
+        .add_event(event)
+        .add_attribute("action", "agent::hold")
         .add_attribute("address", address)
-        .add_attribute("old_status", format!("{:?}", old_status))
-        .add_attribute("new_status", "OnHold")
         .add_attribute("updated_at", agent.updated_at.to_string()))
 }
 
@@ -148,18 +161,20 @@ pub fn exec_ban_agent(
         return Err(ContractError::InvalidAgentStatus {});
     }
 
-    let old_status = agent.status.clone();
     agent.status = AgentStatus::Blacklisted;
     agent.updated_at = env.block.time;
 
     // Save updated agent
     AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
 
+    let event = Event::new("agent::ban")
+        .add_attribute("agent_address", &address)
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
     Ok(Response::new()
-        .add_attribute("action", "ban_agent")
+        .add_event(event)
+        .add_attribute("action", "agent::ban")
         .add_attribute("address", address)
-        .add_attribute("old_status", format!("{:?}", old_status))
-        .add_attribute("new_status", "Blacklisted")
         .add_attribute("updated_at", agent.updated_at.to_string()))
 }
 
@@ -185,7 +200,6 @@ pub fn exec_activate_agent(
         return Err(ContractError::InvalidAgentStatus {});
     }
 
-    let old_status = agent.status.clone();
 
     agent.status = AgentStatus::Active;
     agent.updated_at = env.block.time;
@@ -193,11 +207,14 @@ pub fn exec_activate_agent(
     // Save updated agent
     AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
 
+    let event = Event::new("agent::activate")
+        .add_attribute("agent_address", &address)
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
     Ok(Response::new()
-        .add_attribute("action", "activate_agent")
+        .add_event(event)
+        .add_attribute("action", "agent::activate")
         .add_attribute("address", address)
-        .add_attribute("old_status", format!("{:?}", old_status))
-        .add_attribute("new_status", "Active")
         .add_attribute("updated_at", agent.updated_at.to_string()))
 }
 
@@ -216,18 +233,20 @@ pub fn exec_resign_agent(
         return Err(ContractError::Unauthorized);
     }
 
-    let old_status = agent.status.clone();
     agent.status = AgentStatus::Resigned;
     agent.updated_at = env.block.time;
 
     // Save updated agent
     AGENTS.save(deps.storage, info.sender.clone(), &agent)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "resign_agent")
+    let event = Event::new("agent::resign")
         .add_attribute("agent_wallet", info.sender.to_string())
-        .add_attribute("old_status", format!("{:?}", old_status))
-        .add_attribute("new_status", "Resigned")
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
+    Ok(Response::new()
+        .add_event(event)
+        .add_attribute("action", "agent::resign")
+        .add_attribute("agent_wallet", info.sender.to_string())
         .add_attribute("updated_at", agent.updated_at.to_string()))
 }
 

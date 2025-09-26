@@ -390,7 +390,7 @@ fn test_edit_agent() {
 
     let res = execute(deps.as_mut(), env, info_user1, edit_msg).unwrap();
     assert_eq!(res.attributes[0].key, "action");
-    assert_eq!(res.attributes[0].value, "edit_agent");
+    assert_eq!(res.attributes[0].value, "agent::edit");
 }
 
 #[test]
