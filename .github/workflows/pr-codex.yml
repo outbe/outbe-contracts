@@ -29,19 +29,20 @@ jobs:
 
       - name: Configure Codex to use OpenRouter
         run: |
+          set -euo pipefail
           mkdir -p ~/.codex
           cat > ~/.codex/config.toml <<'TOML'
           default_profile = "openrouter"
-
+      
           [profiles.openrouter]
           model_provider = "openrouter"
           model = "x-ai/grok-code-fast-1"
-
+      
           [model_providers.openrouter]
           name = "OpenRouter"
           base_url = "https://openrouter.ai/api/v1"
           env_key = "OPENROUTER_API_KEY"
-          TOML        
+          TOML      
 
       - name: Compute merge-base diff (compact)
         run: |
@@ -152,11 +153,6 @@ jobs:
           fi
           REVIEW_MSG=$(cat review.md)
           echo "REVIEW_MSG=$REVIEW_MSG" >> $GITHUB_ENV
-
-      - name: Send output
-        id: sendoutput
-        run: |
-          cat output.txt >> "$GITHUB_OUTPUT"
       - name: Send message to Deploy channel
         id: matrix-chat-message
         uses: fadenb/matrix-chat-message@v0.0.6
