@@ -59,3 +59,13 @@ jobs:
         id: sendoutput
         run: |
           cat output.txt >> "$GITHUB_OUTPUT"
+      - name: Send message to Deploy channel
+        id: matrix-chat-message
+        uses: fadenb/matrix-chat-message@v0.0.6
+        with:
+          homeserver: ${{ secrets.MATRIC_SERVER }}
+          token: ${{ secrets.MATRIX_TOKEN }}
+          channel: ${{ secrets.DEPLOY_ROOM }}
+          message: |
+              ✅ **CONTRACT_REGISTRY deployed to ${{ github.event.inputs.environment }}** \
+              - Contract Registry Address: `${{ env.CONTRACT_REGISTRY_CONTRACT_ADDRESS }}`
