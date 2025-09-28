@@ -105,9 +105,7 @@ jobs:
               --sandbox read-only \
               -p openrouter \
               --output-last-message review.md \
-              < prompt.txt \
-              > codex.log 2>&1
-
+              < prompt.txt 
           else
             echo "Large diff – switching to fallback that lets Codex fetch the .diff URL"
             # Recompute merge-base and HEAD for clarity in the prompt
@@ -143,8 +141,7 @@ jobs:
               --sandbox danger-full-access \
               -p openrouter \
               --output-last-message review.md \
-              < prompt.txt \
-              > codex.log 2>&1
+              < prompt.txt 
           fi
 
           # Defensive: ensure later steps don't explode
