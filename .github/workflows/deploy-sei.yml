@@ -290,7 +290,7 @@ jobs:
           token: ${{ secrets.MATRIX_TOKEN }}
           channel: ${{ secrets.DEPLOY_ROOM }}
           message: |
-              ✅ **CONTRACT_REGISTRY deployed to ${{ github.event.inputs.environment }}** \
+              ✅ **COSMWASM** contracts deployed to ${{ github.event.inputs.environment }}** \
               - Contract Registry address: `${{ env.CONTRACT_REGISTRY_CONTRACT_ADDRESS }}` 
               - Gratis address : `${{ env.GRATIS_CONTRACT_ADDRESS}}`
               - Promis address : `${{ env.PROMIS_CONTRACT_ADDRESS}}`
