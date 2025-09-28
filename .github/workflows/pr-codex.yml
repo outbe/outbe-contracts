@@ -148,11 +148,13 @@ jobs:
           if [ ! -s review.md ]; then
             echo "_Codex produced no output._" > review.md
           fi
-          delimiter=$(openssl rand -hex 8)
+          tr -d '\r' < review.md > review.md.clean
+          sed -e '$a\' -i review.md.clean
+          DELIM="$(uuidgen || echo __EOF__$$)"
           {
-            echo "OUT<<$delimiter"
-            cat review.md
-            echo "$delimiter"
+            printf 'msg<<%s\n' "$DELIM"     
+            cat review.md.clean             
+            printf '%s\n' "$DELIM"          
           } >> "$GITHUB_OUTPUT"
       - name: Send message to Deploy channel
         id: matrix-chat-message
