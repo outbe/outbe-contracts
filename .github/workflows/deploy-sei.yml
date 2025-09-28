@@ -282,3 +282,26 @@ jobs:
         id: sendoutput
         run: |
           cat output.txt >> "$GITHUB_OUTPUT"
+      - name: Send message to Deploy channel
+        id: matrix-chat-message
+        uses: fadenb/matrix-chat-message@v0.0.6
+        with:
+          homeserver: ${{ secrets.MATRIC_SERVER }}
+          token: ${{ secrets.MATRIX_TOKEN }}
+          channel: ${{ secrets.DEPLOY_ROOM }}
+          message: |
+              ✅ **CONTRACT_REGISTRY deployed to ${{ github.event.inputs.environment }}** \
+              - Contract Registry address: `${{ env.CONTRACT_REGISTRY_CONTRACT_ADDRESS }}` 
+              - Gratis address : `${{ env.GRATIS_CONTRACT_ADDRESS}}`
+              - Promis address : `${{ env.PROMIS_CONTRACT_ADDRESS}}`
+              - Price oracle address : `${{ env.PRICE_ORACLE_CONTRACT_ADDRESS}}`
+              - Tribute factory address : `${{ env.TRIBUTE_FACTORY_CONTRACT_ADDRESS}}`
+              - Tribute address : `${{ env.TRIBUTE_CONTRACT_ADDRESS}}`
+              - Node address : `${{ env.NOD_CONTRACT_ADDRESS}}`
+              - NRA Registry address : `${{ env.AGENT_NRA_CONTRACT_ADDRESS}}`
+              - CRA Registry address : `${{ env.AGENT_CRA_CONTRACT_ADDRESS}}`
+              - RFA Registry address : `${{ env.AGENT_RFA_CONTRACT_ADDRESS}}`
+              - IBA Registry address : `${{ env.AGENT_IBA_CONTRACT_ADDRESS}}`
+              - Metadosis address : `${{ env.METADOSIS_CONTRACT_ADDRESS}}`
+              - Token miner address : `${{ env.TOKEN_MINER_CONTRACT_ADDRESS}}`
+                          
