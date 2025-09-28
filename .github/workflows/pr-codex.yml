@@ -102,7 +102,7 @@ jobs:
             env -i OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" PATH="$PATH" HOME="$HOME" \
             codex --ask-for-approval never exec \
               --sandbox read-only \
-              -p openrouter
+              -p openrouter \
               --output-last-message review.md \
               < prompt.txt \
               > codex.log 2>&1
@@ -140,7 +140,7 @@ jobs:
             env -i OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" PATH="$PATH" HOME="$HOME" \
             codex --ask-for-approval never exec \
               --sandbox danger-full-access \
-              -p openrouter
+              -p openrouter \
               --output-last-message review.md \
               < prompt.txt \
               > codex.log 2>&1
