@@ -151,7 +151,7 @@ jobs:
           delimiter=$(openssl rand -hex 8)
           {
             echo "OUT<<$delimiter"
-            sed -e '$a\' review.md
+            cat review.md
             echo "$delimiter"
           } >> "$GITHUB_OUTPUT"
       - name: Send message to Deploy channel
