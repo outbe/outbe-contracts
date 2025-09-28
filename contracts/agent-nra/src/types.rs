@@ -7,7 +7,7 @@ pub struct Application {
     pub application_type: AgentType,
     pub wallet: Addr,
     pub name: String,
-    pub email: String,
+    pub email: Option<String>,
     pub endpoint: Option<String>,
     pub discord: Option<String>,
     pub jurisdictions: Vec<String>, // multi-select: ["eu","us",...]
@@ -24,7 +24,7 @@ pub struct Application {
 pub struct ApplicationInput {
     pub application_type: AgentType,
     pub name: String,
-    pub email: String,
+    pub email: Option<String>,
     pub jurisdictions: Vec<String>,
     pub endpoint: Option<String>,
     pub metadata_json: Option<String>,
