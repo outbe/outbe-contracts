@@ -148,9 +148,12 @@ jobs:
           if [ ! -s review.md ]; then
             echo "_Codex produced no output._" > review.md
           fi
-          echo 'REVIEW_MSG<<EOF' >> $GITHUB_ENV
-          cat review.clean.md >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          delimiter=$(openssl rand -hex 8)
+          {
+            echo "OUT<<$delimiter"
+            sed -e '$a\' review.md
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
       - name: Send message to Deploy channel
         id: matrix-chat-message
         uses: fadenb/matrix-chat-message@v0.0.6
