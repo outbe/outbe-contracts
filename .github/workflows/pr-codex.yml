@@ -51,6 +51,7 @@ jobs:
           git --no-pager diff --stat "$MB"..HEAD > pr.stat || true
 
       - name: Build prompt and run Codex (guard + fallback)
+        id: review
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -102,7 +103,8 @@ jobs:
               --sandbox read-only \
               -p openrouter \
               --output-last-message review.md \
-              < prompt.txt 
+              < prompt.txt \
+              > codex.log 2>&1
           else
             echo "Large diff – switching to fallback that lets Codex fetch the .diff URL"
             # Recompute merge-base and HEAD for clarity in the prompt
@@ -138,15 +140,19 @@ jobs:
               --sandbox danger-full-access \
               -p openrouter \
               --output-last-message review.md \
-              < prompt.txt 
+              < prompt.txt \
+              > codex.log 2>&1
           fi
 
           # Defensive: ensure later steps don't explode
           if [ ! -s review.md ]; then
             echo "_Codex produced no output._" > review.md
           fi
-          REVIEW_MSG=$(cat review.md)
-          echo "REVIEW_MSG=$REVIEW_MSG" >> $GITHUB_ENV
+          {
+            echo 'msg<<EOF'
+            cat review.md
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
       - name: Send message to Deploy channel
         id: matrix-chat-message
         uses: fadenb/matrix-chat-message@v0.0.6
@@ -154,4 +160,4 @@ jobs:
           homeserver: ${{ secrets.MATRIC_SERVER }}
           token: ${{ secrets.MATRIX_TOKEN }}
           channel: "!qvvEkPtCetsfvuwCbY:matrix.joyslab.org"
-          message: ${{ env.REVIEW_MSG }}
+          message: ${{ steps.review.outputs.msg }}
