@@ -148,11 +148,9 @@ jobs:
           if [ ! -s review.md ]; then
             echo "_Codex produced no output._" > review.md
           fi
-          {
-            echo 'msg<<__REVIEW_EOF__'
-            cat review.md
-            echo '__REVIEW_EOF__'
-          } >> "$GITHUB_OUTPUT"
+          echo 'REVIEW_MSG<<EOF' >> $GITHUB_ENV
+          cat review.clean.md >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
       - name: Send message to Deploy channel
         id: matrix-chat-message
         uses: fadenb/matrix-chat-message@v0.0.6
