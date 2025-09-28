@@ -149,7 +149,9 @@ jobs:
             echo "_Codex produced no output._" > review.md
           fi
           {
+            echo 'msg<<__REVIEW_EOF__'
             cat review.md
+            echo '__REVIEW_EOF__'
           } >> "$GITHUB_OUTPUT"
       - name: Send message to Deploy channel
         id: matrix-chat-message
