@@ -26,23 +26,20 @@ jobs:
 
       - name: Install Codex CLI
         run: npm i -g @openai/codex
-
+      
       - name: Configure Codex to use OpenRouter
         run: |
-          set -euo pipefail
           mkdir -p ~/.codex
-          cat > ~/.codex/config.toml <<'TOML'
-          default_profile = "openrouter"
-      
-          [profiles.openrouter]
-          model_provider = "openrouter"
-          model = "x-ai/grok-code-fast-1"
-      
-          [model_providers.openrouter]
-          name = "OpenRouter"
-          base_url = "https://openrouter.ai/api/v1"
-          env_key = "OPENROUTER_API_KEY"
-          TOML      
+          {
+            echo 'default_profile = "openrouter"'
+            echo '[profiles.openrouter]'
+            echo 'model_provider = "openrouter"'
+            echo 'model = "x-ai/grok-code-fast-1"'
+            echo '[model_providers.openrouter]'
+            echo 'name = "OpenRouter"'
+            echo 'base_url = "https://openrouter.ai/api/v1"'
+            echo 'env_key = "OPENROUTER_API_KEY"'
+          } > ~/.codex/config.toml
 
       - name: Compute merge-base diff (compact)
         run: |
