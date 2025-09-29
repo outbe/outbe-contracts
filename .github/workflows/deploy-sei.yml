@@ -290,8 +290,15 @@ jobs:
           token: ${{ secrets.MATRIX_TOKEN }}
           channel: ${{ secrets.DEPLOY_ROOM }}
           message: |
-              ✅ **COSMWASM** contracts deployed to ${{ github.event.inputs.environment }}** \
-              - Contract Registry address: `${{ env.CONTRACT_REGISTRY_CONTRACT_ADDRESS }}` 
+            # 📦 New COSMWASM Contracts Deployment ✅
+
+            ENV: **${{ github.event.inputs.environment }}**
+            Commit: **${{ github.sha }}**
+            IS_LATES: **${{ inputs.is_latest }}**
+            Branch: **${{ github.ref }}**
+
+            ## Details:
+              - Contract Registry address: `${{ env.CONTRACT_REGISTRY_CONTRACT_ADDRESS }}`
               - Gratis address : `${{ env.GRATIS_CONTRACT_ADDRESS}}`
               - Promis address : `${{ env.PROMIS_CONTRACT_ADDRESS}}`
               - Price oracle address : `${{ env.PRICE_ORACLE_CONTRACT_ADDRESS}}`
@@ -304,4 +311,3 @@ jobs:
               - IBA Registry address : `${{ env.AGENT_IBA_CONTRACT_ADDRESS}}`
               - Metadosis address : `${{ env.METADOSIS_CONTRACT_ADDRESS}}`
               - Token miner address : `${{ env.TOKEN_MINER_CONTRACT_ADDRESS}}`
-                          
