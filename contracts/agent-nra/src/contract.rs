@@ -128,8 +128,8 @@ pub fn exec_add_application(
         id,
         application_type: input.application_type,
         wallet: wallet.clone(),
-        name: input.name,
-        email: input.email,
+        name: input.name.trim().to_string(),
+        email: input.email.as_ref().map(|e| e.trim().to_string()),
         jurisdictions: input.jurisdictions,
         endpoint: input.endpoint,
         metadata_json: input.metadata_json,
@@ -175,7 +175,7 @@ pub fn exec_update_application(
     }
 
     existing_aplication.name = input.name.trim().to_string();
-    existing_aplication.email = input.email.trim().to_string();
+    existing_aplication.email = input.email.as_ref().map(|e| e.trim().to_string());
     existing_aplication.jurisdictions = input.jurisdictions;
     existing_aplication.endpoint = input.endpoint;
     existing_aplication.metadata_json = input.metadata_json;
@@ -213,7 +213,10 @@ pub fn exec_vote_application(
     }
 
     //check prefered nra
-    if application.application_type == AgentType::Cra {
+    if matches!(
+        application.application_type,
+        AgentType::Cra | AgentType::Iba
+    ) {
         ensure_preferred_nra(&application.ext, &info.sender)?;
     }
 
@@ -362,8 +365,8 @@ pub fn exec_add_nra_directly(
     // Create the agent with Active status directly
     let agent = Agent {
         wallet: agent_addr.clone(),
-        name: agent_input.name.trim().to_string(),
-        email: agent_input.email.trim().to_string(),
+        name: agent_input.name,
+        email: agent_input.email,
         agent_type: agent_common::types::AgentType::Nra, // Force NRA type
         jurisdictions: agent_input.jurisdictions,
         endpoint: agent_input.endpoint,

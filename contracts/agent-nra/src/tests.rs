@@ -21,7 +21,7 @@ fn sample_application_input() -> Box<ApplicationInput> {
     Box::from(ApplicationInput {
         application_type: AgentType::Nra,
         name: "Test NRA".to_string(),
-        email: "test@nra.com".to_string(),
+        email: Some("test@nra.com".to_string()),
         jurisdictions: vec!["US".to_string(), "EU".to_string()],
         endpoint: Some("https://test-nra.com".to_string()),
         metadata_json: Some(r#"{"key": "value"}"#.to_string()),
@@ -35,7 +35,7 @@ fn sample_application_input() -> Box<ApplicationInput> {
 fn sample_agent_input() -> AgentInput {
     AgentInput {
         name: "Test Agent".to_string(),
-        email: "agent@test.com".to_string(),
+        email: Some("agent@test.com".to_string()),
         jurisdictions: vec!["US".to_string()],
         endpoint: Some("https://agent.test.com".to_string()),
         metadata_json: Some(r#"{"agent": "data"}"#.to_string()),
@@ -51,7 +51,7 @@ fn create_mock_agent(deps: DepsMut, env: &cosmwasm_std::Env, wallet: &str) {
         wallet: Addr::unchecked(wallet),
         agent_type: AgentType::Nra,
         name: "Test Agent".to_string(),
-        email: "test@example.com".to_string(),
+        email: Some("test@example.com".to_string()),
         jurisdictions: vec!["US".to_string()],
         endpoint: Some("https://test.com".to_string()),
         metadata_json: None,

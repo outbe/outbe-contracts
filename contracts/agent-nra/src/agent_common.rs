@@ -81,7 +81,7 @@ pub fn exec_edit_agent(
     }
     // Update agent fields from the input
     agent.name = agent_input.name.trim().to_string();
-    agent.email = agent_input.email.trim().to_string();
+    agent.email = agent_input.email.as_ref().map(|e| e.trim().to_string());
     agent.jurisdictions = agent_input.jurisdictions;
     agent.endpoint = agent_input.endpoint;
     agent.metadata_json = agent_input.metadata_json;

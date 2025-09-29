@@ -149,6 +149,30 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "edit_additional_wallets"
+        ],
+        "properties": {
+          "edit_additional_wallets": {
+            "type": "object",
+            "properties": {
+              "additional_wallets": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "$ref": "#/definitions/ExternalWallet"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ],
     "definitions": {
@@ -235,6 +259,18 @@
                       "$ref": "#/definitions/ExternalWallet"
                     }
                   },
+                  "license_number": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "license_uri": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "preferred_nra": {
                     "type": [
                       "array",
@@ -256,7 +292,6 @@
         "type": "object",
         "required": [
           "docs_uri",
-          "email",
           "ext",
           "jurisdictions",
           "name"
@@ -285,7 +320,10 @@
             }
           },
           "email": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "endpoint": {
             "type": [
@@ -471,7 +509,6 @@
           "required": [
             "agent_type",
             "docs_uri",
-            "email",
             "ext",
             "jurisdictions",
             "name",
@@ -507,7 +544,10 @@
               }
             },
             "email": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "endpoint": {
               "type": [
@@ -626,6 +666,18 @@
                       "items": {
                         "$ref": "#/definitions/ExternalWallet"
                       }
+                    },
+                    "license_number": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "license_uri": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "preferred_nra": {
                       "type": [
@@ -731,7 +783,6 @@
           "required": [
             "agent_type",
             "docs_uri",
-            "email",
             "ext",
             "jurisdictions",
             "name",
@@ -767,7 +818,10 @@
               }
             },
             "email": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "endpoint": {
               "type": [
@@ -886,6 +940,18 @@
                       "items": {
                         "$ref": "#/definitions/ExternalWallet"
                       }
+                    },
+                    "license_number": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "license_uri": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "preferred_nra": {
                       "type": [

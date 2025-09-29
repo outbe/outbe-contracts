@@ -21,6 +21,8 @@ pub enum AgentExt {
     Iba {
         preferred_nra: Option<Vec<Addr>>,
         additional_wallets: Option<Vec<ExternalWallet>>,
+        license_number: Option<String>,
+        license_uri: Option<String>,
     },
 }
 
@@ -36,7 +38,7 @@ pub struct Agent {
     pub wallet: Addr,
     pub agent_type: AgentType,
     pub name: String,
-    pub email: String,
+    pub email: Option<String>,
     pub jurisdictions: Vec<String>, // multi-select: ["eu","us",...]
     pub endpoint: Option<String>,
     pub metadata_json: Option<String>,
@@ -52,7 +54,7 @@ pub struct Agent {
 #[cw_serde]
 pub struct AgentInput {
     pub name: String,
-    pub email: String,
+    pub email: Option<String>,
     pub jurisdictions: Vec<String>,
     pub endpoint: Option<String>,
     pub metadata_json: Option<String>,

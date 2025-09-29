@@ -1,11 +1,12 @@
 use crate::msg::{ExecuteMsg, MigrateMsg};
 use agent_common::msg::InstantiateMsg;
-use agent_common::state::{Config, CONFIG};
+use agent_common::state::{Config, AGENTS, CONFIG};
+use agent_common::types::{AgentExt, AgentStatus, ExternalWallet};
 use agent_nra::agent_common::*;
 use agent_nra::error::ContractError;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
 use cw2::set_contract_version;
 const CONTRACT_NAME: &str = "outbe.net:agent-iba";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -52,7 +53,6 @@ pub fn execute(
     let cfg = CONFIG.load(deps.storage)?;
 
     match msg {
-        // Agent
         ExecuteMsg::SubmitAgent { id } => {
             exec_submit_agent(deps, env, info, id, cfg.agent_registry)
         }
@@ -67,5 +67,50 @@ pub fn execute(
             exec_activate_agent(deps, env, info, address, cfg.agent_registry)
         }
         ExecuteMsg::ResignAgent {} => exec_resign_agent(deps, env, info),
+        ExecuteMsg::EditAdditionalWallets { additional_wallets } => {
+            exec_edit_additional_wallets(deps, env, info, additional_wallets)
+        }
     }
+}
+
+pub fn exec_edit_additional_wallets(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    additional_wallets: Option<Vec<ExternalWallet>>,
+) -> Result<Response, ContractError> {
+    // Load the agent for the sender
+    let mut agent = AGENTS
+        .may_load(deps.storage, info.sender.clone())?
+        .ok_or(ContractError::AgentNotFound {})?;
+
+    // Check if the agent status is Active
+    if agent.status != AgentStatus::Active {
+        return Err(ContractError::Unauthorized);
+    }
+
+    // Check if this is an IBA agent and update only additional_wallets
+    if let AgentExt::Iba {
+        additional_wallets: current_wallets,
+        ..
+    } = &mut agent.ext
+    {
+        *current_wallets = additional_wallets.clone();
+    } else {
+        return Err(ContractError::Unauthorized);
+    }
+
+    // Update timestamp
+    agent.updated_at = env.block.time;
+
+    // Save the updated agent (keep status as Active, no review needed)
+    AGENTS.save(deps.storage, info.sender.clone(), &agent)?;
+
+    let event = Event::new("agent-iba::edit_additional_wallets")
+        .add_attribute("agent_wallet", info.sender.to_string())
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
+    Ok(Response::new()
+        .add_attribute("action", "agent-iba::edit_additional_wallets")
+        .add_event(event))
 }
