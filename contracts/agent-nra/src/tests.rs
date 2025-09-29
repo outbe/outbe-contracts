@@ -368,7 +368,7 @@ fn test_submit_agent_flow() {
             .value
             .clone()
     };
-    assert_eq!(get("action"), "agent::submit");
+    assert_eq!(get("action"), "outbe.net:agent-nra::submit");
     assert_eq!(get("application_id"), app_id);
     assert_eq!(get("wallet"), user1.to_string());
 }
@@ -390,7 +390,7 @@ fn test_edit_agent() {
 
     let res = execute(deps.as_mut(), env, info_user1, edit_msg).unwrap();
     assert_eq!(res.attributes[0].key, "action");
-    assert_eq!(res.attributes[0].value, "agent::edit");
+    assert_eq!(res.attributes[0].value, "outbe.net:agent-nra::edit");
 }
 
 #[test]

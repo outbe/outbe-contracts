@@ -3,7 +3,13 @@ use crate::msg::{ApplicationResponse, NraAccessResponse};
 use crate::types::ApplicationStatus;
 use agent_common::state::AGENTS;
 use agent_common::types::{Agent, AgentInput, AgentStatus};
-use cosmwasm_std::{Addr, Deps, DepsMut, Env, Event, MessageInfo, Response};
+use cosmwasm_std::{Addr, Deps, DepsMut, Env, Event, MessageInfo, Response, Storage};
+use cw2::get_contract_version;
+
+fn event_name(storage: &dyn Storage, action: &str) -> Result<String, ContractError> {
+    let cv = get_contract_version(storage)?;
+    Ok(format!("{}::{}", cv.contract, action))
+}
 
 pub fn exec_submit_agent(
     deps: DepsMut,
@@ -49,15 +55,13 @@ pub fn exec_submit_agent(
 
     AGENTS.save(deps.storage, existing_application.wallet.clone(), &agent)?;
 
-    let event = Event::new("agent::submit")
+    let event = Event::new(&event_name(deps.storage, "submit")?)
         .add_attribute("application_id", &id)
         .add_attribute("wallet", existing_application.wallet.to_string());
 
     Ok(Response::new()
         .add_event(event)
-        .add_attribute("action", "agent::submit")
-        .add_attribute("application_id", id)
-        .add_attribute("wallet", existing_application.wallet.to_string()))
+        .add_attribute("action", &event_name(deps.storage, "submit")?))
 }
 
 pub fn exec_edit_agent(
@@ -90,15 +94,13 @@ pub fn exec_edit_agent(
     // Save the updated agent
     AGENTS.save(deps.storage, info.sender.clone(), &agent)?;
 
-    let event = Event::new("agent::edit")
+    let event = Event::new(&event_name(deps.storage, "edit")?)
         .add_attribute("agent_wallet", info.sender.to_string())
         .add_attribute("updated_at", agent.updated_at.to_string());
 
     Ok(Response::new()
         .add_event(event)
-        .add_attribute("action", "agent::edit")
-        .add_attribute("agent_wallet", info.sender.to_string())
-        .add_attribute("updated_at", agent.updated_at.to_string()))
+        .add_attribute("action", &event_name(deps.storage, "edit")?))
 }
 pub fn exec_hold_agent(
     deps: DepsMut,
@@ -128,15 +130,13 @@ pub fn exec_hold_agent(
     // Save updated agent
     AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
 
-    let event = Event::new("agent::hold")
+    let event = Event::new(&event_name(deps.storage, "hold")?)
         .add_attribute("address", &address)
         .add_attribute("updated_at", agent.updated_at.to_string());
 
     Ok(Response::new()
         .add_event(event)
-        .add_attribute("action", "agent::hold")
-        .add_attribute("address", address)
-        .add_attribute("updated_at", agent.updated_at.to_string()))
+        .add_attribute("action", &event_name(deps.storage, "hold")?))
 }
 
 pub fn exec_ban_agent(
@@ -166,15 +166,13 @@ pub fn exec_ban_agent(
     // Save updated agent
     AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
 
-    let event = Event::new("agent::ban")
+    let event = Event::new(&event_name(deps.storage, "ban")?)
         .add_attribute("agent_address", &address)
         .add_attribute("updated_at", agent.updated_at.to_string());
 
     Ok(Response::new()
         .add_event(event)
-        .add_attribute("action", "agent::ban")
-        .add_attribute("address", address)
-        .add_attribute("updated_at", agent.updated_at.to_string()))
+        .add_attribute("action", &event_name(deps.storage, "ban")?))
 }
 
 pub fn exec_activate_agent(
@@ -205,15 +203,13 @@ pub fn exec_activate_agent(
     // Save updated agent
     AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
 
-    let event = Event::new("agent::activate")
+    let event = Event::new(&event_name(deps.storage, "activate")?)
         .add_attribute("agent_address", &address)
         .add_attribute("updated_at", agent.updated_at.to_string());
 
     Ok(Response::new()
         .add_event(event)
-        .add_attribute("action", "agent::activate")
-        .add_attribute("address", address)
-        .add_attribute("updated_at", agent.updated_at.to_string()))
+        .add_attribute("action", &event_name(deps.storage, "activate")?))
 }
 
 pub fn exec_resign_agent(
@@ -237,15 +233,13 @@ pub fn exec_resign_agent(
     // Save updated agent
     AGENTS.save(deps.storage, info.sender.clone(), &agent)?;
 
-    let event = Event::new("agent::resign")
+    let event = Event::new(&event_name(deps.storage, "resign")?)
         .add_attribute("agent_wallet", info.sender.to_string())
         .add_attribute("updated_at", agent.updated_at.to_string());
 
     Ok(Response::new()
         .add_event(event)
-        .add_attribute("action", "agent::resign")
-        .add_attribute("agent_wallet", info.sender.to_string())
-        .add_attribute("updated_at", agent.updated_at.to_string()))
+        .add_attribute("action", &event_name(deps.storage, "resign")?))
 }
 
 pub fn check_active_nra_agent(
