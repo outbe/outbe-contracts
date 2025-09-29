@@ -3,7 +3,14 @@ use crate::msg::{ApplicationResponse, NraAccessResponse};
 use crate::types::ApplicationStatus;
 use agent_common::state::AGENTS;
 use agent_common::types::{Agent, AgentInput, AgentStatus};
-use cosmwasm_std::{Addr, Deps, DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{Addr, Deps, DepsMut, Env, Event, MessageInfo, Response, Storage};
+use cw2::get_contract_version;
+
+fn event_name(storage: &dyn Storage, action: &str) -> Result<String, ContractError> {
+    let cv = get_contract_version(storage)?;
+    let contract_name = cv.contract.split(':').next_back().unwrap_or(&cv.contract);
+    Ok(format!("{}::{}", contract_name, action))
+}
 
 pub fn exec_submit_agent(
     deps: DepsMut,
@@ -34,7 +41,7 @@ pub fn exec_submit_agent(
         wallet: existing_application.wallet.clone(),
         name: existing_application.name,
         email: existing_application.email,
-        agent_type: existing_application.application_type,
+        agent_type: existing_application.application_type.clone(),
         jurisdictions: existing_application.jurisdictions,
         endpoint: existing_application.endpoint.clone(),
         metadata_json: existing_application.metadata_json.clone(),
@@ -49,10 +56,13 @@ pub fn exec_submit_agent(
 
     AGENTS.save(deps.storage, existing_application.wallet.clone(), &agent)?;
 
+    let event = Event::new(&event_name(deps.storage, "submit")?)
+        .add_attribute("application_id", &id)
+        .add_attribute("wallet", existing_application.wallet.to_string());
+
     Ok(Response::new()
-        .add_attribute("action", "agent::submit")
-        .add_attribute("application_id", id)
-        .add_attribute("wallet", existing_application.wallet.to_string()))
+        .add_event(event)
+        .add_attribute("action", &event_name(deps.storage, "submit")?))
 }
 
 pub fn exec_edit_agent(
@@ -85,10 +95,13 @@ pub fn exec_edit_agent(
     // Save the updated agent
     AGENTS.save(deps.storage, info.sender.clone(), &agent)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "edit_agent")
+    let event = Event::new(&event_name(deps.storage, "edit")?)
         .add_attribute("agent_wallet", info.sender.to_string())
-        .add_attribute("updated_at", agent.updated_at.to_string()))
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
+    Ok(Response::new()
+        .add_event(event)
+        .add_attribute("action", &event_name(deps.storage, "edit")?))
 }
 pub fn exec_hold_agent(
     deps: DepsMut,
@@ -112,19 +125,19 @@ pub fn exec_hold_agent(
         return Err(ContractError::InvalidAgentStatus {});
     }
 
-    let old_status = agent.status.clone();
     agent.status = AgentStatus::OnHold;
     agent.updated_at = env.block.time;
 
     // Save updated agent
     AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
 
+    let event = Event::new(&event_name(deps.storage, "hold")?)
+        .add_attribute("address", &address)
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
     Ok(Response::new()
-        .add_attribute("action", "hold_agent")
-        .add_attribute("address", address)
-        .add_attribute("old_status", format!("{:?}", old_status))
-        .add_attribute("new_status", "OnHold")
-        .add_attribute("updated_at", agent.updated_at.to_string()))
+        .add_event(event)
+        .add_attribute("action", &event_name(deps.storage, "hold")?))
 }
 
 pub fn exec_ban_agent(
@@ -148,19 +161,19 @@ pub fn exec_ban_agent(
         return Err(ContractError::InvalidAgentStatus {});
     }
 
-    let old_status = agent.status.clone();
     agent.status = AgentStatus::Blacklisted;
     agent.updated_at = env.block.time;
 
     // Save updated agent
     AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
 
+    let event = Event::new(&event_name(deps.storage, "ban")?)
+        .add_attribute("agent_address", &address)
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
     Ok(Response::new()
-        .add_attribute("action", "ban_agent")
-        .add_attribute("address", address)
-        .add_attribute("old_status", format!("{:?}", old_status))
-        .add_attribute("new_status", "Blacklisted")
-        .add_attribute("updated_at", agent.updated_at.to_string()))
+        .add_event(event)
+        .add_attribute("action", &event_name(deps.storage, "ban")?))
 }
 
 pub fn exec_activate_agent(
@@ -185,20 +198,19 @@ pub fn exec_activate_agent(
         return Err(ContractError::InvalidAgentStatus {});
     }
 
-    let old_status = agent.status.clone();
-
     agent.status = AgentStatus::Active;
     agent.updated_at = env.block.time;
 
     // Save updated agent
     AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
 
+    let event = Event::new(&event_name(deps.storage, "activate")?)
+        .add_attribute("agent_address", &address)
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
     Ok(Response::new()
-        .add_attribute("action", "activate_agent")
-        .add_attribute("address", address)
-        .add_attribute("old_status", format!("{:?}", old_status))
-        .add_attribute("new_status", "Active")
-        .add_attribute("updated_at", agent.updated_at.to_string()))
+        .add_event(event)
+        .add_attribute("action", &event_name(deps.storage, "activate")?))
 }
 
 pub fn exec_resign_agent(
@@ -216,19 +228,19 @@ pub fn exec_resign_agent(
         return Err(ContractError::Unauthorized);
     }
 
-    let old_status = agent.status.clone();
     agent.status = AgentStatus::Resigned;
     agent.updated_at = env.block.time;
 
     // Save updated agent
     AGENTS.save(deps.storage, info.sender.clone(), &agent)?;
 
-    Ok(Response::new()
-        .add_attribute("action", "resign_agent")
+    let event = Event::new(&event_name(deps.storage, "resign")?)
         .add_attribute("agent_wallet", info.sender.to_string())
-        .add_attribute("old_status", format!("{:?}", old_status))
-        .add_attribute("new_status", "Resigned")
-        .add_attribute("updated_at", agent.updated_at.to_string()))
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
+    Ok(Response::new()
+        .add_event(event)
+        .add_attribute("action", &event_name(deps.storage, "resign")?))
 }
 
 pub fn check_active_nra_agent(

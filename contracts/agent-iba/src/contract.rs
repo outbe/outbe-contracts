@@ -30,7 +30,7 @@ pub fn instantiate(
     CONFIG.save(deps.storage, &cfg)?;
 
     Ok(Response::new()
-        .add_attribute("action", "agent-rfa::instantiate")
+        .add_attribute("action", "agent-iba::instantiate")
         .add_attribute("version", CONTRACT_VERSION))
 }
 
