@@ -87,6 +87,7 @@ where
         self.token_count.save(storage, &val)?;
         Ok(val)
     }
+
     pub fn clean_tokens(
         &self,
         storage: &mut dyn Storage,
@@ -101,6 +102,10 @@ where
             .filter_map(|item| item.ok())
             .take(batch)
             .collect::<Vec<_>>();
+
+        if paths.is_empty() {
+            return Ok(());
+        }
 
         let paths_len = paths.len() as u64;
         for (pk, value) in paths {

@@ -13,11 +13,8 @@ async function main() {
   await burnTributes(walletClient, account.address)
   await burnTributeFactory(walletClient, account.address)
   await burnNods(walletClient, account.address)
+  await burnMetadosis(walletClient, account.address)
 
-  let metadosisContractAddress = await getContractAddresses('METADOSIS_CONTRACT_ADDRESS')
-  let metadosisClient = new MetadosisClient(walletClient, account.address, metadosisContractAddress)
-  let tx3: ExecuteResult = await metadosisClient.burnAll(TX_FEE)
-  console.log("Burn metadosis, tx", tx3.transactionHash)
 }
 
 async function burnTributes(walletClient: SigningCosmWasmClient, address: string) {
@@ -45,6 +42,13 @@ async function burnNods(walletClient: SigningCosmWasmClient, address: string) {
     console.log("Burned 50 Nods ..., tx", tx.transactionHash)
   } while (await client.numTokens().then(r => r.count > 0))
   console.log("Burning Nods done ✅")
+}
+
+async function burnMetadosis(walletClient: SigningCosmWasmClient, address: string) {
+  let metadosisContractAddress = await getContractAddresses('METADOSIS_CONTRACT_ADDRESS')
+  let metadosisClient = new MetadosisClient(walletClient, address, metadosisContractAddress)
+  let tx: ExecuteResult = await metadosisClient.burnAll(TX_FEE)
+  console.log("Burn metadosis done ✅, tx", tx.transactionHash)
 }
 
 main();
