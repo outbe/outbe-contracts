@@ -164,5 +164,5 @@ jobs:
           token: ${{ secrets.MATRIX_TOKEN }}
           channel: "!qvvEkPtCetsfvuwCbY:matrix.joyslab.org"
           message: |
-            ${{ github.event.pull_request.number }} ${{ github.event.pull_request.html_url }}
+            *Pull request N${{ github.event.pull_request.number }}* ${{ github.event.pull_request.html_url }}
             ${{ steps.review.outputs.msg }}
