@@ -31,7 +31,7 @@ async function burnTributeFactory(walletClient: SigningCosmWasmClient, address: 
   let tributeFactoryContractAddress = await getContractAddresses('TRIBUTE_FACTORY_CONTRACT_ADDRESS')
   let tributeFactoryClient = new TributeFactoryClient(walletClient, address, tributeFactoryContractAddress)
   let tx1: ExecuteResult = await tributeFactoryClient.burnAll(TX_FEE)
-  console.log("Burn tribute factory, tx", tx1.transactionHash)
+  console.log("Burn tribute factory done ✅, tx", tx1.transactionHash)
 }
 
 async function burnNods(walletClient: SigningCosmWasmClient, address: string) {
