@@ -1,0 +1,176 @@
+name: PR → Codex review
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+jobs:
+  codex_review:
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR HEAD (full history)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Codex CLI
+        run: npm i -g @openai/codex
+      
+      - name: Configure Codex to use OpenRouter
+        run: |
+          mkdir -p ~/.codex
+          {
+            echo 'default_profile = "openrouter"'
+            echo '[profiles.openrouter]'
+            echo 'model_provider = "openrouter"'
+            echo 'model = "x-ai/grok-code-fast-1"'
+            echo '[model_providers.openrouter]'
+            echo 'name = "OpenRouter"'
+            echo 'base_url = "https://openrouter.ai/api/v1"'
+            echo 'env_key = "OPENROUTER_API_KEY"'
+          } > ~/.codex/config.toml
+
+      - name: Compute merge-base diff (compact)
+        run: |
+          set -euo pipefail
+          BASE_REF='${{ github.event.pull_request.base.ref }}'
+          git fetch --no-tags origin "$BASE_REF":"refs/remotes/origin/$BASE_REF"
+          MB=$(git merge-base "origin/$BASE_REF" HEAD)
+          git diff --unified=0 "$MB"..HEAD > pr.diff
+          git --no-pager diff --stat "$MB"..HEAD > pr.stat || true
+
+      - name: Build prompt and run Codex (guard + fallback)
+        id: review
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          MAX=${MAX_DIFF_BYTES:-900000} # ~0.9MB ceiling; override via env if needed
+
+          BYTES=$(wc -c < pr.diff || echo 0)
+          echo "pr.diff size: $BYTES bytes (limit: $MAX)"
+
+          # Common prelude for AppSec review
+          {
+            echo "You are a skilled Reviewer with deep expertise in Cosmos SDK and CosmWasm smart-contract security."
+            echo "Analyze this PR with emphasis on CosmWasm-specific risks:"
+            echo "- storage isolation and state invariants (Item/Map keys, namespacing, zero-copy pitfalls)"
+            echo "- cross-contract calls and message routing (reply handling, submessages, reentrancy-like patterns)"
+            echo "- address/auth validation (sender vs funds vs info, deps.api.addr_validate/addr_canonicalize misuse)"
+            echo "- replay/duplication (instantiate/execute/migrate, idempotency, sequence/counters, event-based triggers)"
+            echo "- gas/DoS vectors (unbounded iteration, large maps, pagination, untrusted input sizes)"
+            echo "- financial safety (loss of funds, rounding/precision, overflow/underflow, price/oracle use)"
+            echo "- inter-module invariants with Cosmos SDK (bank, staking, ibc, authz; privilege boundaries)"
+            echo "- bugs, vulnerabilities, loss of funds issues, crypto attack vectors, signature vulnerability, replay attacks etc.."
+            echo "Think deeply. Prioritize the *changed hunks* in pr.diff, but open any other files"
+            echo "in the checkout as needed for context."
+            echo
+            echo "Return a tight executive summary, then bullets with:"
+            echo "- severity (high/med/low)"
+            echo "- file:line pointers"
+            echo "- concrete fixes & example patches"
+            echo '- if N/A, say "No significant issues found."'
+            echo
+            echo "PR URL: $PR_URL"
+            echo
+            echo "Formatting requirements:"
+            echo "- Output MUST be GitHub-flavored Markdown (GFM)."
+            echo "- Start with '## Executive summary' (one short paragraph)."
+            echo "- Then '## Findings and fixes' as a bullet list."
+            echo "- Use fenced code blocks for patches/configs with language tags (diff, yaml, etc.)."
+            echo "- Use inline code for file:line and identifiers."
+          } > prompt.txt
+
+          if [ "$BYTES" -le "$MAX" ] && [ "$BYTES" -gt 0 ]; then
+            echo "Using embedded diff path (<= $MAX bytes)"
+            {
+              echo "Unified diff (merge-base vs HEAD):"
+              echo '```diff'
+              cat pr.diff
+              echo '```'
+            } >> prompt.txt
+
+            echo "---- prompt head ----"; head -n 40 prompt.txt >&2
+            echo "---- prompt size ----"; wc -c prompt.txt >&2
+
+            # Run Codex with a scrubbed env: only OPENAI_API_KEY, PATH, HOME
+            env -i OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" PATH="$PATH" HOME="$HOME" \
+            codex --ask-for-approval never exec \
+              --sandbox read-only \
+              -p openrouter \
+              --output-last-message review.md \
+              < prompt.txt \
+              > codex.log 2>&1
+          else
+            echo "Large diff – switching to fallback that lets Codex fetch the .diff URL"
+            # Recompute merge-base and HEAD for clarity in the prompt
+            BASE_REF='${{ github.event.pull_request.base.ref }}'
+            git fetch --no-tags origin "$BASE_REF":"refs/remotes/origin/$BASE_REF"
+            MB=$(git merge-base "origin/$BASE_REF" HEAD)
+            HEAD_SHA=$(git rev-parse HEAD)
+            DIFF_URL="${PR_URL}.diff"
+
+            {
+              echo "The diff is too large to embed safely in this CI run."
+              echo "Please fetch and analyze the diff from this URL:"
+              echo "$DIFF_URL"
+              echo
+              echo "Commit range (merge-base...HEAD):"
+              echo "merge-base: $MB"
+              echo "head:       $HEAD_SHA"
+              echo
+              echo "For quick orientation, here is the diffstat:"
+              echo '```'
+              cat pr.stat || true
+              echo '```'
+              echo
+              echo "After fetching the diff, continue with the same review instructions above."
+            } >> prompt.txt
+
+            echo "---- fallback prompt head ----"; head -n 80 prompt.txt >&2
+            echo "---- fallback prompt size ----"; wc -c prompt.txt >&2
+
+            # Network-enabled only for this large-diff case; still scrub env
+            env -i OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" PATH="$PATH" HOME="$HOME" \
+            codex --ask-for-approval never exec \
+              --sandbox danger-full-access \
+              -p openrouter \
+              --output-last-message review.md \
+              < prompt.txt \
+              > codex.log 2>&1
+          fi
+
+          # Defensive: ensure later steps don't explode
+          if [ ! -s review.md ]; then
+            echo "_Codex produced no output._" > review.md
+          fi
+          tr -d '\r' < review.md > review.md.clean
+          sed -e '$a\' -i review.md.clean
+          DELIM="$(uuidgen || echo __EOF__$$)"
+          {
+            printf 'msg<<%s\n' "$DELIM"     
+            cat review.md.clean             
+            printf '%s\n' "$DELIM"          
+          } >> "$GITHUB_OUTPUT"
+      - name: Send message to Deploy channel
+        id: matrix-chat-message
+        uses: fadenb/matrix-chat-message@v0.0.6
+        with:
+          homeserver: ${{ secrets.MATRIC_SERVER }}
+          token: ${{ secrets.MATRIX_TOKEN }}
+          channel: "!qvvEkPtCetsfvuwCbY:matrix.joyslab.org"
+          message: |
+            **Pull request N ${{ github.event.pull_request.number }}** ${{ github.event.pull_request.html_url }}
+            ${{ steps.review.outputs.msg }}
