@@ -64,8 +64,16 @@ jobs:
 
           # Common prelude for AppSec review
           {
-            echo "You are a skilled AppSec reviewer. Analyze this PR for:"
-            echo "bugs, vulnerabilities, loss of funds issues, crypto attack vectors, signature vulnerability, replay attacks etc.."
+            echo "You are a skilled Reviewer with deep expertise in Cosmos SDK and CosmWasm smart-contract security."
+            echo "Analyze this PR with emphasis on CosmWasm-specific risks:"
+            echo "- storage isolation and state invariants (Item/Map keys, namespacing, zero-copy pitfalls)"
+            echo "- cross-contract calls and message routing (reply handling, submessages, reentrancy-like patterns)"
+            echo "- address/auth validation (sender vs funds vs info, deps.api.addr_validate/addr_canonicalize misuse)"
+            echo "- replay/duplication (instantiate/execute/migrate, idempotency, sequence/counters, event-based triggers)"
+            echo "- gas/DoS vectors (unbounded iteration, large maps, pagination, untrusted input sizes)"
+            echo "- financial safety (loss of funds, rounding/precision, overflow/underflow, price/oracle use)"
+            echo "- inter-module invariants with Cosmos SDK (bank, staking, ibc, authz; privilege boundaries)"
+            echo "- bugs, vulnerabilities, loss of funds issues, crypto attack vectors, signature vulnerability, replay attacks etc.."
             echo "Think deeply. Prioritize the *changed hunks* in pr.diff, but open any other files"
             echo "in the checkout as needed for context."
             echo
