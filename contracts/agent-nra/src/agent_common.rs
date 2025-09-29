@@ -8,7 +8,8 @@ use cw2::get_contract_version;
 
 fn event_name(storage: &dyn Storage, action: &str) -> Result<String, ContractError> {
     let cv = get_contract_version(storage)?;
-    Ok(format!("{}::{}", cv.contract, action))
+    let contract_name = cv.contract.split(':').next_back().unwrap_or(&cv.contract);
+    Ok(format!("{}::{}", contract_name, action))
 }
 
 pub fn exec_submit_agent(
