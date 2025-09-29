@@ -200,6 +200,18 @@
                       "$ref": "#/definitions/ExternalWallet"
                     }
                   },
+                  "license_number": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "license_uri": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "preferred_nra": {
                     "type": [
                       "array",
@@ -221,7 +233,6 @@
         "type": "object",
         "required": [
           "docs_uri",
-          "email",
           "ext",
           "jurisdictions",
           "name"
@@ -250,7 +261,10 @@
             }
           },
           "email": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "endpoint": {
             "type": [
@@ -293,7 +307,6 @@
         "required": [
           "application_type",
           "docs_uri",
-          "email",
           "jurisdictions",
           "name"
         ],
@@ -324,7 +337,10 @@
             }
           },
           "email": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "endpoint": {
             "type": [
@@ -994,7 +1010,6 @@
           "required": [
             "agent_type",
             "docs_uri",
-            "email",
             "ext",
             "jurisdictions",
             "name",
@@ -1030,7 +1045,10 @@
               }
             },
             "email": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "endpoint": {
               "type": [
@@ -1149,6 +1167,18 @@
                       "items": {
                         "$ref": "#/definitions/ExternalWallet"
                       }
+                    },
+                    "license_number": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "license_uri": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "preferred_nra": {
                       "type": [
@@ -1329,6 +1359,18 @@
                         "$ref": "#/definitions/ExternalWallet"
                       }
                     },
+                    "license_number": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "license_uri": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "preferred_nra": {
                       "type": [
                         "array",
@@ -1360,7 +1402,6 @@
           "required": [
             "application_type",
             "docs_uri",
-            "email",
             "id",
             "jurisdictions",
             "name",
@@ -1396,7 +1437,10 @@
               }
             },
             "email": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "endpoint": {
               "type": [
@@ -1527,7 +1571,6 @@
           "required": [
             "agent_type",
             "docs_uri",
-            "email",
             "ext",
             "jurisdictions",
             "name",
@@ -1563,7 +1606,10 @@
               }
             },
             "email": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "endpoint": {
               "type": [
@@ -1682,6 +1728,18 @@
                       "items": {
                         "$ref": "#/definitions/ExternalWallet"
                       }
+                    },
+                    "license_number": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "license_uri": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "preferred_nra": {
                       "type": [
@@ -1861,6 +1919,18 @@
                         "$ref": "#/definitions/ExternalWallet"
                       }
                     },
+                    "license_number": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "license_uri": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "preferred_nra": {
                       "type": [
                         "array",
@@ -1892,7 +1962,6 @@
           "required": [
             "application_type",
             "docs_uri",
-            "email",
             "id",
             "jurisdictions",
             "name",
@@ -1928,7 +1997,10 @@
               }
             },
             "email": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "endpoint": {
               "type": [
@@ -2133,6 +2205,18 @@
                         "$ref": "#/definitions/ExternalWallet"
                       }
                     },
+                    "license_number": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "license_uri": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "preferred_nra": {
                       "type": [
                         "array",
@@ -2164,7 +2248,6 @@
           "required": [
             "application_type",
             "docs_uri",
-            "email",
             "id",
             "jurisdictions",
             "name",
@@ -2200,7 +2283,10 @@
               }
             },
             "email": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "endpoint": {
               "type": [
