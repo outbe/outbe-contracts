@@ -37,18 +37,18 @@ fn create_iba_agent(deps: DepsMut, env: &Env, wallet: &str) {
         updated_at: env.block.time,
         ext: AgentExt::Iba {
             preferred_nra: Some(vec![Addr::unchecked("nra1")]),
-            additional_wallets: Some(vec![
-                ExternalWallet {
-                    wallet_type: WalletType::Cosmos,
-                    address: "cosmos1abc123".to_string(),
-                },
-            ]),
+            additional_wallets: Some(vec![ExternalWallet {
+                wallet_type: WalletType::Cosmos,
+                address: "cosmos1abc123".to_string(),
+            }]),
             license_number: Some("IBA123456".to_string()),
             license_uri: Some("https://license.iba.com".to_string()),
         },
     };
 
-    AGENTS.save(deps.storage, Addr::unchecked(wallet), &agent).unwrap();
+    AGENTS
+        .save(deps.storage, Addr::unchecked(wallet), &agent)
+        .unwrap();
 }
 
 #[test]
@@ -59,12 +59,10 @@ fn test_edit_additional_wallets() {
     setup_contract(deps.as_mut());
     create_iba_agent(deps.as_mut(), &env, IBA_AGENT);
 
-    let new_wallets = vec![
-        ExternalWallet {
-            wallet_type: WalletType::Evm,
-            address: "0x9876543210".to_string(),
-        },
-    ];
+    let new_wallets = vec![ExternalWallet {
+        wallet_type: WalletType::Evm,
+        address: "0x9876543210".to_string(),
+    }];
 
     let msg = ExecuteMsg::EditAdditionalWallets {
         additional_wallets: Some(new_wallets.clone()),
@@ -74,12 +72,15 @@ fn test_edit_additional_wallets() {
     let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
     assert_eq!(res.attributes[0].value, "edit_iba_additional_wallets");
-    assert_eq!(res.attributes[3].value, "1");
 
     // Verify the agent was updated
-    let updated_agent = AGENTS.load(&deps.storage, Addr::unchecked(IBA_AGENT)).unwrap();
+    let updated_agent = AGENTS
+        .load(&deps.storage, Addr::unchecked(IBA_AGENT))
+        .unwrap();
     match updated_agent.ext {
-        AgentExt::Iba { additional_wallets, .. } => {
+        AgentExt::Iba {
+            additional_wallets, ..
+        } => {
             assert_eq!(additional_wallets, Some(new_wallets));
         }
         _ => panic!("Expected IBA agent ext"),

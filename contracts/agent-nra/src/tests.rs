@@ -5,7 +5,7 @@ use crate::query::query;
 use crate::state::CONFIG;
 use crate::types::ApplicationInput;
 use agent_common::state::AGENTS;
-use agent_common::types::{Agent, AgentExt, AgentInput, AgentStatus, AgentType, ExternalWallet, WalletType};
+use agent_common::types::{Agent, AgentExt, AgentInput, AgentStatus, AgentType};
 use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
 use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
 use cw_multi_test::{App, ContractWrapper, Executor};
@@ -586,5 +586,3 @@ fn test_add_agent_directly_unauthorized() {
     let agent = AGENTS.may_load(&deps.storage, agent_addr).unwrap();
     assert!(agent.is_none());
 }
-
-

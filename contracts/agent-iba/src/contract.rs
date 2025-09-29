@@ -1,12 +1,12 @@
 use crate::msg::{ExecuteMsg, MigrateMsg};
 use agent_common::msg::InstantiateMsg;
-use agent_common::state::{Config, CONFIG, AGENTS};
+use agent_common::state::{Config, AGENTS, CONFIG};
 use agent_common::types::{AgentExt, AgentStatus, ExternalWallet};
 use agent_nra::agent_common::*;
 use agent_nra::error::ContractError;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
 use cw2::set_contract_version;
 const CONTRACT_NAME: &str = "outbe.net:agent-iba";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -90,7 +90,11 @@ pub fn exec_edit_additional_wallets(
     }
 
     // Check if this is an IBA agent and update only additional_wallets
-    if let AgentExt::Iba { additional_wallets: current_wallets, .. } = &mut agent.ext {
+    if let AgentExt::Iba {
+        additional_wallets: current_wallets,
+        ..
+    } = &mut agent.ext
+    {
         *current_wallets = additional_wallets.clone();
     } else {
         return Err(ContractError::Unauthorized);
@@ -102,12 +106,11 @@ pub fn exec_edit_additional_wallets(
     // Save the updated agent (keep status as Active, no review needed)
     AGENTS.save(deps.storage, info.sender.clone(), &agent)?;
 
+    let event = Event::new("agent-iba::edit_additional_wallets")
+        .add_attribute("agent_wallet", info.sender.to_string())
+        .add_attribute("updated_at", agent.updated_at.to_string());
+
     Ok(Response::new()
         .add_attribute("action", "edit_iba_additional_wallets")
-        .add_attribute("agent_wallet", info.sender.to_string())
-        .add_attribute("updated_at", agent.updated_at.to_string())
-        .add_attribute(
-            "additional_wallets_count",
-            additional_wallets.as_ref().map_or(0, |w| w.len()).to_string(),
-        ))
+        .add_event(event))
 }

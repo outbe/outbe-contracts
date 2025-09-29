@@ -8,12 +8,24 @@ pub enum MigrateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    SubmitAgent { id: String },
-    EditAgent { agent: Box<AgentInput> },
-    HoldAgent { address: String },
-    BanAgent { address: String },
-    ActivateAgent { address: String },
+    SubmitAgent {
+        id: String,
+    },
+    EditAgent {
+        agent: Box<AgentInput>,
+    },
+    HoldAgent {
+        address: String,
+    },
+    BanAgent {
+        address: String,
+    },
+    ActivateAgent {
+        address: String,
+    },
     ResignAgent {},
 
-    EditAdditionalWallets { additional_wallets: Option<Vec<ExternalWallet>> },
+    EditAdditionalWallets {
+        additional_wallets: Option<Vec<ExternalWallet>>,
+    },
 }
