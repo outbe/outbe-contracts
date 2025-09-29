@@ -131,6 +131,16 @@
         "properties": {
           "burn_all": {
             "type": "object",
+            "properties": {
+              "batch_size": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint",
+                "minimum": 0.0
+              }
+            },
             "additionalProperties": false
           }
         },

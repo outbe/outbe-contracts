@@ -98,7 +98,7 @@ pub fn execute(
         } => execute_mint(deps, &env, &info, token_id, owner, token_uri, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
         #[cfg(feature = "demo")]
-        ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
+        ExecuteMsg::BurnAll {batch_size} => execute_burn_all(deps, &env, &info, batch_size),
         ExecuteMsg::BurnForDay { date } => execute_burn_for_day(deps, &env, &info, date),
 
         ExecuteMsg::UpdateMinterOwnership(action) => Ok(
@@ -255,10 +255,11 @@ fn execute_burn_all(
     deps: DepsMut,
     _env: &Env,
     info: &MessageInfo,
+    batch_size: Option<usize>,
 ) -> Result<Response, ContractError> {
     let config = Cw721Config::<TributeData, TributeConfig>::default();
 
-    config.clean_tokens(deps.storage)?;
+    config.clean_tokens(deps.storage, batch_size)?;
 
     Ok(Response::new()
         .add_attribute("action", "tribute::burn_all")
@@ -378,7 +379,7 @@ mod tests {
         assert_eq!(config.token_count(&deps.storage).unwrap(), 2);
 
         // Execute burn all
-        let res = execute_burn_all(deps.as_mut(), &env, &info).unwrap();
+        let res = execute_burn_all(deps.as_mut(), &env, &info, None).unwrap();
 
         // Verify tokens were burned
         assert_eq!(config.token_count(&deps.storage).unwrap(), 0);

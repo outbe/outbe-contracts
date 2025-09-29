@@ -43,7 +43,9 @@ pub enum ExecuteMsg {
     },
     #[cfg(feature = "demo")]
     /// Removes all tributes previously submitted
-    BurnAll {},
+    BurnAll {
+        batch_size: Option<usize>
+    },
     /// Removes all tributes previously submitted
     BurnForDay {
         date: WorldwideDay,
