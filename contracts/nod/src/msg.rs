@@ -25,7 +25,7 @@ pub enum ExecuteMsg {
     /// Burn an existing Nod NFT
     Burn { token_id: String },
     #[cfg(feature = "demo")]
-    BurnAll {batch_size: Option<usize>,},
+    BurnAll { batch_size: Option<usize> },
 }
 
 /// Extension data for submit (mint)

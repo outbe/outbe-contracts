@@ -98,7 +98,7 @@ pub fn execute(
         } => execute_mint(deps, &env, &info, token_id, owner, token_uri, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
         #[cfg(feature = "demo")]
-        ExecuteMsg::BurnAll {batch_size} => execute_burn_all(deps, &env, &info, batch_size),
+        ExecuteMsg::BurnAll { batch_size } => execute_burn_all(deps, &env, &info, batch_size),
         ExecuteMsg::BurnForDay { date } => execute_burn_for_day(deps, &env, &info, date),
 
         ExecuteMsg::UpdateMinterOwnership(action) => Ok(
