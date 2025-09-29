@@ -71,7 +71,10 @@ fn test_edit_additional_wallets() {
 
     let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
-    assert_eq!(res.attributes[0].value, "agent-iba::edit_additional_wallets");
+    assert_eq!(
+        res.attributes[0].value,
+        "agent-iba::edit_additional_wallets"
+    );
 
     // Verify the agent was updated
     let updated_agent = AGENTS
