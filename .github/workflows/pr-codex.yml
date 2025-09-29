@@ -170,7 +170,7 @@ jobs:
         with:
           homeserver: ${{ secrets.MATRIC_SERVER }}
           token: ${{ secrets.MATRIX_TOKEN }}
-          channel: "!qvvEkPtCetsfvuwCbY:matrix.joyslab.org"
+          channel: "!SxUMcRjKcNmuQFlBqa:matrix.joyslab.org"
           message: |
             **Pull request N ${{ github.event.pull_request.number }}** ${{ github.event.pull_request.html_url }}
             ${{ steps.review.outputs.msg }}
