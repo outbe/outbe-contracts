@@ -111,6 +111,6 @@ pub fn exec_edit_additional_wallets(
         .add_attribute("updated_at", agent.updated_at.to_string());
 
     Ok(Response::new()
-        .add_attribute("action", "edit_iba_additional_wallets")
+        .add_attribute("action", "agent-iba::edit_additional_wallets")
         .add_event(event))
 }
