@@ -17,9 +17,9 @@ pub struct TributeInputPayload {
     pub settlement_base_amount: Uint64,
     /// Amount expressed in fractional units, `0 >= settlement_atto_amount < 1e18`
     pub settlement_atto_amount: Uint128,
-    /// Quantity expressed in natural units, `nominal_base_qty >= 0`
-    pub nominal_base_qty: Uint64,
-    /// Amount expressed in fractional units, `0 >= nominal_atto_qty < 1e18`
-    pub nominal_atto_qty: Uint128,
+    /// Quantity expressed in natural units, `nominal_base_amount >= 0`
+    pub nominal_base_amount: Uint64,
+    /// Amount expressed in fractional units, `0 >= nominal_atto_amount < 1e18`
+    pub nominal_atto_amount: Uint128,
     pub cu_hashes: Vec<Base58Binary>,
 }
