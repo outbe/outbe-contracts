@@ -106,11 +106,11 @@ function offerInsecureTribute(tribute: TributeInputPayload): JsonObject {
   }
 }
 
-function randomTribute(owner: string, day: string, coenUsdsRate: number): TributeInputPayload {
+function randomTribute(owner: string, day: string, coenUsdcRate: number): TributeInputPayload {
   let uuid_id = require('crypto').randomUUID().toString()
   let cu_hashes = bs58.encode(new TextEncoder().encode(uuid_id));
   let settlement_amount = getRandomInt(90, 400);
-  let nominal_amount = Math.floor(settlement_amount / coenUsdsRate);
+  let nominal_amount = Math.floor(settlement_amount / coenUsdcRate);
   let owner_bs58 = bs58.encode(new TextEncoder().encode(owner));
   let tribute_draft_id = generateTributeDraftId(owner_bs58, day);
   console.log("Tribute draft id:", tribute_draft_id,
