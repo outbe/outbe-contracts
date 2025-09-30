@@ -4,8 +4,8 @@ import {TributeQueryClient} from "../clients/tribute/Tribute.client";
 
 import {NumTokensResponse} from "../clients/tribute/Tribute.types";
 import {RUN_DATE, TX_FEE} from "../config";
-import {generateTributeDraftId, getRandomInt, readWalletsFromFile, isoToDays} from "../lib/utils";
-import {EncryptionInfoResponse, TributeInputPayload, ZkProof} from "../clients/tribute-factory/TributeFactory.types";
+import {generateTributeDraftId, getRandomInt, readWalletsFromFile} from "../lib/utils";
+import {EncryptionInfoResponse, TributeInputPayload} from "../clients/tribute-factory/TributeFactory.types";
 import {TokenAllocatorQueryClient} from "../clients/token-allocator/TokenAllocator.client";
 import {TokenAllocatorData} from "../clients/token-allocator/TokenAllocator.types";
 import {CosmWasmClient, JsonObject} from "@cosmjs/cosmwasm-stargate";
@@ -116,7 +116,7 @@ function randomTribute(owner: string, day: string, coenUsdsRate: number): Tribut
   console.log("Tribute draft id:", tribute_draft_id,
     "settlement_amount:", settlement_amount, "nominal_amount:", nominal_amount)
 
-  let tribute_input: TributeInputPayload = {
+  return {
     tribute_draft_id: tribute_draft_id,
     owner: owner_bs58,
     worldwide_day: day,
@@ -126,8 +126,7 @@ function randomTribute(owner: string, day: string, coenUsdsRate: number): Tribut
     nominal_base_amount: nominal_amount.toString(),
     nominal_atto_amount: "0",
     cu_hashes: [cu_hashes]
-  }
-  return tribute_input;
+  };
 }
 
 export async function queryActualRate(walletClient: CosmWasmClient): Promise<number> {
