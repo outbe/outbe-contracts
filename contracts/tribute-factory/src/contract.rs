@@ -343,13 +343,14 @@ fn execute_offer_logic(
         tribute.settlement_base_amount,
         tribute.settlement_atto_amount,
     )?;
-    let settlement_qty = normalize_amount(tribute.nominal_base_qty, tribute.nominal_atto_qty)?;
+    let nominal_amount =
+        normalize_amount(tribute.nominal_base_amount, tribute.nominal_atto_amount)?;
     // todo use safe convertion
     let tribute_price = Decimal::from_atomics(settlement_amount, 18).unwrap()
-        / Decimal::from_atomics(settlement_qty, 18).unwrap();
+        / Decimal::from_atomics(nominal_amount, 18).unwrap();
 
     println!("settlement_amount {}", settlement_amount);
-    println!("settlement_qty {}", settlement_qty);
+    println!("nominal_amount {}", nominal_amount);
     println!("tribute_price {}", tribute_price);
 
     let msg = WasmMsg::Execute {
@@ -365,7 +366,7 @@ fn execute_offer_logic(
                     owner: tribute_owner.to_string(),
                     settlement_amount_minor: settlement_amount,
                     settlement_currency: Denom::Native(tribute.settlement_currency), // TODO use native
-                    nominal_qty_minor: settlement_qty,
+                    nominal_amount_minor: nominal_amount,
                     nominal_price_minor: tribute_price,
                 },
             }),
@@ -539,8 +540,8 @@ mod tests {
             settlement_currency: "usd".to_string(),
             settlement_base_amount: Uint64::new(500), // 500 USD
             settlement_atto_amount: Uint128::zero(),
-            nominal_base_qty: Uint64::new(1000),
-            nominal_atto_qty: Uint128::zero(),
+            nominal_base_amount: Uint64::new(1000),
+            nominal_atto_amount: Uint128::zero(),
             owner,
         };
 
@@ -586,8 +587,8 @@ mod tests {
             settlement_currency: "usd".to_string(),
             settlement_base_amount: Uint64::new(500),
             settlement_atto_amount: Uint128::zero(),
-            nominal_base_qty: Uint64::new(1000),
-            nominal_atto_qty: Uint128::zero(),
+            nominal_base_amount: Uint64::new(1000),
+            nominal_atto_amount: Uint128::zero(),
             owner,
         };
 
@@ -624,8 +625,8 @@ mod tests {
             settlement_currency: "usd".to_string(),
             settlement_base_amount: Uint64::new(500),
             settlement_atto_amount: Uint128::zero(),
-            nominal_base_qty: Uint64::new(1000),
-            nominal_atto_qty: Uint128::zero(),
+            nominal_base_amount: Uint64::new(1000),
+            nominal_atto_amount: Uint128::zero(),
             owner,
         };
 
@@ -654,8 +655,8 @@ mod tests {
             settlement_currency: "usd".to_string(),
             settlement_base_amount: Uint64::new(100),
             settlement_atto_amount: Uint128::zero(),
-            nominal_base_qty: Uint64::new(1000),
-            nominal_atto_qty: Uint128::zero(),
+            nominal_base_amount: Uint64::new(1000),
+            nominal_atto_amount: Uint128::zero(),
             owner: Base58Binary::from("user1".as_bytes()),
         };
 
@@ -687,8 +688,8 @@ mod tests {
             settlement_currency: "usd".to_string(),
             settlement_base_amount: Uint64::new(1000),
             settlement_atto_amount: Uint128::zero(),
-            nominal_base_qty: Uint64::new(500),
-            nominal_atto_qty: Uint128::zero(),
+            nominal_base_amount: Uint64::new(500),
+            nominal_atto_amount: Uint128::zero(),
             owner: Base58Binary::from("test_owner".as_bytes()),
         };
 

@@ -308,8 +308,8 @@
         "type": "object",
         "required": [
           "cu_hashes",
-          "nominal_atto_qty",
-          "nominal_base_qty",
+          "nominal_atto_amount",
+          "nominal_base_amount",
           "owner",
           "settlement_atto_amount",
           "settlement_base_amount",
@@ -324,16 +324,16 @@
               "$ref": "#/definitions/Base58Binary"
             }
           },
-          "nominal_atto_qty": {
-            "description": "Amount expressed in fractional units, `0 >= nominal_atto_qty < 1e18`",
+          "nominal_atto_amount": {
+            "description": "Amount expressed in fractional units, `0 >= nominal_atto_amount < 1e18`",
             "allOf": [
               {
                 "$ref": "#/definitions/Uint128"
               }
             ]
           },
-          "nominal_base_qty": {
-            "description": "Quantity expressed in natural units, `nominal_base_qty >= 0`",
+          "nominal_base_amount": {
+            "description": "Quantity expressed in natural units, `nominal_base_amount >= 0`",
             "allOf": [
               {
                 "$ref": "#/definitions/Uint64"

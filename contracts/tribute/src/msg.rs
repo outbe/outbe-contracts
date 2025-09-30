@@ -68,7 +68,7 @@ pub struct TributeMintData {
     /// Tribute settlement token
     pub settlement_currency: Denom,
     /// Value of the Tribute in Native Coins
-    pub nominal_qty_minor: Uint128,
+    pub nominal_amount_minor: Uint128,
     /// Price in Native coins with a rate on the moment of the transaction
     pub nominal_price_minor: Decimal,
 }

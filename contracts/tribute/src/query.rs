@@ -202,7 +202,7 @@ fn query_total_interest(
             |item| matches!(item, Ok((_id, tribute)) if tribute.extension.worldwide_day == date),
         )
         .map(|it| it.unwrap())
-        .map(|(_, tribute)| tribute.extension.nominal_qty_minor)
+        .map(|(_, tribute)| tribute.extension.nominal_amount_minor)
         .fold(Uint128::zero(), |acc, t| acc + t);
 
     Ok(TotalInterestResponse {
@@ -297,7 +297,7 @@ mod tests {
             settlement_amount_minor: Uint128::new(100)
                 * Uint128::new(1_000_000_000_000_000_000u128),
             settlement_currency: Denom::Fiat(Currency::Usd),
-            nominal_qty_minor: Uint128::new(100) * Uint128::new(1_000_000_000_000_000_000u128),
+            nominal_amount_minor: Uint128::new(100) * Uint128::new(1_000_000_000_000_000_000u128),
             nominal_price_minor: Decimal::one(),
             worldwide_day: date,
             owner: owner.to_string(),
@@ -324,7 +324,7 @@ mod tests {
             tribute_id: "2".to_string(),
             settlement_amount_minor: Uint128::new(50) * Uint128::new(1_000_000_000_000_000_000u128),
             settlement_currency: Denom::Fiat(Currency::Usd),
-            nominal_qty_minor: Uint128::new(50) * Uint128::new(1_000_000_000_000_000_000u128),
+            nominal_amount_minor: Uint128::new(50) * Uint128::new(1_000_000_000_000_000_000u128),
             nominal_price_minor: Decimal::one(),
             worldwide_day: date,
             owner: owner.to_string(),

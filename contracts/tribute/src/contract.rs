@@ -165,7 +165,7 @@ fn execute_mint(
     }
 
     if entity.settlement_amount_minor == Uint128::zero()
-        || entity.nominal_qty_minor == Uint128::zero()
+        || entity.nominal_amount_minor == Uint128::zero()
         || entity.nominal_price_minor == Decimal::zero()
     {
         return Err(ContractError::WrongInput {});
@@ -180,14 +180,15 @@ fn execute_mint(
     // )?;
     //
 
-    let nominal_qty = calc_nominal_qty(entity.settlement_amount_minor, entity.nominal_price_minor);
+    let nominal_amount =
+        calc_nominal_amount(entity.settlement_amount_minor, entity.nominal_price_minor);
 
     // create the token
     let data = TributeData {
         settlement_amount_minor: entity.settlement_amount_minor,
         settlement_currency: entity.settlement_currency,
         nominal_price_minor: entity.nominal_price_minor,
-        nominal_qty_minor: nominal_qty,
+        nominal_amount_minor: nominal_amount,
         worldwide_day: entity.worldwide_day,
         created_at: env.block.time,
     };
@@ -216,15 +217,15 @@ fn execute_mint(
         ))
 }
 
-fn calc_nominal_qty(settlement_amount: Uint128, exchange_rate: Decimal) -> Uint128 {
+fn calc_nominal_amount(settlement_amount: Uint128, exchange_rate: Decimal) -> Uint128 {
     let settlement_value_dec = Decimal::from_atomics(settlement_amount, DECIMAL_PLACES).unwrap();
-    let nominal_qty = settlement_value_dec / exchange_rate;
+    let nominal_amount = settlement_value_dec / exchange_rate;
 
     println!("settlement_value: {}", settlement_amount);
     println!("exchange_rate: {}", exchange_rate);
-    println!("nominal_qty: {}", nominal_qty);
+    println!("nominal_amount: {}", nominal_amount);
 
-    nominal_qty.atomics()
+    nominal_amount.atomics()
 }
 
 fn execute_burn(
@@ -325,7 +326,9 @@ fn execute_burn_for_day(
 
 #[cfg(test)]
 mod tests {
-    use crate::contract::{calc_nominal_qty, execute_burn_all, execute_burn_for_day, instantiate};
+    use crate::contract::{
+        calc_nominal_amount, execute_burn_all, execute_burn_for_day, instantiate,
+    };
     use crate::msg::{InstantiateMsg, TributeCollectionExtension};
     use crate::types::{TributeConfig, TributeData, TributeNft};
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env, MockApi};
@@ -336,7 +339,7 @@ mod tests {
 
     #[test]
     fn test_symbolics_calc() {
-        let nominal = calc_nominal_qty(
+        let nominal = calc_nominal_amount(
             Uint128::new(500_000000000000000000u128),
             Decimal::from_str("0.2").unwrap(),
         );
@@ -466,7 +469,7 @@ mod tests {
                 settlement_amount_minor: Uint128::new(100),
                 settlement_currency: Denom::Fiat(Currency::Usd),
                 nominal_price_minor: Decimal::one(),
-                nominal_qty_minor: Uint128::new(100),
+                nominal_amount_minor: Uint128::new(100),
                 worldwide_day: 1,
                 created_at: Timestamp::from_seconds(1000),
             },
@@ -484,7 +487,7 @@ mod tests {
                 settlement_amount_minor: Uint128::new(100),
                 settlement_currency: Denom::Fiat(Currency::Usd),
                 nominal_price_minor: Decimal::one(),
-                nominal_qty_minor: Uint128::new(100),
+                nominal_amount_minor: Uint128::new(100),
                 worldwide_day: day,
                 created_at: Timestamp::from_seconds(1000),
             },

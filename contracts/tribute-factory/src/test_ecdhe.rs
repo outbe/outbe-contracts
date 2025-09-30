@@ -85,8 +85,8 @@ fn test_decrypt_tribute_input() {
         settlement_currency: "usd".to_string(),
         settlement_base_amount: Uint64::new(1000),
         settlement_atto_amount: Uint128::zero(),
-        nominal_base_qty: Uint64::new(500),
-        nominal_atto_qty: Uint128::zero(),
+        nominal_base_amount: Uint64::new(500),
+        nominal_atto_amount: Uint128::zero(),
         owner: Base58Binary::from("test_owner".as_bytes()),
     };
 

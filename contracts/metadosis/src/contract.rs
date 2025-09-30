@@ -258,7 +258,7 @@ fn do_execute_lysis(
     let mut allocated_tributes_sum = Uint128::zero();
     let mut allocated_tributes: Vec<(FullTributeData, Uint128)> = vec![];
     for tribute in tributes.tributes {
-        let symbolic_load = (to_decimals_amount(tribute.data.nominal_qty_minor)
+        let symbolic_load = (to_decimals_amount(tribute.data.nominal_amount_minor)
             * lysis_info.distribution_percent)
             .atomics();
         allocated_tributes_sum += symbolic_load;
