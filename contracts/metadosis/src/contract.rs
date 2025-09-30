@@ -20,7 +20,6 @@ use outbe_utils::{date, gen_compound_hash};
 use rand::prelude::SliceRandom;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use std::str::FromStr;
 use tribute::query::FullTributeData;
 
 const CONTRACT_NAME: &str = "outbe.net:metadosis";
@@ -276,8 +275,8 @@ fn do_execute_lysis(
         let nod_token_id = generate_nod_id(&tribute.token_id, &tribute.owner);
 
         // todo impl floor price with S-Curve
-        let floor_price =
-            exchange_rate.price * (Decimal::one() + Decimal::from_str("0.08").unwrap());
+        let floor_rate = Decimal::percent(8);
+        let floor_price = exchange_rate.price * (Decimal::one() + floor_rate);
 
         let mod_issuance_price = exchange_rate.price.max(tribute.data.nominal_price_minor);
         let nod_mint = WasmMsg::Execute {
@@ -290,7 +289,7 @@ fn do_execute_lysis(
                         nod_id: nod_token_id.to_hex(),
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: config.lysis_limit_percent,
-                        floor_rate: Decimal::zero(), // todo populate
+                        floor_rate,
                         nominal_price_minor: tribute.data.nominal_price_minor,
                         issuance_price_minor: mod_issuance_price,
                         gratis_load_minor: symbolic_load,
