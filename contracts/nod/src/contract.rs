@@ -70,7 +70,7 @@ pub fn execute(
         } => execute_submit(deps, &env, &info, token_id, owner, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
         #[cfg(feature = "demo")]
-        ExecuteMsg::BurnAll {} => execute_burn_all(deps, &env, &info),
+        ExecuteMsg::BurnAll { batch_size } => execute_burn_all(deps, &env, &info, batch_size),
     }
 }
 
@@ -146,13 +146,14 @@ fn execute_burn_all(
     deps: DepsMut,
     _env: &Env,
     info: &MessageInfo,
+    batch_size: Option<usize>,
 ) -> Result<Response, ContractError> {
     let config = Cw721Config::<NodData, NodConfig>::default();
     // TODO verify ownership
     // let token = config.nft_info.load(deps.storage, &token_id)?;
     // check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
 
-    config.clean_tokens(deps.storage)?;
+    config.clean_tokens(deps.storage, batch_size)?;
 
     Ok(Response::new()
         .add_attribute("action", "nod::burn_all")

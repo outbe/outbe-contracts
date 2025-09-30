@@ -1,6 +1,6 @@
 use crate::traits::{Cw721CollectionConfig, Cw721State};
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Order, StdResult, Storage, Timestamp};
+use cosmwasm_std::{Addr, Order, StdError, StdResult, Storage, Timestamp};
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, MultiIndex};
 
@@ -87,30 +87,42 @@ where
         self.token_count.save(storage, &val)?;
         Ok(val)
     }
-    pub fn clean_tokens(&self, storage: &mut dyn Storage) -> StdResult<()> {
-        // NB clean indexes as well
-        const TAKE: usize = 10;
-        let mut cleared = false;
-        while !cleared {
-            let paths = self
-                .nft_info
-                .prefix_range(storage, None, None, Order::Ascending)
-                .filter_map(|item| item.ok())
-                .take(TAKE)
-                .collect::<Vec<_>>();
 
-            let paths_len = paths.len();
-            for (pk, value) in paths {
-                self.nft_info
-                    .idx
-                    .owner
-                    .remove(storage, pk.as_bytes(), &value)?;
-            }
-            cleared = paths_len < TAKE;
+    pub fn clean_tokens(
+        &self,
+        storage: &mut dyn Storage,
+        batch_size: Option<usize>,
+    ) -> StdResult<()> {
+        // NB clean indexes as well
+        let batch: usize = batch_size.unwrap_or(usize::MAX);
+
+        let paths = self
+            .nft_info
+            .prefix_range(storage, None, None, Order::Ascending)
+            .filter_map(|item| item.ok())
+            .take(batch)
+            .collect::<Vec<_>>();
+
+        if paths.is_empty() {
+            return Ok(());
         }
 
-        self.nft_info.clear(storage);
-        self.token_count.save(storage, &0u64)?;
+        let paths_len = paths.len() as u64;
+        for (pk, value) in paths {
+            self.nft_info
+                .idx
+                .owner
+                .remove(storage, pk.as_bytes(), &value)?;
+            self.nft_info.remove(storage, &pk)?;
+        }
+        self.token_count.update(storage, |val| {
+            if val > paths_len {
+                Ok::<u64, StdError>(val - paths_len)
+            } else {
+                Ok(0)
+            }
+        })?;
+
         Ok(())
     }
 }
