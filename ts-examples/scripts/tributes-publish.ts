@@ -123,8 +123,8 @@ function randomTribute(owner: string, day: string, coenUsdsRate: number): Tribut
     settlement_currency: "usd",
     settlement_base_amount: settlement_amount.toString(),
     settlement_atto_amount: "0",
-    nominal_base_qty: nominal_amount.toString(),
-    nominal_atto_qty: "0",
+    nominal_base_amount: nominal_amount.toString(),
+    nominal_atto_amount: "0",
     cu_hashes: [cu_hashes]
   }
   return tribute_input;
