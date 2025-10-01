@@ -230,6 +230,22 @@ cargo test
 4. **UTC 23:00:00**: Touch operation processes remaining tributes
 5. **End of day**: All tributes burned to reset for next cycle
 
+### Cron Integration
+
+```shell
+outbe-chaind tx cron create-job "metadosis-prepare" $TXFLAG \
+  --start-time "2025-10-01T12:30:00Z" \
+  --interval-seconds 86400 \
+  --from ci \
+  --message '{ "@type": "/cosmwasm.wasm.v1.MsgExecuteContract", "sender": "outbe1y4xt40rc8lhsz2lulkkkx555fde53n4x2hxgq5", "contract": "outbe1l3nvn4nc9ftahmr6zjd4frywzpw7ag87kkl93ms37al2zptst6cq9kus08", "msg": {"prepare": {} }  }' 
+
+outbe-chaind tx cron create-job "metadosis-execute" $TXFLAG \
+  --start-time "2025-10-01T12:40:00Z" \
+  --interval-seconds 86400 \
+  --from ci \
+  --message '{ "@type": "/cosmwasm.wasm.v1.MsgExecuteContract", "sender": "outbe1y4xt40rc8lhsz2lulkkkx555fde53n4x2hxgq5", "contract": "outbe1l3nvn4nc9ftahmr6zjd4frywzpw7ag87kkl93ms37al2zptst6cq9kus08", "msg": {"execute": {} }  }' 
+```
+
 ### Error Handling
 
 - `AlreadyPrepared`: Prevents duplicate preparation for same day

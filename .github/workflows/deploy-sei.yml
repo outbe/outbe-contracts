@@ -268,6 +268,7 @@ jobs:
           echo "Deploy output:"
           echo "COMMIT_ID=${{ github.sha }}"
           echo "IS_LATEST=${{ inputs.is_latest }}"
+          echo "ENV=${{ github.event.inputs.environment }}"
           echo ""
           env | sort | grep -E 'CODE_ID|ADDRESS' > output.txt
           cat output.txt
