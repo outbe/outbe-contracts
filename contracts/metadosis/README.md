@@ -233,17 +233,42 @@ cargo test
 ### Cron Integration
 
 ```shell
+SENDER="outbe1y4xt40rc8lhsz2lulkkkx555fde53n4x2hxgq5"
+CONTRACT_ADDRESS="outbe1l3nvn4nc9ftahmr6zjd4frywzpw7ag87kkl93ms37al2zptst6cq9kus08"
+
+# Create the prepare job
+PREPARE_MSG=$(jq -n \
+  --arg sender "$SENDER" \
+  --arg contract "$CONTRACT_ADDRESS" \
+  '{
+    "@type": "/cosmwasm.wasm.v1.MsgExecuteContract",
+    "sender": $sender,
+    "contract": $contract,
+    "msg": {"prepare": {}}
+  }')
+
 outbe-chaind tx cron create-job "metadosis-prepare" $TXFLAG \
   --start-time "2025-10-01T12:30:00Z" \
   --interval-seconds 86400 \
   --from ci \
-  --message '{ "@type": "/cosmwasm.wasm.v1.MsgExecuteContract", "sender": "outbe1y4xt40rc8lhsz2lulkkkx555fde53n4x2hxgq5", "contract": "outbe1l3nvn4nc9ftahmr6zjd4frywzpw7ag87kkl93ms37al2zptst6cq9kus08", "msg": {"prepare": {} }  }' 
+  --message "$PREPARE_MSG"
+
+# Create the execute job
+EXECUTE_MSG=$(jq -n \
+  --arg sender "$SENDER" \
+  --arg contract "$CONTRACT_ADDRESS" \
+  '{
+    "@type": "/cosmwasm.wasm.v1.MsgExecuteContract",
+    "sender": $sender,
+    "contract": $contract,
+    "msg": {"execute": {}}
+  }')
 
 outbe-chaind tx cron create-job "metadosis-execute" $TXFLAG \
   --start-time "2025-10-01T12:40:00Z" \
   --interval-seconds 86400 \
   --from ci \
-  --message '{ "@type": "/cosmwasm.wasm.v1.MsgExecuteContract", "sender": "outbe1y4xt40rc8lhsz2lulkkkx555fde53n4x2hxgq5", "contract": "outbe1l3nvn4nc9ftahmr6zjd4frywzpw7ag87kkl93ms37al2zptst6cq9kus08", "msg": {"execute": {} }  }' 
+  --message "$EXECUTE_MSG"
 ```
 
 ### Error Handling
