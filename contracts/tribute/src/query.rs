@@ -61,7 +61,7 @@ pub enum QueryMsg {
         limit: Option<u32>,
         query_order: Option<Order>,
     },
-    /// Total Tribute Interest is calculated as the sum of Symbolic Load recorded within each
+    /// Total Tribute Interest is calculated as the sum of nominal amount recorded within each
     /// Tribute for the given date.
     #[returns(TotalInterestResponse)]
     TotalInterest { date: WorldwideDay },
@@ -75,7 +75,7 @@ pub struct FullTributeData {
 }
 #[cw_serde]
 pub struct TotalInterestResponse {
-    pub total_nominal_quantity: Uint128,
+    pub total_nominal_amount: Uint128,
 }
 
 #[cw_serde]
@@ -147,7 +147,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             query_order,
         )?),
         QueryMsg::TotalInterest { date } => {
-            to_json_binary(&query_total_interest(deps, &env, date)?)
+            to_json_binary(&query_total_nominal_amount(deps, &env, date)?)
         }
     }
 }
@@ -190,12 +190,12 @@ fn query_daily_tributes(
     Ok(FullTributesResponse { tributes: tokens? })
 }
 
-fn query_total_interest(
+fn query_total_nominal_amount(
     deps: Deps,
     _env: &Env,
     date: WorldwideDay,
 ) -> StdResult<TotalInterestResponse> {
-    let total_interest: Uint128 = Cw721Config::<TributeData, Option<Empty>>::default()
+    let total_nominal_amount: Uint128 = Cw721Config::<TributeData, Option<Empty>>::default()
         .nft_info
         .range(deps.storage, None, None, Order::Ascending)
         .filter(
@@ -206,7 +206,7 @@ fn query_total_interest(
         .fold(Uint128::zero(), |acc, t| acc + t);
 
     Ok(TotalInterestResponse {
-        total_nominal_quantity: total_interest,
+        total_nominal_amount,
     })
 }
 
@@ -351,7 +351,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            response.total_nominal_quantity,
+            response.total_nominal_amount,
             Uint128::new(150000000000000000000)
         );
 
@@ -367,6 +367,6 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(response.total_nominal_quantity, Uint128::zero());
+        assert_eq!(response.total_nominal_amount, Uint128::zero());
     }
 }

@@ -363,13 +363,14 @@
           "required": [
             "assigned_tributes",
             "assigned_tributes_sum",
-            "capacity",
             "deficit",
             "id",
             "index",
             "limit",
             "timestamp",
             "total_gratis_limit",
+            "total_tribute_interest",
+            "total_tribute_nominal_amount",
             "worldwide_day"
           ],
           "properties": {
@@ -381,14 +382,6 @@
             },
             "assigned_tributes_sum": {
               "description": "Sum of tributes were assigned for this run",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Uint128"
-                }
-              ]
-            },
-            "capacity": {
-              "description": "Lysis capacity",
               "allOf": [
                 {
                   "$ref": "#/definitions/Uint128"
@@ -436,6 +429,12 @@
                   "$ref": "#/definitions/Uint128"
                 }
               ]
+            },
+            "total_tribute_interest": {
+              "$ref": "#/definitions/Uint128"
+            },
+            "total_tribute_nominal_amount": {
+              "$ref": "#/definitions/Uint128"
             },
             "worldwide_day": {
               "description": "Worldwide day",
@@ -588,7 +587,8 @@
             "total_gratis_limit",
             "total_lysis_deficit",
             "total_lysis_limit",
-            "total_tribute_interest"
+            "total_tribute_interest",
+            "total_tribute_nominal_amount"
           ],
           "properties": {
             "distribution_percent": {
@@ -633,6 +633,9 @@
                   "$ref": "#/definitions/Uint128"
                 }
               ]
+            },
+            "total_tribute_nominal_amount": {
+              "$ref": "#/definitions/Uint128"
             }
           },
           "additionalProperties": false

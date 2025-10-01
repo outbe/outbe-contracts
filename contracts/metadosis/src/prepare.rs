@@ -27,21 +27,22 @@ pub fn prepare_executions(
         .price_oracle
         .ok_or(ContractError::NotInitialized {})?;
 
-    let exchange_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
+    let coen_usdc_rate: price_oracle::types::TokenPairPrice = deps.querier.query_wasm_smart(
         &price_oracle_address,
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
     let total_gratis_limit = (total_emission_limit - TOTAL_FEES) * DECIMALS; // NB convert to units
 
-    let metadosis_info: MetadosisInfo = match exchange_rate.day_type {
+    let metadosis_info: MetadosisInfo = match coen_usdc_rate.day_type {
         DayType::Green => {
-            let total_tribute_quantity: Uint128 =
-                query_total_tribute_quantity(deps.querier, &tribute_address, execution_date)?;
-            println!("Total tribute quantity = {}", total_tribute_quantity);
+            let total_tribute_nominal_amount: Uint128 =
+                query_total_tribute_amount(deps.querier, &tribute_address, execution_date)?;
+            println!("Total tribute quantity = {}", total_tribute_nominal_amount);
 
-            let total_tribute_interest =
-                (to_decimals_amount(total_tribute_quantity) * config.lysis_limit_percent).atomics();
+            let total_tribute_interest = (to_decimals_amount(total_tribute_nominal_amount)
+                * config.lysis_limit_percent)
+                .atomics();
             let (total_lysis_limit, total_lysis_deficit, distribution_percent) = calc_lysis_limit(
                 total_gratis_limit,
                 total_tribute_interest,
@@ -54,6 +55,7 @@ pub fn prepare_executions(
                     total_fees: TOTAL_FEES,
                     total_lysis_limit,
                     total_tribute_interest,
+                    total_tribute_nominal_amount,
                     total_lysis_deficit,
                     distribution_percent,
                 },
@@ -71,7 +73,7 @@ pub fn prepare_executions(
             )?;
 
             // NB: the bank gold ignot (400 troy ounces) price in coen
-            let gold_ignot_price = gold_price.price / exchange_rate.price;
+            let gold_ignot_price = gold_price.price / coen_usdc_rate.price;
             let gold_ignot_price = gold_ignot_price * Decimal::from_atomics(400u128, 0).unwrap();
 
             MetadosisInfo::Touch {
@@ -113,14 +115,14 @@ fn calc_lysis_limit(
     (total_lysis_limit, total_lysis_deficit, distribution_percent)
 }
 
-fn query_total_tribute_quantity(
+fn query_total_tribute_amount(
     querier: QuerierWrapper,
     addr: &Addr,
     date: WorldwideDay,
 ) -> Result<Uint128, ContractError> {
     let response: tribute::query::TotalInterestResponse =
         querier.query_wasm_smart(addr, &tribute::query::QueryMsg::TotalInterest { date })?;
-    Ok(response.total_nominal_quantity)
+    Ok(response.total_nominal_amount)
 }
 
 #[cfg(test)]
