@@ -233,8 +233,8 @@ cargo test
 ### Cron Integration
 
 ```shell
-SENDER="outbe1y4xt40rc8lhsz2lulkkkx555fde53n4x2hxgq5"
-CONTRACT_ADDRESS="outbe1l3nvn4nc9ftahmr6zjd4frywzpw7ag87kkl93ms37al2zptst6cq9kus08"
+SENDER="outbe1hj5fveer5cjtn4wd6wstzugjfdxzl0xpdqapc6"
+CONTRACT_ADDRESS="outbe15m5fe2pfxq6796rf2z7gma8a0n2s0f0dxasmrzark3q26tltgsysmq3a0y"
 
 # Create the prepare job
 PREPARE_MSG=$(jq -n \
@@ -251,7 +251,7 @@ outbe-chaind tx cron create-job "metadosis-prepare" $TXFLAG \
   --start-time "2025-10-01T12:30:00Z" \
   --interval-seconds 86400 \
   --from ci \
-  --message "$PREPARE_MSG"
+  -y --message "$PREPARE_MSG"
 
 # Create the execute job
 EXECUTE_MSG=$(jq -n \
@@ -268,7 +268,12 @@ outbe-chaind tx cron create-job "metadosis-execute" $TXFLAG \
   --start-time "2025-10-01T12:40:00Z" \
   --interval-seconds 86400 \
   --from ci \
-  --message "$EXECUTE_MSG"
+  -y --message "$EXECUTE_MSG"  
+```
+Query cron jobs:
+
+```shell
+outbe-chaind q cron jobs $NODE
 ```
 
 ### Error Handling
