@@ -181,3 +181,4 @@ jobs:
         with:
           message: ${{ steps.review.outputs.msg }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          comment-tag: codex-review
