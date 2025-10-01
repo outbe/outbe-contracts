@@ -230,6 +230,52 @@ cargo test
 4. **UTC 23:00:00**: Touch operation processes remaining tributes
 5. **End of day**: All tributes burned to reset for next cycle
 
+### Cron Integration
+
+```shell
+SENDER="outbe1hj5fveer5cjtn4wd6wstzugjfdxzl0xpdqapc6"
+CONTRACT_ADDRESS="outbe15m5fe2pfxq6796rf2z7gma8a0n2s0f0dxasmrzark3q26tltgsysmq3a0y"
+
+# Create the prepare job
+PREPARE_MSG=$(jq -n \
+  --arg sender "$SENDER" \
+  --arg contract "$CONTRACT_ADDRESS" \
+  '{
+    "@type": "/cosmwasm.wasm.v1.MsgExecuteContract",
+    "sender": $sender,
+    "contract": $contract,
+    "msg": {"prepare": {}}
+  }')
+
+outbe-chaind tx cron create-job "metadosis-prepare" $TXFLAG \
+  --start-time "2025-10-01T12:30:00Z" \
+  --interval-seconds 86400 \
+  --from ci \
+  -y --message "$PREPARE_MSG"
+
+# Create the execute job
+EXECUTE_MSG=$(jq -n \
+  --arg sender "$SENDER" \
+  --arg contract "$CONTRACT_ADDRESS" \
+  '{
+    "@type": "/cosmwasm.wasm.v1.MsgExecuteContract",
+    "sender": $sender,
+    "contract": $contract,
+    "msg": {"execute": {}}
+  }')
+
+outbe-chaind tx cron create-job "metadosis-execute" $TXFLAG \
+  --start-time "2025-10-01T12:40:00Z" \
+  --interval-seconds 86400 \
+  --from ci \
+  -y --message "$EXECUTE_MSG"  
+```
+Query cron jobs:
+
+```shell
+outbe-chaind q cron jobs $NODE
+```
+
 ### Error Handling
 
 - `AlreadyPrepared`: Prevents duplicate preparation for same day
