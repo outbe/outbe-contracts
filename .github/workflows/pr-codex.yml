@@ -2,11 +2,12 @@ name: PR → Codex review
 
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review]
+    types:
+      - ready_for_review
+      - review_requested
 
 jobs:
   codex_review:
-
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -26,7 +27,6 @@ jobs:
 
       - name: Install Codex CLI
         run: npm i -g @openai/codex
-      
       - name: Configure Codex to use OpenRouter
         run: |
           mkdir -p ~/.codex
@@ -160,10 +160,11 @@ jobs:
           sed -e '$a\' -i review.md.clean
           DELIM="$(uuidgen || echo __EOF__$$)"
           {
-            printf 'msg<<%s\n' "$DELIM"     
-            cat review.md.clean             
-            printf '%s\n' "$DELIM"          
+            printf 'msg<<%s\n' "$DELIM"
+            cat review.md.clean
+            printf '%s\n' "$DELIM"
           } >> "$GITHUB_OUTPUT"
+
       - name: Send message to Deploy channel
         id: matrix-chat-message
         uses: fadenb/matrix-chat-message@v0.0.6
@@ -174,3 +175,9 @@ jobs:
           message: |
             **Pull request N ${{ github.event.pull_request.number }}** ${{ github.event.pull_request.html_url }}
             ${{ steps.review.outputs.msg }}
+
+      - name: Write PR comment
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: ${{ steps.review.outputs.msg }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
