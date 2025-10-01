@@ -1,18 +1,17 @@
-name: PR → Codex review
+name: PR
 
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write # Required to post comments on PRs
 
 jobs:
   codex_review:
-
+    name: Codex Review
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-      pull-requests: write
-
+    timeout-minutes: 10
     steps:
       - name: Checkout PR HEAD (full history)
         uses: actions/checkout@v4
@@ -26,7 +25,6 @@ jobs:
 
       - name: Install Codex CLI
         run: npm i -g @openai/codex
-      
       - name: Configure Codex to use OpenRouter
         run: |
           mkdir -p ~/.codex
@@ -160,10 +158,11 @@ jobs:
           sed -e '$a\' -i review.md.clean
           DELIM="$(uuidgen || echo __EOF__$$)"
           {
-            printf 'msg<<%s\n' "$DELIM"     
-            cat review.md.clean             
-            printf '%s\n' "$DELIM"          
+            printf 'msg<<%s\n' "$DELIM"
+            cat review.md.clean
+            printf '%s\n' "$DELIM"
           } >> "$GITHUB_OUTPUT"
+
       - name: Send message to Deploy channel
         id: matrix-chat-message
         uses: fadenb/matrix-chat-message@v0.0.6
@@ -174,3 +173,53 @@ jobs:
           message: |
             **Pull request N ${{ github.event.pull_request.number }}** ${{ github.event.pull_request.html_url }}
             ${{ steps.review.outputs.msg }}
+
+      - name: Write PR comment
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: ${{ steps.review.outputs.msg }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          comment-tag: codex-review
+
+  coverage:
+    name: "Code Coverage"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Install Rust toolchain"
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.86.0" # As specified in your Cargo.toml
+          components: llvm-tools-preview
+
+      - name: "Install cargo-llvm-cov"
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: "Run tests and generate coverage report"
+        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+
+      # TODO temporarily disable Codecov
+      #      - name: "Upload coverage to Codecov"
+      #        uses: codecov/codecov-action@v4
+      #        with:
+      #          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+      #          file: lcov.info
+      #          fail_ci_if_error: true
+      #          name: codecov-umbrella
+      #          slug: outbe/outbe-contracts
+
+      - name: "PR comment"
+        uses: boris-amenitiz/lcov-pull-request-report@v1.0.0
+        with:
+          lcov-file: ./lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # All files minimum coverage in percentage. For example, 0, 50, 100
+          # Default: 0
+          all-files-minimum-coverage: 60
+          # Changed files minimum coverage in percentage. For example, 0, 50, 100
+          # Default: 0
+          changed-files-minimum-coverage: 60
