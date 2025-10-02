@@ -873,7 +873,7 @@
         "additionalProperties": false
       },
       {
-        "description": "Total Tribute Interest is calculated as the sum of Symbolic Load recorded within each Tribute for the given date.",
+        "description": "Total Tribute Interest is calculated as the sum of nominal amount recorded within each Tribute for the given date.",
         "type": "object",
         "required": [
           "total_interest"
@@ -1800,10 +1800,10 @@
       "title": "TotalInterestResponse",
       "type": "object",
       "required": [
-        "total_nominal_quantity"
+        "total_nominal_amount"
       ],
       "properties": {
-        "total_nominal_quantity": {
+        "total_nominal_amount": {
           "$ref": "#/definitions/Uint128"
         }
       },

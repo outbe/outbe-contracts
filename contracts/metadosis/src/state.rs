@@ -44,6 +44,7 @@ pub struct LysisInfo {
     pub total_lysis_limit: Uint128,
     /// Total Tributes interest
     pub total_tribute_interest: Uint128,
+    pub total_tribute_nominal_amount: Uint128,
     /// Total Deficit
     pub total_lysis_deficit: Uint128,
     pub distribution_percent: Decimal,
@@ -76,8 +77,8 @@ pub struct LysisEntity {
     pub limit: Uint128,
     /// Lysis deficit
     pub deficit: Uint128,
-    /// Lysis capacity
-    pub capacity: Uint128,
+    pub total_tribute_interest: Uint128,
+    pub total_tribute_nominal_amount: Uint128,
     /// Worldwide day
     pub worldwide_day: WorldwideDay,
     /// Timestamp of the last tribute was recognized
