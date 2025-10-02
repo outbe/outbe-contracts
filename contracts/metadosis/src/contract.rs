@@ -326,7 +326,6 @@ fn do_execute_lysis(
             limit: lysis_info.total_lysis_limit,
             deficit: lysis_info.total_lysis_deficit,
             total_tribute_interest: lysis_info.total_tribute_interest,
-            total_tribute_nominal_amount: lysis_info.total_tribute_nominal_amount,
             worldwide_day: execution_date,
             total_gratis_limit: lysis_info.total_gratis_limit,
             assigned_tributes: allocated_tributes_count,

@@ -36,13 +36,10 @@ pub fn prepare_executions(
 
     let metadosis_info: MetadosisInfo = match coen_usdc_rate.day_type {
         DayType::Green => {
-            let total_tribute_nominal_amount: Uint128 =
+            let total_tribute_interest: Uint128 =
                 query_total_tribute_amount(deps.querier, &tribute_address, execution_date)?;
-            println!("Total tribute quantity = {}", total_tribute_nominal_amount);
+            println!("Total tribute quantity = {}", total_tribute_interest);
 
-            let total_tribute_interest = (to_decimals_amount(total_tribute_nominal_amount)
-                * config.lysis_limit_percent)
-                .atomics();
             let (total_lysis_limit, total_lysis_deficit, distribution_percent) = calc_lysis_limit(
                 total_gratis_limit,
                 total_tribute_interest,
@@ -55,7 +52,6 @@ pub fn prepare_executions(
                     total_fees: TOTAL_FEES,
                     total_lysis_limit,
                     total_tribute_interest,
-                    total_tribute_nominal_amount,
                     total_lysis_deficit,
                     distribution_percent,
                 },
@@ -96,6 +92,10 @@ fn calc_lysis_limit(
     total_tribute_interest: Uint128,
     lysis_limit_percent: Decimal,
 ) -> (Uint128, Uint128, Decimal) {
+    // take 8%
+    let total_tribute_interest =
+        (to_decimals_amount(total_tribute_interest) * lysis_limit_percent).atomics();
+
     let mut total_lysis_limit = total_gratis_limit;
     // If the interest is less than the total limit, the limit is set to the interest
     // to reduce over allocation
@@ -142,7 +142,7 @@ mod tests {
             lysis_limit_percent,
         );
 
-        assert_eq!(total_lysis_limit, Uint128::new(500));
+        assert_eq!(total_lysis_limit, Uint128::new(50));
         assert_eq!(total_lysis_deficit, Uint128::zero());
         assert_eq!(distribution_percent, Decimal::percent(10));
     }
@@ -159,9 +159,9 @@ mod tests {
             lysis_limit_percent,
         );
 
-        assert_eq!(total_lysis_limit, Uint128::new(1000));
-        assert_eq!(total_lysis_deficit, Uint128::new(1000));
-        assert_eq!(distribution_percent, Decimal::percent(5));
+        assert_eq!(total_lysis_limit, Uint128::new(200));
+        assert_eq!(total_lysis_deficit, Uint128::new(0));
+        assert_eq!(distribution_percent, Decimal::percent(10));
     }
 
     #[test]
@@ -176,7 +176,7 @@ mod tests {
             lysis_limit_percent,
         );
 
-        assert_eq!(total_lysis_limit, Uint128::new(1000));
+        assert_eq!(total_lysis_limit, Uint128::new(100));
         assert_eq!(total_lysis_deficit, Uint128::zero());
         assert_eq!(distribution_percent, Decimal::percent(10));
     }
