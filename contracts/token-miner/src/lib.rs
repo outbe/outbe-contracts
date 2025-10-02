@@ -12,6 +12,7 @@
 pub mod contract;
 pub mod error;
 pub mod msg;
+pub(crate) mod pow;
 pub mod query;
 pub mod state;
 

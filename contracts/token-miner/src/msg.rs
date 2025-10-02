@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, HexBinary, Uint128};
 
 use crate::state::{AccessPermissions, Config, TokenType};
 
@@ -14,6 +14,8 @@ pub struct InstantiateMsg {
     pub price_oracle_contract: String,
     /// Address of the Nod NFT contract
     pub nod_contract: String,
+    /// Mining complexity for proof-of-work algorithm
+    pub pow_complexity: usize,
     /// Initial access
     pub access_list: Vec<AccessMsg>,
 }
@@ -50,6 +52,8 @@ pub enum ExecuteMsg {
     MineGratisWithNod {
         /// Token ID of the Nod NFT to use for mining
         nod_token_id: String,
+        /// Nonce for proof-of-work. Empty string can be specified for demo purposes
+        nonce: HexBinary,
     },
     /// Add an address to the access list (admin only)
     AddToAccessList {

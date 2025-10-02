@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, QueryRequest, Response,
-    StdResult, Uint128, WasmMsg, WasmQuery,
+    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, HexBinary, MessageInfo, QueryRequest,
+    Response, StdResult, Uint128, WasmMsg, WasmQuery,
 };
 use cw2::set_contract_version;
 use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
@@ -46,6 +46,7 @@ pub fn instantiate(
         promis_contract,
         price_oracle_contract,
         nod_contract,
+        pow_complexity: msg.pow_complexity,
     };
     CONFIG.save(deps.storage, &config)?;
 
@@ -93,9 +94,10 @@ pub fn execute(
             amount,
             token_type,
         } => execute_mine(deps, env, info, recipient, amount, token_type),
-        ExecuteMsg::MineGratisWithNod { nod_token_id } => {
-            execute_mine_gratis_with_nod(deps, env, info, nod_token_id)
-        }
+        ExecuteMsg::MineGratisWithNod {
+            nod_token_id,
+            nonce,
+        } => execute_mine_gratis_with_nod(deps, env, info, nod_token_id, nonce),
         ExecuteMsg::AddToAccessList {
             address,
             permissions,
@@ -196,9 +198,16 @@ pub fn execute_mine_gratis_with_nod(
     _env: Env,
     info: MessageInfo,
     nod_token_id: String,
+    nonce: HexBinary,
 ) -> Result<Response, ContractError> {
     // Get contract configuration
     let config = CONFIG.load(deps.storage)?;
+
+    crate::pow::verify_proof_of_work(
+        HexBinary::from_hex(&nod_token_id)?,
+        nonce,
+        config.pow_complexity,
+    )?;
 
     // Query the Nod NFT to get its data
     let nod_info_query = QueryRequest::Wasm(WasmQuery::Smart {

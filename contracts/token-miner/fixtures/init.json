@@ -3,6 +3,7 @@
   "promis_contract": $promis_address,
   "nod_contract": $nod_address,
   "price_oracle_contract": $price_oracle_address,
+  "pow_complexity": 2,
   "access_list": [
     {
       "address": $faucet_address,
