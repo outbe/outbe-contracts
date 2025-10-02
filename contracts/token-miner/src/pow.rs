@@ -18,7 +18,6 @@ pub(crate) fn verify_proof_of_work(
     if seek_hash.len() != 32 {
         return Err(ContractError::InvalidHash {});
     }
-    println!("seek_hash={:?}, nonce_hash={:?}", seek_hash, nonce_hash);
 
     let seek_suffix = &seek_hash.as_slice()[32 - complexity..];
     let nonce_suffix = &nonce_hash.as_slice()[32 - complexity..];

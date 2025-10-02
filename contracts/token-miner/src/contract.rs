@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     entry_point, to_json_binary, Binary, Deps, DepsMut, Env, HexBinary, MessageInfo, QueryRequest,
-    Response, StdResult, Uint128, WasmMsg, WasmQuery,
+    Response, StdError, StdResult, Uint128, WasmMsg, WasmQuery,
 };
 use cw2::set_contract_version;
 use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
@@ -32,6 +32,12 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    if msg.pow_complexity > 32 {
+        return Err(ContractError::Std(StdError::generic_err(
+            "pow_complexity must be <= 32",
+        )));
+    }
 
     // Validate and store contract addresses
     let gratis_contract = deps.api.addr_validate(&msg.gratis_contract)?;
