@@ -178,7 +178,7 @@ jobs:
         uses: thollander/actions-comment-pull-request@v3
         with:
           message: ${{ steps.review.outputs.msg }}
-          mode: recreate
+          mode: upsert
           comment-tag: codex-review
 
   coverage:
