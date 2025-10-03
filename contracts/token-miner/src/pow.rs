@@ -7,6 +7,10 @@ pub(crate) fn verify_proof_of_work(
     nonce: HexBinary,
     complexity: usize,
 ) -> Result<(), ContractError> {
+    if seek_hash.len() != 32 {
+        return Err(ContractError::InvalidHash {});
+    }
+
     #[cfg(feature = "demo")]
     {
         if nonce.is_empty() {
@@ -15,9 +19,6 @@ pub(crate) fn verify_proof_of_work(
     }
 
     let nonce_hash = gen_hash(vec![&nonce]);
-    if seek_hash.len() != 32 {
-        return Err(ContractError::InvalidHash {});
-    }
 
     let seek_suffix = &seek_hash.as_slice()[32 - complexity..];
     let nonce_suffix = &nonce_hash.as_slice()[32 - complexity..];
