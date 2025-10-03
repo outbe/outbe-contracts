@@ -36,7 +36,7 @@ async function main() {
   }, TX_FEE)
 
   console.log("New Coen/USDC Rate:", await queryCoenRate(queryClient))
-  console.log("New XAU/USD Rate:", await queryCoenRate(queryClient))
+  console.log("New XAU/USD Rate:", await queryXauRate(queryClient))
 }
 
 export async function queryCoenRate(queryClient: PriceOracleQueryClient): Promise<number> {
