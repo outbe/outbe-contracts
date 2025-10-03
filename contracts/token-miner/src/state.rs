@@ -15,6 +15,8 @@ pub struct Config {
     pub price_oracle_contract: Addr,
     /// Address of the Nod NFT contract
     pub nod_contract: Addr,
+    /// Mining complexity for proof-of-work algorithm
+    pub pow_complexity: usize,
 }
 
 /// Token types that can be minted

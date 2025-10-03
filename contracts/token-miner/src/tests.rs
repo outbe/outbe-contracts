@@ -9,8 +9,8 @@ mod test_token_miner {
     use crate::ContractError;
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env, MockApi};
     use cosmwasm_std::{
-        from_json, to_json_binary, ContractResult, Decimal, SystemError, SystemResult, Timestamp,
-        Uint128, WasmMsg, WasmQuery,
+        from_json, to_json_binary, ContractResult, Decimal, HexBinary, SystemError, SystemResult,
+        Timestamp, Uint128, WasmMsg, WasmQuery,
     };
     use cw20_base::msg::ExecuteMsg as Cw20ExecuteMsg;
     use nod::msg::ExecuteMsg as NodExecuteMsg;
@@ -18,6 +18,7 @@ mod test_token_miner {
     use nod::types::{NodData, State as NodState};
     use outbe_nft::msg::NftInfoResponse;
     use outbe_utils::denom::{Currency, Denom};
+    use outbe_utils::gen_hash;
     use price_oracle::query::QueryMsg as PriceOracleQueryMsg;
     use price_oracle::types::{DayType, TokenPairPrice};
     use std::str::FromStr;
@@ -37,6 +38,7 @@ mod test_token_miner {
             price_oracle_contract: api.addr_make(PRICE_ORACLE_CONTRACT).to_string(),
             nod_contract: api.addr_make(NOD_CONTRACT).to_string(),
             access_list: Vec::new(),
+            pow_complexity: 0,
         }
     }
 
@@ -732,7 +734,8 @@ mod test_token_miner {
 
         // Mine Gratis with Nod
         let mine_msg = ExecuteMsg::MineGratisWithNod {
-            nod_token_id: "test_nod_1".to_string(),
+            nod_token_id: gen_hash(vec!["test_nod_1".as_bytes()]).to_string(),
+            nonce: HexBinary::default(),
         };
         let info = message_info(&user1_addr, &[]);
         let res = execute(deps.as_mut(), mock_env(), info, mine_msg).unwrap();
@@ -766,7 +769,7 @@ mod test_token_miner {
         {
             assert_eq!(contract_addr, &nod_contract_addr.to_string());
             let expected_burn_msg = NodExecuteMsg::Burn {
-                token_id: "test_nod_1".to_string(),
+                token_id: gen_hash(vec!["test_nod_1".as_bytes()]).to_string(),
             };
             assert_eq!(msg, &to_json_binary(&expected_burn_msg).unwrap());
         } else {
@@ -776,7 +779,10 @@ mod test_token_miner {
         // Check response attributes
         assert_eq!(res.attributes[0].value, "mine_gratis_with_nod");
         assert_eq!(res.attributes[1].value, user1_addr.to_string());
-        assert_eq!(res.attributes[2].value, "test_nod_1");
+        assert_eq!(
+            res.attributes[2].value,
+            gen_hash(vec!["test_nod_1".as_bytes()]).to_string()
+        );
         assert_eq!(res.attributes[3].value, "500"); // gratis_load_minor
     }
 
@@ -822,7 +828,8 @@ mod test_token_miner {
 
         // Try to mine Gratis with Nod owned by someone else
         let mine_msg = ExecuteMsg::MineGratisWithNod {
-            nod_token_id: "test_nod_1".to_string(),
+            nod_token_id: gen_hash(vec!["test_nod_1".as_bytes()]).to_string(),
+            nonce: HexBinary::default(),
         };
         let info = message_info(&user1_addr, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, mine_msg).unwrap_err();
@@ -874,7 +881,8 @@ mod test_token_miner {
 
         // Try to mine Gratis with Nod that is not in Issued state
         let mine_msg = ExecuteMsg::MineGratisWithNod {
-            nod_token_id: "test_nod_1".to_string(),
+            nod_token_id: gen_hash(vec!["test_nod_1".as_bytes()]).to_string(),
+            nonce: HexBinary::default(),
         };
         let info = message_info(&user1_addr, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, mine_msg).unwrap_err();
@@ -932,7 +940,8 @@ mod test_token_miner {
 
         // Try to mine Gratis with Nod when price is too low
         let mine_msg = ExecuteMsg::MineGratisWithNod {
-            nod_token_id: "test_nod_1".to_string(),
+            nod_token_id: gen_hash(vec!["test_nod_1".as_bytes()]).to_string(),
+            nonce: HexBinary::default(),
         };
         let info = message_info(&user1_addr, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, mine_msg).unwrap_err();

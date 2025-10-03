@@ -51,6 +51,12 @@ pub enum ContractError {
     #[error("Nod NFT is not in Issued state - cannot mine Gratis")]
     NodNotIssued {},
 
+    /// Invalid proof-of-work
+    #[error("Invalid proof-of-work")]
+    InvalidProofOfWork {},
+    #[error("Invalid hash")]
+    InvalidHash {},
+
     /// Nod NFT is not qualified for mining (current price < floor price)
     #[error("Nod NFT is not qualified for mining: current price {current_price} < floor price {floor_price}")]
     NodNotQualified {
