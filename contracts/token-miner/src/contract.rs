@@ -209,11 +209,10 @@ pub fn execute_mine_gratis_with_nod(
     // Get contract configuration
     let config = CONFIG.load(deps.storage)?;
 
-    crate::pow::verify_proof_of_work(
-        HexBinary::from_hex(&nod_token_id)?,
-        nonce,
-        config.pow_complexity,
-    )?;
+    // NB: we know here that nod_token_id is a valid sha256 hex string, so we can safely unwrap
+    let nod_hash = HexBinary::from_hex(&nod_token_id)?;
+    // check PoW mining
+    crate::pow::verify_proof_of_work(nod_hash, nonce, config.pow_complexity)?;
 
     // Query the Nod NFT to get its data
     let nod_info_query = QueryRequest::Wasm(WasmQuery::Smart {
