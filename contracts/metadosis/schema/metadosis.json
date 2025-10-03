@@ -370,7 +370,6 @@
             "timestamp",
             "total_gratis_limit",
             "total_tribute_interest",
-            "total_tribute_nominal_amount",
             "worldwide_day"
           ],
           "properties": {
@@ -431,9 +430,6 @@
               ]
             },
             "total_tribute_interest": {
-              "$ref": "#/definitions/Uint128"
-            },
-            "total_tribute_nominal_amount": {
               "$ref": "#/definitions/Uint128"
             },
             "worldwide_day": {
@@ -587,8 +583,7 @@
             "total_gratis_limit",
             "total_lysis_deficit",
             "total_lysis_limit",
-            "total_tribute_interest",
-            "total_tribute_nominal_amount"
+            "total_tribute_interest"
           ],
           "properties": {
             "distribution_percent": {
@@ -633,9 +628,6 @@
                   "$ref": "#/definitions/Uint128"
                 }
               ]
-            },
-            "total_tribute_nominal_amount": {
-              "$ref": "#/definitions/Uint128"
             }
           },
           "additionalProperties": false
