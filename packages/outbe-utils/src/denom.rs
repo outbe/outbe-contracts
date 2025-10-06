@@ -44,23 +44,6 @@ pub enum Currency {
     Gbp = 826, // British Pound Sterling
     Jpy = 392, // Japanese Yen
     Chf = 756, // Swiss Franc
-    Cad = 124, // Canadian Dollar
-    Aud = 36,  // Australian Dollar
-    Cny = 156, // Chinese Yuan
-    Inr = 356, // Indian Rupee
-    Krw = 410, // South Korean Won
-    Brl = 986, // Brazilian Real
-    Mxn = 484, // Mexican Peso
-    Sgd = 702, // Singapore Dollar
-    Hkd = 344, // Hong Kong Dollar
-    Nok = 578, // Norwegian Krone
-    Sek = 752, // Swedish Krona
-    Dkk = 208, // Danish Krone
-    Pln = 985, // Polish Zloty
-    Try = 949, // Turkish Lira
-    Zar = 710, // South African Rand
-    Thb = 764, // Thai Baht
-    Nzd = 554, // New Zealand Dollar
 }
 
 impl Currency {
@@ -77,30 +60,13 @@ impl Currency {
             Currency::Gbp => "GBP",
             Currency::Jpy => "JPY",
             Currency::Chf => "CHF",
-            Currency::Cad => "CAD",
-            Currency::Aud => "AUD",
-            Currency::Cny => "CNY",
-            Currency::Inr => "INR",
-            Currency::Krw => "KRW",
-            Currency::Brl => "BRL",
-            Currency::Mxn => "MXN",
-            Currency::Sgd => "SGD",
-            Currency::Hkd => "HKD",
-            Currency::Nok => "NOK",
-            Currency::Sek => "SEK",
-            Currency::Dkk => "DKK",
-            Currency::Pln => "PLN",
-            Currency::Try => "TRY",
-            Currency::Zar => "ZAR",
-            Currency::Thb => "THB",
-            Currency::Nzd => "NZD",
         }
     }
 
     /// Returns the standard minor units (decimal places)
     pub fn minor_units(&self) -> u8 {
         match self {
-            Currency::Jpy | Currency::Krw => 0, // No decimal places
+            Currency::Jpy => 0, // No decimal places
             // Most currencies use 2 decimal places
             _ => 2,
         }
@@ -130,23 +96,6 @@ impl TryFrom<CurrencyCode> for Currency {
             826 => Ok(Gbp),
             392 => Ok(Jpy),
             756 => Ok(Chf),
-            124 => Ok(Cad),
-            36 => Ok(Aud),
-            156 => Ok(Cny),
-            356 => Ok(Inr),
-            410 => Ok(Krw),
-            986 => Ok(Brl),
-            484 => Ok(Mxn),
-            702 => Ok(Sgd),
-            344 => Ok(Hkd),
-            578 => Ok(Nok),
-            752 => Ok(Sek),
-            208 => Ok(Dkk),
-            985 => Ok(Pln),
-            949 => Ok(Try),
-            710 => Ok(Zar),
-            764 => Ok(Thb),
-            554 => Ok(Nzd),
             _ => Err(CurrencyError::WrongCode(value)),
         }
     }
@@ -217,7 +166,6 @@ mod tests {
     fn test_minor_units() {
         assert_eq!(Currency::Usd.minor_units(), 2);
         assert_eq!(Currency::Jpy.minor_units(), 0); // Yen has no decimal places
-        assert_eq!(Currency::Krw.minor_units(), 0); // Won has no decimal places
     }
 
     #[test]
