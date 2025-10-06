@@ -7,6 +7,9 @@ edition = { workspace = true }
 crate-type = ["cdylib", "rlib"]
 
 [features]
+default = ["demo"]
+demo = []
+# use library feature to disable all instantiate/execute/query exports
 library = []
 
 [dependencies]

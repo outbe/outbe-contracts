@@ -11,6 +11,7 @@
       "access_list",
       "gratis_contract",
       "nod_contract",
+      "pow_complexity",
       "price_oracle_contract",
       "promis_contract"
     ],
@@ -29,6 +30,12 @@
       "nod_contract": {
         "description": "Address of the Nod NFT contract",
         "type": "string"
+      },
+      "pow_complexity": {
+        "description": "Mining complexity for proof-of-work algorithm",
+        "type": "integer",
+        "format": "uint",
+        "minimum": 0.0
       },
       "price_oracle_contract": {
         "description": "Address of the Price Oracle contract",
@@ -147,12 +154,21 @@
           "mine_gratis_with_nod": {
             "type": "object",
             "required": [
-              "nod_token_id"
+              "nod_token_id",
+              "nonce"
             ],
             "properties": {
               "nod_token_id": {
                 "description": "Token ID of the Nod NFT to use for mining",
                 "type": "string"
+              },
+              "nonce": {
+                "description": "Nonce for proof-of-work. Empty string can be specified for demo purposes",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/HexBinary"
+                  }
+                ]
               }
             },
             "additionalProperties": false
@@ -341,6 +357,10 @@
           }
         },
         "additionalProperties": false
+      },
+      "HexBinary": {
+        "description": "This is a wrapper around Vec<u8> to add hex de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is similar to `cosmwasm_std::Binary` but uses hex. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+        "type": "string"
       },
       "TokenType": {
         "description": "Token types that can be minted",
@@ -667,6 +687,7 @@
             "admin",
             "gratis_contract",
             "nod_contract",
+            "pow_complexity",
             "price_oracle_contract",
             "promis_contract"
           ],
@@ -694,6 +715,12 @@
                   "$ref": "#/definitions/Addr"
                 }
               ]
+            },
+            "pow_complexity": {
+              "description": "Mining complexity for proof-of-work algorithm",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0.0
             },
             "price_oracle_contract": {
               "description": "Address of the Price Oracle contract",
