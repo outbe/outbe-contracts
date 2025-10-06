@@ -366,7 +366,9 @@
           },
           "settlement_currency": {
             "description": "ISO 4217",
-            "type": "string"
+            "type": "integer",
+            "format": "uint16",
+            "minimum": 0.0
           },
           "tribute_draft_id": {
             "description": "ID of the draft tribute",

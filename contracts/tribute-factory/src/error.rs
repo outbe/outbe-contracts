@@ -2,6 +2,7 @@ use cosmwasm_std::{StdError, VerificationError};
 use cw_ownable::OwnershipError;
 use outbe_utils::amount_utils::AmountError;
 use outbe_utils::date::DateError;
+use outbe_utils::denom::CurrencyError;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -38,4 +39,6 @@ pub enum ContractError {
     InvalidNonce {},
     #[error("Tribute date window is closed")]
     ClosedOfferWindow {},
+    #[error(transparent)]
+    CurrencyError(#[from] CurrencyError),
 }

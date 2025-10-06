@@ -120,7 +120,7 @@ function randomTribute(owner: string, day: string, coenUsdcRate: number): Tribut
     tribute_draft_id: tribute_draft_id,
     owner: owner_bs58,
     worldwide_day: day,
-    settlement_currency: "usd",
+    settlement_currency: 840,
     settlement_base_amount: settlement_amount.toString(),
     settlement_atto_amount: "0",
     nominal_base_amount: nominal_amount.toString(),

@@ -164,7 +164,27 @@
         "type": "string",
         "enum": [
           "usd",
-          "eur"
+          "eur",
+          "gbp",
+          "jpy",
+          "chf",
+          "cad",
+          "aud",
+          "cny",
+          "inr",
+          "krw",
+          "brl",
+          "mxn",
+          "sgd",
+          "hkd",
+          "nok",
+          "sek",
+          "dkk",
+          "pln",
+          "try",
+          "zar",
+          "thb",
+          "nzd"
         ]
       },
       "Decimal": {
@@ -860,7 +880,27 @@
           "type": "string",
           "enum": [
             "usd",
-            "eur"
+            "eur",
+            "gbp",
+            "jpy",
+            "chf",
+            "cad",
+            "aud",
+            "cny",
+            "inr",
+            "krw",
+            "brl",
+            "mxn",
+            "sgd",
+            "hkd",
+            "nok",
+            "sek",
+            "dkk",
+            "pln",
+            "try",
+            "zar",
+            "thb",
+            "nzd"
           ]
         },
         "Decimal": {

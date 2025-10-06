@@ -32,7 +32,7 @@ impl Display for Denom {
 }
 
 /// Numeric currency code
-type CurrencyCode = u16;
+pub type CurrencyCode = u16;
 
 /// Currency code in ISO 4217 format. Please see for details
 /// [wiki](https://en.wikipedia.org/wiki/ISO_4217)
