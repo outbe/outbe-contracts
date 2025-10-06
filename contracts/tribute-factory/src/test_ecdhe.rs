@@ -83,7 +83,7 @@ fn test_decrypt_tribute_input() {
         tribute_draft_id: Base58Binary::from([42u8; 32]),
         cu_hashes: vec![Base58Binary::from([1u8; 32]), Base58Binary::from([2u8; 32])],
         worldwide_day: "2025-08-26".to_string(),
-        settlement_currency: Currency::Usd.numeric_code(),
+        settlement_currency: Currency::Usd.into(),
         settlement_base_amount: Uint64::new(1000),
         settlement_atto_amount: Uint128::zero(),
         nominal_base_amount: Uint64::new(500),
