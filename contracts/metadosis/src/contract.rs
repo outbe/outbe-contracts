@@ -318,14 +318,14 @@ fn do_execute_lysis(
         &Entry::Lysis(LysisEntity {
             id: entity_id.to_hex(),
             index: 1,
-            limit: lysis_info.total_lysis_limit,
-            deficit: lysis_info.total_lysis_deficit,
-            total_tribute_interest: lysis_info.total_tribute_interest,
+            limit_minor: lysis_info.total_lysis_limit_minor,
+            deficit_minor: lysis_info.total_lysis_deficit_minor,
+            total_tribute_interest_minor: lysis_info.total_tribute_interest_minor,
             worldwide_day: execution_date,
-            total_gratis_limit: lysis_info.total_gratis_limit,
+            total_gratis_limit_minor: lysis_info.total_gratis_limit_minor,
             assigned_tributes: allocated_tributes_count,
             timestamp: block_time,
-            assigned_tributes_sum: allocated_tributes_sum,
+            assigned_tributes_sum_minor: allocated_tributes_sum,
         }),
     )?;
 
@@ -393,9 +393,9 @@ fn do_execute_touch(
             &Entry::Touch(TouchEntity {
                 id: entity_id.to_hex(),
                 worldwide_day: execution_date,
-                total_gratis_limit: touch_info.total_gratis_limit,
+                total_gratis_limit_minor: touch_info.total_gratis_limit_minor,
                 gold_ignot_price: touch_info.gold_ignot_price,
-                touch_limit: touch_info.touch_limit,
+                touch_limit_minor: touch_info.touch_limit_minor,
                 assigned_tributes: assigned_tributes_count,
                 recognised_tributes: vec![],
                 timestamp: block_time,
@@ -424,7 +424,7 @@ fn do_execute_touch(
     allocated_tributes.shuffle(&mut rnd);
 
     let (expected_winners_count, win_amount) =
-        calc_touch_win_amount(touch_info.touch_limit, touch_info.gold_ignot_price);
+        calc_touch_win_amount(touch_info.touch_limit_minor, touch_info.gold_ignot_price);
 
     let mut winners: Vec<FullTributeData> = vec![];
     for tribute in allocated_tributes {
@@ -476,9 +476,9 @@ fn do_execute_touch(
         &Entry::Touch(TouchEntity {
             id: entity_id.to_hex(),
             worldwide_day: execution_date,
-            total_gratis_limit: touch_info.total_gratis_limit,
+            total_gratis_limit_minor: touch_info.total_gratis_limit_minor,
             gold_ignot_price: touch_info.gold_ignot_price,
-            touch_limit: touch_info.touch_limit,
+            touch_limit_minor: touch_info.touch_limit_minor,
             assigned_tributes: assigned_tributes_count,
             recognised_tributes: winners_ids,
             timestamp: block_time,

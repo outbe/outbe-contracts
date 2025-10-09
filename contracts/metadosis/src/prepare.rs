@@ -48,11 +48,11 @@ pub fn prepare_executions(
 
             MetadosisInfo::Lysis {
                 lysis_info: LysisInfo {
-                    total_gratis_limit,
-                    total_fees: TOTAL_FEES,
-                    total_lysis_limit,
-                    total_tribute_interest,
-                    total_lysis_deficit,
+                    total_gratis_limit_minor: total_gratis_limit,
+                    total_fees_minor: TOTAL_FEES,
+                    total_lysis_limit_minor: total_lysis_limit,
+                    total_tribute_interest_minor: total_tribute_interest,
+                    total_lysis_deficit_minor: total_lysis_deficit,
                     distribution_percent,
                 },
             }
@@ -74,8 +74,8 @@ pub fn prepare_executions(
 
             MetadosisInfo::Touch {
                 touch_info: TouchInfo {
-                    total_gratis_limit,
-                    touch_limit,
+                    total_gratis_limit_minor: total_gratis_limit,
+                    touch_limit_minor: touch_limit,
                     gold_ignot_price,
                 },
             }

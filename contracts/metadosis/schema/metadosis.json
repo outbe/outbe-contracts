@@ -362,14 +362,14 @@
           "type": "object",
           "required": [
             "assigned_tributes",
-            "assigned_tributes_sum",
-            "deficit",
+            "assigned_tributes_sum_minor",
+            "deficit_minor",
             "id",
             "index",
-            "limit",
+            "limit_minor",
             "timestamp",
-            "total_gratis_limit",
-            "total_tribute_interest",
+            "total_gratis_limit_minor",
+            "total_tribute_interest_minor",
             "worldwide_day"
           ],
           "properties": {
@@ -379,7 +379,7 @@
               "format": "uint",
               "minimum": 0.0
             },
-            "assigned_tributes_sum": {
+            "assigned_tributes_sum_minor": {
               "description": "Sum of tributes were assigned for this run",
               "allOf": [
                 {
@@ -387,7 +387,7 @@
                 }
               ]
             },
-            "deficit": {
+            "deficit_minor": {
               "description": "Lysis deficit",
               "allOf": [
                 {
@@ -405,7 +405,7 @@
               "format": "uint",
               "minimum": 0.0
             },
-            "limit": {
+            "limit_minor": {
               "description": "Lysis limit",
               "allOf": [
                 {
@@ -421,7 +421,7 @@
                 }
               ]
             },
-            "total_gratis_limit": {
+            "total_gratis_limit_minor": {
               "description": "Total emission limit in native coins for this day",
               "allOf": [
                 {
@@ -429,7 +429,7 @@
                 }
               ]
             },
-            "total_tribute_interest": {
+            "total_tribute_interest_minor": {
               "$ref": "#/definitions/Uint128"
             },
             "worldwide_day": {
@@ -457,8 +457,8 @@
             "id",
             "recognised_tributes",
             "timestamp",
-            "total_gratis_limit",
-            "touch_limit",
+            "total_gratis_limit_minor",
+            "touch_limit_minor",
             "worldwide_day"
           ],
           "properties": {
@@ -495,7 +495,7 @@
                 }
               ]
             },
-            "total_gratis_limit": {
+            "total_gratis_limit_minor": {
               "description": "Total emission limit in native coins for this day",
               "allOf": [
                 {
@@ -503,7 +503,7 @@
                 }
               ]
             },
-            "touch_limit": {
+            "touch_limit_minor": {
               "description": "Touch limit",
               "allOf": [
                 {
@@ -569,17 +569,17 @@
           "type": "object",
           "required": [
             "distribution_percent",
-            "total_fees",
-            "total_gratis_limit",
-            "total_lysis_deficit",
-            "total_lysis_limit",
-            "total_tribute_interest"
+            "total_fees_minor",
+            "total_gratis_limit_minor",
+            "total_lysis_deficit_minor",
+            "total_lysis_limit_minor",
+            "total_tribute_interest_minor"
           ],
           "properties": {
             "distribution_percent": {
               "$ref": "#/definitions/Decimal"
             },
-            "total_fees": {
+            "total_fees_minor": {
               "description": "Total fees to be paid for validators (currently 0)",
               "allOf": [
                 {
@@ -587,7 +587,7 @@
                 }
               ]
             },
-            "total_gratis_limit": {
+            "total_gratis_limit_minor": {
               "description": "Total emission limit in native coins for this day",
               "allOf": [
                 {
@@ -595,7 +595,7 @@
                 }
               ]
             },
-            "total_lysis_deficit": {
+            "total_lysis_deficit_minor": {
               "description": "Total Deficit",
               "allOf": [
                 {
@@ -603,7 +603,7 @@
                 }
               ]
             },
-            "total_lysis_limit": {
+            "total_lysis_limit_minor": {
               "description": "Total Lysis Limit = `total_emission_limit - total_fees`",
               "allOf": [
                 {
@@ -611,7 +611,7 @@
                 }
               ]
             },
-            "total_tribute_interest": {
+            "total_tribute_interest_minor": {
               "description": "Total Tributes interest",
               "allOf": [
                 {
@@ -694,8 +694,8 @@
           "type": "object",
           "required": [
             "gold_ignot_price",
-            "total_gratis_limit",
-            "touch_limit"
+            "total_gratis_limit_minor",
+            "touch_limit_minor"
           ],
           "properties": {
             "gold_ignot_price": {
@@ -706,7 +706,7 @@
                 }
               ]
             },
-            "total_gratis_limit": {
+            "total_gratis_limit_minor": {
               "description": "Total emission limit in native coins for this day",
               "allOf": [
                 {
@@ -714,7 +714,7 @@
                 }
               ]
             },
-            "touch_limit": {
+            "touch_limit_minor": {
               "description": "Touch limit = 4 % of `total_emission_limit - total_fees`",
               "allOf": [
                 {
