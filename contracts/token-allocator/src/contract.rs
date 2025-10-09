@@ -2,6 +2,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::CREATOR;
 use cosmwasm_schema::cw_serde;
+use std::str::FromStr;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -63,17 +64,16 @@ pub struct AllocationResult {
 
 fn execute_allocate_tokens(
     _deps: DepsMut,
-    env: Env,
+    _env: Env,
     _info: MessageInfo,
     date: WorldwideDay,
 ) -> Result<Response, ContractError> {
-    let daily_total_allocation = crate::query::query_daily_allocation(env)?;
-
-    // 1 414 599 614.792365000000000000
+    // let daily_total_allocation = crate::query::query_daily_allocation(env)?;
+    let daily_total_allocation = mock_daily_allocation();
 
     let allocation_data = AllocationResult {
         day: date,
-        allocation: daily_total_allocation.amount,
+        allocation: daily_total_allocation,
     };
     let allocation_data = to_json_binary(&allocation_data)?;
 
@@ -82,4 +82,18 @@ fn execute_allocate_tokens(
         .add_attribute("action", "token-allocator::allocate_tokens")
         .add_attribute("date", date.to_string())
         .add_attribute("daily_total_allocation", daily_total_allocation.to_string()))
+}
+
+pub fn mock_daily_allocation() -> Uint128 {
+    Uint128::from_str("1414599614792365000000000000").unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::contract::mock_daily_allocation;
+
+    #[test]
+    fn mock_daily_allocation_ok() {
+        println!("mock_daily_allocation_ok = {}", mock_daily_allocation());
+    }
 }

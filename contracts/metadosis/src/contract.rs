@@ -14,7 +14,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_utils::ParseReplyError::SubMsgFailure;
 use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
-use outbe_utils::consts::to_decimals_amount;
+use outbe_utils::consts::{to_decimals_amount, DECIMALS};
 use outbe_utils::date::WorldwideDay;
 use outbe_utils::{date, gen_compound_hash};
 use rand::prelude::SliceRandom;
@@ -506,6 +506,7 @@ fn calc_touch_win_amount(touch_limit: Uint128, ignot_price: Decimal) -> (usize, 
     let mut expected_win_amount = touch_limit;
 
     let ignot_price_ato = ignot_price.atomics();
+    let ignot_price_ato = ignot_price_ato * DECIMALS; // convert to units
     if ignot_price_ato < touch_limit {
         let winners_count = touch_limit / ignot_price_ato;
         expected_winners_count = winners_count.u128() as usize;
@@ -567,7 +568,7 @@ mod tests {
     #[test]
     fn ignot_price_lower_than_touch_limit() {
         let touch_limit = Uint128::new(100) * DECIMALS;
-        let ignot_price = Decimal::from_str("45.3").unwrap();
+        let ignot_price = to_decimals_amount(Uint128::new(43));
 
         let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
         assert_eq!(winners, 2);
@@ -577,7 +578,7 @@ mod tests {
     #[test]
     fn ignot_price_equal_to_touch_limit() {
         let touch_limit = Uint128::new(100) * DECIMALS;
-        let ignot_price = Decimal::from_str("50").unwrap();
+        let ignot_price = to_decimals_amount(Uint128::new(50));
 
         let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
         assert_eq!(winners, 2);
