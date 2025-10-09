@@ -550,23 +550,13 @@
         "DailyRunState": {
           "type": "object",
           "required": [
-            "number_of_runs",
-            "undistributed_limit"
+            "number_of_runs"
           ],
           "properties": {
-            "last_tribute_id": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
             "number_of_runs": {
               "type": "integer",
               "format": "uint",
               "minimum": 0.0
-            },
-            "undistributed_limit": {
-              "$ref": "#/definitions/Uint128"
             }
           },
           "additionalProperties": false
