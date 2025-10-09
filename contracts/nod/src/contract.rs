@@ -89,6 +89,8 @@ fn execute_submit(
     let owner_addr = deps.api.addr_validate(&owner)?;
     let entity = extension.entity;
 
+    let node_issued_at = extension.created_at.unwrap_or(env.block.time);
+
     let data = NodData {
         nod_id: entity.nod_id.clone(),
         settlement_currency: entity.settlement_currency.clone(),
@@ -100,7 +102,7 @@ fn execute_submit(
         floor_price_minor: entity.floor_price_minor,
         state: entity.state.clone(),
         owner: entity.owner.clone(),
-        issued_at: extension.created_at.unwrap_or(env.block.time),
+        issued_at: node_issued_at,
         qualified_at: entity.qualified_at,
         is_touch: entity.is_touch,
     };
@@ -123,19 +125,38 @@ fn execute_submit(
         .add_attribute("action", "nod::submit")
         .add_attribute("token_id", token_id)
         .add_attribute("owner", owner)
-        .add_attribute("settlement_currency",data.settlement_currency.clone())
-        .add_attribute("symbolic_rate",data.symbolic_rate.clone())
-        .add_attribute("floor_rate",data.floor_rate.clone())
-        .add_attribute("nominal_price_minor",data.nominal_price_minor.clone())
-        .add_attribute("issuance_price_minor",data.issuance_price_minor.clone())
-        .add_attribute("gratis_load_minor",data.gratis_load_minor.clone())
-        .add_attribute("floor_price_minor",data.floor_price_minor.clone())
-        .add_attribute("state",data.state.clone())
-        .add_attribute("issued_at",data.issued_at.clone())
-        .add_attribute("is_touch",data.is_touch.clone())
-        .add_attribute("qualified_at", data.qualified_at.map(|t| t.to_string()).unwrap_or_default())
-    );
-
+        .add_attribute(
+            "settlement_currency",
+            entity.settlement_currency.clone().to_string(),
+        )
+        .add_attribute("symbolic_rate", entity.symbolic_rate.clone().to_string())
+        .add_attribute("floor_rate", entity.floor_rate.clone().to_string())
+        .add_attribute(
+            "nominal_price_minor",
+            entity.nominal_price_minor.clone().to_string(),
+        )
+        .add_attribute(
+            "issuance_price_minor",
+            entity.issuance_price_minor.clone().to_string(),
+        )
+        .add_attribute(
+            "gratis_load_minor",
+            entity.gratis_load_minor.clone().to_string(),
+        )
+        .add_attribute(
+            "floor_price_minor",
+            entity.floor_price_minor.clone().to_string(),
+        )
+        .add_attribute("state", entity.state.clone().to_string())
+        .add_attribute("issued_at", node_issued_at.clone().to_string())
+        .add_attribute("is_touch", entity.is_touch.clone().to_string())
+        .add_attribute(
+            "qualified_at",
+            entity
+                .qualified_at
+                .map(|t| t.seconds().to_string())
+                .unwrap_or_default(),
+        ))
 }
 
 fn execute_burn(
