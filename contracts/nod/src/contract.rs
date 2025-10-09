@@ -123,6 +123,18 @@ fn execute_submit(
         .add_attribute("action", "nod::submit")
         .add_attribute("token_id", token_id)
         .add_attribute("owner", owner))
+        .add_attribute("settlement_currency",data.settlement_currency.clone())
+        .add_attribute("symbolic_rate",data.symbolic_rate.clone())
+        .add_attribute("floor_rate",data.floor_rate.clone())
+        .add_attribute("nominal_price_minor",data.nominal_price_minor.clone())
+        .add_attribute("issuance_price_minor",data.issuance_price_minor.clone())
+        .add_attribute("gratis_load_minor",data.gratis_load_minor.clone())
+        .add_attribute("floor_price_minor",data.floor_price_minor.clone())
+        .add_attribute("state",data.state.clone())
+        .add_attribute("issued_at",data.created_at.clone());
+        .add_attribute("qualified_at",data.qualified_at.clone());
+        .add_attribute("is_touch",data.is_touch.clone());
+
 }
 
 fn execute_burn(
