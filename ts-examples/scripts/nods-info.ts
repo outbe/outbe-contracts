@@ -18,22 +18,13 @@ async function main() {
 
   let last_nod_id: string | undefined;
   let done = false;
-  console.log("Finding TOuch Nod tokens...")
 
   while (!done) {
     let response: TokensResponse = await nodClient.allTokens({
       queryOrder: "descending",
       startAfter: last_nod_id,
     })
-    // console.log("Nod ids batch size =", response.tokens.length, ", data: ", response.tokens.join(", "))
-    for (let i = 0; i < response.tokens.length; i++) {
-      let token_id = response.tokens[i];
-      let nod = await nodClient.nftInfo({tokenId: token_id});
-      if (nod.extension.is_touch) {
-        console.log("FOUND ", JSON.stringify(nod, null, 2))
-      }
-    }
-
+    console.log("Nod ids batch size =", response.tokens.length, ", data: ", response.tokens.join(", "))
     if (response.tokens.length == 0) {
       done = true;
     } else {
