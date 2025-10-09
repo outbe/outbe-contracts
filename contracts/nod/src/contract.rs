@@ -122,7 +122,7 @@ fn execute_submit(
     Ok(Response::new()
         .add_attribute("action", "nod::submit")
         .add_attribute("token_id", token_id)
-        .add_attribute("owner", owner))
+        .add_attribute("owner", owner)
         .add_attribute("settlement_currency",data.settlement_currency.clone())
         .add_attribute("symbolic_rate",data.symbolic_rate.clone())
         .add_attribute("floor_rate",data.floor_rate.clone())
