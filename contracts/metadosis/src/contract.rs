@@ -577,7 +577,7 @@ mod tests {
     #[test]
     fn ignot_price_lower_than_touch_limit() {
         let touch_limit = Uint128::new(100) * DECIMALS;
-        let ignot_price = to_decimals_amount(Uint128::new(43));
+        let ignot_price = Decimal::from_str("45.3").unwrap();
 
         let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
         assert_eq!(winners, 2);
@@ -587,7 +587,7 @@ mod tests {
     #[test]
     fn ignot_price_equal_to_touch_limit() {
         let touch_limit = Uint128::new(100) * DECIMALS;
-        let ignot_price = to_decimals_amount(Uint128::new(50));
+        let ignot_price = Decimal::from_str("50").unwrap();
 
         let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
         assert_eq!(winners, 2);
