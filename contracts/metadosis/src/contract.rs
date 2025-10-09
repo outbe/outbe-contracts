@@ -177,8 +177,6 @@ fn execute_run(
     let run_today = DAILY_RUN_STATE.may_load(deps.storage, execution_date)?;
     let mut run_today = run_today.unwrap_or(DailyRunState {
         number_of_runs: 0,
-        last_tribute_id: None,
-        undistributed_limit: Uint128::zero(),
     });
     run_today.number_of_runs += 1;
 
@@ -237,7 +235,7 @@ fn do_execute_lysis(
             date: Some(execution_date),
             query_order: None,
             limit: None,
-            start_after: run_today.last_tribute_id,
+            start_after: None,
         },
     )?;
 
@@ -312,16 +310,15 @@ fn do_execute_lysis(
         execution_date,
         &DailyRunState {
             number_of_runs: run_today.number_of_runs,
-            last_tribute_id: None,
-            undistributed_limit: Uint128::zero(),
         },
     )?;
 
+    let entity_id = gen_compound_hash(Some("lysis"), vec![&execution_date.to_ne_bytes()]);
     ENTRY_STATE.save(
         deps.storage,
         execution_date,
         &Entry::Lysis(LysisEntity {
-            id: format!("lysis_{}", execution_date),
+            id: entity_id.to_hex(),
             index: 1,
             limit: lysis_info.total_lysis_limit,
             deficit: lysis_info.total_lysis_deficit,
@@ -389,13 +386,14 @@ fn do_execute_touch(
         run_today.number_of_runs, assigned_tributes_count
     );
 
+    let entity_id = gen_compound_hash(Some("touch"), vec![&execution_date.to_ne_bytes()]);
     // fast exit when no tributes
     if allocated_tributes.is_empty() {
         ENTRY_STATE.save(
             deps.storage,
             execution_date,
             &Entry::Touch(TouchEntity {
-                id: format!("touch_{}", execution_date),
+                id: entity_id.to_hex(),
                 worldwide_day: execution_date,
                 total_gratis_limit: touch_info.total_gratis_limit,
                 gold_ignot_price: touch_info.gold_ignot_price,
@@ -473,11 +471,12 @@ fn do_execute_touch(
         messages.push(SubMsg::new(nod_mint));
     }
 
+    let entity_id = gen_compound_hash(Some("touch"), vec![&execution_date.to_ne_bytes()]);
     ENTRY_STATE.save(
         deps.storage,
         execution_date,
         &Entry::Touch(TouchEntity {
-            id: format!("touch_{}", execution_date),
+            id: entity_id.to_hex(),
             worldwide_day: execution_date,
             total_gratis_limit: touch_info.total_gratis_limit,
             gold_ignot_price: touch_info.gold_ignot_price,

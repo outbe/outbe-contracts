@@ -69,6 +69,8 @@ fn execute_allocate_tokens(
 ) -> Result<Response, ContractError> {
     let daily_total_allocation = crate::query::query_daily_allocation(env)?;
 
+    // 1 414 599 614.792365000000000000
+
     let allocation_data = AllocationResult {
         day: date,
         allocation: daily_total_allocation.amount,
