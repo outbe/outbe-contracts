@@ -131,10 +131,11 @@ fn execute_submit(
         .add_attribute("gratis_load_minor",data.gratis_load_minor.clone())
         .add_attribute("floor_price_minor",data.floor_price_minor.clone())
         .add_attribute("state",data.state.clone())
-        .add_attribute("issued_at",data.created_at.clone());
-        .add_attribute("qualified_at",data.qualified_at.clone());
-        .add_attribute("is_touch",data.is_touch.clone());
-
+        .add_attribute("issued_at",data.issued_at.clone())
+        .add_attribute("created_at",data.created_at.clone())
+        .add_attribute("is_touch",data.is_touch.clone())
+        .add_attribute("qualified_at", data.qualified_at.map(|t| t.to_string()).unwrap_or_default());
+    
 }
 
 fn execute_burn(
