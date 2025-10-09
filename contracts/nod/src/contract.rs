@@ -133,7 +133,8 @@ fn execute_submit(
         .add_attribute("state",data.state.clone())
         .add_attribute("issued_at",data.issued_at.clone())
         .add_attribute("is_touch",data.is_touch.clone())
-        .add_attribute("qualified_at", data.qualified_at.map(|t| t.to_string()).unwrap_or_default());
+        .add_attribute("qualified_at", data.qualified_at.map(|t| t.to_string()).unwrap_or_default())
+    );
 
 }
 
