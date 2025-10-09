@@ -175,9 +175,7 @@ fn execute_run(
     let config = CONFIG.load(deps.storage)?;
 
     let run_today = DAILY_RUN_STATE.may_load(deps.storage, execution_date)?;
-    let mut run_today = run_today.unwrap_or(DailyRunState {
-        number_of_runs: 0,
-    });
+    let mut run_today = run_today.unwrap_or(DailyRunState { number_of_runs: 0 });
     run_today.number_of_runs += 1;
 
     let info = METADOSIS_INFO

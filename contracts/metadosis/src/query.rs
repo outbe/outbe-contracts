@@ -57,9 +57,7 @@ fn query_metadosis_info(deps: Deps, _env: Env) -> StdResult<MetadosisInfoRespons
             Ok((k, v)) => {
                 let state = DAILY_RUN_STATE
                     .load(deps.storage, k)
-                    .unwrap_or(DailyRunState {
-                        number_of_runs: 0,
-                    });
+                    .unwrap_or(DailyRunState { number_of_runs: 0 });
 
                 Some(Ok(MetadosisInfoData {
                     date: k,
