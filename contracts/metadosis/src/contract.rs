@@ -506,7 +506,6 @@ fn calc_touch_win_amount(touch_limit: Uint128, ignot_price: Decimal) -> (usize, 
     let mut expected_win_amount = touch_limit;
 
     let ignot_price_ato = ignot_price.atomics();
-    let ignot_price_ato = ignot_price_ato * DECIMALS; // convert to units
     if ignot_price_ato < touch_limit {
         let winners_count = touch_limit / ignot_price_ato;
         expected_winners_count = winners_count.u128() as usize;
@@ -559,6 +558,16 @@ mod tests {
     fn ignot_price_higher_than_touch_limit() {
         let touch_limit = Uint128::new(30) * DECIMALS;
         let ignot_price = Decimal::from_str("45.3").unwrap();
+
+        let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
+        assert_eq!(winners, 1);
+        assert_eq!(amount, touch_limit);
+    }
+
+    #[test]
+    fn test_real_calc_touch_win_amount() {
+        let touch_limit = Uint128::from_str("56583984591694600000000000").unwrap();
+        let ignot_price = Decimal::from_str("101720000").unwrap();
 
         let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
         assert_eq!(winners, 1);
