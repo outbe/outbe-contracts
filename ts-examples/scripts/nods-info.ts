@@ -18,6 +18,7 @@ async function main() {
 
   let last_nod_id: string | undefined;
   let done = false;
+
   while (!done) {
     let response: TokensResponse = await nodClient.allTokens({
       queryOrder: "descending",
