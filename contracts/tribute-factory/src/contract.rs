@@ -20,7 +20,7 @@ use outbe_utils::amount_utils::normalize_amount;
 use outbe_utils::date::{
     iso_to_days, iso_to_ts, normalize_to_date, Iso8601Date, WorldwideDay, SECONDS_IN_DAY,
 };
-use outbe_utils::denom::Denom;
+use outbe_utils::denom::{Currency, Denom};
 use outbe_utils::{gen_compound_hash, gen_hash, Base58Binary};
 use sha2::Sha256;
 
@@ -327,6 +327,7 @@ fn execute_offer_logic(
         }
     };
     let wwd_ts = iso_to_ts(&tribute_input.worldwide_day)?;
+    let currency: Currency = Currency::try_from(tribute_input.settlement_currency)?;
 
     validate_deadline(&wwd_ts, &_env.block.time)?;
 
@@ -365,7 +366,7 @@ fn execute_offer_logic(
                     worldwide_day: wwd_ts,
                     owner: tribute_owner.to_string(),
                     settlement_amount_minor: settlement_amount,
-                    settlement_currency: Denom::Native(tribute.settlement_currency), // TODO use native
+                    settlement_currency: Denom::Fiat(currency),
                     nominal_amount_minor: nominal_amount,
                     nominal_price_minor: tribute_price,
                 },
@@ -537,7 +538,7 @@ mod tests {
             tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap(),
             cu_hashes: vec![Base58Binary::from(cu_hash_1), Base58Binary::from(cu_hash_2)],
             worldwide_day,
-            settlement_currency: "usd".to_string(),
+            settlement_currency: Currency::Usd.into(),
             settlement_base_amount: Uint64::new(500), // 500 USD
             settlement_atto_amount: Uint128::zero(),
             nominal_base_amount: Uint64::new(1000),
@@ -584,7 +585,7 @@ mod tests {
             tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap(),
             cu_hashes: vec![Base58Binary::from([11; 32])],
             worldwide_day,
-            settlement_currency: "usd".to_string(),
+            settlement_currency: Currency::Usd.into(),
             settlement_base_amount: Uint64::new(500),
             settlement_atto_amount: Uint128::zero(),
             nominal_base_amount: Uint64::new(1000),
@@ -622,7 +623,7 @@ mod tests {
             tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap(),
             cu_hashes: vec![cu_hash.clone()],
             worldwide_day,
-            settlement_currency: "usd".to_string(),
+            settlement_currency: Currency::Usd.into(),
             settlement_base_amount: Uint64::new(500),
             settlement_atto_amount: Uint128::zero(),
             nominal_base_amount: Uint64::new(1000),
@@ -652,7 +653,7 @@ mod tests {
             tribute_draft_id: Base58Binary::from([42; 32]), // incorrect
             cu_hashes: vec![Base58Binary::from([1; 32])],
             worldwide_day: "2025-03-22".to_string(),
-            settlement_currency: "usd".to_string(),
+            settlement_currency: Currency::Usd.into(),
             settlement_base_amount: Uint64::new(100),
             settlement_atto_amount: Uint128::zero(),
             nominal_base_amount: Uint64::new(1000),
@@ -685,7 +686,7 @@ mod tests {
             tribute_draft_id: Base58Binary::from([42u8; 32]),
             cu_hashes: vec![Base58Binary::from([1u8; 32]), Base58Binary::from([2u8; 32])],
             worldwide_day: "2025-08-27".to_string(),
-            settlement_currency: "usd".to_string(),
+            settlement_currency: Currency::Usd.into(),
             settlement_base_amount: Uint64::new(1000),
             settlement_atto_amount: Uint128::zero(),
             nominal_base_amount: Uint64::new(500),

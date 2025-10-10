@@ -68,7 +68,10 @@
         "type": "string",
         "enum": [
           "usd",
-          "eur"
+          "eur",
+          "gbp",
+          "jpy",
+          "chf"
         ]
       },
       "Denom": {
@@ -415,7 +418,10 @@
         "type": "string",
         "enum": [
           "usd",
-          "eur"
+          "eur",
+          "gbp",
+          "jpy",
+          "chf"
         ]
       },
       "Decimal": {
@@ -1001,7 +1007,10 @@
           "type": "string",
           "enum": [
             "usd",
-            "eur"
+            "eur",
+            "gbp",
+            "jpy",
+            "chf"
           ]
         },
         "Denom": {
@@ -1120,7 +1129,10 @@
           "type": "string",
           "enum": [
             "usd",
-            "eur"
+            "eur",
+            "gbp",
+            "jpy",
+            "chf"
           ]
         },
         "Decimal": {
@@ -1607,7 +1619,10 @@
           "type": "string",
           "enum": [
             "usd",
-            "eur"
+            "eur",
+            "gbp",
+            "jpy",
+            "chf"
           ]
         },
         "Decimal": {

@@ -227,7 +227,10 @@
         "type": "string",
         "enum": [
           "usd",
-          "eur"
+          "eur",
+          "gbp",
+          "jpy",
+          "chf"
         ]
       },
       "DayType": {
@@ -515,7 +518,10 @@
         "type": "string",
         "enum": [
           "usd",
-          "eur"
+          "eur",
+          "gbp",
+          "jpy",
+          "chf"
         ]
       },
       "Denom": {
@@ -630,7 +636,10 @@
           "type": "string",
           "enum": [
             "usd",
-            "eur"
+            "eur",
+            "gbp",
+            "jpy",
+            "chf"
           ]
         },
         "Denom": {
@@ -940,7 +949,10 @@
           "type": "string",
           "enum": [
             "usd",
-            "eur"
+            "eur",
+            "gbp",
+            "jpy",
+            "chf"
           ]
         },
         "DayType": {
