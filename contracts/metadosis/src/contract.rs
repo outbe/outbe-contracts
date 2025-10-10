@@ -311,7 +311,13 @@ fn do_execute_lysis(
         },
     )?;
 
-    let entity_id = gen_compound_hash(Some("lysis"), vec![&execution_date.to_ne_bytes()]);
+    let entity_id = gen_compound_hash(
+        Some("lysis"),
+        vec![
+            &execution_date.to_be_bytes(),
+            &block_time.nanos().to_be_bytes(),
+        ],
+    );
     ENTRY_STATE.save(
         deps.storage,
         execution_date,
@@ -360,6 +366,7 @@ fn do_execute_touch(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
+    // TODO add pagination if required and split into multiple runs
     let tributes: tribute::query::FullTributesResponse = deps.querier.query_wasm_smart(
         &tribute_address,
         &tribute::query::QueryMsg::DailyTributes {
@@ -384,7 +391,14 @@ fn do_execute_touch(
         run_today.number_of_runs, assigned_tributes_count
     );
 
-    let entity_id = gen_compound_hash(Some("touch"), vec![&execution_date.to_ne_bytes()]);
+    let entity_id = gen_compound_hash(
+        Some("touch"),
+        vec![
+            &execution_date.to_be_bytes(),
+            &block_time.nanos().to_be_bytes(),
+        ],
+    );
+
     // fast exit when no tributes
     if allocated_tributes.is_empty() {
         ENTRY_STATE.save(
@@ -469,7 +483,6 @@ fn do_execute_touch(
         messages.push(SubMsg::new(nod_mint));
     }
 
-    let entity_id = gen_compound_hash(Some("touch"), vec![&execution_date.to_ne_bytes()]);
     ENTRY_STATE.save(
         deps.storage,
         execution_date,
