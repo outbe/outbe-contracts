@@ -1,7 +1,7 @@
 use crate::error::ContractError;
 use crate::state::{LysisInfo, MetadosisInfo, TouchInfo, CONFIG, METADOSIS_INFO};
 use cosmwasm_std::{Addr, Decimal, DepsMut, QuerierWrapper, Uint128};
-use outbe_utils::consts::{to_decimals_amount, DECIMALS};
+use outbe_utils::consts::to_decimals_amount;
 use outbe_utils::date::WorldwideDay;
 use outbe_utils::denom::{CommodityType, Currency, Denom};
 use price_oracle::types::DayType;
@@ -32,7 +32,7 @@ pub fn prepare_executions(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
-    let total_gratis_limit = (total_emission_limit - TOTAL_FEES) * DECIMALS; // NB convert to units
+    let total_gratis_limit = total_emission_limit - TOTAL_FEES; // NB convert to units
 
     let metadosis_info: MetadosisInfo = match coen_usdc_rate.day_type {
         DayType::Green => {
@@ -48,11 +48,11 @@ pub fn prepare_executions(
 
             MetadosisInfo::Lysis {
                 lysis_info: LysisInfo {
-                    total_gratis_limit,
-                    total_fees: TOTAL_FEES,
-                    total_lysis_limit,
-                    total_tribute_interest,
-                    total_lysis_deficit,
+                    total_gratis_limit_minor: total_gratis_limit,
+                    total_fees_minor: TOTAL_FEES,
+                    total_lysis_limit_minor: total_lysis_limit,
+                    total_tribute_interest_minor: total_tribute_interest,
+                    total_lysis_deficit_minor: total_lysis_deficit,
                     distribution_percent,
                 },
             }
@@ -74,8 +74,8 @@ pub fn prepare_executions(
 
             MetadosisInfo::Touch {
                 touch_info: TouchInfo {
-                    total_gratis_limit,
-                    touch_limit,
+                    total_gratis_limit_minor: total_gratis_limit,
+                    touch_limit_minor: touch_limit,
                     gold_ignot_price,
                 },
             }

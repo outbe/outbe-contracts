@@ -175,11 +175,7 @@ fn execute_run(
     let config = CONFIG.load(deps.storage)?;
 
     let run_today = DAILY_RUN_STATE.may_load(deps.storage, execution_date)?;
-    let mut run_today = run_today.unwrap_or(DailyRunState {
-        number_of_runs: 0,
-        last_tribute_id: None,
-        undistributed_limit: Uint128::zero(),
-    });
+    let mut run_today = run_today.unwrap_or(DailyRunState { number_of_runs: 0 });
     run_today.number_of_runs += 1;
 
     let info = METADOSIS_INFO
@@ -237,7 +233,7 @@ fn do_execute_lysis(
             date: Some(execution_date),
             query_order: None,
             limit: None,
-            start_after: run_today.last_tribute_id,
+            start_after: None,
         },
     )?;
 
@@ -312,25 +308,30 @@ fn do_execute_lysis(
         execution_date,
         &DailyRunState {
             number_of_runs: run_today.number_of_runs,
-            last_tribute_id: None,
-            undistributed_limit: Uint128::zero(),
         },
     )?;
 
+    let entity_id = gen_compound_hash(
+        Some("lysis"),
+        vec![
+            &execution_date.to_be_bytes(),
+            &block_time.nanos().to_be_bytes(),
+        ],
+    );
     ENTRY_STATE.save(
         deps.storage,
         execution_date,
         &Entry::Lysis(LysisEntity {
-            id: format!("lysis_{}", execution_date),
+            id: entity_id.to_hex(),
             index: 1,
-            limit: lysis_info.total_lysis_limit,
-            deficit: lysis_info.total_lysis_deficit,
-            total_tribute_interest: lysis_info.total_tribute_interest,
+            limit_minor: lysis_info.total_lysis_limit_minor,
+            deficit_minor: lysis_info.total_lysis_deficit_minor,
+            total_tribute_interest_minor: lysis_info.total_tribute_interest_minor,
             worldwide_day: execution_date,
-            total_gratis_limit: lysis_info.total_gratis_limit,
+            total_gratis_limit_minor: lysis_info.total_gratis_limit_minor,
             assigned_tributes: allocated_tributes_count,
             timestamp: block_time,
-            assigned_tributes_sum: allocated_tributes_sum,
+            assigned_tributes_sum_minor: allocated_tributes_sum,
         }),
     )?;
 
@@ -365,6 +366,7 @@ fn do_execute_touch(
         &price_oracle::query::QueryMsg::GetPrice {},
     )?;
 
+    // TODO add pagination if required and split into multiple runs
     let tributes: tribute::query::FullTributesResponse = deps.querier.query_wasm_smart(
         &tribute_address,
         &tribute::query::QueryMsg::DailyTributes {
@@ -389,17 +391,25 @@ fn do_execute_touch(
         run_today.number_of_runs, assigned_tributes_count
     );
 
+    let entity_id = gen_compound_hash(
+        Some("touch"),
+        vec![
+            &execution_date.to_be_bytes(),
+            &block_time.nanos().to_be_bytes(),
+        ],
+    );
+
     // fast exit when no tributes
     if allocated_tributes.is_empty() {
         ENTRY_STATE.save(
             deps.storage,
             execution_date,
             &Entry::Touch(TouchEntity {
-                id: format!("touch_{}", execution_date),
+                id: entity_id.to_hex(),
                 worldwide_day: execution_date,
-                total_gratis_limit: touch_info.total_gratis_limit,
+                total_gratis_limit_minor: touch_info.total_gratis_limit_minor,
                 gold_ignot_price: touch_info.gold_ignot_price,
-                touch_limit: touch_info.touch_limit,
+                touch_limit_minor: touch_info.touch_limit_minor,
                 assigned_tributes: assigned_tributes_count,
                 recognised_tributes: vec![],
                 timestamp: block_time,
@@ -428,7 +438,7 @@ fn do_execute_touch(
     allocated_tributes.shuffle(&mut rnd);
 
     let (expected_winners_count, win_amount) =
-        calc_touch_win_amount(touch_info.touch_limit, touch_info.gold_ignot_price);
+        calc_touch_win_amount(touch_info.touch_limit_minor, touch_info.gold_ignot_price);
 
     let mut winners: Vec<FullTributeData> = vec![];
     for tribute in allocated_tributes {
@@ -477,11 +487,11 @@ fn do_execute_touch(
         deps.storage,
         execution_date,
         &Entry::Touch(TouchEntity {
-            id: format!("touch_{}", execution_date),
+            id: entity_id.to_hex(),
             worldwide_day: execution_date,
-            total_gratis_limit: touch_info.total_gratis_limit,
+            total_gratis_limit_minor: touch_info.total_gratis_limit_minor,
             gold_ignot_price: touch_info.gold_ignot_price,
-            touch_limit: touch_info.touch_limit,
+            touch_limit_minor: touch_info.touch_limit_minor,
             assigned_tributes: assigned_tributes_count,
             recognised_tributes: winners_ids,
             timestamp: block_time,
@@ -561,6 +571,16 @@ mod tests {
     fn ignot_price_higher_than_touch_limit() {
         let touch_limit = Uint128::new(30) * DECIMALS;
         let ignot_price = Decimal::from_str("45.3").unwrap();
+
+        let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
+        assert_eq!(winners, 1);
+        assert_eq!(amount, touch_limit);
+    }
+
+    #[test]
+    fn test_real_calc_touch_win_amount() {
+        let touch_limit = Uint128::from_str("56583984591694600000000000").unwrap();
+        let ignot_price = Decimal::from_str("101720000").unwrap();
 
         let (winners, amount) = calc_touch_win_amount(touch_limit, ignot_price);
         assert_eq!(winners, 1);

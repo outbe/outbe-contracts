@@ -37,24 +37,24 @@ pub enum MetadosisInfo {
 #[cw_serde]
 pub struct LysisInfo {
     /// Total emission limit in native coins for this day
-    pub total_gratis_limit: Uint128,
+    pub total_gratis_limit_minor: Uint128,
     /// Total fees to be paid for validators (currently 0)
-    pub total_fees: Uint128,
+    pub total_fees_minor: Uint128,
     /// Total Lysis Limit = `total_emission_limit - total_fees`
-    pub total_lysis_limit: Uint128,
+    pub total_lysis_limit_minor: Uint128,
     /// Total Tributes interest
-    pub total_tribute_interest: Uint128,
+    pub total_tribute_interest_minor: Uint128,
     /// Total Deficit
-    pub total_lysis_deficit: Uint128,
+    pub total_lysis_deficit_minor: Uint128,
     pub distribution_percent: Decimal,
 }
 
 #[cw_serde]
 pub struct TouchInfo {
     /// Total emission limit in native coins for this day
-    pub total_gratis_limit: Uint128,
+    pub total_gratis_limit_minor: Uint128,
     /// Touch limit = 4 % of `total_emission_limit - total_fees`
-    pub touch_limit: Uint128,
+    pub touch_limit_minor: Uint128,
     /// Gold ignot price in native coins
     pub gold_ignot_price: Decimal,
 }
@@ -62,8 +62,6 @@ pub struct TouchInfo {
 #[cw_serde]
 pub struct DailyRunState {
     pub number_of_runs: usize,
-    pub last_tribute_id: Option<String>,
-    pub undistributed_limit: Uint128,
 }
 
 #[cw_serde]
@@ -73,20 +71,20 @@ pub struct LysisEntity {
     /// Position in the daily lysis sequence
     pub index: usize,
     /// Lysis limit
-    pub limit: Uint128,
+    pub limit_minor: Uint128,
     /// Lysis deficit
-    pub deficit: Uint128,
-    pub total_tribute_interest: Uint128,
+    pub deficit_minor: Uint128,
+    pub total_tribute_interest_minor: Uint128,
     /// Worldwide day
     pub worldwide_day: WorldwideDay,
     /// Timestamp of the last tribute was recognized
     pub timestamp: Timestamp,
     /// Total emission limit in native coins for this day
-    pub total_gratis_limit: Uint128,
+    pub total_gratis_limit_minor: Uint128,
     /// Count of tributes was assigned for this run
     pub assigned_tributes: usize,
     /// Sum of tributes were assigned for this run
-    pub assigned_tributes_sum: Uint128,
+    pub assigned_tributes_sum_minor: Uint128,
 }
 
 #[cw_serde]
@@ -96,11 +94,11 @@ pub struct TouchEntity {
     /// Worldwide day
     pub worldwide_day: WorldwideDay,
     /// Total emission limit in native coins for this day
-    pub total_gratis_limit: Uint128,
+    pub total_gratis_limit_minor: Uint128,
     /// Gold ignot price in native coins
     pub gold_ignot_price: Decimal,
     /// Touch limit
-    pub touch_limit: Uint128,
+    pub touch_limit_minor: Uint128,
     /// Count of tributes was assigned for this run
     pub assigned_tributes: usize,
     /// IDs of the recognized tributes
