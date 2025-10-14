@@ -141,7 +141,7 @@ pub fn update_collection_info(
         )?;
     }
 
-    let response = Response::new().add_attribute("action", "update_collection_info");
+    let response = Response::new().add_attribute("action", "tribute::update_collection_info");
     Ok(response)
 }
 

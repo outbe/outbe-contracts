@@ -135,7 +135,7 @@ pub fn execute_burn(
     TICKETS.save(deps.storage, ticket.to_hex(), &true)?;
 
     let res = Response::new()
-        .add_attribute("action", "burn")
+        .add_attribute("action", "promis::burn")
         .add_attribute("from", sender_address)
         .add_attribute("amount", amount)
         .add_attribute("ticket", ticket.to_hex())
@@ -179,7 +179,7 @@ pub fn execute_update_minter(
     TOKEN_INFO.save(deps.storage, &token_info)?;
 
     let res = Response::new()
-        .add_attribute("action", "update_minter")
+        .add_attribute("action", "promis::update_minter")
         .add_attribute(
             "old_minter",
             old_minter.unwrap_or_else(|| "none".to_string()),
@@ -207,7 +207,7 @@ pub fn execute_update_admin(
     ADMIN.save(deps.storage, &new_admin_addr)?;
 
     Ok(Response::new()
-        .add_attribute("action", "update_admin")
+        .add_attribute("action", "promis::update_admin")
         .add_attribute("old_admin", admin)
         .add_attribute("new_admin", new_admin_addr))
 }

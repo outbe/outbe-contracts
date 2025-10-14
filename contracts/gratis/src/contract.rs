@@ -96,7 +96,7 @@ pub fn execute_mint_native(
 
     let res = Response::new()
         .add_message(send_native_msg)
-        .add_attribute("action", "mint_native")
+        .add_attribute("action", "gratis::mint_native")
         .add_attribute("recipient", recipient)
         .add_attribute("amount", amount);
 
@@ -176,7 +176,7 @@ pub fn execute_burn(
 
     let res = Response::new()
         .add_message(send_native_msg)
-        .add_attribute("action", "burn")
+        .add_attribute("action", "gratis::burn")
         .add_attribute("from", sender_address)
         .add_attribute("amount", amount)
         .add_attribute("ticket", ticket.to_hex())
@@ -215,7 +215,7 @@ pub fn execute_update_minter(
     TOKEN_INFO.save(deps.storage, &token_info)?;
 
     let res = Response::new()
-        .add_attribute("action", "update_minter")
+        .add_attribute("action", "gratis::update_minter")
         .add_attribute(
             "old_minter",
             old_minter.unwrap_or_else(|| "none".to_string()),
@@ -243,7 +243,7 @@ pub fn execute_update_admin(
     ADMIN.save(deps.storage, &new_admin_addr)?;
 
     Ok(Response::new()
-        .add_attribute("action", "update_admin")
+        .add_attribute("action", "gratis::update_admin")
         .add_attribute("old_admin", admin)
         .add_attribute("new_admin", new_admin_addr))
 }

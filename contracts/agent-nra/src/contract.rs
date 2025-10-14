@@ -384,7 +384,7 @@ pub fn exec_add_nra_directly(
     AGENTS.save(deps.storage, agent_addr.clone(), &agent)?;
 
     Ok(Response::new()
-        .add_attribute("action", "add_agent_directly")
+        .add_attribute("action", "agent-nra::add_agent_directly")
         .add_attribute("agent_address", agent_addr.to_string())
         .add_attribute("agent_type", "NRA")
         .add_attribute("status", "Active")
