@@ -330,20 +330,14 @@ fn do_execute_lysis(
         messages.push(SubMsg::new(nod_mint));
     }
 
-    DAILY_RUN_STATE.save(
-        deps.storage,
-        execution_date,
-        &DailyRunState {
-            number_of_runs: run_today.number_of_runs,
-        },
-    )?;
+    DAILY_RUN_STATE.save(deps.storage, execution_date, &run_today)?;
 
     ENTRY_STATE.save(
         deps.storage,
         execution_date,
         &Entry::Lysis(LysisEntity {
             id: entity_id.to_hex(),
-            index: 1,
+            index: run_today.number_of_runs,
             limit_minor: lysis_info.total_lysis_limit_minor,
             deficit_minor: lysis_info.total_lysis_deficit_minor,
             total_tribute_interest_minor: lysis_info.total_tribute_interest_minor,
