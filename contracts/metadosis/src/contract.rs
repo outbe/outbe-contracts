@@ -243,8 +243,35 @@ fn do_execute_lysis(
         run_today.number_of_runs, all_tributes_count
     );
 
+    let entity_id = gen_compound_hash(
+        Some("lysis"),
+        vec![
+            &execution_date.to_be_bytes(),
+            &block_time.nanos().to_be_bytes(),
+        ],
+    );
+
     // fast exit when no tributes
     if all_tributes_count == 0 {
+        DAILY_RUN_STATE.save(deps.storage, execution_date, &run_today)?;
+
+        ENTRY_STATE.save(
+            deps.storage,
+            execution_date,
+            &Entry::Lysis(LysisEntity {
+                id: entity_id.to_hex(),
+                index: run_today.number_of_runs,
+                limit_minor: lysis_info.total_lysis_limit_minor,
+                deficit_minor: lysis_info.total_lysis_deficit_minor,
+                total_tribute_interest_minor: lysis_info.total_tribute_interest_minor,
+                worldwide_day: execution_date,
+                total_gratis_limit_minor: lysis_info.total_gratis_limit_minor,
+                assigned_tributes: 0,
+                timestamp: block_time,
+                assigned_tributes_sum_minor: Uint128::zero(),
+            }),
+        )?;
+
         return Ok(Response::new()
             .add_attribute("action", "metadosis::lysis")
             .add_event(Event::new("metadosis::lysis").add_attribute("tributes_count", "0")));
@@ -311,13 +338,6 @@ fn do_execute_lysis(
         },
     )?;
 
-    let entity_id = gen_compound_hash(
-        Some("lysis"),
-        vec![
-            &execution_date.to_be_bytes(),
-            &block_time.nanos().to_be_bytes(),
-        ],
-    );
     ENTRY_STATE.save(
         deps.storage,
         execution_date,
