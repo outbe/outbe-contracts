@@ -3,6 +3,10 @@ name: Migrate
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: environment
       deploy_type:
         type: choice
         description: Deploy type
@@ -11,29 +15,29 @@ on:
         options:
           - all
           - selected
-
       selected_contracts:
         type: string
-        description: "Select: gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_nra agent_cra agent_iba agent_rfa  metadosis token_miner"
+        description: "Select: gratis promis price_oracle random_oracle token_allocator vector tr_factory tribute nod agent_nra agent_cra agent_rfa agent_iba metadosis token_miner"
         required: false
         default: ""
 
 env:
-  # Chain configuration
-  CHAIN_ID: outbe-devnet-1
   FEE_DENOM: unit
-  RPC: https://rpc.dev.outbe.net
-
-  CONTRACT_REGISTRY_CONTRACT_ADDRESS: "outbe1pu6e36nugjxv3w2tcvxgld39y5kx3zz6l74dwxyyytx9cz5xwg5s4sknnl"
+  BINARY: outbe-chaind
+  CONTRACT_REGISTRY_DEVNET: "outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9"
+  CONTRACT_REGISTRY_PRIVNET: "outbe18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3qvpnjf9"
   FAUCET_ADDRESS: "outbe13a6zjh96w9z9y2defkktdc6vn4r5h3s7xk6jkv"
 
 jobs:
   migrate:
     name: Optimize & Migrate
     runs-on: ubuntu-latest
-
     container:
-      image: ghcr.io/outbe/outbe-wasm-builder:0.2.0
+      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      RPC: ${{ vars.RPC }}
+      CHAIN_ID: ${{ vars.CHAIN_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -44,20 +48,29 @@ jobs:
 
       - name: Configure wallet
         env:
-          WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY }}
+          WALLET_MNEMONIC: ${{ secrets.WALLET_MNEMONIC }}
         run: |
-          outbe-noded keys import-hex ci $WALLET_PRIVATE_KEY --keyring-backend test
-          OWNER_ADDRESS=$(outbe-noded keys show ci --keyring-backend test --output json | jq -r '.address')
+          echo $WALLET_MNEMONIC | $BINARY keys add ci --keyring-backend test --recover
+          OWNER_ADDRESS=$($BINARY keys show ci --keyring-backend test --output json | jq -r '.address')
           echo "OWNER_ADDRESS=$OWNER_ADDRESS" >> $GITHUB_ENV
 
       - name: Make Optimized build
         run: |
           optimize.sh .
 
+      - name: Configure Contract Registry (Devnet)
+        if: ${{ github.event.inputs.environment == 'devnet' }}
+        run: |
+          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_DEVNET" >> $GITHUB_ENV
+      - name: Configure Contract Registry (Privnet)
+        if: ${{ github.event.inputs.environment == 'privnet' }}
+        run: |
+          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_PRIVNET" >> $GITHUB_ENV
+
       - name: Query and Export Contract Addresses
         run: |
           echo "Querying deployed contract addresses from Contract Registry"
-          QUERY_RESPONSE=$(outbe-noded query wasm contract-state smart $CONTRACT_REGISTRY_CONTRACT_ADDRESS \
+          QUERY_RESPONSE=$($BINARY query wasm contract-state smart $CONTRACT_REGISTRY_CONTRACT_ADDRESS \
             '{"get_deployment": {"commit_id" : null } }' --node $RPC --output json)
           CONTRACTS_COUNT=$(echo "$QUERY_RESPONSE" | jq '.data.deployment.contracts | length')
           if [ "$CONTRACTS_COUNT" -eq 0 ]; then
@@ -172,3 +185,19 @@ jobs:
         id: sendoutput
         run: |
           cat output.txt >> "$GITHUB_OUTPUT"
+
+      - name: Send message to Deploy channel
+        id: matrix-chat-message
+        uses: fadenb/matrix-chat-message@v0.0.6
+        with:
+          homeserver: ${{ secrets.MATRIC_SERVER }}
+          token: ${{ secrets.MATRIX_TOKEN }}
+          channel: ${{ secrets.DEPLOY_ROOM }}
+          message: |
+            # 📦 New COSMWASM Contracts Migrated ✅
+
+            ENV: **${{ github.event.inputs.environment }}**
+            Commit: **${{ github.sha }}**
+            Branch: **${{ github.ref }}**
+            Deploy Type: **${{ inputs.deploy_type }}**
+            Selected: **${{ inputs.selected_contracts }}**
