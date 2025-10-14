@@ -300,6 +300,8 @@ jobs:
             Commit: **${{ github.sha }}**
             IS_LATES: **${{ inputs.is_latest }}**
             Branch: **${{ github.ref }}**
+            Deploy Type: **${{ inputs.deploy_type }}**
+            Selected: **${{ inputs.selected_contracts }}**
 
             ## Details:
               - Contract Registry address: `${{ env.CONTRACT_REGISTRY_CONTRACT_ADDRESS }}`
