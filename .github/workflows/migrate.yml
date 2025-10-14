@@ -58,6 +58,15 @@ jobs:
         run: |
           optimize.sh .
 
+      - name: Configure Contract Registry (Devnet)
+        if: ${{ github.event.inputs.environment == 'devnet' }}
+        run: |
+          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_DEVNET" >> $GITHUB_ENV
+      - name: Configure Contract Registry (Privnet)
+        if: ${{ github.event.inputs.environment == 'privnet' }}
+        run: |
+          echo "CONTRACT_REGISTRY_CONTRACT_ADDRESS=$CONTRACT_REGISTRY_PRIVNET" >> $GITHUB_ENV
+
       - name: Query and Export Contract Addresses
         run: |
           echo "Querying deployed contract addresses from Contract Registry"
