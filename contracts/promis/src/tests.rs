@@ -118,7 +118,7 @@ mod test_promis {
         // Check burn response attributes
         assert_eq!(res.attributes.len(), 5);
         assert_eq!(res.attributes[0].key, "action");
-        assert_eq!(res.attributes[0].value, "burn");
+        assert_eq!(res.attributes[0].value, "promis::burn");
         assert_eq!(res.attributes[1].key, "from");
         assert_eq!(res.attributes[1].value, USER1);
         assert_eq!(res.attributes[2].key, "amount");
@@ -270,7 +270,7 @@ mod test_promis {
         // Check response attributes
         assert_eq!(res.attributes.len(), 3);
         assert_eq!(res.attributes[0].key, "action");
-        assert_eq!(res.attributes[0].value, "update_admin");
+        assert_eq!(res.attributes[0].value, "promis::update_admin");
         assert_eq!(res.attributes[1].key, "old_admin");
         assert_eq!(res.attributes[1].value, admin_addr.to_string());
         assert_eq!(res.attributes[2].key, "new_admin");
