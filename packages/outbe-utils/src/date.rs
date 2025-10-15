@@ -89,4 +89,32 @@ mod tests {
         assert_eq!(is_valid(20230431), Err(DateError::InvalidDate {})); // April 31st
         assert_eq!(is_valid(20230229), Err(DateError::InvalidDate {})); // Not leap year
     }
+
+    #[test]
+    fn test_subtract_days() {
+        // Basic subtraction
+        assert_eq!(subtract_days(20230101, 1).unwrap(), 20221231);
+        assert_eq!(subtract_days(20230301, 1).unwrap(), 20230228);
+        assert_eq!(subtract_days(20230701, 30).unwrap(), 20230601);
+
+        // Leap year
+        assert_eq!(subtract_days(20240301, 1).unwrap(), 20240229);
+
+        // Invalid date
+        assert_eq!(subtract_days(20230230, 1), Err(DateError::InvalidDate {}));
+    }
+
+    #[test]
+    fn test_add_days() {
+        // Basic addition
+        assert_eq!(add_days(20231231, 1).unwrap(), 20240101);
+        assert_eq!(add_days(20230228, 1).unwrap(), 20230301);
+        assert_eq!(add_days(20230601, 30).unwrap(), 20230701);
+
+        // Leap year
+        assert_eq!(add_days(20240228, 1).unwrap(), 20240229);
+
+        // Invalid date
+        assert_eq!(add_days(20230230, 1), Err(DateError::InvalidDate {}));
+    }
 }
