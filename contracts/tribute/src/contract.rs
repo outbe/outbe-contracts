@@ -334,9 +334,9 @@ mod tests {
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env, MockApi};
     use cosmwasm_std::{Addr, Decimal, Storage, Timestamp, Uint128};
     use outbe_nft::state::Cw721Config;
+    use outbe_utils::date::WorldwideDay;
     use outbe_utils::denom::{Currency, Denom};
     use std::str::FromStr;
-    use outbe_utils::date::WorldwideDay;
 
     #[test]
     fn test_symbolics_calc() {

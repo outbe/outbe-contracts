@@ -103,7 +103,7 @@ fn execute_prepare(
 ) -> Result<Response, ContractError> {
     // todo verify ownership to run metadosis
 
-    let execution_date = get_execution_date(run_date, &env)?;
+    let execution_date = get_execution_date(run_date, &env.block.time)?;
 
     let config = CONFIG.load(deps.storage)?;
     let token_allocator_address = config
@@ -171,7 +171,7 @@ fn execute_run(
 ) -> Result<Response, ContractError> {
     // todo verify ownership to run metadosis
 
-    let execution_date = get_execution_date(run_date, &env)?;
+    let execution_date = get_execution_date(run_date, &env.block.time)?;
     let config = CONFIG.load(deps.storage)?;
 
     let run_today = DAILY_RUN_STATE.may_load(deps.storage, execution_date)?;
@@ -544,9 +544,9 @@ fn calc_touch_win_amount(touch_limit: Uint128, ignot_price: Decimal) -> (usize, 
 
 fn get_execution_date(
     run_date: Option<WorldwideDay>,
-    env: &Env,
+    block_time: &Timestamp,
 ) -> Result<WorldwideDay, ContractError> {
-    let execution_date = run_date.unwrap_or(calc_run_date(&env.block.time));
+    let execution_date = run_date.unwrap_or(calc_run_date(block_time));
     date::is_valid(&execution_date)?;
     println!("execution date = {}", execution_date);
     Ok(execution_date)

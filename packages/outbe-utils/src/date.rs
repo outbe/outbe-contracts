@@ -30,7 +30,6 @@ pub fn is_valid(date: &WorldwideDay) -> Result<(), DateError> {
 /// Worldwide day in YYYYMMDD format
 pub type WorldwideDay = u32;
 
-
 #[derive(Error, Debug, PartialEq)]
 pub enum DateError {
     #[error("Invalid date")]

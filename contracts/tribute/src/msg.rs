@@ -60,7 +60,7 @@ pub struct MintExtension {
 #[cw_serde]
 pub struct TributeMintData {
     pub tribute_id: String,
-    /// Date of the Tribute creation
+    /// Worldwide day of the tribute in YYYYMMDD format
     pub worldwide_day: WorldwideDay,
     pub owner: String,
     /// Value of the Tribute in Settlement Tokens

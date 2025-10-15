@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Uint128, Uint64};
-use outbe_utils::date::{WorldwideDay};
+use outbe_utils::date::WorldwideDay;
 use outbe_utils::denom::CurrencyCode;
 use outbe_utils::Base58Binary;
 
@@ -10,7 +10,7 @@ pub struct TributeInputPayload {
     pub tribute_draft_id: Base58Binary,
     /// Owner is a derivative address on L2 network based on blake3 hashing
     pub owner: Base58Binary,
-    /// ISO 8601
+    /// Worldwide day of the tribute in YYYYMMDD format
     pub worldwide_day: WorldwideDay,
     /// ISO 4217
     pub settlement_currency: CurrencyCode,

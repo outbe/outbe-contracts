@@ -615,7 +615,7 @@ mod tests {
     fn test_unique_cu_hash() {
         let mut deps = mock_dependencies();
         let owner = Base58Binary::from("user1".as_bytes());
-        let worldwide_day:WorldwideDay = 20250522;
+        let worldwide_day: WorldwideDay = 20250522;
 
         let cu_hash = Base58Binary::from([42; 32]);
 
