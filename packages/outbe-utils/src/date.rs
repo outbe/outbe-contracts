@@ -1,66 +1,35 @@
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate};
 use cosmwasm_std::Timestamp;
 use thiserror::Error;
 
 pub const SECONDS_IN_DAY: u64 = 86400;
 
-/// Normalize any timestamp to midnight UTC of that day.
+/// Normalize any timestamp to YYYYMMDD format of that day.
 pub fn normalize_to_date(timestamp: &Timestamp) -> WorldwideDay {
-    let seconds = timestamp.seconds();
-    let days = seconds / SECONDS_IN_DAY;
-    days * SECONDS_IN_DAY
+    let naive_datetime =
+        chrono::DateTime::from_timestamp_nanos(timestamp.nanos() as i64).naive_utc();
+    let year = naive_datetime.year() as u32;
+    let month = naive_datetime.month();
+    let day = naive_datetime.day();
+
+    year * 10000 + month * 100 + day
 }
 
 pub fn is_valid(date: &WorldwideDay) -> Result<(), DateError> {
-    if date % SECONDS_IN_DAY == 0 {
-        Ok(())
-    } else {
-        Err(DateError::InvalidDate {})
+    let year = date / 10000;
+    let month = (date / 100) % 100;
+    let day = date % 100;
+
+    // Use chrono to validate the actual date
+    match NaiveDate::from_ymd_opt(year as i32, month, day) {
+        Some(_) => Ok(()),
+        None => Err(DateError::InvalidDate {}),
     }
 }
 
-/// Worldwide day in seconds
-pub type WorldwideDay = u64;
+/// Worldwide day in YYYYMMDD format
+pub type WorldwideDay = u32;
 
-/// ISO 8601 Date format string
-pub type Iso8601Date = String;
-
-pub fn iso_to_ts(date: &Iso8601Date) -> Result<WorldwideDay, DateError> {
-    match NaiveDate::parse_from_str(date.as_str(), "%Y-%m-%d") {
-        Ok(parsed_date) => {
-            let timestamp_seconds = parsed_date
-                .and_hms_opt(0, 0, 0)
-                .ok_or(DateError::InvalidDate {})?
-                .and_utc()
-                .timestamp();
-            if timestamp_seconds < 0 {
-                return Err(DateError::InvalidDate {});
-            }
-            Ok(timestamp_seconds.unsigned_abs())
-        }
-        Err(_) => Err(DateError::InvalidDate {}),
-    }
-}
-
-const EPOCH: NaiveDate = NaiveDate::from_ymd_opt(2025, 1, 1).unwrap();
-
-pub fn iso_to_days(date: &Iso8601Date) -> Result<u64, DateError> {
-    match NaiveDate::parse_from_str(date.as_str(), "%Y-%m-%d") {
-        Ok(parsed_date) => {
-            // Define the EPOCH as January 1, 2025
-
-            // Calculate days since EPOCH
-            let days_since_epoch = parsed_date.signed_duration_since(EPOCH).num_days();
-
-            // Ensure the result is non-negative
-            if days_since_epoch < 0 {
-                return Err(DateError::DateBeforeEpoch {});
-            }
-            Ok(days_since_epoch as u64)
-        }
-        Err(_) => Err(DateError::InvalidDate {}),
-    }
-}
 
 #[derive(Error, Debug, PartialEq)]
 pub enum DateError {
@@ -75,53 +44,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_iso_to_ts_valid() {
-        let result = iso_to_ts(&"2024-01-15".to_string()).unwrap();
-        assert_eq!(result, 1705276800);
+    fn test_normalize_to_date() {
+        let timestamp = Timestamp::from_nanos(1672531200000000000); // 2023-01-01
+        assert_eq!(normalize_to_date(&timestamp), 20230101);
+
+        let timestamp = Timestamp::from_nanos(1688169600000000000); // 2023-07-01
+        assert_eq!(normalize_to_date(&timestamp), 20230701);
     }
 
     #[test]
-    fn test_iso_to_ts_invalid_format() {
-        let result = iso_to_ts(&"15-01-2024".to_string());
-        assert!(result.is_err());
-    }
+    fn test_is_valid() {
+        // Valid dates
+        assert!(is_valid(&20230101).is_ok());
+        assert!(is_valid(&20231231).is_ok());
+        assert!(is_valid(&20240229).is_ok()); // Leap year
 
-    #[test]
-    fn test_iso_to_ts_negative_date() {
-        let result = iso_to_ts(&"1800-01-01".to_string());
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_iso_to_days_success() {
-        let result = iso_to_days(&"2025-01-01".to_string()).unwrap();
-        assert_eq!(result, 0); // Epoch date
-
-        let result = iso_to_days(&"2025-01-02".to_string()).unwrap();
-        assert_eq!(result, 1);
-
-        let result = iso_to_days(&"2026-01-01".to_string()).unwrap();
-        assert_eq!(result, 365);
-    }
-
-    #[test]
-    fn test_iso_to_days_invalid_format() {
-        let result = iso_to_days(&"01-01-2025".to_string());
-        assert!(result.is_err());
-
-        let result = iso_to_days(&"2025/01/01".to_string());
-        assert!(result.is_err());
-
-        let result = iso_to_days(&"invalid".to_string());
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_iso_to_days_before_epoch() {
-        let result = iso_to_days(&"2024-12-31".to_string());
-        assert!(result.is_err());
-
-        let result = iso_to_days(&"2020-01-01".to_string());
-        assert!(result.is_err());
+        // Invalid dates
+        assert_eq!(is_valid(&20230000), Err(DateError::InvalidDate {}));
+        assert_eq!(is_valid(&20231232), Err(DateError::InvalidDate {}));
+        assert_eq!(is_valid(&20230431), Err(DateError::InvalidDate {})); // April 31st
+        assert_eq!(is_valid(&20230229), Err(DateError::InvalidDate {})); // Not leap year
     }
 }

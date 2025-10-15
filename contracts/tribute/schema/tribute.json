@@ -312,7 +312,7 @@
             "properties": {
               "date": {
                 "type": "integer",
-                "format": "uint64",
+                "format": "uint32",
                 "minimum": 0.0
               }
             },
@@ -617,7 +617,7 @@
           "worldwide_day": {
             "description": "Date of the Tribute creation",
             "type": "integer",
-            "format": "uint64",
+            "format": "uint32",
             "minimum": 0.0
           }
         },
@@ -845,7 +845,7 @@
                   "integer",
                   "null"
                 ],
-                "format": "uint64",
+                "format": "uint32",
                 "minimum": 0.0
               },
               "limit": {
@@ -893,7 +893,7 @@
             "properties": {
               "date": {
                 "type": "integer",
-                "format": "uint64",
+                "format": "uint32",
                 "minimum": 0.0
               }
             },
@@ -1275,7 +1275,7 @@
             "worldwide_day": {
               "description": "Date of Consumption",
               "type": "integer",
-              "format": "uint64",
+              "format": "uint32",
               "minimum": 0.0
             }
           },
@@ -1745,7 +1745,7 @@
             "worldwide_day": {
               "description": "Date of Consumption",
               "type": "integer",
-              "format": "uint64",
+              "format": "uint32",
               "minimum": 0.0
             }
           },

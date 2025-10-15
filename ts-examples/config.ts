@@ -15,8 +15,8 @@ export const NUMBER_OF_METADOSIS_RUNS = 1
 // SPECIFY HERE DATE FOR RUN FOR METADOSIS
 export const RUN_DATE = "2025-09-29";
 
-export function toTimestamp(dateStr: string): number {
-  return Math.floor(new Date(dateStr).getTime() / 1000);
+export function toTimestamp(date: number): number {
+  return Math.floor(new Date(date).getTime() / 1000);
 }
 
 export function RUN_DATE_TS(): number {

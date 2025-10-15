@@ -1,6 +1,6 @@
 use cosmwasm_std::StdError;
 use cw_utils::ParseReplyError;
-use outbe_utils::date::DateError;
+use outbe_utils::date::{DateError, WorldwideDay};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -14,7 +14,7 @@ pub enum ContractError {
     #[error("Bad Run Configuration")]
     BadRunConfiguration {},
     #[error("Data already prepared {day}")]
-    AlreadyPrepared { day: u64 },
+    AlreadyPrepared { day: WorldwideDay },
     #[error(transparent)]
     DateError(#[from] DateError),
     #[error("Bad Reply ID {id}")]

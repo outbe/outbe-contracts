@@ -380,7 +380,9 @@
           },
           "worldwide_day": {
             "description": "ISO 8601",
-            "type": "string"
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
           }
         },
         "additionalProperties": false

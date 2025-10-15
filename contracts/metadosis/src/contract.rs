@@ -554,7 +554,7 @@ fn get_execution_date(
 
 fn calc_run_date(timestamp: &Timestamp) -> WorldwideDay {
     let normalized = date::normalize_to_date(timestamp);
-    normalized - 3 * date::SECONDS_IN_DAY
+    normalized - 3
 }
 
 #[cfg(feature = "demo")]
@@ -674,13 +674,13 @@ mod tests {
     fn test_calc_run_date() {
         let current_time = Timestamp::from_seconds(1632960000); // 2021-09-30 00:00:00 UTC
         let result = calc_run_date(&current_time);
-        assert_eq!(result, date::iso_to_ts(&"2021-09-27".to_string()).unwrap());
+        assert_eq!(result, 20210927);
     }
 
     #[test]
     fn test_calc_run_date2() {
         let current_time = Timestamp::from_seconds(1758889055); // 2025-09-26 12:17:35 UTC
         let result = calc_run_date(&current_time);
-        assert_eq!(result, date::iso_to_ts(&"2025-09-23".to_string()).unwrap());
+        assert_eq!(result, 20250923);
     }
 }
