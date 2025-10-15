@@ -534,7 +534,7 @@ fn test_add_agent_directly_success() {
     // Check response attributes
     assert_eq!(res.attributes.len(), 5);
     assert_eq!(res.attributes[0].key, "action");
-    assert_eq!(res.attributes[0].value, "add_agent_directly");
+    assert_eq!(res.attributes[0].value, "agent-nra::add_agent_directly");
     assert_eq!(res.attributes[1].key, "agent_address");
     assert_eq!(res.attributes[1].value, agent_address);
     assert_eq!(res.attributes[2].key, "agent_type");
