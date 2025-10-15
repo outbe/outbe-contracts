@@ -1,3 +1,5 @@
+use std::fmt;
+
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Timestamp, Uint128};
 use outbe_nft::state::NftInfo;
@@ -45,6 +47,12 @@ pub struct NodData {
 pub enum State {
     Issued,
     Qualified,
+}
+
+impl fmt::Display for State {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 pub type NodNft = NftInfo<NodData>;

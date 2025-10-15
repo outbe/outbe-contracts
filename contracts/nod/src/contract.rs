@@ -89,6 +89,8 @@ fn execute_submit(
     let owner_addr = deps.api.addr_validate(&owner)?;
     let entity = extension.entity;
 
+    let node_issued_at = extension.created_at.unwrap_or(env.block.time);
+
     let data = NodData {
         nod_id: entity.nod_id.clone(),
         settlement_currency: entity.settlement_currency.clone(),
@@ -100,7 +102,7 @@ fn execute_submit(
         floor_price_minor: entity.floor_price_minor,
         state: entity.state.clone(),
         owner: entity.owner.clone(),
-        issued_at: extension.created_at.unwrap_or(env.block.time),
+        issued_at: node_issued_at,
         qualified_at: entity.qualified_at,
         is_touch: entity.is_touch,
     };
@@ -122,7 +124,39 @@ fn execute_submit(
     Ok(Response::new()
         .add_attribute("action", "nod::submit")
         .add_attribute("token_id", token_id)
-        .add_attribute("owner", owner))
+        .add_attribute("owner", owner)
+        .add_attribute(
+            "settlement_currency",
+            entity.settlement_currency.clone().to_string(),
+        )
+        .add_attribute("symbolic_rate", entity.symbolic_rate.clone().to_string())
+        .add_attribute("floor_rate", entity.floor_rate.clone().to_string())
+        .add_attribute(
+            "nominal_price_minor",
+            entity.nominal_price_minor.clone().to_string(),
+        )
+        .add_attribute(
+            "issuance_price_minor",
+            entity.issuance_price_minor.clone().to_string(),
+        )
+        .add_attribute(
+            "gratis_load_minor",
+            entity.gratis_load_minor.clone().to_string(),
+        )
+        .add_attribute(
+            "floor_price_minor",
+            entity.floor_price_minor.clone().to_string(),
+        )
+        .add_attribute("state", entity.state.clone().to_string())
+        .add_attribute("issued_at", node_issued_at.clone().to_string())
+        .add_attribute("is_touch", entity.is_touch.clone().to_string())
+        .add_attribute(
+            "qualified_at",
+            entity
+                .qualified_at
+                .map(|t| t.seconds().to_string())
+                .unwrap_or_default(),
+        ))
 }
 
 fn execute_burn(
