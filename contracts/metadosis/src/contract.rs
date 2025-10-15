@@ -15,7 +15,7 @@ use cw2::set_contract_version;
 use cw_utils::ParseReplyError::SubMsgFailure;
 use cw_utils::{parse_execute_response_data, MsgExecuteContractResponse};
 use outbe_utils::consts::to_decimals_amount;
-use outbe_utils::date::WorldwideDay;
+use outbe_utils::date::{subtract_days, DateError, WorldwideDay};
 use outbe_utils::{date, gen_compound_hash};
 use rand::prelude::SliceRandom;
 use rand_chacha::rand_core::SeedableRng;
@@ -546,15 +546,15 @@ fn get_execution_date(
     run_date: Option<WorldwideDay>,
     block_time: &Timestamp,
 ) -> Result<WorldwideDay, ContractError> {
-    let execution_date = run_date.unwrap_or(calc_run_date(block_time));
-    date::is_valid(&execution_date)?;
+    let execution_date = run_date.unwrap_or(calc_run_date(block_time)?);
+    date::is_valid(execution_date)?;
     println!("execution date = {}", execution_date);
     Ok(execution_date)
 }
 
-fn calc_run_date(timestamp: &Timestamp) -> WorldwideDay {
+fn calc_run_date(timestamp: &Timestamp) -> Result<WorldwideDay, DateError> {
     let normalized = date::normalize_to_date(timestamp);
-    normalized - 3
+    subtract_days(normalized, 3)
 }
 
 #[cfg(feature = "demo")]
@@ -673,14 +673,14 @@ mod tests {
     #[test]
     fn test_calc_run_date() {
         let current_time = Timestamp::from_seconds(1632960000); // 2021-09-30 00:00:00 UTC
-        let result = calc_run_date(&current_time);
+        let result = calc_run_date(&current_time).unwrap();
         assert_eq!(result, 20210927);
     }
 
     #[test]
     fn test_calc_run_date2() {
         let current_time = Timestamp::from_seconds(1758889055); // 2025-09-26 12:17:35 UTC
-        let result = calc_run_date(&current_time);
+        let result = calc_run_date(&current_time).unwrap();
         assert_eq!(result, 20250923);
     }
 }

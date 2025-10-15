@@ -2,7 +2,8 @@ use chrono::{Datelike, NaiveDate};
 use cosmwasm_std::Timestamp;
 use thiserror::Error;
 
-pub const SECONDS_IN_DAY: u64 = 86400;
+/// Worldwide day in YYYYMMDD format
+pub type WorldwideDay = u32;
 
 /// Normalize any timestamp to YYYYMMDD format of that day.
 pub fn normalize_to_date(timestamp: &Timestamp) -> WorldwideDay {
@@ -15,10 +16,8 @@ pub fn normalize_to_date(timestamp: &Timestamp) -> WorldwideDay {
     year * 10000 + month * 100 + day
 }
 
-pub fn is_valid(date: &WorldwideDay) -> Result<(), DateError> {
-    let year = date / 10000;
-    let month = (date / 100) % 100;
-    let day = date % 100;
+pub fn is_valid(date: WorldwideDay) -> Result<(), DateError> {
+    let (year, month, day) = ymd(date);
 
     // Use chrono to validate the actual date
     match NaiveDate::from_ymd_opt(year as i32, month, day) {
@@ -27,8 +26,34 @@ pub fn is_valid(date: &WorldwideDay) -> Result<(), DateError> {
     }
 }
 
-/// Worldwide day in YYYYMMDD format
-pub type WorldwideDay = u32;
+pub fn ymd(date: WorldwideDay) -> (u32, u32, u32) {
+    let year = date / 10000;
+    let month = (date / 100) % 100;
+    let day = date % 100;
+    (year, month, day)
+}
+
+pub fn subtract_days(wwd: WorldwideDay, days: u32) -> Result<WorldwideDay, DateError> {
+    let (year, month, day) = ymd(wwd);
+    let naive_date =
+        NaiveDate::from_ymd_opt(year as i32, month, day).ok_or(DateError::InvalidDate {})?;
+    let new_date = naive_date - chrono::Duration::days(days as i64);
+    let y = new_date.year() as u32;
+    let m = new_date.month();
+    let d = new_date.day();
+    Ok(y * 10000 + m * 100 + d)
+}
+
+pub fn add_days(wwd: WorldwideDay, days: u32) -> Result<WorldwideDay, DateError> {
+    let (year, month, day) = ymd(wwd);
+    let naive_date =
+        NaiveDate::from_ymd_opt(year as i32, month, day).ok_or(DateError::InvalidDate {})?;
+    let new_date = naive_date + chrono::Duration::days(days as i64);
+    let y = new_date.year() as u32;
+    let m = new_date.month();
+    let d = new_date.day();
+    Ok(y * 10000 + m * 100 + d)
+}
 
 #[derive(Error, Debug, PartialEq)]
 pub enum DateError {
@@ -54,14 +79,14 @@ mod tests {
     #[test]
     fn test_is_valid() {
         // Valid dates
-        assert!(is_valid(&20230101).is_ok());
-        assert!(is_valid(&20231231).is_ok());
-        assert!(is_valid(&20240229).is_ok()); // Leap year
+        assert!(is_valid(20230101).is_ok());
+        assert!(is_valid(20231231).is_ok());
+        assert!(is_valid(20240229).is_ok()); // Leap year
 
         // Invalid dates
-        assert_eq!(is_valid(&20230000), Err(DateError::InvalidDate {}));
-        assert_eq!(is_valid(&20231232), Err(DateError::InvalidDate {}));
-        assert_eq!(is_valid(&20230431), Err(DateError::InvalidDate {})); // April 31st
-        assert_eq!(is_valid(&20230229), Err(DateError::InvalidDate {})); // Not leap year
+        assert_eq!(is_valid(20230000), Err(DateError::InvalidDate {}));
+        assert_eq!(is_valid(20231232), Err(DateError::InvalidDate {}));
+        assert_eq!(is_valid(20230431), Err(DateError::InvalidDate {})); // April 31st
+        assert_eq!(is_valid(20230229), Err(DateError::InvalidDate {})); // Not leap year
     }
 }

@@ -17,7 +17,7 @@ use curve25519_dalek::{MontgomeryPoint, Scalar};
 use cw_ownable::Action;
 use hkdf::Hkdf;
 use outbe_utils::amount_utils::normalize_amount;
-use outbe_utils::date::{normalize_to_date, WorldwideDay};
+use outbe_utils::date::{add_days, normalize_to_date, WorldwideDay};
 use outbe_utils::denom::{Currency, Denom};
 use outbe_utils::{gen_compound_hash, gen_hash, Base58Binary};
 use sha2::Sha256;
@@ -96,9 +96,9 @@ fn validate_tee_config(tee_setup: &TeeSetup) -> Result<Base58Binary, ContractErr
     Ok(Base58Binary::from(derived_public_key_bytes))
 }
 
-fn validate_deadline(wwd: &WorldwideDay, current_time: &Timestamp) -> Result<(), ContractError> {
+fn validate_deadline(wwd: WorldwideDay, current_time: &Timestamp) -> Result<(), ContractError> {
     let now_wwd = normalize_to_date(current_time);
-    let metadosis_deadline = wwd + 3;
+    let metadosis_deadline = add_days(wwd, 3)?;
 
     if metadosis_deadline < now_wwd {
         return Err(ContractError::ClosedOfferWindow {});
@@ -327,7 +327,7 @@ fn execute_offer_logic(
     let wwd = tribute_input.worldwide_day;
     let currency: Currency = Currency::try_from(tribute_input.settlement_currency)?;
 
-    validate_deadline(&wwd, &_env.block.time)?;
+    validate_deadline(wwd, &_env.block.time)?;
 
     let tribute = tee_obfuscate(tribute_input.clone())?;
     update_used_state(deps.storage, &tribute)?;
@@ -900,12 +900,12 @@ mod tests {
 
         //  Before deadline: 2025-09-03 00:00:00 UTC (still valid)
         let current_time_ok = Timestamp::from_seconds(1_756_857_600);
-        let res_ok = validate_deadline(&wwd_ts, &current_time_ok);
+        let res_ok = validate_deadline(wwd_ts, &current_time_ok);
         assert!(res_ok.is_ok(), "expected Ok inside deadline");
 
         //  After deadline: 2025-09-05 00:00:00 UTC (should fail)
         let current_time_fail = Timestamp::from_seconds(1_757_030_400);
-        let res_fail = validate_deadline(&wwd_ts, &current_time_fail);
+        let res_fail = validate_deadline(wwd_ts, &current_time_fail);
         assert!(
             matches!(res_fail, Err(ContractError::ClosedOfferWindow {})),
             "expected ClosedOfferWindow error after deadline"
