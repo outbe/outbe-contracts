@@ -24,7 +24,7 @@ pub struct TributeData {
     pub nominal_amount_minor: Uint128,
     /// Price in Native coins with a rate on the moment of the transaction
     pub nominal_price_minor: Decimal,
-    /// Date of Consumption
+    /// Worldwide day of the tribute in YYYYMMDD format
     pub worldwide_day: WorldwideDay,
     /// Time when the Tribute NFT was created on the network
     pub created_at: Timestamp,

@@ -105,7 +105,7 @@
                   "integer",
                   "null"
                 ],
-                "format": "uint64",
+                "format": "uint32",
                 "minimum": 0.0
               }
             },
@@ -128,7 +128,7 @@
                   "integer",
                   "null"
                 ],
-                "format": "uint64",
+                "format": "uint32",
                 "minimum": 0.0
               }
             },
@@ -435,7 +435,7 @@
             "worldwide_day": {
               "description": "Worldwide day",
               "type": "integer",
-              "format": "uint64",
+              "format": "uint32",
               "minimum": 0.0
             }
           },
@@ -514,7 +514,7 @@
             "worldwide_day": {
               "description": "Worldwide day",
               "type": "integer",
-              "format": "uint64",
+              "format": "uint32",
               "minimum": 0.0
             }
           },
@@ -678,7 +678,7 @@
           "properties": {
             "date": {
               "type": "integer",
-              "format": "uint64",
+              "format": "uint32",
               "minimum": 0.0
             },
             "info": {

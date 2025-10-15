@@ -334,6 +334,7 @@ mod tests {
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env, MockApi};
     use cosmwasm_std::{Addr, Decimal, Storage, Timestamp, Uint128};
     use outbe_nft::state::Cw721Config;
+    use outbe_utils::date::WorldwideDay;
     use outbe_utils::denom::{Currency, Denom};
     use std::str::FromStr;
 
@@ -421,16 +422,16 @@ mod tests {
         .unwrap();
 
         // Create test tokens with different dates
-        create_test_token_with_day(deps.as_mut().storage, "token1", 1);
-        create_test_token_with_day(deps.as_mut().storage, "token2", 1);
-        create_test_token_with_day(deps.as_mut().storage, "token3", 2);
-        create_test_token_with_day(deps.as_mut().storage, "token4", 3);
+        create_test_token_with_day(deps.as_mut().storage, "token1", 20250101);
+        create_test_token_with_day(deps.as_mut().storage, "token2", 20250101);
+        create_test_token_with_day(deps.as_mut().storage, "token3", 20250102);
+        create_test_token_with_day(deps.as_mut().storage, "token4", 20250103);
 
         let config = Cw721Config::<TributeData, TributeConfig>::default();
         assert_eq!(config.token_count(&deps.storage).unwrap(), 4);
 
         // Execute burn for day 1
-        let res = execute_burn_for_day(deps.as_mut(), &env, &info, 1).unwrap();
+        let res = execute_burn_for_day(deps.as_mut(), &env, &info, 20250101).unwrap();
 
         // Verify only tokens from day 1 were burned (2 tokens)
         assert_eq!(config.token_count(&deps.storage).unwrap(), 2);
@@ -447,7 +448,7 @@ mod tests {
         assert!(event
             .attributes
             .iter()
-            .any(|attr| attr.key == "date" && attr.value == "1"));
+            .any(|attr| attr.key == "date" && attr.value == "20250101"));
         assert!(event
             .attributes
             .iter()
@@ -478,7 +479,7 @@ mod tests {
         config.increment_tokens(storage).unwrap();
     }
 
-    fn create_test_token_with_day(storage: &mut dyn Storage, token_id: &str, day: u64) {
+    fn create_test_token_with_day(storage: &mut dyn Storage, token_id: &str, day: WorldwideDay) {
         let config = Cw721Config::<TributeData, TributeConfig>::default();
         let token = TributeNft {
             owner: Addr::unchecked("owner"),

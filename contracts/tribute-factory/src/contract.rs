@@ -17,9 +17,7 @@ use curve25519_dalek::{MontgomeryPoint, Scalar};
 use cw_ownable::Action;
 use hkdf::Hkdf;
 use outbe_utils::amount_utils::normalize_amount;
-use outbe_utils::date::{
-    iso_to_days, iso_to_ts, normalize_to_date, Iso8601Date, WorldwideDay, SECONDS_IN_DAY,
-};
+use outbe_utils::date::{add_days, normalize_to_date, WorldwideDay};
 use outbe_utils::denom::{Currency, Denom};
 use outbe_utils::{gen_compound_hash, gen_hash, Base58Binary};
 use sha2::Sha256;
@@ -98,11 +96,11 @@ fn validate_tee_config(tee_setup: &TeeSetup) -> Result<Base58Binary, ContractErr
     Ok(Base58Binary::from(derived_public_key_bytes))
 }
 
-fn validate_deadline(wwd_ts: &WorldwideDay, current_time: &Timestamp) -> Result<(), ContractError> {
-    let today_ts = normalize_to_date(current_time);
-    let metadosis_deadline = wwd_ts.saturating_add(3 * SECONDS_IN_DAY);
+fn validate_deadline(wwd: WorldwideDay, current_time: &Timestamp) -> Result<(), ContractError> {
+    let now_wwd = normalize_to_date(current_time);
+    let metadosis_deadline = add_days(wwd, 3)?;
 
-    if metadosis_deadline < today_ts {
+    if metadosis_deadline < now_wwd {
         return Err(ContractError::ClosedOfferWindow {});
     }
     Ok(())
@@ -326,10 +324,10 @@ fn execute_offer_logic(
             info.sender.clone()
         }
     };
-    let wwd_ts = iso_to_ts(&tribute_input.worldwide_day)?;
+    let wwd = tribute_input.worldwide_day;
     let currency: Currency = Currency::try_from(tribute_input.settlement_currency)?;
 
-    validate_deadline(&wwd_ts, &_env.block.time)?;
+    validate_deadline(wwd, &_env.block.time)?;
 
     let tribute = tee_obfuscate(tribute_input.clone())?;
     update_used_state(deps.storage, &tribute)?;
@@ -337,7 +335,7 @@ fn execute_offer_logic(
     let tribute_id = generate_tribute_id(
         &tribute.tribute_draft_id,
         &tribute_owner,
-        &tribute_input.worldwide_day,
+        tribute_input.worldwide_day,
     );
 
     let settlement_amount = normalize_amount(
@@ -363,7 +361,7 @@ fn execute_offer_logic(
             extension: Box::new(TributeMintExtension {
                 data: TributeMintData {
                     tribute_id: tribute_id.to_string(),
-                    worldwide_day: wwd_ts,
+                    worldwide_day: wwd,
                     owner: tribute_owner.to_string(),
                     settlement_amount_minor: settlement_amount,
                     settlement_currency: Denom::Fiat(currency),
@@ -424,24 +422,26 @@ fn update_used_state(
 
 pub fn generate_tribute_draft_id_hash(
     owner: &Base58Binary,
-    worldwide_day: &Iso8601Date,
+    worldwide_day: WorldwideDay,
 ) -> Result<Base58Binary, ContractError> {
-    let days = iso_to_days(worldwide_day)?;
-    let hex_bin = gen_hash(vec![owner.as_slice(), days.to_le_bytes().as_slice()]);
+    let hex_bin = gen_hash(vec![
+        owner.as_slice(),
+        worldwide_day.to_le_bytes().as_slice(),
+    ]);
     Ok(Base58Binary::from(hex_bin.as_slice()))
 }
 
 fn generate_tribute_id(
     token_id: &Base58Binary,
     owner: &Addr,
-    worldwide_day: &Iso8601Date,
+    worldwide_day: WorldwideDay,
 ) -> HexBinary {
     gen_compound_hash(
         Some("tribute-factory:tribute_id"),
         vec![
             token_id.as_slice(),
             owner.as_bytes(),
-            worldwide_day.as_bytes(),
+            worldwide_day.to_le_bytes().as_slice(),
         ],
     )
 }
@@ -531,11 +531,11 @@ mod tests {
 
         // Prepare inputs for execution
         let owner = Base58Binary::from(sender.as_bytes());
-        let worldwide_day = "2025-03-22".to_string();
+        let worldwide_day = 20250322u32;
         let cu_hash_1 = [11; 32];
         let cu_hash_2 = [22; 32];
         let tribute_input = TributeInputPayload {
-            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap(),
+            tribute_draft_id: generate_tribute_draft_id_hash(&owner, worldwide_day).unwrap(),
             cu_hashes: vec![Base58Binary::from(cu_hash_1), Base58Binary::from(cu_hash_2)],
             worldwide_day,
             settlement_currency: Currency::Usd.into(),
@@ -575,14 +575,14 @@ mod tests {
     fn test_unique_tribute_draft_id() {
         let mut deps = mock_dependencies();
         let owner = Base58Binary::from("user1".as_bytes());
-        let worldwide_day = "2025-03-22".to_string();
+        let worldwide_day: WorldwideDay = 20250322;
         println!(
             "id {:?}",
-            generate_tribute_draft_id_hash(&owner, &worldwide_day)
+            generate_tribute_draft_id_hash(&owner, worldwide_day)
         );
 
         let tribute = TributeInputPayload {
-            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap(),
+            tribute_draft_id: generate_tribute_draft_id_hash(&owner, worldwide_day).unwrap(),
             cu_hashes: vec![Base58Binary::from([11; 32])],
             worldwide_day,
             settlement_currency: Currency::Usd.into(),
@@ -604,9 +604,9 @@ mod tests {
     fn test_tribute_draft_id() {
         let owner =
             Base58Binary::from_base58("5HpHagT65TDzv1PH4D1wkmPxqHL5vTMzMmPMDqqAqxnwfnXF").unwrap();
-        let worldwide_day = "2025-01-01".to_string();
-        let result1 = generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap();
-        let result2 = generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap();
+        let worldwide_day: WorldwideDay = 20250101;
+        let result1 = generate_tribute_draft_id_hash(&owner, worldwide_day).unwrap();
+        let result2 = generate_tribute_draft_id_hash(&owner, worldwide_day).unwrap();
 
         assert_eq!(result1, result2);
     }
@@ -615,12 +615,12 @@ mod tests {
     fn test_unique_cu_hash() {
         let mut deps = mock_dependencies();
         let owner = Base58Binary::from("user1".as_bytes());
-        let worldwide_day = "2025-05-22".to_string();
+        let worldwide_day: WorldwideDay = 20250522;
 
         let cu_hash = Base58Binary::from([42; 32]);
 
         let tribute1 = TributeInputPayload {
-            tribute_draft_id: generate_tribute_draft_id_hash(&owner, &worldwide_day).unwrap(),
+            tribute_draft_id: generate_tribute_draft_id_hash(&owner, worldwide_day).unwrap(),
             cu_hashes: vec![cu_hash.clone()],
             worldwide_day,
             settlement_currency: Currency::Usd.into(),
@@ -633,9 +633,9 @@ mod tests {
 
         // Change worldwide_day && tribute_draft_id
         let mut tribute2 = tribute1.clone();
-        tribute2.worldwide_day = "2025-03-23".to_string();
+        tribute2.worldwide_day = 20250323;
         tribute2.tribute_draft_id =
-            generate_tribute_draft_id_hash(&tribute2.owner, &tribute2.worldwide_day).unwrap();
+            generate_tribute_draft_id_hash(&tribute2.owner, tribute2.worldwide_day).unwrap();
 
         // first call
         update_used_state(deps.as_mut().storage, &tribute1).unwrap();
@@ -652,7 +652,7 @@ mod tests {
         let tribute = TributeInputPayload {
             tribute_draft_id: Base58Binary::from([42; 32]), // incorrect
             cu_hashes: vec![Base58Binary::from([1; 32])],
-            worldwide_day: "2025-03-22".to_string(),
+            worldwide_day: 20250322,
             settlement_currency: Currency::Usd.into(),
             settlement_base_amount: Uint64::new(100),
             settlement_atto_amount: Uint128::zero(),
@@ -685,7 +685,7 @@ mod tests {
         let tribute_input = TributeInputPayload {
             tribute_draft_id: Base58Binary::from([42u8; 32]),
             cu_hashes: vec![Base58Binary::from([1u8; 32]), Base58Binary::from([2u8; 32])],
-            worldwide_day: "2025-08-27".to_string(),
+            worldwide_day: 20250827,
             settlement_currency: Currency::Usd.into(),
             settlement_base_amount: Uint64::new(1000),
             settlement_atto_amount: Uint128::zero(),
@@ -900,12 +900,12 @@ mod tests {
 
         //  Before deadline: 2025-09-03 00:00:00 UTC (still valid)
         let current_time_ok = Timestamp::from_seconds(1_756_857_600);
-        let res_ok = validate_deadline(&wwd_ts, &current_time_ok);
+        let res_ok = validate_deadline(wwd_ts, &current_time_ok);
         assert!(res_ok.is_ok(), "expected Ok inside deadline");
 
         //  After deadline: 2025-09-05 00:00:00 UTC (should fail)
         let current_time_fail = Timestamp::from_seconds(1_757_030_400);
-        let res_fail = validate_deadline(&wwd_ts, &current_time_fail);
+        let res_fail = validate_deadline(wwd_ts, &current_time_fail);
         assert!(
             matches!(res_fail, Err(ContractError::ClosedOfferWindow {})),
             "expected ClosedOfferWindow error after deadline"

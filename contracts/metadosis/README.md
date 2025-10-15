@@ -234,7 +234,7 @@ cargo test
 
 ```shell
 SENDER="outbe1hj5fveer5cjtn4wd6wstzugjfdxzl0xpdqapc6"
-CONTRACT_ADDRESS="outbe15m5fe2pfxq6796rf2z7gma8a0n2s0f0dxasmrzark3q26tltgsysmq3a0y"
+CONTRACT_ADDRESS="outbe1henlu8duwzfwkcz0qmrjjx8jyh9ea0wa2nm67d6levjtuexrxhkq2fujl7"
 
 # Create the prepare job
 PREPARE_MSG=$(jq -n \
@@ -248,7 +248,7 @@ PREPARE_MSG=$(jq -n \
   }')
 
 outbe-chaind tx cron create-job "metadosis-prepare" $TXFLAG \
-  --start-time "2025-10-01T12:30:00Z" \
+  --start-time "2025-10-14T00:01:00Z" \
   --interval-seconds 86400 \
   --from ci \
   -y --message "$PREPARE_MSG"
@@ -265,7 +265,7 @@ EXECUTE_MSG=$(jq -n \
   }')
 
 outbe-chaind tx cron create-job "metadosis-execute" $TXFLAG \
-  --start-time "2025-10-01T12:40:00Z" \
+  --start-time "2025-10-14T00:02:00Z" \
   --interval-seconds 86400 \
   --from ci \
   -y --message "$EXECUTE_MSG"  
@@ -273,7 +273,7 @@ outbe-chaind tx cron create-job "metadosis-execute" $TXFLAG \
 Query cron jobs:
 
 ```shell
-outbe-chaind q cron jobs $NODE
+outbe-chaind q cron jobs --node https://rpc.p.outbe.net
 ```
 
 ### Error Handling
