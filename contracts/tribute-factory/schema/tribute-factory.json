@@ -379,7 +379,7 @@
             ]
           },
           "worldwide_day": {
-            "description": "ISO 8601",
+            "description": "Worldwide day of the tribute in YYYYMMDD format",
             "type": "integer",
             "format": "uint32",
             "minimum": 0.0

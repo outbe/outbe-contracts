@@ -615,7 +615,7 @@
             "type": "string"
           },
           "worldwide_day": {
-            "description": "Date of the Tribute creation",
+            "description": "Worldwide day of the tribute in YYYYMMDD format",
             "type": "integer",
             "format": "uint32",
             "minimum": 0.0
@@ -1273,7 +1273,7 @@
               ]
             },
             "worldwide_day": {
-              "description": "Date of Consumption",
+              "description": "Worldwide day of the tribute in YYYYMMDD format",
               "type": "integer",
               "format": "uint32",
               "minimum": 0.0
@@ -1743,7 +1743,7 @@
               ]
             },
             "worldwide_day": {
-              "description": "Date of Consumption",
+              "description": "Worldwide day of the tribute in YYYYMMDD format",
               "type": "integer",
               "format": "uint32",
               "minimum": 0.0
