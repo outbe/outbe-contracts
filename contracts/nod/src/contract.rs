@@ -96,10 +96,10 @@ fn execute_submit(
         settlement_currency: entity.settlement_currency.clone(),
         symbolic_rate: entity.symbolic_rate,
         floor_rate: entity.floor_rate,
-        nominal_price_minor: entity.nominal_price_minor,
-        issuance_price_minor: entity.issuance_price_minor,
+        nominal_price: entity.nominal_price,
+        issuance_price: entity.issuance_price,
         gratis_load_minor: entity.gratis_load_minor,
-        floor_price_minor: entity.floor_price_minor,
+        floor_price: entity.floor_price,
         state: entity.state.clone(),
         owner: entity.owner.clone(),
         issued_at: node_issued_at,
@@ -132,20 +132,20 @@ fn execute_submit(
         .add_attribute("symbolic_rate", entity.symbolic_rate.clone().to_string())
         .add_attribute("floor_rate", entity.floor_rate.clone().to_string())
         .add_attribute(
-            "nominal_price_minor",
-            entity.nominal_price_minor.clone().to_string(),
+            "nominal_price",
+            entity.nominal_price.clone().to_string(),
         )
         .add_attribute(
-            "issuance_price_minor",
-            entity.issuance_price_minor.clone().to_string(),
+            "issuance_price",
+            entity.issuance_price.clone().to_string(),
         )
         .add_attribute(
             "gratis_load_minor",
             entity.gratis_load_minor.clone().to_string(),
         )
         .add_attribute(
-            "floor_price_minor",
-            entity.floor_price_minor.clone().to_string(),
+            "floor_price",
+            entity.floor_price.clone().to_string(),
         )
         .add_attribute("state", entity.state.clone().to_string())
         .add_attribute("issued_at", node_issued_at.clone().to_string())

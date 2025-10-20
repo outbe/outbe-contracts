@@ -301,7 +301,7 @@ fn do_execute_lysis(
         let floor_rate = Decimal::percent(8);
         let floor_price = exchange_rate.price * (Decimal::one() + floor_rate);
 
-        let mod_issuance_price = exchange_rate.price.max(tribute.data.nominal_price_minor);
+        let mod_issuance_price = exchange_rate.price.max(tribute.data.nominal_price);
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
@@ -313,10 +313,10 @@ fn do_execute_lysis(
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: config.lysis_limit_percent,
                         floor_rate,
-                        nominal_price_minor: tribute.data.nominal_price_minor,
-                        issuance_price_minor: mod_issuance_price,
+                        nominal_price: tribute.data.nominal_price,
+                        issuance_price: mod_issuance_price,
                         gratis_load_minor: symbolic_load,
-                        floor_price_minor: floor_price,
+                        floor_price,
                         state: nod::types::State::Issued,
                         owner: tribute.owner.to_string(),
                         qualified_at: None,
@@ -468,7 +468,7 @@ fn do_execute_touch(
     for tribute in winners {
         let token_id = generate_nod_id(&tribute.token_id, &tribute.owner);
 
-        let mod_issuance_price = exchange_rate.price.max(tribute.data.nominal_price_minor);
+        let mod_issuance_price = exchange_rate.price.max(tribute.data.nominal_price);
         let nod_mint = WasmMsg::Execute {
             contract_addr: nod_address.to_string(),
             msg: to_json_binary(&nod::msg::ExecuteMsg::Submit {
@@ -480,10 +480,10 @@ fn do_execute_touch(
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: config.lysis_limit_percent,
                         floor_rate: Decimal::zero(),
-                        nominal_price_minor: tribute.data.nominal_price_minor,
-                        issuance_price_minor: mod_issuance_price,
+                        nominal_price: tribute.data.nominal_price,
+                        issuance_price: mod_issuance_price,
                         gratis_load_minor: win_amount,
-                        floor_price_minor: exchange_rate.price,
+                        floor_price: exchange_rate.price,
                         state: nod::types::State::Issued,
                         owner: tribute.owner.to_string(),
                         qualified_at: None,

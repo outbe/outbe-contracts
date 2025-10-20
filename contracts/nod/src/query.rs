@@ -152,10 +152,10 @@ mod tests {
             settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::from_str("1.23").unwrap(),
             floor_rate: Decimal::from_str("10").unwrap(),
-            nominal_price_minor: Decimal::from_str("100").unwrap(),
-            issuance_price_minor: Decimal::from_str("200").unwrap(),
+            nominal_price: Decimal::from_str("100").unwrap(),
+            issuance_price: Decimal::from_str("200").unwrap(),
             gratis_load_minor: Uint128::new(300),
-            floor_price_minor: Decimal::from_str("400").unwrap(),
+            floor_price: Decimal::from_str("400").unwrap(),
             state: State::Issued,
             owner: recipient.to_string(),
             qualified_at: None,
@@ -210,15 +210,15 @@ mod tests {
         assert_eq!(resp.extension.symbolic_rate, entity.symbolic_rate);
         assert_eq!(resp.extension.floor_rate, entity.floor_rate);
         assert_eq!(
-            resp.extension.nominal_price_minor,
-            entity.nominal_price_minor
+            resp.extension.nominal_price,
+            entity.nominal_price
         );
         assert_eq!(
-            resp.extension.issuance_price_minor,
-            entity.issuance_price_minor
+            resp.extension.issuance_price,
+            entity.issuance_price
         );
         assert_eq!(resp.extension.gratis_load_minor, entity.gratis_load_minor);
-        assert_eq!(resp.extension.floor_price_minor, entity.floor_price_minor);
+        assert_eq!(resp.extension.floor_price, entity.floor_price);
         assert_eq!(resp.extension.state, entity.state);
         assert_eq!(resp.extension.issued_at, submit_ext.created_at.unwrap());
         assert_eq!(resp.extension.qualified_at, entity.qualified_at);
@@ -302,10 +302,10 @@ mod tests {
             settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::from_str("1.23").unwrap(),
             floor_rate: Decimal::from_str("10").unwrap(),
-            nominal_price_minor: Decimal::from_str("100").unwrap(),
-            issuance_price_minor: Decimal::from_str("200").unwrap(),
+            nominal_price: Decimal::from_str("100").unwrap(),
+            issuance_price: Decimal::from_str("200").unwrap(),
             gratis_load_minor: Uint128::new(300),
-            floor_price_minor: Decimal::from_str("400").unwrap(),
+            floor_price: Decimal::from_str("400").unwrap(),
             state: State::Issued,
             owner: recipient.to_string(),
             qualified_at: None,

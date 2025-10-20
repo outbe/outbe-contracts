@@ -366,7 +366,7 @@ fn execute_offer_logic(
                     settlement_amount_minor: settlement_amount,
                     settlement_currency: Denom::Fiat(currency),
                     nominal_amount_minor: nominal_amount,
-                    nominal_price_minor: tribute_price,
+                    nominal_price: tribute_price,
                 },
             }),
         })?,

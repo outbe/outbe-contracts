@@ -231,20 +231,20 @@
         "description": "Entity data for each Nod NFT",
         "type": "object",
         "required": [
-          "floor_price_minor",
+          "floor_price",
           "floor_rate",
           "gratis_load_minor",
           "is_touch",
-          "issuance_price_minor",
+          "issuance_price",
           "nod_id",
-          "nominal_price_minor",
+          "nominal_price",
           "owner",
           "settlement_currency",
           "state",
           "symbolic_rate"
         ],
         "properties": {
-          "floor_price_minor": {
+          "floor_price": {
             "$ref": "#/definitions/Decimal"
           },
           "floor_rate": {
@@ -256,13 +256,13 @@
           "is_touch": {
             "type": "boolean"
           },
-          "issuance_price_minor": {
+          "issuance_price": {
             "$ref": "#/definitions/Decimal"
           },
           "nod_id": {
             "type": "string"
           },
-          "nominal_price_minor": {
+          "nominal_price": {
             "$ref": "#/definitions/Decimal"
           },
           "owner": {
@@ -930,21 +930,21 @@
           "description": "Public data for each Nod NFT",
           "type": "object",
           "required": [
-            "floor_price_minor",
+            "floor_price",
             "floor_rate",
             "gratis_load_minor",
             "is_touch",
-            "issuance_price_minor",
+            "issuance_price",
             "issued_at",
             "nod_id",
-            "nominal_price_minor",
+            "nominal_price",
             "owner",
             "settlement_currency",
             "state",
             "symbolic_rate"
           ],
           "properties": {
-            "floor_price_minor": {
+            "floor_price": {
               "description": "Floor price",
               "allOf": [
                 {
@@ -971,7 +971,7 @@
             "is_touch": {
               "type": "boolean"
             },
-            "issuance_price_minor": {
+            "issuance_price": {
               "description": "coen Price at the moment of Nod issuance",
               "allOf": [
                 {
@@ -991,7 +991,7 @@
               "description": "Identifier of the Nod",
               "type": "string"
             },
-            "nominal_price_minor": {
+            "nominal_price": {
               "description": "From Tribute",
               "allOf": [
                 {

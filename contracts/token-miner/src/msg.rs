@@ -47,7 +47,7 @@ pub enum ExecuteMsg {
         token_type: TokenType,
     },
     /// Mine Gratis tokens using a qualified Nod NFT
-    /// This will check if the current price from Price Oracle is >= floor_price_minor
+    /// This will check if the current price from Price Oracle is >= floor_price
     /// If qualified, it will mint Gratis tokens based on gratis_load_minor and burn the Nod NFT
     MineGratisWithNod {
         /// Token ID of the Nod NFT to use for mining

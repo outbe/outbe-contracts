@@ -197,7 +197,7 @@ pub fn execute_mine(
 }
 
 /// Execute mine gratis with nod - mines Gratis tokens using a qualified Nod NFT
-/// This function checks if the current price from Price Oracle is >= floor_price_minor
+/// This function checks if the current price from Price Oracle is >= floor_price
 /// If qualified, it will mint Gratis tokens based on gratis_load_minor and burn the Nod NFT
 pub fn execute_mine_gratis_with_nod(
     deps: DepsMut,
@@ -244,10 +244,10 @@ pub fn execute_mine_gratis_with_nod(
     let price_response: TokenPairPrice = deps.querier.query(&price_query)?;
 
     // Check if current price is >= floor price (Nod is qualified)
-    if price_response.price < nod_data.floor_price_minor {
+    if price_response.price < nod_data.floor_price {
         return Err(ContractError::NodNotQualified {
             current_price: price_response.price,
-            floor_price: nod_data.floor_price_minor,
+            floor_price: nod_data.floor_price,
         });
     }
 
@@ -282,7 +282,7 @@ pub fn execute_mine_gratis_with_nod(
         .add_attribute("nod_token_id", nod_token_id)
         .add_attribute("amount", nod_data.gratis_load_minor)
         .add_attribute("current_price", price_response.price.atomics())
-        .add_attribute("floor_price", nod_data.floor_price_minor.atomics())
+        .add_attribute("floor_price", nod_data.floor_price.atomics())
         .add_attribute("gratis_contract", config.gratis_contract)
         .add_attribute("nod_contract", config.nod_contract))
 }

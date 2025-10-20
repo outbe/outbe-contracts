@@ -636,7 +636,7 @@ mod test_token_miner {
     fn mock_nod_data(
         owner: &str,
         state: NodState,
-        floor_price_minor: Decimal,
+        floor_price: Decimal,
         gratis_load_minor: Uint128,
     ) -> NodData {
         NodData {
@@ -644,10 +644,10 @@ mod test_token_miner {
             settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::one(),
             floor_rate: Decimal::from_str("100").unwrap(),
-            nominal_price_minor: Decimal::from_str("1000").unwrap(),
-            issuance_price_minor: Decimal::from_str("900").unwrap(),
+            nominal_price: Decimal::from_str("1000").unwrap(),
+            issuance_price: Decimal::from_str("900").unwrap(),
             gratis_load_minor,
-            floor_price_minor,
+            floor_price,
             state,
             owner: owner.to_string(),
             issued_at: Timestamp::from_seconds(1234567890),
