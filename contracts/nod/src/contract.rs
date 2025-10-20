@@ -154,8 +154,9 @@ fn execute_submit(
             "qualified_at",
             entity
                 .qualified_at
-                .map(|t| t.seconds().to_string())
-                .unwrap_or_default(),
+                .map(|t| t.seconds())
+                .unwrap_or_default()
+                .to_string(),
         ))
 }
 

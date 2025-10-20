@@ -67,14 +67,13 @@ export async function readWalletsFromFile(): Promise<WalletKeyInfo[]> {
     }
 }
 
-export function generateTributeDraftId(owner: string, day: string): string {
+export function generateTributeDraftId(owner: string, wwd: number): string {
     const ownerBytes = bs58.decode(owner);
-    
-    // Convert days number directly to bytes (little-endian 8-byte representation)
-    let days = isoToDays(day);
-    const daysBytes = new Uint8Array(8);
+
+    // Convert wwd number directly to bytes (little-endian 4-byte representation)
+    const daysBytes = new Uint8Array(4);
     const view = new DataView(daysBytes.buffer);
-    view.setBigUint64(0, BigInt(days), true); // true for little-endian
+    view.setInt32(0, wwd, true); // true for little-endian
 
     // Concatenate the inputs
     const combined = new Uint8Array(ownerBytes.length + daysBytes.length);

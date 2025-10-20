@@ -1,6 +1,4 @@
 import {getContractAddresses, initClient} from "../lib/clientService";
-import {TributeQueryClient} from "../clients/tribute/Tribute.client";
-import {RUN_DATE, RUN_DATE_TS} from "../config";
 import {NodQueryClient} from "../clients/nod/Nod.client";
 import {TokensResponse} from "../clients/nod/Nod.types";
 

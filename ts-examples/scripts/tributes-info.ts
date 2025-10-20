@@ -1,6 +1,6 @@
 import {getContractAddresses, initClient} from "../lib/clientService";
 import {TributeQueryClient} from "../clients/tribute/Tribute.client";
-import {RUN_DATE, RUN_DATE_TS} from "../config";
+import {RUN_DATE} from "../config";
 import {CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {PriceOracleQueryClient} from "../clients/price-oracle/PriceOracle.client";
 
@@ -9,7 +9,7 @@ async function main() {
 
   let height = await walletClient.getHeight()
   console.log("Current Height:", height)
-  console.log("Using RUN_DATE", RUN_DATE, ":", RUN_DATE_TS())
+  console.log("Using RUN_DATE", RUN_DATE)
 
   let coenUsdRate = await queryActualRate(walletClient)
   console.log("Actual 'coen/usd' rate now:", coenUsdRate)

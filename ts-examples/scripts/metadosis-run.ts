@@ -1,4 +1,4 @@
-import {NUMBER_OF_METADOSIS_RUNS, RUN_DATE_TS, TX_FEE} from "../config";
+import {NUMBER_OF_METADOSIS_RUNS, RUN_DATE, TX_FEE} from "../config";
 import {getContractAddresses, initClient} from "../lib/clientService";
 import {MetadosisClient} from "../clients/metadosis/Metadosis.client";
 import {HistoryResponse, MetadosisInfoResponse} from "../clients/metadosis/Metadosis.types";
@@ -18,7 +18,7 @@ async function main() {
   const nodClient = new NodQueryClient(walletClient, await getContractAddresses('NOD_CONTRACT_ADDRESS'))
 
   for (let i = 1; i <= NUMBER_OF_METADOSIS_RUNS; i++) {
-    let tx = await metadosisClient.execute({runDate: RUN_DATE_TS()}, TX_FEE)
+    let tx = await metadosisClient.execute({runDate: RUN_DATE}, TX_FEE)
     console.log(i + ": Executed Metadosis, tx ", tx.transactionHash)
     console.log("Number of Nod tokens (after run): ", await nodClient.numTokens())
   }
