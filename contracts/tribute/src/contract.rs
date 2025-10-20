@@ -180,8 +180,7 @@ fn execute_mint(
     // )?;
     //
 
-    let nominal_amount =
-        calc_nominal_amount(entity.settlement_amount_minor, entity.nominal_price);
+    let nominal_amount = calc_nominal_amount(entity.settlement_amount_minor, entity.nominal_price);
 
     // create the token
     let data = TributeData {

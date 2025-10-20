@@ -131,22 +131,13 @@ fn execute_submit(
         )
         .add_attribute("symbolic_rate", entity.symbolic_rate.clone().to_string())
         .add_attribute("floor_rate", entity.floor_rate.clone().to_string())
-        .add_attribute(
-            "nominal_price",
-            entity.nominal_price.clone().to_string(),
-        )
-        .add_attribute(
-            "issuance_price",
-            entity.issuance_price.clone().to_string(),
-        )
+        .add_attribute("nominal_price", entity.nominal_price.clone().to_string())
+        .add_attribute("issuance_price", entity.issuance_price.clone().to_string())
         .add_attribute(
             "gratis_load_minor",
             entity.gratis_load_minor.clone().to_string(),
         )
-        .add_attribute(
-            "floor_price",
-            entity.floor_price.clone().to_string(),
-        )
+        .add_attribute("floor_price", entity.floor_price.clone().to_string())
         .add_attribute("state", entity.state.clone().to_string())
         .add_attribute("issued_at", node_issued_at.clone().to_string())
         .add_attribute("is_touch", entity.is_touch.clone().to_string())

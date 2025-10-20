@@ -209,14 +209,8 @@ mod tests {
         );
         assert_eq!(resp.extension.symbolic_rate, entity.symbolic_rate);
         assert_eq!(resp.extension.floor_rate, entity.floor_rate);
-        assert_eq!(
-            resp.extension.nominal_price,
-            entity.nominal_price
-        );
-        assert_eq!(
-            resp.extension.issuance_price,
-            entity.issuance_price
-        );
+        assert_eq!(resp.extension.nominal_price, entity.nominal_price);
+        assert_eq!(resp.extension.issuance_price, entity.issuance_price);
         assert_eq!(resp.extension.gratis_load_minor, entity.gratis_load_minor);
         assert_eq!(resp.extension.floor_price, entity.floor_price);
         assert_eq!(resp.extension.state, entity.state);
