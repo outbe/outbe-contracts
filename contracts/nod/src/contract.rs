@@ -1,11 +1,11 @@
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, SubmitExtension};
-use crate::types::{NodConfig, NodData, NodNft};
+use crate::types::{NodConfig, NodData, NodNft, State};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
+use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Response};
 use outbe_nft::error::Cw721ContractError;
-use outbe_nft::state::{CollectionInfo, Cw721Config};
+use outbe_nft::state::{CollectionInfo, Cw721Config, NftInfo};
 
 const CONTRACT_NAME: &str = "outbe.net:nod";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -69,6 +69,9 @@ pub fn execute(
             extension,
         } => execute_submit(deps, &env, &info, token_id, owner, *extension),
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
+        ExecuteMsg::PriceUpdate { price_threshold } => {
+            execute_update_tokens_to_qualified(deps, &env, &info, price_threshold)
+        }
         #[cfg(feature = "demo")]
         ExecuteMsg::BurnAll { batch_size } => execute_burn_all(deps, &env, &info, batch_size),
     }
@@ -165,6 +168,56 @@ fn execute_burn(
         .add_attribute("action", "nod::burn")
         .add_attribute("sender", info.sender.to_string())
         .add_attribute("token_id", token_id))
+}
+
+fn execute_update_tokens_to_qualified(
+    deps: DepsMut,
+    env: &Env,
+    _info: &MessageInfo,
+    price_threshold: Decimal,
+) -> Result<Response, ContractError> {
+    // TODO verify caller address
+
+    let config = Cw721Config::<NodData, NodConfig>::default();
+    let mut updated_count = 0u32;
+    let mut updated_tokens = Vec::<String>::new();
+
+    let all_tokens: Vec<(String, NftInfo<NodData>)> = config
+        .nft_info
+        .range(deps.storage, None, None, cosmwasm_std::Order::Ascending)
+        .filter_map(|item| match item {
+            Ok((token_id, data)) => {
+                if data.extension.state == State::Issued
+                    && data.extension.floor_price <= price_threshold
+                {
+                    let mut new_data = data.clone();
+                    new_data.extension.state = State::Qualified;
+                    new_data.extension.qualified_at = Some(env.block.time);
+                    Some((token_id, new_data))
+                } else {
+                    None
+                }
+            }
+            Err(_) => None,
+        })
+        .collect();
+
+    for (token_id, data) in all_tokens {
+        config.nft_info.save(deps.storage, &token_id, &data)?;
+
+        updated_count += 1;
+        updated_tokens.push(token_id);
+    }
+
+    Ok(Response::new()
+        .add_attribute("action", "nod::update_tokens_to_qualified")
+        .add_attribute("price_threshold", price_threshold.to_string())
+        .add_attribute("updated_count", updated_count.to_string())
+        .add_event(
+            Event::new("nod::tokens_qualified")
+                .add_attribute("updated_count", updated_count.to_string())
+                .add_attribute("updated_tokens", updated_tokens.join(",")),
+        ))
 }
 
 #[cfg(feature = "demo")]

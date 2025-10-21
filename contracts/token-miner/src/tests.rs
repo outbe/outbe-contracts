@@ -19,8 +19,6 @@ mod test_token_miner {
     use outbe_nft::msg::NftInfoResponse;
     use outbe_utils::denom::{Currency, Denom};
     use outbe_utils::gen_hash;
-    use price_oracle::query::QueryMsg as PriceOracleQueryMsg;
-    use price_oracle::types::{DayType, TokenPairPrice};
     use std::str::FromStr;
 
     const ADMIN: &str = "admin";
@@ -28,14 +26,12 @@ mod test_token_miner {
     const USER2: &str = "user2";
     const GRATIS_CONTRACT: &str = "gratis_contract";
     const PROMIS_CONTRACT: &str = "promis_contract";
-    const PRICE_ORACLE_CONTRACT: &str = "price_oracle_contract";
     const NOD_CONTRACT: &str = "nod_contract";
 
     fn default_instantiate_msg(api: &MockApi) -> InstantiateMsg {
         InstantiateMsg {
             gratis_contract: api.addr_make(GRATIS_CONTRACT).into_string(),
             promis_contract: api.addr_make(PROMIS_CONTRACT).to_string(),
-            price_oracle_contract: api.addr_make(PRICE_ORACLE_CONTRACT).to_string(),
             nod_contract: api.addr_make(NOD_CONTRACT).to_string(),
             access_list: Vec::new(),
             pow_complexity: 0,
@@ -49,7 +45,6 @@ mod test_token_miner {
         let admin_addr = &deps.api.addr_make(ADMIN);
         let gratis_addr = &deps.api.addr_make(GRATIS_CONTRACT);
         let promis_addr = &deps.api.addr_make(PROMIS_CONTRACT);
-        let price_oracle_addr = &deps.api.addr_make(PRICE_ORACLE_CONTRACT);
         let nod_addr = &deps.api.addr_make(NOD_CONTRACT);
 
         let info = message_info(admin_addr, &[]);
@@ -68,10 +63,6 @@ mod test_token_miner {
         assert_eq!(config_response.config.admin, admin_addr);
         assert_eq!(config_response.config.gratis_contract, gratis_addr);
         assert_eq!(config_response.config.promis_contract, promis_addr);
-        assert_eq!(
-            config_response.config.price_oracle_contract,
-            price_oracle_addr
-        );
         assert_eq!(config_response.config.nod_contract, nod_addr);
 
         // Check that admin was added to access list with full permissions
@@ -656,22 +647,11 @@ mod test_token_miner {
         }
     }
 
-    // Helper function to create a mock TokenPairPrice
-    fn mock_token_pair_price(price: Decimal) -> TokenPairPrice {
-        TokenPairPrice {
-            token1: Denom::Fiat(Currency::Usd),
-            token2: Denom::Native("token".to_string()),
-            day_type: DayType::Green,
-            price,
-        }
-    }
-
     #[test]
     fn test_mine_gratis_with_nod_success() {
         let mut deps = mock_dependencies();
         let user1_addr = deps.api.addr_make(USER1);
         let nod_contract_addr = deps.api.addr_make(NOD_CONTRACT);
-        let price_oracle_addr = deps.api.addr_make(PRICE_ORACLE_CONTRACT);
 
         // Setup mock querier to return proper responses
         deps.querier.update_wasm(move |query| match query {
@@ -695,20 +675,6 @@ mod test_token_miner {
                         }
                         _ => SystemResult::Err(SystemError::UnsupportedRequest {
                             kind: "Only NftInfo supported in tests".to_string(),
-                        }),
-                    }
-                } else if contract_addr == &price_oracle_addr.to_string() {
-                    let query_msg: PriceOracleQueryMsg = from_json(msg).unwrap();
-                    match query_msg {
-                        PriceOracleQueryMsg::GetPrice {} => {
-                            let price_response =
-                                mock_token_pair_price(Decimal::from_atomics(150u128, 0).unwrap());
-                            SystemResult::Ok(ContractResult::Ok(
-                                to_json_binary(&price_response).unwrap(),
-                            ))
-                        }
-                        _ => SystemResult::Err(SystemError::UnsupportedRequest {
-                            kind: "Only GetPrice supported in tests".to_string(),
                         }),
                     }
                 } else {
@@ -888,7 +854,7 @@ mod test_token_miner {
         let err = execute(deps.as_mut(), mock_env(), info, mine_msg).unwrap_err();
 
         match err {
-            ContractError::NodNotIssued {} => {}
+            ContractError::NodNotQualified {} => {}
             _ => panic!("Expected NodNotIssued error"),
         }
     }
@@ -898,7 +864,6 @@ mod test_token_miner {
         let mut deps = mock_dependencies();
         let user1_addr = deps.api.addr_make(USER1);
         let nod_contract_addr = deps.api.addr_make(NOD_CONTRACT);
-        let price_oracle_addr = deps.api.addr_make(PRICE_ORACLE_CONTRACT);
 
         deps.querier.update_wasm(move |query| match query {
             WasmQuery::Smart { contract_addr, msg } => {
@@ -915,10 +880,6 @@ mod test_token_miner {
                         token_id: "test_nod_1".to_string(),
                     };
                     SystemResult::Ok(ContractResult::Ok(to_json_binary(&response).unwrap()))
-                } else if contract_addr == &price_oracle_addr.to_string() {
-                    // Price too low - create a decimal that when converted to atomics is less than 200
-                    let price_response = mock_token_pair_price(Decimal::from_str("150").unwrap());
-                    SystemResult::Ok(ContractResult::Ok(to_json_binary(&price_response).unwrap()))
                 } else {
                     SystemResult::Err(SystemError::InvalidRequest {
                         error: "Unknown contract".to_string(),
@@ -947,13 +908,7 @@ mod test_token_miner {
         let err = execute(deps.as_mut(), mock_env(), info, mine_msg).unwrap_err();
 
         match err {
-            ContractError::NodNotQualified {
-                current_price,
-                floor_price,
-            } => {
-                assert_eq!(current_price, Decimal::from_str("150").unwrap());
-                assert_eq!(floor_price, Decimal::from_str("200").unwrap());
-            }
+            ContractError::NodNotQualified {} => {}
             _ => panic!("Expected NodNotQualified error"),
         }
     }

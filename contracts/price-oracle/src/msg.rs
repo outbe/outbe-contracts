@@ -7,6 +7,7 @@ use outbe_utils::denom::Denom;
 pub struct InstantiateMsg {
     pub creator: Option<String>,
     pub vwap_window_seconds: Option<u64>,
+    pub nod_address: String,
 }
 
 #[cw_serde]

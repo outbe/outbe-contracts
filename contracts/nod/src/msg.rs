@@ -24,6 +24,11 @@ pub enum ExecuteMsg {
     },
     /// Burn an existing Nod NFT
     Burn { token_id: String },
+    /// Update tokens with floor_price less than threshold to Qualified status
+    PriceUpdate {
+        /// Price threshold - tokens with floor_price < threshold will be updated
+        price_threshold: Decimal,
+    },
     #[cfg(feature = "demo")]
     BurnAll { batch_size: Option<usize> },
 }

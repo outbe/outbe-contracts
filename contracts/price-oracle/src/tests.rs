@@ -10,7 +10,7 @@ use outbe_utils::denom::Denom;
 use std::str::FromStr;
 
 pub const CREATOR_ADDR: &str = "creator";
-// pub const UNAUTHORIZED_ADDR: &str = "unauthorized";
+pub const NOD_ADDR: &str = "nod_contract";
 
 pub const COEN: &str = "COEN";
 pub const USDC: &str = "USDC";
@@ -19,6 +19,7 @@ fn get_default_instantiate_msg() -> InstantiateMsg {
     InstantiateMsg {
         creator: None,
         vwap_window_seconds: None,
+        nod_address: "nod".to_string(),
     }
 }
 
@@ -754,6 +755,7 @@ fn test_vwap_calculation() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300), // 5 minutes
+        nod_address: "nod".to_string(),
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -834,6 +836,7 @@ fn test_vwap_window_update() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300), // Start with 5 minutes
+        nod_address: "nod".to_string(),
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -866,6 +869,7 @@ fn test_vwap_with_window_filtering() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(200), // 200 seconds window
+        nod_address: "nod".to_string(),
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -946,6 +950,7 @@ fn test_vwap_history() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300), // 5 minutes
+        nod_address: "nod".to_string(),
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -1060,6 +1065,7 @@ fn test_vwap_history_empty() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300),
+        nod_address: deps.api.addr_make(NOD_ADDR).to_string(),
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -1096,6 +1102,7 @@ fn test_vwap_history_invalid_time_range() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300),
+        nod_address: "nod".to_string(),
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),

@@ -10,8 +10,6 @@ pub struct InstantiateMsg {
     pub gratis_contract: String,
     /// Address of the Promis token contract
     pub promis_contract: String,
-    /// Address of the Price Oracle contract
-    pub price_oracle_contract: String,
     /// Address of the Nod NFT contract
     pub nod_contract: String,
     /// Mining complexity for proof-of-work algorithm
@@ -85,8 +83,6 @@ pub enum ExecuteMsg {
         gratis_contract: Option<String>,
         /// New Promis contract address (optional)
         promis_contract: Option<String>,
-        /// New Price Oracle contract address (optional)
-        price_oracle_contract: Option<String>,
         /// New Nod NFT contract address (optional)
         nod_contract: Option<String>,
     },

@@ -66,11 +66,11 @@ mod tests {
 
     #[test]
     fn test_get_pair_id() {
-        let token1 = Denom::Native("uatom".to_string());
-        let token2 = Denom::Native("uosmo".to_string());
+        let token1 = Denom::Native("coen".to_string());
+        let token2 = Denom::Native("usdc".to_string());
 
         // Should be consistent regardless of order
-        assert_eq!(get_pair_id(&token1, &token2), "native_uatom-native_uosmo");
-        assert_eq!(get_pair_id(&token2, &token1), "native_uatom-native_uosmo");
+        assert_eq!(get_pair_id(&token1, &token2), "native_coen-native_usdc");
+        assert_eq!(get_pair_id(&token2, &token1), "native_coen-native_usdc");
     }
 }
