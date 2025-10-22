@@ -151,6 +151,29 @@
         "additionalProperties": false
       },
       {
+        "description": "Update the address that can call PriceUpdate",
+        "type": "object",
+        "required": [
+          "update_price_updater"
+        ],
+        "properties": {
+          "update_price_updater": {
+            "type": "object",
+            "properties": {
+              "price_updater": {
+                "description": "Address of the new price updater",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
         "type": "object",
         "required": [
           "burn_all"

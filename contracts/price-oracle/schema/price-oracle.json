@@ -214,6 +214,27 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "update_nod_address"
+        ],
+        "properties": {
+          "update_nod_address": {
+            "type": "object",
+            "properties": {
+              "nod_address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ],
     "definitions": {
