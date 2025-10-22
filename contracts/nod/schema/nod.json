@@ -124,6 +124,33 @@
         "additionalProperties": false
       },
       {
+        "description": "Update tokens with floor_price less than threshold to Qualified status",
+        "type": "object",
+        "required": [
+          "price_update"
+        ],
+        "properties": {
+          "price_update": {
+            "type": "object",
+            "required": [
+              "price_threshold"
+            ],
+            "properties": {
+              "price_threshold": {
+                "description": "Price threshold - tokens with floor_price < threshold will be updated",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/Decimal"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
         "type": "object",
         "required": [
           "burn_all"

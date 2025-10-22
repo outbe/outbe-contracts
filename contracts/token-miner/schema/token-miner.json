@@ -12,7 +12,6 @@
       "gratis_contract",
       "nod_contract",
       "pow_complexity",
-      "price_oracle_contract",
       "promis_contract"
     ],
     "properties": {
@@ -36,10 +35,6 @@
         "type": "integer",
         "format": "uint",
         "minimum": 0.0
-      },
-      "price_oracle_contract": {
-        "description": "Address of the Price Oracle contract",
-        "type": "string"
       },
       "promis_contract": {
         "description": "Address of the Promis token contract",
@@ -305,13 +300,6 @@
               },
               "nod_contract": {
                 "description": "New Nod NFT contract address (optional)",
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "price_oracle_contract": {
-                "description": "New Price Oracle contract address (optional)",
                 "type": [
                   "string",
                   "null"
@@ -688,7 +676,6 @@
             "gratis_contract",
             "nod_contract",
             "pow_complexity",
-            "price_oracle_contract",
             "promis_contract"
           ],
           "properties": {
@@ -721,14 +708,6 @@
               "type": "integer",
               "format": "uint",
               "minimum": 0.0
-            },
-            "price_oracle_contract": {
-              "description": "Address of the Price Oracle contract",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/Addr"
-                }
-              ]
             },
             "promis_contract": {
               "description": "Address of the Promis token contract",
