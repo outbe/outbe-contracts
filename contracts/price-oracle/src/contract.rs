@@ -109,6 +109,9 @@ pub fn execute(
         ExecuteMsg::UpdateVwapWindow { window_seconds } => {
             execute_update_vwap_window(deps, env, info, window_seconds)
         }
+        ExecuteMsg::UpdateNodAddress { nod_address } => {
+            execute_update_nod_address(deps, env, info, nod_address)
+        }
     }
 }
 
@@ -328,6 +331,35 @@ fn execute_update_vwap_window(
     Ok(Response::new()
         .add_attribute("action", "price-oracle::update_vwap_window")
         .add_attribute("window_seconds", window_seconds.to_string()))
+}
+
+fn execute_update_nod_address(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    nod_address: Option<String>,
+) -> Result<Response, ContractError> {
+    // Check authorization - only creator can update nod address
+    CREATOR.assert_owner(deps.storage, &info.sender)?;
+
+    // Update or remove the nod address
+    match nod_address.clone() {
+        Some(address) => {
+            let nod_addr = deps.api.addr_validate(&address)?;
+            NOD_CONTRACT_ADDRESS.save(deps.storage, &nod_addr)?;
+        }
+        None => {
+            NOD_CONTRACT_ADDRESS.remove(deps.storage);
+        }
+    }
+
+    Ok(Response::new()
+        .add_attribute("action", "price-oracle::update_nod_address")
+        .add_event(
+            Event::new("price-oracle::nod_address_updated")
+                .add_attribute("nod_address", nod_address.unwrap_or("none".to_string()))
+                .add_attribute("updated_by", info.sender),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

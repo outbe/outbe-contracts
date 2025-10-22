@@ -39,6 +39,9 @@ pub enum ExecuteMsg {
     UpdateVwapWindow {
         window_seconds: u64,
     },
+    UpdateNodAddress {
+        nod_address: Option<String>,
+    },
 }
 
 #[cw_serde]
