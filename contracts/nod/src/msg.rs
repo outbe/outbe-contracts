@@ -29,6 +29,11 @@ pub enum ExecuteMsg {
         /// Price threshold - tokens with floor_price < threshold will be updated
         price_threshold: Decimal,
     },
+    /// Update the address that can call PriceUpdate
+    UpdatePriceUpdater {
+        /// Address of the new price updater
+        price_updater: Option<String>,
+    },
     #[cfg(feature = "demo")]
     BurnAll { batch_size: Option<usize> },
 }

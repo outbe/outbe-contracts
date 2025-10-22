@@ -199,7 +199,8 @@ jobs:
         run: |
           UPDATE_PAYLOAD=$(jq -n --arg address $NOD_CONTRACT_ADDRESS -f ./contracts/price-oracle/fixtures/update-nod-address.json)
           ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
-
+          UPDATE_PAYLOAD=$(jq -n --arg address $PRICE_ORACLE_CONTRACT_ADDRESS -f ./contracts/nod/fixtures/update-price-updater.json)
+          ./scripts/execute_tx.sh $NOD_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
       - name: Deploy Agent NRA
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_nra') }}

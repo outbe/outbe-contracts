@@ -4,11 +4,15 @@ use crate::types::{NodConfig, NodData, NodNft, State};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Decimal, DepsMut, Env, Event, MessageInfo, Response};
+use cw_ownable::OwnershipStore;
 use outbe_nft::error::Cw721ContractError;
 use outbe_nft::state::{CollectionInfo, Cw721Config, NftInfo};
 
 const CONTRACT_NAME: &str = "outbe.net:nod";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// Price updater owns the ability to call PriceUpdate
+pub const PRICE_UPDATER: OwnershipStore = OwnershipStore::new("price_updater");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -71,6 +75,9 @@ pub fn execute(
         ExecuteMsg::Burn { token_id } => execute_burn(deps, &env, &info, token_id),
         ExecuteMsg::PriceUpdate { price_threshold } => {
             execute_update_tokens_to_qualified(deps, &env, &info, price_threshold)
+        }
+        ExecuteMsg::UpdatePriceUpdater { price_updater } => {
+            execute_update_price_updater(deps, &env, &info, price_updater)
         }
         #[cfg(feature = "demo")]
         ExecuteMsg::BurnAll { batch_size } => execute_burn_all(deps, &env, &info, batch_size),
@@ -173,10 +180,13 @@ fn execute_burn(
 fn execute_update_tokens_to_qualified(
     deps: DepsMut,
     env: &Env,
-    _info: &MessageInfo,
+    info: &MessageInfo,
     price_threshold: Decimal,
 ) -> Result<Response, ContractError> {
-    // TODO verify caller address
+    // Verify caller is the authorized price updater
+    if PRICE_UPDATER.assert_owner(deps.storage, &info.sender).is_err() {
+        return Err(ContractError::Unauthorized {});
+    }
 
     let config = Cw721Config::<NodData, NodConfig>::default();
     let mut updated_count = 0u32;
@@ -217,6 +227,37 @@ fn execute_update_tokens_to_qualified(
             Event::new("nod::tokens_qualified")
                 .add_attribute("updated_count", updated_count.to_string())
                 .add_attribute("updated_tokens", updated_tokens.join(",")),
+        ))
+}
+
+fn execute_update_price_updater(
+    deps: DepsMut,
+    _env: &Env,
+    info: &MessageInfo,
+    price_updater: Option<String>,
+) -> Result<Response, ContractError> {
+    // Check authorization - only creator can update price updater
+    outbe_nft::execute::assert_creator(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+
+    // Update or remove the price updater
+    match price_updater.clone() {
+        Some(updater) => {
+            let updater_addr = deps.api.addr_validate(&updater)?;
+            PRICE_UPDATER.initialize_owner(deps.storage, deps.api, Some(updater_addr.as_str()))?;
+        }
+        None => {
+            // Remove the price updater by initializing with None
+            PRICE_UPDATER.initialize_owner(deps.storage, deps.api, None)?;
+        }
+    }
+
+    Ok(Response::new()
+        .add_attribute("action", "nod::update_price_updater")
+        .add_event(
+            Event::new("nod::price_updater_updated")
+                .add_attribute("price_updater", price_updater.unwrap_or("none".to_string()))
+                .add_attribute("updated_by", info.sender.clone()),
         ))
 }
 

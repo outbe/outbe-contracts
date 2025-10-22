@@ -1,0 +1,5 @@
+{
+  "update_price_updater": {
+    "price_updater": $address
+  }
+}
