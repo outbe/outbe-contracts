@@ -115,13 +115,7 @@ pub fn execute(
             gratis_contract,
             promis_contract,
             nod_contract,
-        } => execute_update_contracts(
-            deps,
-            info,
-            gratis_contract,
-            promis_contract,
-            nod_contract,
-        ),
+        } => execute_update_contracts(deps, info, gratis_contract, promis_contract, nod_contract),
     }
 }
 

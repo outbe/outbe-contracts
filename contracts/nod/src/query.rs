@@ -437,7 +437,8 @@ mod tests {
         let exec_msg = ExecuteMsg::UpdatePriceUpdater {
             price_updater: Some(price_updater.to_string()),
         };
-        let result = app.execute_contract(unauthorized.clone(), contract_addr.clone(), &exec_msg, &[]);
+        let result =
+            app.execute_contract(unauthorized.clone(), contract_addr.clone(), &exec_msg, &[]);
         assert!(result.is_err());
     }
 
@@ -473,7 +474,8 @@ mod tests {
         let exec_msg = ExecuteMsg::PriceUpdate {
             price_threshold: Decimal::from_str("100.0").unwrap(),
         };
-        let result = app.execute_contract(price_updater.clone(), contract_addr.clone(), &exec_msg, &[]);
+        let result =
+            app.execute_contract(price_updater.clone(), contract_addr.clone(), &exec_msg, &[]);
         assert!(result.is_ok());
     }
 
@@ -502,7 +504,8 @@ mod tests {
         let exec_msg = ExecuteMsg::PriceUpdate {
             price_threshold: Decimal::from_str("100.0").unwrap(),
         };
-        let result = app.execute_contract(unauthorized.clone(), contract_addr.clone(), &exec_msg, &[]);
+        let result =
+            app.execute_contract(unauthorized.clone(), contract_addr.clone(), &exec_msg, &[]);
         assert!(result.is_err());
     }
 }

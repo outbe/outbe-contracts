@@ -184,7 +184,10 @@ fn execute_update_tokens_to_qualified(
     price_threshold: Decimal,
 ) -> Result<Response, ContractError> {
     // Verify caller is the authorized price updater
-    if PRICE_UPDATER.assert_owner(deps.storage, &info.sender).is_err() {
+    if PRICE_UPDATER
+        .assert_owner(deps.storage, &info.sender)
+        .is_err()
+    {
         return Err(ContractError::Unauthorized {});
     }
 
