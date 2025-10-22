@@ -19,7 +19,7 @@ fn get_default_instantiate_msg() -> InstantiateMsg {
     InstantiateMsg {
         creator: None,
         vwap_window_seconds: None,
-        nod_address: "nod".to_string(),
+        nod_address: None,
     }
 }
 
@@ -755,7 +755,7 @@ fn test_vwap_calculation() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300), // 5 minutes
-        nod_address: "nod".to_string(),
+        nod_address: None,
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -836,7 +836,7 @@ fn test_vwap_window_update() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300), // Start with 5 minutes
-        nod_address: "nod".to_string(),
+        nod_address: None,
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -869,7 +869,7 @@ fn test_vwap_with_window_filtering() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(200), // 200 seconds window
-        nod_address: "nod".to_string(),
+        nod_address: None,
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -950,7 +950,7 @@ fn test_vwap_history() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300), // 5 minutes
-        nod_address: "nod".to_string(),
+        nod_address: None,
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -1065,7 +1065,7 @@ fn test_vwap_history_empty() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300),
-        nod_address: deps.api.addr_make(NOD_ADDR).to_string(),
+        nod_address: Some(deps.api.addr_make(NOD_ADDR).to_string()),
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -1102,7 +1102,7 @@ fn test_vwap_history_invalid_time_range() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300),
-        nod_address: "nod".to_string(),
+        nod_address: None,
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),

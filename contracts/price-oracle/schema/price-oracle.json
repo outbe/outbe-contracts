@@ -6,9 +6,6 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "InstantiateMsg",
     "type": "object",
-    "required": [
-      "nod_address"
-    ],
     "properties": {
       "creator": {
         "type": [
@@ -17,7 +14,10 @@
         ]
       },
       "nod_address": {
-        "type": "string"
+        "type": [
+          "string",
+          "null"
+        ]
       },
       "vwap_window_seconds": {
         "type": [

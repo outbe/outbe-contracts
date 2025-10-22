@@ -47,8 +47,10 @@ pub fn instantiate(
     };
     VWAP_CONFIG.save(deps.storage, &vwap_config)?;
 
-    let nod_addr = deps.api.addr_validate(&msg.nod_address)?;
-    NOD_CONTRACT_ADDRESS.save(deps.storage, &nod_addr)?;
+    if let Some(nod_address) = &msg.nod_address {
+        let nod_addr = deps.api.addr_validate(nod_address)?;
+        NOD_CONTRACT_ADDRESS.save(deps.storage, &nod_addr)?;
+    }
 
     Ok(Response::default()
         .add_attribute("action", "price-oracle::instantiate")
@@ -59,7 +61,7 @@ pub fn instantiate(
                     "vwap_window_seconds",
                     vwap_config.window_seconds.to_string(),
                 )
-                .add_attribute("nod_address", msg.nod_address.to_string()),
+                .add_attribute("nod_address", msg.nod_address.unwrap_or("none".to_string())),
         ))
 }
 
@@ -249,15 +251,16 @@ fn execute_update_price(
 
     let mut messages: Vec<CosmosMsg> = vec![];
     if pair_id == "native_coen-native_usdc" {
-        let nod_contract_addr = NOD_CONTRACT_ADDRESS.load(deps.storage)?;
-        let wasm_msg = WasmMsg::Execute {
-            contract_addr: nod_contract_addr.to_string(),
-            msg: to_json_binary(&NodExecuteMsg::PriceUpdate {
-                price_threshold: params.price,
-            })?,
-            funds: vec![],
-        };
-        messages.push(CosmosMsg::Wasm(wasm_msg));
+        if let Ok(nod_contract_addr) = NOD_CONTRACT_ADDRESS.load(deps.storage) {
+            let wasm_msg = WasmMsg::Execute {
+                contract_addr: nod_contract_addr.to_string(),
+                msg: to_json_binary(&NodExecuteMsg::PriceUpdate {
+                    price_threshold: params.price,
+                })?,
+                funds: vec![],
+            };
+            messages.push(CosmosMsg::Wasm(wasm_msg));
+        }
     }
 
     Ok(Response::new()

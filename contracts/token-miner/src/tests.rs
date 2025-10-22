@@ -53,7 +53,7 @@ mod test_token_miner {
         let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Check response attributes
-        assert_eq!(res.attributes.len(), 6);
+        assert_eq!(res.attributes.len(), 5);
         assert_eq!(res.attributes[0].key, "method");
         assert_eq!(res.attributes[0].value, "instantiate");
 
@@ -662,7 +662,7 @@ mod test_token_miner {
                         NodQueryMsg::NftInfo { token_id: _ } => {
                             let nod_data = mock_nod_data(
                                 user1_addr.to_string().as_ref(),
-                                NodState::Issued,
+                                NodState::Qualified,
                                 Decimal::from_str("100").unwrap(),
                                 Uint128::new(500),
                             );
@@ -816,7 +816,7 @@ mod test_token_miner {
                 if contract_addr == &nod_contract_addr.to_string() {
                     let nod_data = mock_nod_data(
                         user1_addr.as_str(),
-                        NodState::Qualified,
+                        NodState::Issued,
                         Decimal::from_str("100").unwrap(),
                         Uint128::new(500),
                     );

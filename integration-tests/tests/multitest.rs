@@ -446,7 +446,7 @@ fn deploy_price_oracle(app: &mut App, owner: Addr) -> DeployedContract {
     let instantiate_msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300),
-        nod_address: "nod".to_string(),
+        nod_address: None,
     };
 
     let address = app
