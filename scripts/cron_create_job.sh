@@ -2,7 +2,11 @@
 set -e
 
 get_tomorrow_date() {
+  if [ "$(uname)" = "Darwin" ]; then
     date -u -v+1d '+%Y-%m-%d'
+  else
+    date -d tomorrow '+%Y-%m-%d'
+  fi;
 }
 
 job_name=$1
