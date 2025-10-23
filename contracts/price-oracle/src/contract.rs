@@ -2,15 +2,24 @@ use crate::error::ContractError;
 use crate::helpers::get_pair_id;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg};
 use crate::state::{
-    CREATOR, LATEST_PRICES, LATEST_VWAP, PAIR_DAY_TYPES, PRICE_HISTORY, TOKEN_PAIRS, VWAP_CONFIG,
-    VWAP_HISTORY,
+    CREATOR, LATEST_PRICES, LATEST_VWAP, NOD_CONTRACT_ADDRESS, PAIR_DAY_TYPES, PRICE_HISTORY,
+    TOKEN_PAIRS, VWAP_CONFIG, VWAP_HISTORY,
 };
 use crate::types::{DayType, PriceData, TokenPair, UpdatePriceParams, VwapConfig};
+use cosmwasm_schema::cw_serde;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
+use cosmwasm_std::{
+    to_json_binary, CosmosMsg, Decimal, DepsMut, Env, Event, MessageInfo, Response, WasmMsg,
+};
 use cw2::set_contract_version;
 use outbe_utils::denom::Denom;
+
+/// Message types for calling the nod contract
+#[cw_serde]
+pub enum NodExecuteMsg {
+    PriceUpdate { price_threshold: Decimal },
+}
 
 const CONTRACT_NAME: &str = "outbe:price-oracle";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -38,13 +47,22 @@ pub fn instantiate(
     };
     VWAP_CONFIG.save(deps.storage, &vwap_config)?;
 
+    if let Some(nod_address) = &msg.nod_address {
+        let nod_addr = deps.api.addr_validate(nod_address)?;
+        NOD_CONTRACT_ADDRESS.save(deps.storage, &nod_addr)?;
+    }
+
     Ok(Response::default()
         .add_attribute("action", "price-oracle::instantiate")
-        .add_attribute(
-            "vwap_window_seconds",
-            vwap_config.window_seconds.to_string(),
-        )
-        .add_event(Event::new("price-oracle::instantiate").add_attribute("creator", creator)))
+        .add_event(
+            Event::new("price-oracle::instantiate")
+                .add_attribute("creator", creator)
+                .add_attribute(
+                    "vwap_window_seconds",
+                    vwap_config.window_seconds.to_string(),
+                )
+                .add_attribute("nod_address", msg.nod_address.unwrap_or("none".to_string())),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -90,6 +108,9 @@ pub fn execute(
         } => execute_set_day_type(deps, env, info, token1, token2, day_type),
         ExecuteMsg::UpdateVwapWindow { window_seconds } => {
             execute_update_vwap_window(deps, env, info, window_seconds)
+        }
+        ExecuteMsg::UpdateNodAddress { nod_address } => {
+            execute_update_nod_address(deps, env, info, nod_address)
         }
     }
 }
@@ -231,8 +252,23 @@ fn execute_update_price(
     //     VWAP_HISTORY.save(deps.storage, pair_id.clone(), &vwap_history)?;
     // }
 
+    let mut messages: Vec<CosmosMsg> = vec![];
+    if pair_id == "native_coen-native_usdc" {
+        if let Ok(nod_contract_addr) = NOD_CONTRACT_ADDRESS.load(deps.storage) {
+            let wasm_msg = WasmMsg::Execute {
+                contract_addr: nod_contract_addr.to_string(),
+                msg: to_json_binary(&NodExecuteMsg::PriceUpdate {
+                    price_threshold: params.price,
+                })?,
+                funds: vec![],
+            };
+            messages.push(CosmosMsg::Wasm(wasm_msg));
+        }
+    }
+
     Ok(Response::new()
         .add_attribute("action", "price-oracle::update_price")
+        .add_messages(messages)
         .add_event(
             Event::new("price-oracle::price_updated")
                 .add_attribute("pair_id", pair_id)
@@ -295,6 +331,35 @@ fn execute_update_vwap_window(
     Ok(Response::new()
         .add_attribute("action", "price-oracle::update_vwap_window")
         .add_attribute("window_seconds", window_seconds.to_string()))
+}
+
+fn execute_update_nod_address(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    nod_address: Option<String>,
+) -> Result<Response, ContractError> {
+    // Check authorization - only creator can update nod address
+    CREATOR.assert_owner(deps.storage, &info.sender)?;
+
+    // Update or remove the nod address
+    match nod_address.clone() {
+        Some(address) => {
+            let nod_addr = deps.api.addr_validate(&address)?;
+            NOD_CONTRACT_ADDRESS.save(deps.storage, &nod_addr)?;
+        }
+        None => {
+            NOD_CONTRACT_ADDRESS.remove(deps.storage);
+        }
+    }
+
+    Ok(Response::new()
+        .add_attribute("action", "price-oracle::update_nod_address")
+        .add_event(
+            Event::new("price-oracle::nod_address_updated")
+                .add_attribute("nod_address", nod_address.unwrap_or("none".to_string()))
+                .add_attribute("updated_by", info.sender),
+        ))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

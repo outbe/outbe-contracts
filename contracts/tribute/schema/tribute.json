@@ -568,7 +568,7 @@
         "type": "object",
         "required": [
           "nominal_amount_minor",
-          "nominal_price_minor",
+          "nominal_price",
           "owner",
           "settlement_amount_minor",
           "settlement_currency",
@@ -584,7 +584,7 @@
               }
             ]
           },
-          "nominal_price_minor": {
+          "nominal_price": {
             "description": "Price in Native coins with a rate on the moment of the transaction",
             "allOf": [
               {
@@ -1226,7 +1226,7 @@
           "required": [
             "created_at",
             "nominal_amount_minor",
-            "nominal_price_minor",
+            "nominal_price",
             "settlement_amount_minor",
             "settlement_currency",
             "worldwide_day"
@@ -1248,7 +1248,7 @@
                 }
               ]
             },
-            "nominal_price_minor": {
+            "nominal_price": {
               "description": "Price in Native coins with a rate on the moment of the transaction",
               "allOf": [
                 {
@@ -1696,7 +1696,7 @@
           "required": [
             "created_at",
             "nominal_amount_minor",
-            "nominal_price_minor",
+            "nominal_price",
             "settlement_amount_minor",
             "settlement_currency",
             "worldwide_day"
@@ -1718,7 +1718,7 @@
                 }
               ]
             },
-            "nominal_price_minor": {
+            "nominal_price": {
               "description": "Price in Native coins with a rate on the moment of the transaction",
               "allOf": [
                 {

@@ -38,7 +38,7 @@ jobs:
     name: Optimize & Deploy
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
+      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.2.1
     environment: ${{ github.event.inputs.environment }}
     env:
       RPC: ${{ vars.RPC }}
@@ -194,6 +194,14 @@ jobs:
           NOD_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Nod" $NOD_CODE_ID "$INIT_PAYLOAD")
           echo "NOD_CONTRACT_ADDRESS=$NOD_CONTRACT_ADDRESS" >> $GITHUB_ENV
 
+      - name: Link Nod and Price Oracle contracts
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'nod') || contains(inputs.selected_contracts, 'price_oracle') }}
+        run: |
+          UPDATE_PAYLOAD=$(jq -n --arg address $NOD_CONTRACT_ADDRESS -f ./contracts/price-oracle/fixtures/update-nod-address.json)
+          ./scripts/execute_tx.sh $PRICE_ORACLE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+          UPDATE_PAYLOAD=$(jq -n --arg address $PRICE_ORACLE_CONTRACT_ADDRESS -f ./contracts/nod/fixtures/update-price-updater.json)
+          ./scripts/execute_tx.sh $NOD_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
+
       - name: Deploy Agent NRA
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'agent_nra') }}
         run: |
@@ -240,11 +248,21 @@ jobs:
           UPDATE_PAYLOAD=$(jq -n --arg new_burner $METADOSIS_CONTRACT_ADDRESS -f ./contracts/tribute/fixtures/update-burner.json)
           ./scripts/execute_tx.sh $TRIBUTE_CONTRACT_ADDRESS "$UPDATE_PAYLOAD"
 
+      - name: Update Cron for running metadosis
+        if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'metadosis') }}
+        run: |
+          echo "Creating metadosis prepare cron job..."
+          PAYLOAD=$(jq -n --arg sender $OWNER_ADDRESS --arg contract $METADOSIS_CONTRACT_ADDRESS -f ./contracts/metadosis/fixtures/cron-prepare.json)
+          ./scripts/cron_create_job.sh "metadosis-prepare-$METADOSIS_CONTRACT_ADDRESS" "$PAYLOAD" "00:01:00Z"
+          echo "Creating metadosis execute cron job..."
+          PAYLOAD=$(jq -n --arg sender $OWNER_ADDRESS --arg contract $METADOSIS_CONTRACT_ADDRESS -f ./contracts/metadosis/fixtures/cron-execute.json)
+          ./scripts/cron_create_job.sh "metadosis-execute-$METADOSIS_CONTRACT_ADDRESS" "$PAYLOAD" "00:05:00Z"
+
       - name: Deploy Token Miner
         if: ${{ inputs.deploy_type == 'all' || contains(inputs.selected_contracts, 'token_miner') }}
         run: |
           TOKEN_MINER_CODE_ID=$(./scripts/store_code.sh artifacts/token_miner.wasm)
-          INIT_PAYLOAD=$(jq -n --arg gratis_address $GRATIS_CONTRACT_ADDRESS --arg promis_address $PROMIS_CONTRACT_ADDRESS --arg nod_address $NOD_CONTRACT_ADDRESS --arg price_oracle_address $PRICE_ORACLE_CONTRACT_ADDRESS --arg faucet_address $FAUCET_ADDRESS --from-file ./contracts/token-miner/fixtures/init.json)
+          INIT_PAYLOAD=$(jq -n --arg gratis_address $GRATIS_CONTRACT_ADDRESS --arg promis_address $PROMIS_CONTRACT_ADDRESS --arg nod_address $NOD_CONTRACT_ADDRESS --arg faucet_address $FAUCET_ADDRESS --from-file ./contracts/token-miner/fixtures/init.json)
           TOKEN_MINER_CONTRACT_ADDRESS=$(./scripts/init_contract.sh "Token Miner" $TOKEN_MINER_CODE_ID "$INIT_PAYLOAD")
           echo "TOKEN_MINER_CONTRACT_ADDRESS=$TOKEN_MINER_CONTRACT_ADDRESS" >> $GITHUB_ENV
           echo "Grant access"

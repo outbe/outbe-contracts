@@ -1,4 +1,5 @@
 use crate::types::{DayType, PriceData, TokenPair, VwapConfig, VwapData};
+use cosmwasm_std::Addr;
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Item, Map};
 use std::fmt;
@@ -11,6 +12,7 @@ pub const PAIR_DAY_TYPES: Map<String, DayType> = Map::new("pair_day_types");
 pub const VWAP_CONFIG: Item<VwapConfig> = Item::new("vwap_config");
 pub const LATEST_VWAP: Map<String, VwapData> = Map::new("latest_vwap");
 pub const VWAP_HISTORY: Map<String, Vec<VwapData>> = Map::new("vwap_history");
+pub const NOD_CONTRACT_ADDRESS: Item<Addr> = Item::new("nod_contract_address");
 
 impl fmt::Display for DayType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

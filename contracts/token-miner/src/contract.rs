@@ -16,8 +16,6 @@ use outbe_nft::msg::NftInfoResponse;
 use nod::msg::ExecuteMsg as NodExecuteMsg;
 use nod::query::QueryMsg as NodQueryMsg;
 use nod::types::{NodData, State as NodState};
-use price_oracle::query::QueryMsg as PriceOracleQueryMsg;
-use price_oracle::types::TokenPairPrice;
 
 /// Contract name and version for migration info
 pub const CONTRACT_NAME: &str = "outbe.net:token-minter";
@@ -42,7 +40,6 @@ pub fn instantiate(
     // Validate and store contract addresses
     let gratis_contract = deps.api.addr_validate(&msg.gratis_contract)?;
     let promis_contract = deps.api.addr_validate(&msg.promis_contract)?;
-    let price_oracle_contract = deps.api.addr_validate(&msg.price_oracle_contract)?;
     let nod_contract = deps.api.addr_validate(&msg.nod_contract)?;
 
     // Create configuration with the instantiator as admin
@@ -50,7 +47,6 @@ pub fn instantiate(
         admin: info.sender.clone(),
         gratis_contract,
         promis_contract,
-        price_oracle_contract,
         nod_contract,
         pow_complexity: msg.pow_complexity,
     };
@@ -73,7 +69,6 @@ pub fn instantiate(
         .add_attribute("admin", info.sender)
         .add_attribute("gratis_contract", msg.gratis_contract)
         .add_attribute("promis_contract", msg.promis_contract)
-        .add_attribute("price_oracle_contract", msg.price_oracle_contract)
         .add_attribute("nod_contract", msg.nod_contract))
 }
 
@@ -119,16 +114,8 @@ pub fn execute(
         ExecuteMsg::UpdateContracts {
             gratis_contract,
             promis_contract,
-            price_oracle_contract,
             nod_contract,
-        } => execute_update_contracts(
-            deps,
-            info,
-            gratis_contract,
-            promis_contract,
-            price_oracle_contract,
-            nod_contract,
-        ),
+        } => execute_update_contracts(deps, info, gratis_contract, promis_contract, nod_contract),
     }
 }
 
@@ -197,7 +184,7 @@ pub fn execute_mine(
 }
 
 /// Execute mine gratis with nod - mines Gratis tokens using a qualified Nod NFT
-/// This function checks if the current price from Price Oracle is >= floor_price_minor
+/// This function checks if the current price from Price Oracle is >= floor_price
 /// If qualified, it will mint Gratis tokens based on gratis_load_minor and burn the Nod NFT
 pub fn execute_mine_gratis_with_nod(
     deps: DepsMut,
@@ -231,24 +218,8 @@ pub fn execute_mine_gratis_with_nod(
     }
 
     // Check if the Nod is in Issued state (can only mine from Issued state)
-    if nod_data.state != NodState::Issued {
-        return Err(ContractError::NodNotIssued {});
-    }
-
-    // Query the Price Oracle to get the current price
-    let price_query = QueryRequest::Wasm(WasmQuery::Smart {
-        contract_addr: config.price_oracle_contract.to_string(),
-        msg: to_json_binary(&PriceOracleQueryMsg::GetPrice {})?,
-    });
-
-    let price_response: TokenPairPrice = deps.querier.query(&price_query)?;
-
-    // Check if current price is >= floor price (Nod is qualified)
-    if price_response.price < nod_data.floor_price_minor {
-        return Err(ContractError::NodNotQualified {
-            current_price: price_response.price,
-            floor_price: nod_data.floor_price_minor,
-        });
+    if nod_data.state != NodState::Qualified {
+        return Err(ContractError::NodNotQualified {});
     }
 
     // Create mint message for Gratis tokens using gratis_load_minor from Nod
@@ -281,8 +252,7 @@ pub fn execute_mine_gratis_with_nod(
         .add_attribute("miner", info.sender)
         .add_attribute("nod_token_id", nod_token_id)
         .add_attribute("amount", nod_data.gratis_load_minor)
-        .add_attribute("current_price", price_response.price.atomics())
-        .add_attribute("floor_price", nod_data.floor_price_minor.atomics())
+        .add_attribute("floor_price", nod_data.floor_price.atomics())
         .add_attribute("gratis_contract", config.gratis_contract)
         .add_attribute("nod_contract", config.nod_contract))
 }
@@ -432,7 +402,6 @@ pub fn execute_update_contracts(
     info: MessageInfo,
     gratis_contract: Option<String>,
     promis_contract: Option<String>,
-    price_oracle_contract: Option<String>,
     nod_contract: Option<String>,
 ) -> Result<Response, ContractError> {
     // Check if sender is admin
@@ -463,16 +432,6 @@ pub fn execute_update_contracts(
         }
         config.promis_contract = new_promis_addr;
         response = response.add_attribute("new_promis_contract", promis_addr);
-    }
-
-    // Update Price Oracle contract if provided
-    if let Some(price_oracle_addr) = price_oracle_contract {
-        let new_price_oracle_addr = deps.api.addr_validate(&price_oracle_addr)?;
-        if new_price_oracle_addr == config.price_oracle_contract {
-            return Err(ContractError::SameContractAddress {});
-        }
-        config.price_oracle_contract = new_price_oracle_addr;
-        response = response.add_attribute("new_price_oracle_contract", price_oracle_addr);
     }
 
     // Update Nod contract if provided

@@ -166,7 +166,7 @@ fn execute_mint(
 
     if entity.settlement_amount_minor == Uint128::zero()
         || entity.nominal_amount_minor == Uint128::zero()
-        || entity.nominal_price_minor == Decimal::zero()
+        || entity.nominal_price == Decimal::zero()
     {
         return Err(ContractError::WrongInput {});
     }
@@ -180,14 +180,13 @@ fn execute_mint(
     // )?;
     //
 
-    let nominal_amount =
-        calc_nominal_amount(entity.settlement_amount_minor, entity.nominal_price_minor);
+    let nominal_amount = calc_nominal_amount(entity.settlement_amount_minor, entity.nominal_price);
 
     // create the token
     let data = TributeData {
         settlement_amount_minor: entity.settlement_amount_minor,
         settlement_currency: entity.settlement_currency,
-        nominal_price_minor: entity.nominal_price_minor,
+        nominal_price: entity.nominal_price,
         nominal_amount_minor: nominal_amount,
         worldwide_day: entity.worldwide_day,
         created_at: env.block.time,
@@ -469,7 +468,7 @@ mod tests {
             extension: TributeData {
                 settlement_amount_minor: Uint128::new(100),
                 settlement_currency: Denom::Fiat(Currency::Usd),
-                nominal_price_minor: Decimal::one(),
+                nominal_price: Decimal::one(),
                 nominal_amount_minor: Uint128::new(100),
                 worldwide_day: 1,
                 created_at: Timestamp::from_seconds(1000),
@@ -487,7 +486,7 @@ mod tests {
             extension: TributeData {
                 settlement_amount_minor: Uint128::new(100),
                 settlement_currency: Denom::Fiat(Currency::Usd),
-                nominal_price_minor: Decimal::one(),
+                nominal_price: Decimal::one(),
                 nominal_amount_minor: Uint128::new(100),
                 worldwide_day: day,
                 created_at: Timestamp::from_seconds(1000),

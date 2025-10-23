@@ -366,7 +366,7 @@ fn execute_offer_logic(
                     settlement_amount_minor: settlement_amount,
                     settlement_currency: Denom::Fiat(currency),
                     nominal_amount_minor: nominal_amount,
-                    nominal_price_minor: tribute_price,
+                    nominal_price: tribute_price,
                 },
             }),
         })?,
@@ -389,7 +389,7 @@ fn update_used_state(
     storage: &mut dyn Storage,
     tribute: &TributeInputPayload,
 ) -> Result<Empty, ContractError> {
-    // NB: temporary disable validation for demo
+    // TODO: temporary disable validation for demo such as missing Poseidon hashing implementation
     #[cfg(not(feature = "demo"))]
     {
         let tribute_draft_id = crate::contract::generate_tribute_draft_id_hash(

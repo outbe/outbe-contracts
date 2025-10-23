@@ -1,0 +1,8 @@
+{
+  "@type": "/cosmwasm.wasm.v1.MsgExecuteContract",
+  "sender": $sender,
+  "contract": $contract,
+  "msg": {
+    "prepare": {}
+  }
+}

@@ -35,7 +35,7 @@ fn test_tribute() {
                     nominal_amount_minor: Uint128::from(100000000u32),
                     settlement_amount_minor: Uint128::from(100000000u32),
                     worldwide_day: normalize_to_date(&app.block_info().time),
-                    nominal_price_minor: Decimal::one(),
+                    nominal_price: Decimal::one(),
                 },
             }),
         },
@@ -210,7 +210,7 @@ fn test_metadosis() {
                     settlement_amount_minor: Uint128::from(5_000000000000000000u128),
                     nominal_amount_minor: Uint128::from(10_000000000000000000u128),
                     worldwide_day: normalize_to_date(&app.block_info().time),
-                    nominal_price_minor: Decimal::from_str("0.5").unwrap(),
+                    nominal_price: Decimal::from_str("0.5").unwrap(),
                 },
             }),
         },
@@ -233,7 +233,7 @@ fn test_metadosis() {
                     settlement_amount_minor: Uint128::from(150_000000000000000000u128),
                     nominal_amount_minor: Uint128::from(5_000000000000000000u128),
                     worldwide_day: normalize_to_date(&app.block_info().time),
-                    nominal_price_minor: Decimal::from_str("3").unwrap(),
+                    nominal_price: Decimal::from_str("3").unwrap(),
                 },
             }),
         },
@@ -313,7 +313,7 @@ fn test_metadosis() {
         .unwrap();
 }
 
-fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedContract {
+pub fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedContract {
     use tribute::contract::{execute, instantiate};
     use tribute::msg::InstantiateMsg;
     use tribute::query::query;
@@ -344,7 +344,7 @@ fn deploy_tribute(app: &mut App, owner: Addr, price_oracle: Addr) -> DeployedCon
         .unwrap();
     DeployedContract { address, code_id }
 }
-fn deploy_nod(app: &mut App, owner: Addr) -> DeployedContract {
+pub fn deploy_nod(app: &mut App, owner: Addr) -> DeployedContract {
     use nod::contract::{execute, instantiate};
     use nod::msg::InstantiateMsg;
     use nod::query::query;
@@ -373,7 +373,7 @@ fn deploy_nod(app: &mut App, owner: Addr) -> DeployedContract {
     DeployedContract { address, code_id }
 }
 
-fn deploy_random_oracle(app: &mut App, owner: Addr) -> DeployedContract {
+pub fn deploy_random_oracle(app: &mut App, owner: Addr) -> DeployedContract {
     use random_oracle::contract::{execute, instantiate, query};
     use random_oracle::msg::InstantiateMsg;
 
@@ -397,7 +397,7 @@ fn deploy_random_oracle(app: &mut App, owner: Addr) -> DeployedContract {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn deploy_metadosis(
+pub fn deploy_metadosis(
     app: &mut App,
     owner: Addr,
     tribute: Addr,
@@ -435,7 +435,7 @@ fn deploy_metadosis(
     DeployedContract { address, code_id }
 }
 
-fn deploy_price_oracle(app: &mut App, owner: Addr) -> DeployedContract {
+pub fn deploy_price_oracle(app: &mut App, owner: Addr) -> DeployedContract {
     use price_oracle::contract::{execute, instantiate};
     use price_oracle::msg::InstantiateMsg;
     use price_oracle::query::query;
@@ -446,6 +446,7 @@ fn deploy_price_oracle(app: &mut App, owner: Addr) -> DeployedContract {
     let instantiate_msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300),
+        nod_address: None,
     };
 
     let address = app
@@ -462,7 +463,7 @@ fn deploy_price_oracle(app: &mut App, owner: Addr) -> DeployedContract {
     DeployedContract { address, code_id }
 }
 
-fn deploy_token_allocator(app: &mut App, owner: Addr) -> DeployedContract {
+pub fn deploy_token_allocator(app: &mut App, owner: Addr) -> DeployedContract {
     use token_allocator::contract::{execute, instantiate};
     use token_allocator::msg::InstantiateMsg;
     use token_allocator::query::query;
@@ -485,7 +486,7 @@ fn deploy_token_allocator(app: &mut App, owner: Addr) -> DeployedContract {
 }
 
 #[allow(dead_code)]
-fn deploy_vector(app: &mut App, owner: Addr) -> DeployedContract {
+pub fn deploy_vector(app: &mut App, owner: Addr) -> DeployedContract {
     use vector::contract::{execute, instantiate};
     use vector::msg::InstantiateMsg;
     use vector::query::query;
@@ -508,4 +509,227 @@ fn deploy_vector(app: &mut App, owner: Addr) -> DeployedContract {
         )
         .unwrap();
     DeployedContract { address, code_id }
+}
+
+#[test]
+fn test_price_oracle_nod_qualification() {
+    use nod::msg::ExecuteMsg as NodExecuteMsg;
+    use nod::msg::{NodEntity, SubmitExtension};
+    use nod::query::QueryMsg as NodQueryMsg;
+    use nod::types::State;
+    use price_oracle::msg::ExecuteMsg as PriceOracleExecuteMsg;
+
+    println!("🎯 Test Price Oracle NOD Qualification");
+    let (mut app, config) = setup_test_env();
+
+    let owner_addr = config.owner_addr;
+
+    // Deploy contracts
+    let price_oracle = deploy_price_oracle(&mut app, owner_addr.clone());
+    let nod = deploy_nod(&mut app, owner_addr.clone());
+
+    // Setup price oracle with nod address
+    println!("🔗 Configure price oracle with nod address");
+    let msg = PriceOracleExecuteMsg::UpdateNodAddress {
+        nod_address: Some(nod.address.to_string()),
+    };
+    app.execute_contract(owner_addr.clone(), price_oracle.address.clone(), &msg, &[])
+        .unwrap();
+
+    // Add token pair to price oracle
+    println!("🔥 Add coen/usdc token pair to price oracle");
+    let coen_denom = Denom::Native("coen".to_string());
+    let usdc_denom = Denom::Native("usdc".to_string());
+    let msg = PriceOracleExecuteMsg::AddTokenPair {
+        token1: coen_denom.clone(),
+        token2: usdc_denom.clone(),
+    };
+    app.execute_contract(owner_addr.clone(), price_oracle.address.clone(), &msg, &[])
+        .unwrap();
+
+    // Setup price updater for nod contract BEFORE adding price
+    println!("🔧 Set price oracle as price updater for nod contract");
+    let msg = NodExecuteMsg::UpdatePriceUpdater {
+        price_updater: Some(price_oracle.address.to_string()),
+    };
+    app.execute_contract(owner_addr.clone(), nod.address.clone(), &msg, &[])
+        .unwrap();
+
+    // Add initial price to oracle
+    println!("💰 Add initial price to oracle: 0.3");
+    let msg = PriceOracleExecuteMsg::UpdatePrice {
+        token1: coen_denom.clone(),
+        token2: usdc_denom.clone(),
+        price: Decimal::from_str("0.3").unwrap(),
+        open: Some(Decimal::from_str("0.29").unwrap()),
+        high: Some(Decimal::from_str("0.32").unwrap()),
+        low: Some(Decimal::from_str("0.28").unwrap()),
+        close: Some(Decimal::from_str("0.3").unwrap()),
+        volume: Some(Uint128::new(1000)),
+    };
+    app.execute_contract(owner_addr.clone(), price_oracle.address.clone(), &msg, &[])
+        .unwrap();
+
+    // Create nod tokens with different floor prices
+    println!("🎯 Create nod tokens with different floor prices");
+
+    // Token 1: floor_price = 0.5 (above threshold, should not qualify)
+    let msg = NodExecuteMsg::Submit {
+        token_id: "nod_1".to_string(),
+        owner: owner_addr.to_string(),
+        extension: Box::new(SubmitExtension {
+            entity: NodEntity {
+                nod_id: "nod_1".to_string(),
+                settlement_currency: coen_denom.clone(),
+                symbolic_rate: Decimal::from_str("1.0").unwrap(),
+                floor_rate: Decimal::from_str("0.5").unwrap(),
+                nominal_price: Decimal::from_str("1.0").unwrap(),
+                issuance_price: Decimal::from_str("0.3").unwrap(),
+                gratis_load_minor: Uint128::new(100),
+                floor_price: Decimal::from_str("0.5").unwrap(),
+                state: State::Issued,
+                owner: owner_addr.to_string(),
+                qualified_at: None,
+                is_touch: false,
+            },
+            created_at: None,
+        }),
+    };
+    app.execute_contract(owner_addr.clone(), nod.address.clone(), &msg, &[])
+        .unwrap();
+
+    // Token 2: floor_price = 0.2 (below threshold, should qualify)
+    let msg = NodExecuteMsg::Submit {
+        token_id: "nod_2".to_string(),
+        owner: owner_addr.to_string(),
+        extension: Box::new(SubmitExtension {
+            entity: NodEntity {
+                nod_id: "nod_2".to_string(),
+                settlement_currency: coen_denom.clone(),
+                symbolic_rate: Decimal::from_str("1.0").unwrap(),
+                floor_rate: Decimal::from_str("0.2").unwrap(),
+                nominal_price: Decimal::from_str("1.0").unwrap(),
+                issuance_price: Decimal::from_str("0.3").unwrap(),
+                gratis_load_minor: Uint128::new(100),
+                floor_price: Decimal::from_str("0.2").unwrap(),
+                state: State::Issued,
+                owner: owner_addr.to_string(),
+                qualified_at: None,
+                is_touch: false,
+            },
+            created_at: None,
+        }),
+    };
+    app.execute_contract(owner_addr.clone(), nod.address.clone(), &msg, &[])
+        .unwrap();
+
+    // Token 3: floor_price = 0.4 (equal to threshold, should qualify)
+    let msg = NodExecuteMsg::Submit {
+        token_id: "nod_3".to_string(),
+        owner: owner_addr.to_string(),
+        extension: Box::new(SubmitExtension {
+            entity: NodEntity {
+                nod_id: "nod_3".to_string(),
+                settlement_currency: coen_denom.clone(),
+                symbolic_rate: Decimal::from_str("1.0").unwrap(),
+                floor_rate: Decimal::from_str("0.4").unwrap(),
+                nominal_price: Decimal::from_str("1.0").unwrap(),
+                issuance_price: Decimal::from_str("0.3").unwrap(),
+                gratis_load_minor: Uint128::new(100),
+                floor_price: Decimal::from_str("0.4").unwrap(),
+                state: State::Issued,
+                owner: owner_addr.to_string(),
+                qualified_at: None,
+                is_touch: false,
+            },
+            created_at: None,
+        }),
+    };
+    app.execute_contract(owner_addr.clone(), nod.address.clone(), &msg, &[])
+        .unwrap();
+
+    // Verify initial state: all tokens should be Issued
+    println!("✅ Verify initial state: all tokens are Issued");
+    for token_id in ["nod_1", "nod_2", "nod_3"] {
+        let query_msg = NodQueryMsg::NftInfo {
+            token_id: token_id.to_string(),
+        };
+        let res: outbe_nft::msg::NftInfoResponse<nod::types::NodData> = app
+            .wrap()
+            .query_wasm_smart(nod.address.clone(), &query_msg)
+            .unwrap();
+        assert_eq!(res.extension.state, State::Issued);
+        assert_eq!(res.extension.qualified_at, None);
+        println!("  Token {}: State = {:?}", token_id, res.extension.state);
+    }
+
+    // Update price in oracle to 0.4 (this should trigger qualification)
+    println!("💰 Update price in oracle to 0.4");
+    let msg = PriceOracleExecuteMsg::UpdatePrice {
+        token1: coen_denom.clone(),
+        token2: usdc_denom.clone(),
+        price: Decimal::from_str("0.4").unwrap(),
+        open: Some(Decimal::from_str("0.38").unwrap()),
+        high: Some(Decimal::from_str("0.42").unwrap()),
+        low: Some(Decimal::from_str("0.37").unwrap()),
+        close: Some(Decimal::from_str("0.4").unwrap()),
+        volume: Some(Uint128::new(1200)),
+    };
+    let res = app
+        .execute_contract(owner_addr.clone(), price_oracle.address.clone(), &msg, &[])
+        .unwrap();
+
+    println!("📊 Price update response events: {:?}", res.events);
+
+    // Verify final state: tokens with floor_price <= 0.4 should be Qualified
+    println!("✅ Verify final state after price update");
+
+    // nod_1 (floor_price = 0.5) should still be Issued
+    let query_msg = NodQueryMsg::NftInfo {
+        token_id: "nod_1".to_string(),
+    };
+    let res: outbe_nft::msg::NftInfoResponse<nod::types::NodData> = app
+        .wrap()
+        .query_wasm_smart(nod.address.clone(), &query_msg)
+        .unwrap();
+    assert_eq!(res.extension.state, State::Issued);
+    assert_eq!(res.extension.qualified_at, None);
+    println!(
+        "  Token nod_1 (floor_price=0.5): State = {:?} ✅",
+        res.extension.state
+    );
+
+    // nod_2 (floor_price = 0.2) should be Qualified
+    let query_msg = NodQueryMsg::NftInfo {
+        token_id: "nod_2".to_string(),
+    };
+    let res: outbe_nft::msg::NftInfoResponse<nod::types::NodData> = app
+        .wrap()
+        .query_wasm_smart(nod.address.clone(), &query_msg)
+        .unwrap();
+    assert_eq!(res.extension.state, State::Qualified);
+    assert!(res.extension.qualified_at.is_some());
+    println!(
+        "  Token nod_2 (floor_price=0.2): State = {:?} ✅",
+        res.extension.state
+    );
+
+    // nod_3 (floor_price = 0.4) should be Qualified
+    let query_msg = NodQueryMsg::NftInfo {
+        token_id: "nod_3".to_string(),
+    };
+    let res: outbe_nft::msg::NftInfoResponse<nod::types::NodData> = app
+        .wrap()
+        .query_wasm_smart(nod.address.clone(), &query_msg)
+        .unwrap();
+    assert_eq!(res.extension.state, State::Qualified);
+    assert!(res.extension.qualified_at.is_some());
+    println!(
+        "  Token nod_3 (floor_price=0.4): State = {:?} ✅",
+        res.extension.state
+    );
+
+    println!(
+        "🎉 Test completed successfully! Price oracle update triggered nod token qualification."
+    );
 }

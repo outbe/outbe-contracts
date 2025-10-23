@@ -152,10 +152,10 @@ mod tests {
             settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::from_str("1.23").unwrap(),
             floor_rate: Decimal::from_str("10").unwrap(),
-            nominal_price_minor: Decimal::from_str("100").unwrap(),
-            issuance_price_minor: Decimal::from_str("200").unwrap(),
+            nominal_price: Decimal::from_str("100").unwrap(),
+            issuance_price: Decimal::from_str("200").unwrap(),
             gratis_load_minor: Uint128::new(300),
-            floor_price_minor: Decimal::from_str("400").unwrap(),
+            floor_price: Decimal::from_str("400").unwrap(),
             state: State::Issued,
             owner: recipient.to_string(),
             qualified_at: None,
@@ -209,16 +209,10 @@ mod tests {
         );
         assert_eq!(resp.extension.symbolic_rate, entity.symbolic_rate);
         assert_eq!(resp.extension.floor_rate, entity.floor_rate);
-        assert_eq!(
-            resp.extension.nominal_price_minor,
-            entity.nominal_price_minor
-        );
-        assert_eq!(
-            resp.extension.issuance_price_minor,
-            entity.issuance_price_minor
-        );
+        assert_eq!(resp.extension.nominal_price, entity.nominal_price);
+        assert_eq!(resp.extension.issuance_price, entity.issuance_price);
         assert_eq!(resp.extension.gratis_load_minor, entity.gratis_load_minor);
-        assert_eq!(resp.extension.floor_price_minor, entity.floor_price_minor);
+        assert_eq!(resp.extension.floor_price, entity.floor_price);
         assert_eq!(resp.extension.state, entity.state);
         assert_eq!(resp.extension.issued_at, submit_ext.created_at.unwrap());
         assert_eq!(resp.extension.qualified_at, entity.qualified_at);
@@ -302,10 +296,10 @@ mod tests {
             settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::from_str("1.23").unwrap(),
             floor_rate: Decimal::from_str("10").unwrap(),
-            nominal_price_minor: Decimal::from_str("100").unwrap(),
-            issuance_price_minor: Decimal::from_str("200").unwrap(),
+            nominal_price: Decimal::from_str("100").unwrap(),
+            issuance_price: Decimal::from_str("200").unwrap(),
             gratis_load_minor: Uint128::new(300),
-            floor_price_minor: Decimal::from_str("400").unwrap(),
+            floor_price: Decimal::from_str("400").unwrap(),
             state: State::Issued,
             owner: recipient.to_string(),
             qualified_at: None,
@@ -386,5 +380,132 @@ mod tests {
             )
             .unwrap();
         assert!(resp.tokens.is_empty());
+    }
+
+    #[test]
+    fn test_update_price_updater_by_creator() {
+        let mut app = App::default();
+        let creator = app.api().addr_make("creator");
+        let price_updater = app.api().addr_make("price_updater");
+
+        let code = ContractWrapper::new(execute, instantiate, query);
+        let code_id = app.store_code(Box::new(code));
+
+        let init_msg = InstantiateMsg {
+            name: "nod".to_string(),
+            symbol: "NOD".to_string(),
+            collection_info_extension: NodCollectionExtension {},
+            minter: None,
+            creator: Some(creator.to_string()),
+            burner: None,
+        };
+        let contract_addr = app
+            .instantiate_contract(code_id, creator.clone(), &init_msg, &[], "nod1", None)
+            .unwrap();
+
+        // Creator should be able to update price updater
+        let exec_msg = ExecuteMsg::UpdatePriceUpdater {
+            price_updater: Some(price_updater.to_string()),
+        };
+        let result = app.execute_contract(creator.clone(), contract_addr.clone(), &exec_msg, &[]);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_update_price_updater_unauthorized() {
+        let mut app = App::default();
+        let creator = app.api().addr_make("creator");
+        let unauthorized = app.api().addr_make("unauthorized");
+        let price_updater = app.api().addr_make("price_updater");
+
+        let code = ContractWrapper::new(execute, instantiate, query);
+        let code_id = app.store_code(Box::new(code));
+
+        let init_msg = InstantiateMsg {
+            name: "nod".to_string(),
+            symbol: "NOD".to_string(),
+            collection_info_extension: NodCollectionExtension {},
+            minter: None,
+            creator: Some(creator.to_string()),
+            burner: None,
+        };
+        let contract_addr = app
+            .instantiate_contract(code_id, creator.clone(), &init_msg, &[], "nod1", None)
+            .unwrap();
+
+        // Non-creator should not be able to update price updater
+        let exec_msg = ExecuteMsg::UpdatePriceUpdater {
+            price_updater: Some(price_updater.to_string()),
+        };
+        let result =
+            app.execute_contract(unauthorized.clone(), contract_addr.clone(), &exec_msg, &[]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_price_update_with_authorized_updater() {
+        let mut app = App::default();
+        let creator = app.api().addr_make("creator");
+        let price_updater = app.api().addr_make("price_updater");
+
+        let code = ContractWrapper::new(execute, instantiate, query);
+        let code_id = app.store_code(Box::new(code));
+
+        let init_msg = InstantiateMsg {
+            name: "nod".to_string(),
+            symbol: "NOD".to_string(),
+            collection_info_extension: NodCollectionExtension {},
+            minter: None,
+            creator: Some(creator.to_string()),
+            burner: None,
+        };
+        let contract_addr = app
+            .instantiate_contract(code_id, creator.clone(), &init_msg, &[], "nod1", None)
+            .unwrap();
+
+        // First, creator sets the price updater
+        let exec_msg = ExecuteMsg::UpdatePriceUpdater {
+            price_updater: Some(price_updater.to_string()),
+        };
+        app.execute_contract(creator.clone(), contract_addr.clone(), &exec_msg, &[])
+            .unwrap();
+
+        // Now the authorized price updater should be able to call PriceUpdate
+        let exec_msg = ExecuteMsg::PriceUpdate {
+            price_threshold: Decimal::from_str("100.0").unwrap(),
+        };
+        let result =
+            app.execute_contract(price_updater.clone(), contract_addr.clone(), &exec_msg, &[]);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_price_update_unauthorized() {
+        let mut app = App::default();
+        let creator = app.api().addr_make("creator");
+        let unauthorized = app.api().addr_make("unauthorized");
+
+        let code = ContractWrapper::new(execute, instantiate, query);
+        let code_id = app.store_code(Box::new(code));
+
+        let init_msg = InstantiateMsg {
+            name: "nod".to_string(),
+            symbol: "NOD".to_string(),
+            collection_info_extension: NodCollectionExtension {},
+            minter: None,
+            creator: Some(creator.to_string()),
+            burner: None,
+        };
+        let contract_addr = app
+            .instantiate_contract(code_id, creator.clone(), &init_msg, &[], "nod1", None)
+            .unwrap();
+
+        // Unauthorized user should not be able to call PriceUpdate
+        let exec_msg = ExecuteMsg::PriceUpdate {
+            price_threshold: Decimal::from_str("100.0").unwrap(),
+        };
+        let result =
+            app.execute_contract(unauthorized.clone(), contract_addr.clone(), &exec_msg, &[]);
+        assert!(result.is_err());
     }
 }

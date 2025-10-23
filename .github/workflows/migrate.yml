@@ -33,7 +33,7 @@ jobs:
     name: Optimize & Migrate
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.1.1
+      image: ghcr.io/outbe/outbe-wasm-sei-builder:0.2.1
     environment: ${{ github.event.inputs.environment }}
     env:
       RPC: ${{ vars.RPC }}

@@ -1,0 +1,5 @@
+{
+  "update_nod_address": {
+    "nod_address": $address
+  }
+}

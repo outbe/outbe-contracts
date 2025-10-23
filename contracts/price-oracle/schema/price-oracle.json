@@ -13,6 +13,12 @@
           "null"
         ]
       },
+      "nod_address": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
       "vwap_window_seconds": {
         "type": [
           "integer",
@@ -202,6 +208,27 @@
                 "type": "integer",
                 "format": "uint64",
                 "minimum": 0.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "update_nod_address"
+        ],
+        "properties": {
+          "update_nod_address": {
+            "type": "object",
+            "properties": {
+              "nod_address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "additionalProperties": false

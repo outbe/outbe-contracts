@@ -8,4 +8,6 @@ pub enum ContractError {
     Std(#[from] StdError),
     #[error("{0}")]
     Cw721ContractError(#[from] Cw721ContractError),
+    #[error("Unauthorized")]
+    Unauthorized {},
 }

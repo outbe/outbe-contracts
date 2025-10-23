@@ -298,7 +298,7 @@ mod tests {
                 * Uint128::new(1_000_000_000_000_000_000u128),
             settlement_currency: Denom::Fiat(Currency::Usd),
             nominal_amount_minor: Uint128::new(100) * Uint128::new(1_000_000_000_000_000_000u128),
-            nominal_price_minor: Decimal::one(),
+            nominal_price: Decimal::one(),
             worldwide_day: date,
             owner: owner.to_string(),
         };
@@ -325,7 +325,7 @@ mod tests {
             settlement_amount_minor: Uint128::new(50) * Uint128::new(1_000_000_000_000_000_000u128),
             settlement_currency: Denom::Fiat(Currency::Usd),
             nominal_amount_minor: Uint128::new(50) * Uint128::new(1_000_000_000_000_000_000u128),
-            nominal_price_minor: Decimal::one(),
+            nominal_price: Decimal::one(),
             worldwide_day: date,
             owner: owner.to_string(),
         };

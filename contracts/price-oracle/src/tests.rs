@@ -10,7 +10,7 @@ use outbe_utils::denom::Denom;
 use std::str::FromStr;
 
 pub const CREATOR_ADDR: &str = "creator";
-// pub const UNAUTHORIZED_ADDR: &str = "unauthorized";
+pub const NOD_ADDR: &str = "nod_contract";
 
 pub const COEN: &str = "COEN";
 pub const USDC: &str = "USDC";
@@ -19,6 +19,7 @@ fn get_default_instantiate_msg() -> InstantiateMsg {
     InstantiateMsg {
         creator: None,
         vwap_window_seconds: None,
+        nod_address: None,
     }
 }
 
@@ -754,6 +755,7 @@ fn test_vwap_calculation() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300), // 5 minutes
+        nod_address: None,
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -834,6 +836,7 @@ fn test_vwap_window_update() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300), // Start with 5 minutes
+        nod_address: None,
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -866,6 +869,7 @@ fn test_vwap_with_window_filtering() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(200), // 200 seconds window
+        nod_address: None,
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -946,6 +950,7 @@ fn test_vwap_history() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300), // 5 minutes
+        nod_address: None,
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -1060,6 +1065,7 @@ fn test_vwap_history_empty() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300),
+        nod_address: Some(deps.api.addr_make(NOD_ADDR).to_string()),
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -1096,6 +1102,7 @@ fn test_vwap_history_invalid_time_range() {
     let msg = InstantiateMsg {
         creator: None,
         vwap_window_seconds: Some(300),
+        nod_address: None,
     };
     let info = MessageInfo {
         sender: deps.api.addr_make(CREATOR_ADDR),
@@ -1119,4 +1126,90 @@ fn test_vwap_history_invalid_time_range() {
     .unwrap_err();
 
     assert!(err.to_string().contains("Invalid time range"));
+}
+
+#[test]
+fn test_update_nod_address_by_creator() {
+    let mut deps = mock_dependencies();
+    let msg = InstantiateMsg {
+        creator: None,
+        vwap_window_seconds: None,
+        nod_address: None,
+    };
+    let info = MessageInfo {
+        sender: deps.api.addr_make(CREATOR_ADDR),
+        funds: vec![],
+    };
+    let env = mock_env();
+
+    instantiate(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
+
+    // Update nod address by creator
+    let msg = ExecuteMsg::UpdateNodAddress {
+        nod_address: Some(deps.api.addr_make("new_nod_address").to_string()),
+    };
+    let res = execute(deps.as_mut(), env, info, msg).unwrap();
+
+    // Check response attributes and events
+    assert_eq!(1, res.events.len());
+    let event = &res.events[0];
+    assert_eq!(event.ty, "price-oracle::nod_address_updated");
+}
+
+#[test]
+fn test_update_nod_address_unauthorized() {
+    let mut deps = mock_dependencies();
+    let msg = InstantiateMsg {
+        creator: None,
+        vwap_window_seconds: None,
+        nod_address: None,
+    };
+    let creator_info = MessageInfo {
+        sender: deps.api.addr_make(CREATOR_ADDR),
+        funds: vec![],
+    };
+    let env = mock_env();
+
+    instantiate(deps.as_mut(), env.clone(), creator_info, msg).unwrap();
+
+    // Try to update nod address by non-creator
+    let non_creator_info = MessageInfo {
+        sender: deps.api.addr_make("non_creator"),
+        funds: vec![],
+    };
+    let msg = ExecuteMsg::UpdateNodAddress {
+        nod_address: Some(deps.api.addr_make("new_nod_address").to_string()),
+    };
+    let err = execute(deps.as_mut(), env, non_creator_info, msg).unwrap_err();
+
+    // Should fail with unauthorized error
+    assert!(err
+        .to_string()
+        .contains("Caller is not the contract's current owner"));
+}
+
+#[test]
+fn test_update_nod_address_to_none() {
+    let mut deps = mock_dependencies();
+    let msg = InstantiateMsg {
+        creator: None,
+        vwap_window_seconds: None,
+        nod_address: Some(deps.api.addr_make("initial_nod_address").to_string()),
+    };
+    let info = MessageInfo {
+        sender: deps.api.addr_make(CREATOR_ADDR),
+        funds: vec![],
+    };
+    let env = mock_env();
+
+    instantiate(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
+
+    // Remove nod address by setting to None
+    let msg = ExecuteMsg::UpdateNodAddress { nod_address: None };
+    let res = execute(deps.as_mut(), env, info, msg).unwrap();
+
+    // Check response attributes and events
+    assert_eq!(1, res.events.len());
+    let event = &res.events[0];
+    assert_eq!(event.ty, "price-oracle::nod_address_updated");
 }

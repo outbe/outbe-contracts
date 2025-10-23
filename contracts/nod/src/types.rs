@@ -24,13 +24,13 @@ pub struct NodData {
     /// Account specific, from Lysis
     pub floor_rate: Decimal,
     /// From Tribute
-    pub nominal_price_minor: Decimal,
+    pub nominal_price: Decimal,
     /// coen Price at the moment of Nod issuance
-    pub issuance_price_minor: Decimal,
+    pub issuance_price: Decimal,
     /// From Tribute Symbolic Load
     pub gratis_load_minor: Uint128,
     /// Floor price
-    pub floor_price_minor: Decimal,
+    pub floor_price: Decimal,
     /// Current state of the Nod
     pub state: State,
     /// Address entitled to mine Gratis
