@@ -17,18 +17,29 @@ async function main() {
   let last_nod_id: string | undefined;
   let done = false;
 
-  while (!done) {
-    let response: TokensResponse = await nodClient.allTokens({
-      queryOrder: "descending",
-      startAfter: last_nod_id,
+  let response: TokensResponse = await nodClient.allTokens({
+    queryOrder: "descending",
+    startAfter: last_nod_id,
+  })
+  console.log("Fetching one page of Nod tokens:")
+  for (let token_id of response.tokens) {
+    await nodClient.nftInfo({tokenId: token_id}).then(info => {
+      console.log("Nod data: ", info)
     })
-    console.log("Nod ids batch size =", response.tokens.length, ", data: ", response.tokens.join(", "))
-    if (response.tokens.length == 0) {
-      done = true;
-    } else {
-      last_nod_id = response.tokens[response.tokens.length - 1];
-    }
   }
+  // Uncomment if need to query all tokens
+  // while (!done) {
+  //   let response: TokensResponse = await nodClient.allTokens({
+  //     queryOrder: "descending",
+  //     startAfter: last_nod_id,
+  //   })
+  //   console.log("Nod ids batch size =", response.tokens.length, ", data: ", response.tokens.join(", "))
+  //   if (response.tokens.length == 0) {
+  //     done = true;
+  //   } else {
+  //     last_nod_id = response.tokens[response.tokens.length - 1];
+  //   }
+  // }
 }
 
 main();
