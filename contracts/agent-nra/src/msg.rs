@@ -1,6 +1,6 @@
 use crate::state::ThresholdConfig;
 use crate::types::{Application, ApplicationInput, Vote};
-use agent_common::types::AgentInput;
+use agent_common::types::AgentDirectInput;
 use cosmwasm_schema::cw_serde;
 
 #[cw_serde]
@@ -8,6 +8,7 @@ pub struct InstantiateMsg {
     pub thresholds: Option<ThresholdConfig>,
     pub paused: Option<bool>,
     pub bootstrap_voters: Option<Vec<String>>,
+    pub directly_agents: Option<Vec<(String, AgentDirectInput)>>,
 }
 
 #[cw_serde]
@@ -43,9 +44,9 @@ pub enum OwnerMsg {
     RemoveBootstrapVoter {
         address: String,
     },
-    AddNraDirectly {
+    AddAgentDirectly {
         address: String,
-        agent: Box<AgentInput>,
+        agent: Box<AgentDirectInput>,
     },
 }
 

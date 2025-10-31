@@ -4,7 +4,7 @@ use crate::msg::{AgentMsg, ApplicationMsg, ExecuteMsg, InstantiateMsg, MigrateMs
 use crate::state::{Config, ThresholdConfig, APPLICATIONS, APPLICATION_VOTES, CONFIG};
 use crate::types::{Application, ApplicationInput, ApplicationStatus, Vote};
 use agent_common::state::AGENTS;
-use agent_common::types::{Agent, AgentExt, AgentInput, AgentStatus, AgentType};
+use agent_common::types::{Agent, AgentDirectInput, AgentExt, AgentStatus, AgentType};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Addr, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
@@ -14,7 +14,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    deps: DepsMut,
+    mut deps: DepsMut,
     _env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
@@ -45,6 +45,19 @@ pub fn instantiate(
     };
 
     CONFIG.save(deps.storage, &cfg)?;
+
+    // Add agents directly if provided
+    if let Some(agents) = msg.directly_agents {
+        for (address, agent_input) in agents {
+            exec_add_agent_directly(
+                deps.branch(),
+                _env.clone(),
+                info.clone(),
+                address,
+                agent_input,
+            )?;
+        }
+    }
 
     Ok(Response::new()
         .add_attribute("action", "agent-nra::instantiate")
@@ -98,8 +111,8 @@ pub fn execute(
         },
 
         ExecuteMsg::Owner(owner_msg) => match owner_msg {
-            OwnerMsg::AddNraDirectly { address, agent } => {
-                exec_add_nra_directly(deps, env, info, address, *agent)
+            OwnerMsg::AddAgentDirectly { address, agent } => {
+                exec_add_agent_directly(deps, env, info, address, *agent)
             }
             OwnerMsg::AddBootstrapVoter { address } => {
                 exec_add_bootstrap_voter(deps, info, address)
@@ -336,12 +349,12 @@ pub fn exec_remove_bootstrap_voter(
         .add_attribute("voter", voter))
 }
 
-pub fn exec_add_nra_directly(
+pub fn exec_add_agent_directly(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
     address: String,
-    agent_input: AgentInput,
+    agent_input: AgentDirectInput,
 ) -> Result<Response, ContractError> {
     let config = crate::state::CONFIG.load(deps.storage)?;
 
@@ -367,7 +380,7 @@ pub fn exec_add_nra_directly(
         wallet: agent_addr.clone(),
         name: agent_input.name,
         email: agent_input.email,
-        agent_type: agent_common::types::AgentType::Nra, // Force NRA type
+        agent_type: agent_input.agent_type,
         jurisdictions: agent_input.jurisdictions,
         endpoint: agent_input.endpoint,
         metadata_json: agent_input.metadata_json,
@@ -386,7 +399,7 @@ pub fn exec_add_nra_directly(
     Ok(Response::new()
         .add_attribute("action", "agent-nra::add_agent_directly")
         .add_attribute("agent_address", agent_addr.to_string())
-        .add_attribute("agent_type", "NRA")
+        .add_attribute("agent_type", agent.agent_type.to_string())
         .add_attribute("status", "Active")
         .add_attribute("submitted_at", agent.submitted_at.to_string()))
 }

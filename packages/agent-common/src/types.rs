@@ -1,5 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Timestamp, Uint128};
+use strum_macros::Display;
 
 #[cw_serde]
 pub enum AgentStatus {
@@ -27,6 +28,7 @@ pub enum AgentExt {
 }
 
 #[cw_serde]
+#[derive(Display)]
 pub enum AgentType {
     Nra,
     Cra,
@@ -62,6 +64,20 @@ pub struct AgentInput {
     pub discord: Option<String>,
     pub avg_cu: Option<Uint128>,
     pub ext: AgentExt,
+}
+
+#[cw_serde]
+pub struct AgentDirectInput {
+    pub name: String,
+    pub email: Option<String>,
+    pub jurisdictions: Vec<String>,
+    pub endpoint: Option<String>,
+    pub metadata_json: Option<String>,
+    pub docs_uri: Vec<String>,
+    pub discord: Option<String>,
+    pub avg_cu: Option<Uint128>,
+    pub ext: AgentExt,
+    pub agent_type: AgentType,
 }
 
 #[cw_serde]

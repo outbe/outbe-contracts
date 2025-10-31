@@ -16,6 +16,25 @@
           "type": "string"
         }
       },
+      "directly_agents": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/definitions/AgentDirectInput"
+            }
+          ],
+          "maxItems": 2,
+          "minItems": 2
+        }
+      },
       "paused": {
         "type": [
           "boolean",
@@ -35,6 +54,211 @@
     },
     "additionalProperties": false,
     "definitions": {
+      "Addr": {
+        "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+        "type": "string"
+      },
+      "AgentDirectInput": {
+        "type": "object",
+        "required": [
+          "agent_type",
+          "docs_uri",
+          "ext",
+          "jurisdictions",
+          "name"
+        ],
+        "properties": {
+          "agent_type": {
+            "$ref": "#/definitions/AgentType"
+          },
+          "avg_cu": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Uint128"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "discord": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "docs_uri": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "endpoint": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ext": {
+            "$ref": "#/definitions/AgentExt"
+          },
+          "jurisdictions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata_json": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AgentExt": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "nra"
+            ],
+            "properties": {
+              "nra": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "cra"
+            ],
+            "properties": {
+              "cra": {
+                "type": "object",
+                "properties": {
+                  "additional_wallets": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "preferred_nra": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "$ref": "#/definitions/Addr"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "rfa"
+            ],
+            "properties": {
+              "rfa": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "iba"
+            ],
+            "properties": {
+              "iba": {
+                "type": "object",
+                "properties": {
+                  "additional_wallets": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "$ref": "#/definitions/ExternalWallet"
+                    }
+                  },
+                  "license_number": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "license_uri": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "preferred_nra": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "$ref": "#/definitions/Addr"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "AgentType": {
+        "type": "string",
+        "enum": [
+          "nra",
+          "cra",
+          "rfa",
+          "iba"
+        ]
+      },
+      "ExternalWallet": {
+        "type": "object",
+        "required": [
+          "address",
+          "wallet_type"
+        ],
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "wallet_type": {
+            "$ref": "#/definitions/WalletType"
+          }
+        },
+        "additionalProperties": false
+      },
       "ThresholdConfig": {
         "type": "object",
         "required": [
@@ -72,6 +296,18 @@
           }
         },
         "additionalProperties": false
+      },
+      "Uint128": {
+        "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+        "type": "string"
+      },
+      "WalletType": {
+        "type": "string",
+        "enum": [
+          "cosmos",
+          "evm",
+          "solana"
+        ]
       }
     }
   },
@@ -120,6 +356,74 @@
       "Addr": {
         "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
         "type": "string"
+      },
+      "AgentDirectInput": {
+        "type": "object",
+        "required": [
+          "agent_type",
+          "docs_uri",
+          "ext",
+          "jurisdictions",
+          "name"
+        ],
+        "properties": {
+          "agent_type": {
+            "$ref": "#/definitions/AgentType"
+          },
+          "avg_cu": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Uint128"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "discord": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "docs_uri": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "endpoint": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ext": {
+            "$ref": "#/definitions/AgentExt"
+          },
+          "jurisdictions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata_json": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "AgentExt": {
         "oneOf": [
@@ -663,10 +967,10 @@
           {
             "type": "object",
             "required": [
-              "add_nra_directly"
+              "add_agent_directly"
             ],
             "properties": {
-              "add_nra_directly": {
+              "add_agent_directly": {
                 "type": "object",
                 "required": [
                   "address",
@@ -677,7 +981,7 @@
                     "type": "string"
                   },
                   "agent": {
-                    "$ref": "#/definitions/AgentInput"
+                    "$ref": "#/definitions/AgentDirectInput"
                   }
                 },
                 "additionalProperties": false
