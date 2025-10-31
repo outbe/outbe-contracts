@@ -399,7 +399,7 @@ pub fn exec_add_agent_directly(
     Ok(Response::new()
         .add_attribute("action", "agent-nra::add_agent_directly")
         .add_attribute("agent_address", agent_addr.to_string())
-        .add_attribute("agent_type", format!("{:?}", agent.agent_type))
+        .add_attribute("agent_type", agent.agent_type.to_string())
         .add_attribute("status", "Active")
         .add_attribute("submitted_at", agent.submitted_at.to_string()))
 }

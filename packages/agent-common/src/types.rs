@@ -1,5 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Timestamp, Uint128};
+use strum_macros::Display;
 
 #[cw_serde]
 pub enum AgentStatus {
@@ -27,6 +28,7 @@ pub enum AgentExt {
 }
 
 #[cw_serde]
+#[derive(Display)]
 pub enum AgentType {
     Nra,
     Cra,
