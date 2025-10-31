@@ -553,7 +553,7 @@ fn test_add_agent_directly_success() {
     assert_eq!(res.attributes[1].key, "agent_address");
     assert_eq!(res.attributes[1].value, agent_address);
     assert_eq!(res.attributes[2].key, "agent_type");
-    assert_eq!(res.attributes[2].value, "NRA");
+    assert_eq!(res.attributes[2].value, "Nra");
     assert_eq!(res.attributes[3].key, "status");
     assert_eq!(res.attributes[3].value, "Active");
 
