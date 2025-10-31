@@ -5,7 +5,7 @@ use crate::query::query;
 use crate::state::CONFIG;
 use crate::types::ApplicationInput;
 use agent_common::state::AGENTS;
-use agent_common::types::{Agent, AgentExt, AgentInput, AgentStatus, AgentType};
+use agent_common::types::{Agent, AgentDirectInput, AgentExt, AgentInput, AgentStatus, AgentType};
 use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
 use cosmwasm_std::{Addr, DepsMut, Response, Uint128};
 use cw_multi_test::{App, ContractWrapper, Executor};
@@ -43,6 +43,21 @@ fn sample_agent_input() -> AgentInput {
         discord: Some("agent#5678".to_string()),
         avg_cu: Option::from(Uint128::new(2000)),
         ext: AgentExt::Nra {},
+    }
+}
+
+fn sample_direct_input() -> AgentDirectInput {
+    AgentDirectInput {
+        name: "Test Agent".to_string(),
+        email: Some("agent@test.com".to_string()),
+        jurisdictions: vec!["US".to_string()],
+        endpoint: Some("https://agent.test.com".to_string()),
+        metadata_json: Some(r#"{"agent": "data"}"#.to_string()),
+        docs_uri: vec!["https://agent-docs.com".to_string()],
+        discord: Some("agent#5678".to_string()),
+        avg_cu: Option::from(Uint128::new(2000)),
+        ext: AgentExt::Nra {},
+        agent_type: AgentType::Nra,
     }
 }
 
@@ -521,7 +536,7 @@ fn test_add_agent_directly_success() {
 
     // Owner adds agent directly
     let agent_address = USER1.to_string();
-    let agent_input = sample_agent_input();
+    let agent_input = sample_direct_input();
 
     let msg = ExecuteMsg::Owner(OwnerMsg::AddNraDirectly {
         address: agent_address.clone(),
@@ -564,7 +579,7 @@ fn test_add_agent_directly_unauthorized() {
 
     // Non-owner tries to add agent directly
     let agent_address = USER1.to_string();
-    let agent_input = sample_agent_input();
+    let agent_input = sample_direct_input();
 
     let msg = ExecuteMsg::Owner(OwnerMsg::AddNraDirectly {
         address: agent_address.clone(),

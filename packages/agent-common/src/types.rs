@@ -65,6 +65,20 @@ pub struct AgentInput {
 }
 
 #[cw_serde]
+pub struct AgentDirectInput {
+    pub name: String,
+    pub email: Option<String>,
+    pub jurisdictions: Vec<String>,
+    pub endpoint: Option<String>,
+    pub metadata_json: Option<String>,
+    pub docs_uri: Vec<String>,
+    pub discord: Option<String>,
+    pub avg_cu: Option<Uint128>,
+    pub ext: AgentExt,
+    pub agent_type: AgentType,
+}
+
+#[cw_serde]
 pub enum WalletType {
     Cosmos,
     Evm,
