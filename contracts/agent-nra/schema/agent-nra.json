@@ -731,10 +731,10 @@
           {
             "type": "object",
             "required": [
-              "add_nra_directly"
+              "add_agent_directly"
             ],
             "properties": {
-              "add_nra_directly": {
+              "add_agent_directly": {
                 "type": "object",
                 "required": [
                   "address",

@@ -8,6 +8,7 @@ pub struct InstantiateMsg {
     pub thresholds: Option<ThresholdConfig>,
     pub paused: Option<bool>,
     pub bootstrap_voters: Option<Vec<String>>,
+    pub directly_agents: Option<Vec<(String, AgentDirectInput)>>,
 }
 
 #[cw_serde]
@@ -43,7 +44,7 @@ pub enum OwnerMsg {
     RemoveBootstrapVoter {
         address: String,
     },
-    AddNraDirectly {
+    AddAgentDirectly {
         address: String,
         agent: Box<AgentDirectInput>,
     },

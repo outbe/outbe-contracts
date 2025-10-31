@@ -1,6 +1,6 @@
 import {getContractAddresses, initClient} from "../lib/clientService";
 import {AgentNraClient} from "../clients/agent-nra/AgentNra.client";
-import {AgentDirectInput, AgentExt, AgentInput} from "../clients/agent-nra/AgentNra.types";
+import {AgentDirectInput, AgentExt} from "../clients/agent-nra/AgentNra.types";
 import {AGENTS, TX_FEE} from "../config";
 import {coins} from "@cosmjs/proto-signing";
 
@@ -34,7 +34,7 @@ async function main() {
 
       const result = await agentNraClient.owner(
         {
-          add_nra_directly: {
+          add_agent_directly: {
             address: agent.address,
             agent: agentInput
           }

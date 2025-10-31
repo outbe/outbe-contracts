@@ -14,7 +14,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    deps: DepsMut,
+    mut deps: DepsMut,
     _env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
@@ -46,10 +46,16 @@ pub fn instantiate(
 
     CONFIG.save(deps.storage, &cfg)?;
 
+    // Add agents directly if provided
+    if let Some(agents) = msg.directly_agents {
+        for (address, agent_input) in agents {
+            exec_add_agent_directly(deps.branch(), _env.clone(), info.clone(), address, agent_input)?;
+        }
+    }
+
     Ok(Response::new()
         .add_attribute("action", "agent-nra::instantiate")
-        .add_attribute("version", CONTRACT_VERSION))
-}
+        .add_attribute("version", CONTRACT_VERSION))}
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
@@ -98,8 +104,8 @@ pub fn execute(
         },
 
         ExecuteMsg::Owner(owner_msg) => match owner_msg {
-            OwnerMsg::AddNraDirectly { address, agent } => {
-                exec_add_nra_directly(deps, env, info, address, *agent)
+            OwnerMsg::AddAgentDirectly { address, agent } => {
+                exec_add_agent_directly(deps, env, info, address, *agent)
             }
             OwnerMsg::AddBootstrapVoter { address } => {
                 exec_add_bootstrap_voter(deps, info, address)
@@ -336,7 +342,7 @@ pub fn exec_remove_bootstrap_voter(
         .add_attribute("voter", voter))
 }
 
-pub fn exec_add_nra_directly(
+pub fn exec_add_agent_directly(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,

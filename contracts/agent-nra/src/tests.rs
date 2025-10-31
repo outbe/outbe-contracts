@@ -97,6 +97,7 @@ fn instantiate_contract(deps: DepsMut) -> Result<Response, ContractError> {
         ]),
         thresholds: None,
         paused: None,
+        directly_agents:None
     };
 
     instantiate(deps, env, info, msg)
@@ -317,6 +318,7 @@ fn test_submit_agent_flow() {
         ]),
         thresholds: None,
         paused: None,
+        directly_agents:None
     };
     let nra_addr = app
         .instantiate_contract(code_id, owner.clone(), &init_msg, &[], "agent-nra", None)
@@ -538,7 +540,7 @@ fn test_add_agent_directly_success() {
     let agent_address = USER1.to_string();
     let agent_input = sample_direct_input();
 
-    let msg = ExecuteMsg::Owner(OwnerMsg::AddNraDirectly {
+    let msg = ExecuteMsg::Owner(OwnerMsg::AddAgentDirectly {
         address: agent_address.clone(),
         agent: Box::new(agent_input.clone()),
     });
@@ -581,7 +583,7 @@ fn test_add_agent_directly_unauthorized() {
     let agent_address = USER1.to_string();
     let agent_input = sample_direct_input();
 
-    let msg = ExecuteMsg::Owner(OwnerMsg::AddNraDirectly {
+    let msg = ExecuteMsg::Owner(OwnerMsg::AddAgentDirectly {
         address: agent_address.clone(),
         agent: Box::new(agent_input),
     });
