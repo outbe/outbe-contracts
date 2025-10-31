@@ -97,7 +97,7 @@ fn instantiate_contract(deps: DepsMut) -> Result<Response, ContractError> {
         ]),
         thresholds: None,
         paused: None,
-        directly_agents:None
+        directly_agents: None,
     };
 
     instantiate(deps, env, info, msg)
@@ -318,7 +318,7 @@ fn test_submit_agent_flow() {
         ]),
         thresholds: None,
         paused: None,
-        directly_agents:None
+        directly_agents: None,
     };
     let nra_addr = app
         .instantiate_contract(code_id, owner.clone(), &init_msg, &[], "agent-nra", None)
