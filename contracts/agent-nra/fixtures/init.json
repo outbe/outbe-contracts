@@ -9,6 +9,8 @@
         "name": "NRA Agent 1",
         "email": "nra_1_main@proton.me",
         "agent_type": "nra",
+        "jurisdictions": [],
+        "docs_uri": [],
         "ext": {
           "nra": {}
         }
@@ -20,6 +22,8 @@
         "name": "NRA Agent 2",
         "email": "nra_2_main@proton.me",
         "agent_type": "nra",
+        "jurisdictions": [],
+        "docs_uri": [],
         "ext": {
           "nra": {}
         }
@@ -31,6 +35,8 @@
         "name": "NRA Alya",
         "email": "xiaoxiongmao88@proton.me",
         "agent_type": "nra",
+        "jurisdictions": [],
+        "docs_uri": [],
         "ext": {
           "nra": {}
         }
@@ -42,6 +48,8 @@
         "name": "CRA Agent 1",
         "email": "swoo@swoo.com",
         "agent_type": "cra",
+        "jurisdictions": [],
+        "docs_uri": [],
         "ext": {
           "cra": {}
         }
