@@ -33,5 +33,4 @@ async function main() {
   console.log(JSON.stringify(history, null, 2))
 }
 
-
-main();
+main().catch(console.error);

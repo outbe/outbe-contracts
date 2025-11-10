@@ -51,4 +51,4 @@ async function burnMetadosis(walletClient: SigningCosmWasmClient, address: strin
   console.log("Burn metadosis done ✅, tx", tx.transactionHash)
 }
 
-main();
+main().catch(console.error);

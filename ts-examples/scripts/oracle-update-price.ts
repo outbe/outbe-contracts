@@ -65,4 +65,4 @@ export async function queryXauRate(queryClient: PriceOracleQueryClient): Promise
   return parseFloat(response.price)
 }
 
-main();
+main().catch(console.error);

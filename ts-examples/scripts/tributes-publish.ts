@@ -150,4 +150,4 @@ export async function queryEncryptionInfo(walletClient: CosmWasmClient, address:
   return await client.encryptionInfo()
 }
 
-main();
+main().catch(console.error);
