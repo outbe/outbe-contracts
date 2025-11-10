@@ -34,5 +34,4 @@ async function main() {
   console.log("Number of Nod tokens: ", await nodClient.numTokens())
 }
 
-
-main();
+main().catch(console.error);
