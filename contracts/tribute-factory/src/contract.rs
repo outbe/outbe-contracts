@@ -426,7 +426,7 @@ pub fn generate_tribute_draft_id_hash(
 ) -> Result<Base58Binary, ContractError> {
     let hex_bin = gen_hash(vec![
         owner.as_slice(),
-        worldwide_day.to_le_bytes().as_slice(),
+        worldwide_day.to_be_bytes().as_slice(),
     ]);
     Ok(Base58Binary::from(hex_bin.as_slice()))
 }
@@ -441,7 +441,7 @@ fn generate_tribute_id(
         vec![
             token_id.as_slice(),
             owner.as_bytes(),
-            worldwide_day.to_le_bytes().as_slice(),
+            worldwide_day.to_be_bytes().as_slice(),
         ],
     )
 }
