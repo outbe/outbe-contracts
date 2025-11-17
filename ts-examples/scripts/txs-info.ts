@@ -20,4 +20,4 @@ async function main() {
   console.log(result);
 }
 
-main();
+main().catch(console.error);
