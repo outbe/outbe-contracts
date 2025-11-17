@@ -195,7 +195,7 @@ fn execute_mint(
     let token = TributeNft {
         owner: owner_addr,
         token_uri,
-        extension: data,
+        extension: data.clone(),
     };
 
     config
@@ -212,7 +212,18 @@ fn execute_mint(
         .add_event(
             Event::new("tribute::mint")
                 .add_attribute("token_id", token_id)
-                .add_attribute("owner", owner),
+                .add_attribute("owner", owner)
+                .add_attribute("worldwide_day", data.worldwide_day.to_string())
+                .add_attribute(
+                    "nominal_amount_minor",
+                    data.nominal_amount_minor.to_string(),
+                )
+                .add_attribute("nominal_price", data.nominal_price.to_string())
+                .add_attribute(
+                    "settlement_amount_minor",
+                    data.settlement_amount_minor.to_string(),
+                )
+                .add_attribute("settlement_currency", data.settlement_currency.to_string()),
         ))
 }
 
