@@ -1,7 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 
-
 /// Helper type for identifying commit id
 pub type CommitId = String;
 
