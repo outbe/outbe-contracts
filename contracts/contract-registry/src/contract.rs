@@ -52,7 +52,7 @@ fn execute_publish_deployment(
     let commit = deployment.commit_id.clone();
     DEPLOYMENTS.save(
         deps.storage,
-        &commit,
+        commit.clone(),
         &DeploymentInfoState {
             commit_id: deployment.commit_id.clone(),
             contracts: deployment.contracts.clone(),
