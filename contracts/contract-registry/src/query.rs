@@ -40,7 +40,7 @@ fn query_get_deployment(deps: Deps, commit_id: Option<String>) -> StdResult<GetD
         .load(deps.storage)
         .unwrap_or("none".to_string());
     let commit = commit_id.unwrap_or(latest_deployment_commit.clone());
-    let deployment = DEPLOYMENTS.load(deps.storage, commit.as_str())?;
+    let deployment = DEPLOYMENTS.load(deps.storage, commit)?;
     Ok(GetDeploymentResponse {
         deployment: Deployment {
             commit_id: deployment.commit_id.clone(),

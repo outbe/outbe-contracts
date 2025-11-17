@@ -376,7 +376,36 @@ fn execute_offer_logic(
     Ok(Response::new()
         .add_message(msg)
         .add_attribute("action", "tribute-factory::offer")
-        .add_event(Event::new("tribute-factory::offer")))
+        .add_event(
+            Event::new("tribute-factory::offer")
+                .add_attribute(
+                    "tribute_draft_id",
+                    tribute_input.tribute_draft_id.to_base58(),
+                )
+                .add_attribute("tribute_id", tribute_id.to_string())
+                .add_attribute("owner", tribute_input.owner.to_base58())
+                .add_attribute("worldwide_day", tribute_input.worldwide_day.to_string())
+                .add_attribute(
+                    "settlement_currency",
+                    tribute_input.settlement_currency.to_string(),
+                )
+                .add_attribute(
+                    "settlement_base_amount",
+                    tribute_input.settlement_base_amount.to_string(),
+                )
+                .add_attribute(
+                    "settlement_atto_amount",
+                    tribute_input.settlement_atto_amount.to_string(),
+                )
+                .add_attribute(
+                    "nominal_base_amount",
+                    tribute_input.nominal_base_amount.to_string(),
+                )
+                .add_attribute(
+                    "nominal_atto_amount",
+                    tribute_input.nominal_atto_amount.to_string(),
+                ),
+        ))
 }
 
 fn tee_obfuscate(tribute_input: TributeInputPayload) -> Result<TributeInputPayload, ContractError> {
