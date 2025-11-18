@@ -246,8 +246,8 @@ fn do_execute_lysis(
     let entity_id = gen_compound_hash(
         Some("lysis"),
         vec![
-            &execution_date.to_be_bytes(),
-            &block_time.nanos().to_be_bytes(),
+            &execution_date.to_le_bytes(),
+            &block_time.nanos().to_le_bytes(),
         ],
     );
 
@@ -408,8 +408,8 @@ fn do_execute_touch(
     let entity_id = gen_compound_hash(
         Some("touch"),
         vec![
-            &execution_date.to_be_bytes(),
-            &block_time.nanos().to_be_bytes(),
+            &execution_date.to_le_bytes(),
+            &block_time.nanos().to_le_bytes(),
         ],
     );
 
