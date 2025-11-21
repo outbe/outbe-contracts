@@ -6,7 +6,7 @@ import {secp256k1} from "@noble/curves/secp256k1";
 async function main() {
 
 // Input Ethereum address
-  const ethAddress = "0xA809592D9fC260C3A7D0022aa21e5e890cebBCf8"
+  const ethAddress = "0x92dae186d5eef66888746044b9f3a4922911b487"
   // const ethAddress = "0x37B6cA0eF49865e4E1439D62b21aDdB6aF1Bcf25" // this doesnt work!!
 
   let seiAddress = evmToOutbe(ethAddress);
