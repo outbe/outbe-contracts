@@ -580,6 +580,7 @@ fn test_price_oracle_nod_qualification() {
         extension: Box::new(SubmitExtension {
             entity: NodEntity {
                 nod_id: "nod_1".to_string(),
+                worldwide_day: 20250101,
                 settlement_currency: coen_denom.clone(),
                 symbolic_rate: Decimal::from_str("1.0").unwrap(),
                 floor_rate: Decimal::from_str("0.5").unwrap(),
@@ -605,6 +606,7 @@ fn test_price_oracle_nod_qualification() {
         extension: Box::new(SubmitExtension {
             entity: NodEntity {
                 nod_id: "nod_2".to_string(),
+                worldwide_day: 20250101,
                 settlement_currency: coen_denom.clone(),
                 symbolic_rate: Decimal::from_str("1.0").unwrap(),
                 floor_rate: Decimal::from_str("0.2").unwrap(),
@@ -623,13 +625,14 @@ fn test_price_oracle_nod_qualification() {
     app.execute_contract(owner_addr.clone(), nod.address.clone(), &msg, &[])
         .unwrap();
 
-    // Token 3: floor_price = 0.4 (equal to threshold, should qualify)
+    // Token 3: floor_price = 0.4 (equal to a threshold, should qualify)
     let msg = NodExecuteMsg::Submit {
         token_id: "nod_3".to_string(),
         owner: owner_addr.to_string(),
         extension: Box::new(SubmitExtension {
             entity: NodEntity {
                 nod_id: "nod_3".to_string(),
+                worldwide_day: 20250101,
                 settlement_currency: coen_denom.clone(),
                 symbolic_rate: Decimal::from_str("1.0").unwrap(),
                 floor_rate: Decimal::from_str("0.4").unwrap(),

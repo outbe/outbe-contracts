@@ -4,6 +4,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Timestamp, Uint128};
 use outbe_nft::state::NftInfo;
 use outbe_nft::traits::{Cw721CollectionConfig, Cw721CustomMsg, Cw721State};
+use outbe_utils::date::WorldwideDay;
 use outbe_utils::denom::Denom;
 
 /// Configuration for the Nod NFT collection (empty)
@@ -17,6 +18,8 @@ impl Cw721CollectionConfig for NodConfig {}
 pub struct NodData {
     /// Identifier of the Nod
     pub nod_id: String,
+    /// Worldwide day of the tribute in YYYYMMDD format
+    pub worldwide_day: WorldwideDay,
     /// Settlement Currency
     pub settlement_currency: Denom,
     /// Symbolic rate

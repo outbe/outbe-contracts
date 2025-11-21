@@ -310,6 +310,7 @@ fn do_execute_lysis(
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
                         nod_id: nod_token_id.to_hex(),
+                        worldwide_day: execution_date,
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: config.lysis_limit_percent,
                         floor_rate,
@@ -477,6 +478,7 @@ fn do_execute_touch(
                 extension: Box::new(nod::msg::SubmitExtension {
                     entity: nod::msg::NodEntity {
                         nod_id: token_id.to_hex(),
+                        worldwide_day: execution_date,
                         settlement_currency: tribute.data.settlement_currency.clone(),
                         symbolic_rate: config.lysis_limit_percent,
                         floor_rate: Decimal::zero(),
