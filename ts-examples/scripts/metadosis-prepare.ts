@@ -23,5 +23,4 @@ async function main() {
   console.log(JSON.stringify(info, null, 2))
 }
 
-
-main();
+main().catch(console.error);

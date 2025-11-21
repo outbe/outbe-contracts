@@ -38,5 +38,4 @@ export async function queryActualRate(walletClient: CosmWasmClient): Promise<num
   return parseFloat(response.price)
 }
 
-
-main();
+main().catch(console.error);
