@@ -103,6 +103,7 @@ fn execute_submit(
 
     let data = NodData {
         nod_id: entity.nod_id.clone(),
+        worldwide_day: entity.worldwide_day,
         settlement_currency: entity.settlement_currency.clone(),
         symbolic_rate: entity.symbolic_rate,
         floor_rate: entity.floor_rate,

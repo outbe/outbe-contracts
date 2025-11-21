@@ -632,6 +632,7 @@ mod test_token_miner {
     ) -> NodData {
         NodData {
             nod_id: "test_nod_1".to_string(),
+            worldwide_day: 20250101,
             settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::one(),
             floor_rate: Decimal::from_str("100").unwrap(),

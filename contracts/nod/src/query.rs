@@ -149,6 +149,7 @@ mod tests {
         let recipient = app.api().addr_make("recipient");
         let entity = NodEntity {
             nod_id: "nod123".to_string(),
+            worldwide_day: 20250101,
             settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::from_str("1.23").unwrap(),
             floor_rate: Decimal::from_str("10").unwrap(),
@@ -293,6 +294,7 @@ mod tests {
         let recipient = app.api().addr_make("recipient");
         let entity = NodEntity {
             nod_id: "nod123".to_string(),
+            worldwide_day: 20250101,
             settlement_currency: Denom::Fiat(Currency::Usd),
             symbolic_rate: Decimal::from_str("1.23").unwrap(),
             floor_rate: Decimal::from_str("10").unwrap(),

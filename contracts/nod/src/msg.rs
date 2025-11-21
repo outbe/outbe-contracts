@@ -2,6 +2,7 @@ use crate::types::State;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Timestamp, Uint128};
 use outbe_nft::msg::Cw721InstantiateMsg;
+use outbe_utils::date::WorldwideDay;
 use outbe_utils::denom::Denom;
 
 /// Custom collection extension for instantiate
@@ -49,6 +50,8 @@ pub struct SubmitExtension {
 #[cw_serde]
 pub struct NodEntity {
     pub nod_id: String,
+    /// Worldwide day of the tribute in YYYYMMDD format
+    pub worldwide_day: WorldwideDay,
     pub settlement_currency: Denom,
     pub symbolic_rate: Decimal,
     pub floor_rate: Decimal,

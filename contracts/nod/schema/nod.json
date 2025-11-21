@@ -291,7 +291,8 @@
           "owner",
           "settlement_currency",
           "state",
-          "symbolic_rate"
+          "symbolic_rate",
+          "worldwide_day"
         ],
         "properties": {
           "floor_price": {
@@ -336,6 +337,12 @@
           },
           "symbolic_rate": {
             "$ref": "#/definitions/Decimal"
+          },
+          "worldwide_day": {
+            "description": "Worldwide day of the tribute in YYYYMMDD format",
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
           }
         },
         "additionalProperties": false
@@ -991,7 +998,8 @@
             "owner",
             "settlement_currency",
             "state",
-            "symbolic_rate"
+            "symbolic_rate",
+            "worldwide_day"
           ],
           "properties": {
             "floor_price": {
@@ -1087,6 +1095,12 @@
                   "$ref": "#/definitions/Decimal"
                 }
               ]
+            },
+            "worldwide_day": {
+              "description": "Worldwide day of the tribute in YYYYMMDD format",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
             }
           },
           "additionalProperties": false
