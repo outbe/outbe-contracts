@@ -27,9 +27,12 @@
     "@noble/ciphers": "0.5.3",
     "@noble/curves": "1.4.2",
     "@noble/hashes": "^1.8.0",
+    "@sei-js/evm": "^2.0.5",
+    "bech32": "^2.0.0",
     "bs58": "^6.0.0",
     "dotenv": "^16.4.0",
-    "secp256k1": "^5.0.1"
+    "secp256k1": "^5.0.1",
+    "viem": "^2.21.54"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
