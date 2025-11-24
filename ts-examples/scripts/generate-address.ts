@@ -2,7 +2,6 @@ import {keccak_256} from '@noble/hashes/sha3';
 import {secp256k1} from '@noble/curves/secp256k1';
 import {DirectSecp256k1Wallet} from "@cosmjs/proto-signing";
 
-
 export class FullAccountInfo {
   constructor(
     public private_key: string,
@@ -15,8 +14,9 @@ export class FullAccountInfo {
 }
 
 
-// Function to generate addresses from a private key
-async function generateAddresses(privateKeyHex: string): Promise<FullAccountInfo> {
+// Function to generate addresses from a private key.
+// See https://docs.sei.io/learn/accounts#deriving-bech32-and-hex-addresses-from-pubkey
+export async function generateAddressesFromPrivateKey(privateKeyHex: string): Promise<FullAccountInfo> {
   // 1. Generate Bech32 address
   // Derive the compressed public key from the private key
   const publicKeyBytes = secp256k1.getPublicKey(privateKeyHex, true);
@@ -38,11 +38,3 @@ async function generateAddresses(privateKeyHex: string): Promise<FullAccountInfo
     seiAddress,
     ethAddress);
 }
-
-async function main() {
-  const privateKeyHex = '0b8c7c552f2059b9b887df108070ec7bd0cca7fc798af787734554d867ca2af7';
-  const data = await generateAddresses(privateKeyHex);
-  console.log(`Sei Address: ${JSON.stringify(data, null, 2)}`);
-}
-
-main().catch(console.error);
